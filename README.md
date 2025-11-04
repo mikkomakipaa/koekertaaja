@@ -1,250 +1,250 @@
-# Koekertaaja
+# Koekertaaja (Exam Prepper)
 
-**Harjoittele kokeisiin ja opi uutta!** 🚀
+**Practice for exams and learn new things!** 🚀
 
-Koekertaaja on interaktiivinen koeharjoittelusovellus, joka auttaa opiskelijoita valmistautumaan kokeisiin pelillistetyn oppimisen avulla. Lataa oppimateriaalisi, anna tekoälyn luoda kysymyksiä, ja kerää pisteitä oikeilla vastauksilla!
+Koekertaaja is an interactive exam preparation application that helps students prepare for exams through gamified learning. Upload your study materials, let AI create questions, and earn points with correct answers!
 
 ![Made with Next.js](https://img.shields.io/badge/Next.js-14-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)
 ![Anthropic Claude](https://img.shields.io/badge/AI-Claude_Sonnet_4-purple)
 
-## ✨ Ominaisuudet
+## ✨ Features
 
-### 🎮 Pelillistetty oppiminen
-- **Pistejärjestelmä**: Ansaitse 10 pistettä jokaisesta oikeasta vastauksesta
-- **Putkibonukset**: Saat +5 bonuspistettä kun vastaat 3+ oikein putkeen
-- **Saavutukset**: Avaa erikoismerkkejä täydellisistä suorituksista ja pitkistä putkista
-- **Dynaamiset juhlinnot**: Erilainen juhlinta tulostasosi mukaan
-- **Visuaalinen palaute**: Näe edistyksesi reaaliajassa
+### 🎮 Gamified Learning
+- **Points System**: Earn 10 points for each correct answer
+- **Streak Bonuses**: Get +5 bonus points when you answer 3+ correct in a row
+- **Achievements**: Unlock special badges for perfect scores and long streaks
+- **Dynamic Celebrations**: Different celebration animations based on your score
+- **Visual Feedback**: See your progress in real-time
 
-### 📚 Kysymyssarjojen luonti
-- **AI-avusteinen generointi**: Claude Sonnet 4 -tekoäly luo kysymyksiä materiaalistasi
-- **Monipuoliset lähdemateriaalit**: Lataa PDF-tiedostoja, kuvia tai kirjoita teksti
-- **Vaihtelevia vaikeustasoja**: Helppo, Normaali, Vaikea, Mahdoton
-- **Säädettävä kysymysmäärä**: 20-100 kysymystä per koealue
-- **Jaettavat koodit**: Jokaiselle koealueelle generoidaan uniikki 6-merkkinen koodi
+### 📚 Question Set Creation
+- **AI-Assisted Generation**: Claude Sonnet 4 AI creates questions from your materials
+- **Multiple Source Types**: Upload PDFs, images, or write text
+- **Variable Difficulty Levels**: Easy, Normal, Hard, Impossible
+- **Adjustable Question Count**: 20-100 questions per exam area
+- **Shareable Codes**: Each exam area gets a unique 6-character code
 
-### 🎯 Harjoittelu
-- **Koealueiden selaus**: Selaa kaikkia saatavilla olevia koealueita
-- **Edistymisen seuranta**: Näe pistemääräsi ja nykyinen putki
-- **Välitön palaute**: Saat selityksen jokaisen kysymyksen jälkeen
-- **Tulosyhteenveto**: Katso kokonaissuorituksesi ja oikeat vastaukset
-- **Mobiiliystävällinen**: Toimii saumattomasti kaikilla laitteilla
+### 🎯 Practice
+- **Browse Exam Areas**: Browse all available exam areas
+- **Progress Tracking**: See your points and current streak
+- **Immediate Feedback**: Get explanations after each question
+- **Results Summary**: View your overall performance and correct answers
+- **Mobile-Friendly**: Works seamlessly on all devices
 
-### 🎨 Moderni käyttöliittymä
-- **Värikkäät gradientit**: Energinen teal-purple-pink -värimaailma
-- **Glassmorphism-efektit**: Nykyaikaiset läpinäkyvät elementit
-- **Tähtiluokitukset**: Visuaaliset vaikeustason indikaattorit
-- **Responsiivinen**: Optimoitu sekä tietokoneelle että mobiilille
-- **Touch-optimoitu**: Suuret kosketustavoitteet mobiililaitteille
+### 🎨 Modern UI
+- **Colorful Gradients**: Energetic teal-purple-pink color scheme
+- **Glassmorphism Effects**: Modern semi-transparent elements
+- **Star Ratings**: Visual difficulty indicators
+- **Responsive**: Optimized for both desktop and mobile
+- **Touch-Optimized**: Large touch targets for mobile devices
 
-## 🚀 Pika-aloitus (ei-teknisille käyttäjille)
+## 🚀 Quick Start (For Non-Technical Users)
 
-### Vaihe 1: Hanki tarvittavat tilit
+### Step 1: Get Required Accounts
 
-1. **Supabase-tili** (tietokanta):
-   - Mene osoitteeseen [supabase.com](https://supabase.com)
-   - Luo ilmainen tili
-   - Luo uusi projekti
-   - Kirjaa ylös Project URL ja anon public key (löytyvät Settings → API)
+1. **Supabase Account** (database):
+   - Go to [supabase.com](https://supabase.com)
+   - Create a free account
+   - Create a new project
+   - Note down Project URL and anon public key (found in Settings → API)
 
-2. **Anthropic-tili** (tekoäly):
-   - Mene osoitteeseen [console.anthropic.com](https://console.anthropic.com)
-   - Luo tili ja hanki API-avain
-   - Kirjaa ylös API-avain
+2. **Anthropic Account** (AI):
+   - Go to [console.anthropic.com](https://console.anthropic.com)
+   - Create an account and get an API key
+   - Note down the API key
 
-### Vaihe 2: Asenna sovellus
+### Step 2: Install the Application
 
-1. **Lataa koodi**:
+1. **Download the code**:
    ```bash
    git clone https://github.com/mikkomakipaa/exam-prepper.git
    cd exam-prepper
    ```
 
-2. **Asenna riippuvuudet**:
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. **Konfiguroi ympäristömuuttujat**:
-   - Kopioi `.env.example` → `.env.local`
-   - Avaa `.env.local` tekstieditorissa
-   - Lisää Supabase-tiedot:
+3. **Configure environment variables**:
+   - Copy `.env.example` → `.env.local`
+   - Open `.env.local` in a text editor
+   - Add your Supabase details:
      ```env
-     NEXT_PUBLIC_SUPABASE_URL=sinun_supabase_url_tähän
-     NEXT_PUBLIC_SUPABASE_ANON_KEY=sinun_supabase_anon_key_tähän
-     SUPABASE_SERVICE_ROLE_KEY=sinun_service_role_key_tähän
-     ANTHROPIC_API_KEY=sinun_anthropic_api_key_tähän
+     NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
+     NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+     SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+     ANTHROPIC_API_KEY=your_anthropic_api_key_here
      ```
 
-### Vaihe 3: Alusta tietokanta
+### Step 3: Initialize Database
 
-1. Mene Supabase-projektiisi
-2. Avaa SQL Editor
-3. Kopioi ja aja tiedosto `supabase/migrations/20250103_initial_schema.sql`
-4. Tämä luo tarvittavat taulut: `question_sets` ja `questions`
+1. Go to your Supabase project
+2. Open SQL Editor
+3. Copy and run the file `supabase/migrations/20250103_initial_schema.sql`
+4. This creates the required tables: `question_sets` and `questions`
 
-### Vaihe 4: Käynnistä sovellus
+### Step 4: Start the Application
 
 ```bash
 npm run dev
 ```
 
-Avaa selaimessa [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 📖 Käyttöohje
+## 📖 User Guide
 
-### Koealueen luominen
+### Creating an Exam Area
 
-1. Klikkaa **"Luo uusi koealue"** etusivulla
-2. Valitse **aine** (esim. Englanti)
-3. Valitse **luokka-aste** (valinnainen)
-4. Valitse **vaikeustaso** (Helppo, Normaali, Vaikea, Mahdoton)
-5. Valitse **kysymysten määrä** (20-100)
-6. Lisää **oppimateriaali**:
-   - Kirjoita tekstiä tekstikenttään
-   - TAI lataa PDF-tiedostoja
-   - TAI lataa kuvia
-7. Klikkaa **"Luo kysymyssarja"**
-8. Odota että tekoäly generoi kysymykset (20-60 sekuntia)
-9. Saat **jakokelpoisen koodin** (esim. `A3B7XY`)
+1. Click **"Create New Exam Area"** on the home page
+2. Select **subject** (e.g., English)
+3. Select **grade level** (optional)
+4. Select **difficulty level** (Easy, Normal, Hard, Impossible)
+5. Select **number of questions** (20-100)
+6. Add **study materials**:
+   - Write text in the text field
+   - OR upload PDF files
+   - OR upload images
+7. Click **"Create Question Set"**
+8. Wait for AI to generate questions (20-60 seconds)
+9. You'll receive a **shareable code** (e.g., `A3B7XY`)
 
-### Harjoittelu
+### Practicing
 
-1. Klikkaa **"Aloita harjoittelu"** etusivulla
-2. Selaa **koealueita** ja klikkaa haluamaasi
-3. Vastaa kysymyksiin:
-   - Valitse vastauksesi
-   - Klikkaa **"Tarkista vastaus"**
-   - Lue selitys ja kerää pisteitä
-   - Klikkaa **"Seuraava kysymys"**
-4. Katso **tuloksesi**:
-   - Kokonaispistemäärä
-   - Paras putki
-   - Avatut saavutukset
-   - Kaikki vastaukset selityksineen
-5. Pelaa uudestaan tai palaa valikkoon
+1. Click **"Start Practice"** on the home page
+2. Browse **exam areas** and click on the one you want
+3. Answer the questions:
+   - Select your answer
+   - Click **"Check Answer"**
+   - Read the explanation and earn points
+   - Click **"Next Question"**
+4. View your **results**:
+   - Total points
+   - Best streak
+   - Unlocked achievements
+   - All answers with explanations
+5. Play again or return to menu
 
-### Pisteiden ansaitseminen
+### Earning Points
 
-- **10 pistettä** jokaisesta oikeasta vastauksesta
-- **+5 bonuspistettä** kun vastaat 3 tai enemmän oikein peräkkäin
-- **Saavutukset**:
-  - 🏆 **Täydellisyys** - 100% oikein
-  - 🔥 **Tuliputki** - 5+ oikein peräkkäin
+- **10 points** for each correct answer
+- **+5 bonus points** when you answer 3 or more correct in a row
+- **Achievements**:
+  - 🏆 **Perfection** - 100% correct
+  - 🔥 **Fire Streak** - 5+ correct in a row
 
-## 🛠️ Tekniset tiedot
+## 🛠️ Technical Details
 
-### Teknologiat
+### Technologies
 
 - **Frontend**: Next.js 14 (App Router), React, TypeScript
 - **Styling**: Tailwind CSS + shadcn/ui
-- **Tietokanta**: Supabase (PostgreSQL)
-- **Tekoäly**: Anthropic Claude API (claude-sonnet-4-20250514)
-- **Hosting**: Vercel-valmis
+- **Database**: Supabase (PostgreSQL)
+- **AI**: Anthropic Claude API (claude-sonnet-4-20250514)
+- **Hosting**: Vercel-ready
 
-### Projektirakenteen
+### Project Structure
 
 ```
 exam-prepper/
 ├── src/
-│   ├── app/                      # Next.js sivut
-│   │   ├── page.tsx             # Etusivu
-│   │   ├── create/page.tsx      # Luo koealue
-│   │   ├── play/page.tsx        # Selaa koealueita
-│   │   ├── play/[code]/page.tsx # Pelaa kysymyksiä
-│   │   └── api/                 # API-reitit
-│   ├── components/              # React-komponentit
-│   │   ├── ui/                  # shadcn/ui komponentit
-│   │   ├── questions/           # Kysymystyypit
-│   │   ├── create/              # Luontiflow
-│   │   └── play/                # Peliflow
-│   ├── lib/                     # Palvelut ja apurit
-│   │   ├── supabase/            # Tietokantakyselyt
-│   │   ├── ai/                  # Tekoälygenerointi
-│   │   └── utils/               # Apufunktiot
-│   ├── hooks/                   # React hookit
-│   │   └── useGameSession.ts    # Pelin tila ja pisteet
-│   ├── config/                  # Konfiguraatio
-│   │   ├── subjects.ts          # Ainemääritykset
-│   │   └── prompts/             # AI-promptit
-│   └── types/                   # TypeScript-tyypit
+│   ├── app/                      # Next.js pages
+│   │   ├── page.tsx             # Home page
+│   │   ├── create/page.tsx      # Create exam area
+│   │   ├── play/page.tsx        # Browse exam areas
+│   │   ├── play/[code]/page.tsx # Play questions
+│   │   └── api/                 # API routes
+│   ├── components/              # React components
+│   │   ├── ui/                  # shadcn/ui components
+│   │   ├── questions/           # Question types
+│   │   ├── create/              # Creation flow
+│   │   └── play/                # Game flow
+│   ├── lib/                     # Services and utilities
+│   │   ├── supabase/            # Database queries
+│   │   ├── ai/                  # AI generation
+│   │   └── utils/               # Helper functions
+│   ├── hooks/                   # React hooks
+│   │   └── useGameSession.ts    # Game state and points
+│   ├── config/                  # Configuration
+│   │   ├── subjects.ts          # Subject definitions
+│   │   └── prompts/             # AI prompts
+│   └── types/                   # TypeScript types
 └── supabase/
-    └── migrations/              # Tietokannan skeema
+    └── migrations/              # Database schema
 ```
 
-### Kehityskomennot
+### Development Commands
 
 ```bash
-# Kehityspalvelin
+# Development server
 npm run dev
 
-# Tyyppitarkistus
+# Type checking
 npm run typecheck
 
-# Tuotantobuildi
+# Production build
 npm run build
 
-# Tuotantopalvelin
+# Production server
 npm start
 ```
 
-## 🚢 Julkaisu Verceliin
+## 🚢 Deploy to Vercel
 
-1. **Pushaa koodi GitHubiin**:
+1. **Push code to GitHub**:
    ```bash
    git add .
    git commit -m "Initial commit"
    git push origin main
    ```
 
-2. **Luo Vercel-projekti**:
-   - Mene [vercel.com](https://vercel.com)
-   - Klikkaa "Import Project"
-   - Valitse GitHub-repositoriosi
-   - Lisää ympäristömuuttujat (samat kuin `.env.local`)
-   - Klikkaa "Deploy"
+2. **Create Vercel project**:
+   - Go to [vercel.com](https://vercel.com)
+   - Click "Import Project"
+   - Select your GitHub repository
+   - Add environment variables (same as `.env.local`)
+   - Click "Deploy"
 
-3. **Valmis!** Sovelluksesi on nyt verkossa
+3. **Done!** Your app is now online
 
-## 🎨 Värimaailma
+## 🎨 Color Palette
 
-Koekertaaja käyttää modernia, energistä väripalettia:
+Koekertaaja uses a modern, energetic color palette:
 
-- **Päägradientti**: Cyan → Teal → Purple
-- **Taustat**: Pehmeä cyan-purple-pink gradient
-- **Pisteet**: Violetti (💎)
-- **Putket**: Oranssi-kulta (🔥)
-- **Onnistuminen**: Smaragdinvihreä (✅)
-- **Saavutukset**: Kulta-amber (🏆)
+- **Primary Gradient**: Cyan → Teal → Purple
+- **Backgrounds**: Soft cyan-purple-pink gradient
+- **Points**: Violet (💎)
+- **Streaks**: Orange-Gold (🔥)
+- **Success**: Emerald Green (✅)
+- **Achievements**: Gold-Amber (🏆)
 
-## 🔐 Tietoturva
+## 🔐 Security
 
-- **Ei kirjautumista**: Ei henkilökohtaisia tietoja
-- **Julkiset koealueet**: Koodit ovat jaettavia
-- **RLS-käytännöt**: Row-level security Supabasessa
-- **Server-side API**: API-avaimet eivät näy selaimessa
-- **Ei evästeitä**: Privacy-first lähestymistapa
+- **No Login Required**: No personal data collected
+- **Public Exam Areas**: Codes are shareable
+- **RLS Policies**: Row-level security in Supabase
+- **Server-Side API**: API keys not visible in browser
+- **No Cookies**: Privacy-first approach
 
-## 📝 Lisenssi
+## 📝 License
 
-MIT License - vapaa käyttöön ja muokkaukseen
+MIT License - free to use and modify
 
-## 🤝 Tuki ja kehitys
+## 🤝 Support and Development
 
-- **Ongelmat**: Avaa issue GitHubissa
-- **Kysymykset**: Katso dokumentaatio tai avaa keskustelu
-- **Kehitysideat**: Pull requestit tervetulleita!
+- **Issues**: Open an issue on GitHub
+- **Questions**: Check documentation or start a discussion
+- **Feature Ideas**: Pull requests welcome!
 
-## 🌟 Kiitokset
+## 🌟 Credits
 
-- [Next.js](https://nextjs.org/) - React-framework
+- [Next.js](https://nextjs.org/) - React framework
 - [Supabase](https://supabase.com/) - Backend-as-a-Service
-- [Anthropic Claude](https://www.anthropic.com/) - Tekoälymalli
-- [shadcn/ui](https://ui.shadcn.com/) - UI-komponentit
-- [Tailwind CSS](https://tailwindcss.com/) - Tyylit
+- [Anthropic Claude](https://www.anthropic.com/) - AI model
+- [shadcn/ui](https://ui.shadcn.com/) - UI components
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
 
 ---
 
-Tehty ❤️:llä oppijoille | [GitHub](https://github.com/mikkomakipaa/exam-prepper)
+Made with ❤️ for learners | [GitHub](https://github.com/mikkomakipaa/exam-prepper)
