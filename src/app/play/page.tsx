@@ -142,7 +142,7 @@ export default function PlayBrowsePage() {
             <BookOpen className="w-7 h-7 text-purple-600" />
             <h1 className="text-3xl font-bold text-gray-900">Valitse aihealue</h1>
           </div>
-          <p className="text-gray-600">Valitse ensin aihealue, sitten vaikeustaso</p>
+          <p className="text-gray-600">Valitse aihealue ja vaikeustaso</p>
         </div>
 
         {state === 'error' && (
