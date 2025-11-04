@@ -1,21 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
-import { QuestionSet } from '@/types';
+import { QuestionSet, Difficulty } from '@/types';
 import { Loader2, BookOpen, Clock, BarChart3, Star } from 'lucide-react';
 
 type BrowseState = 'loading' | 'loaded' | 'error';
 
 export default function PlayBrowsePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const difficulty = searchParams.get('difficulty') as Difficulty | null;
+
   const [state, setState] = useState<BrowseState>('loading');
   const [questionSets, setQuestionSets] = useState<QuestionSet[]>([]);
   const [error, setError] = useState('');
+
+  const difficultyLabels: Record<string, string> = {
+    helppo: 'Helppo',
+    normaali: 'Normaali',
+    vaikea: 'Vaikea',
+    mahdoton: 'Mahdoton',
+  };
 
   useEffect(() => {
     const loadQuestionSets = async () => {
@@ -23,11 +33,20 @@ export default function PlayBrowsePage() {
         setState('loading');
         const sets = await getRecentQuestionSets(50); // Load last 50 sets
 
-        if (sets.length === 0) {
-          setError('Ei vielä kysymyssarjoja. Luo ensimmäinen!');
+        // Filter by difficulty if specified
+        const filteredSets = difficulty
+          ? sets.filter(set => set.difficulty === difficulty)
+          : sets;
+
+        if (filteredSets.length === 0) {
+          setError(
+            difficulty
+              ? `Ei kysymyssarjoja vaikeustasolla: ${difficultyLabels[difficulty] || difficulty}`
+              : 'Ei vielä kysymyssarjoja. Luo ensimmäinen!'
+          );
         }
 
-        setQuestionSets(sets);
+        setQuestionSets(filteredSets);
         setState('loaded');
       } catch (err) {
         console.error('Error loading question sets:', err);
@@ -37,7 +56,7 @@ export default function PlayBrowsePage() {
     };
 
     loadQuestionSets();
-  }, []);
+  }, [difficulty]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -104,9 +123,15 @@ export default function PlayBrowsePage() {
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-2">
             <BookOpen className="w-7 h-7 text-purple-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Aihealueet</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Aihealueet{difficulty && ` - ${difficultyLabels[difficulty]}`}
+            </h1>
           </div>
-          <p className="text-gray-600">Valitse aihealue aloittaaksesi harjoittelun</p>
+          <p className="text-gray-600">
+            {difficulty
+              ? `Valitse aihealue vaikeustasolla: ${difficultyLabels[difficulty]}`
+              : 'Valitse aihealue aloittaaksesi harjoittelun'}
+          </p>
         </div>
 
         {state === 'error' && (

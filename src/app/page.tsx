@@ -20,14 +20,42 @@ export default function HomePage() {
           <p className="text-lg text-gray-600 mt-2">Harjoittele kokeisiin ja opi uutta</p>
         </div>
 
-        {/* Main CTA */}
-        <Button
-          onClick={() => router.push('/play')}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xl py-8 rounded-xl shadow-sm hover:shadow-md transition-all touch-manipulation font-medium"
-        >
-          <span className="text-2xl mr-2">🎮</span>
-          Aloita harjoittelu
-        </Button>
+        {/* Difficulty Selection */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900 text-center mb-4">
+            Valitse vaikeustaso
+          </h2>
+          <div className="grid grid-cols-1 gap-3">
+            <Button
+              onClick={() => router.push('/play?difficulty=helppo')}
+              className="w-full bg-green-500 hover:bg-green-600 text-white py-6 rounded-xl font-semibold text-lg shadow-sm hover:shadow-md transition-all"
+            >
+              <span className="text-2xl mr-2">😊</span>
+              Helppo
+            </Button>
+            <Button
+              onClick={() => router.push('/play?difficulty=normaali')}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-6 rounded-xl font-semibold text-lg shadow-sm hover:shadow-md transition-all"
+            >
+              <span className="text-2xl mr-2">🎯</span>
+              Normaali
+            </Button>
+            <Button
+              onClick={() => router.push('/play?difficulty=vaikea')}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-6 rounded-xl font-semibold text-lg shadow-sm hover:shadow-md transition-all"
+            >
+              <span className="text-2xl mr-2">💪</span>
+              Vaikea
+            </Button>
+            <Button
+              onClick={() => router.push('/play?difficulty=mahdoton')}
+              className="w-full bg-red-500 hover:bg-red-600 text-white py-6 rounded-xl font-semibold text-lg shadow-sm hover:shadow-md transition-all"
+            >
+              <span className="text-2xl mr-2">🔥</span>
+              Mahdoton
+            </Button>
+          </div>
+        </div>
 
         {/* Features */}
         <div className="mt-12 space-y-4">

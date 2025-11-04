@@ -10,7 +10,6 @@ export async function POST(request: NextRequest) {
 
     // Extract form data
     const subject = formData.get('subject') as Subject;
-    const difficulty = formData.get('difficulty') as Difficulty;
     const questionCount = parseInt(formData.get('questionCount') as string);
     const questionSetName = formData.get('questionSetName') as string;
     const grade = formData.get('grade') ? parseInt(formData.get('grade') as string) : undefined;
@@ -18,8 +17,8 @@ export async function POST(request: NextRequest) {
     const subtopic = formData.get('subtopic') as string | undefined;
     const materialText = formData.get('materialText') as string | undefined;
 
-    // Validate required fields
-    if (!subject || !difficulty || !questionCount || !questionSetName) {
+    // Validate required fields (no longer need difficulty from form)
+    if (!subject || !questionCount || !questionSetName) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -52,62 +51,83 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate questions using AI
-    const questions = await generateQuestions({
-      subject,
-      difficulty,
-      questionCount,
-      grade,
-      materialText,
-      materialFiles: files.length > 0 ? files : undefined,
-    });
+    // Define all difficulty levels
+    const difficulties: Difficulty[] = ['helppo', 'normaali', 'vaikea', 'mahdoton'];
 
-    if (questions.length === 0) {
-      return NextResponse.json(
-        { error: 'Failed to generate questions' },
-        { status: 500 }
-      );
-    }
+    // Calculate questions per difficulty (25% each)
+    const questionsPerDifficulty = Math.floor(questionCount / 4);
 
-    // Generate unique code
-    let code = generateCode();
-    let attempts = 0;
-    const maxAttempts = 10;
+    // Array to store created question sets
+    const createdSets: any[] = [];
 
-    // Ensure code is unique (simple retry logic)
-    while (attempts < maxAttempts) {
-      const result = await createQuestionSet(
-        {
-          code,
-          name: questionSetName,
-          subject,
-          difficulty,
-          grade,
-          topic,
-          subtopic,
-          question_count: questions.length,
-        },
-        questions
-      );
+    // Generate questions for each difficulty level
+    for (const difficulty of difficulties) {
+      // Generate questions using AI
+      const questions = await generateQuestions({
+        subject,
+        difficulty,
+        questionCount: questionsPerDifficulty,
+        grade,
+        materialText,
+        materialFiles: files.length > 0 ? files : undefined,
+      });
 
-      if (result) {
-        return NextResponse.json({
-          success: true,
-          code: result.code,
-          questionSet: result.questionSet,
-          questionCount: questions.length,
-        });
+      if (questions.length === 0) {
+        return NextResponse.json(
+          { error: `Failed to generate questions for difficulty: ${difficulty}` },
+          { status: 500 }
+        );
       }
 
-      // Code collision, try again
-      code = generateCode();
-      attempts++;
+      // Generate unique code
+      let code = generateCode();
+      let attempts = 0;
+      const maxAttempts = 10;
+      let result = null;
+
+      // Ensure code is unique (simple retry logic)
+      while (attempts < maxAttempts && !result) {
+        result = await createQuestionSet(
+          {
+            code,
+            name: `${questionSetName} - ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`,
+            subject,
+            difficulty,
+            grade,
+            topic,
+            subtopic,
+            question_count: questions.length,
+          },
+          questions
+        );
+
+        if (!result) {
+          // Code collision, try again
+          code = generateCode();
+          attempts++;
+        }
+      }
+
+      if (!result) {
+        return NextResponse.json(
+          { error: `Failed to create question set for difficulty: ${difficulty}` },
+          { status: 500 }
+        );
+      }
+
+      createdSets.push(result);
     }
 
-    return NextResponse.json(
-      { error: 'Failed to create question set after multiple attempts' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: true,
+      message: `Created ${createdSets.length} question sets across all difficulty levels`,
+      questionSets: createdSets.map(set => ({
+        code: set.code,
+        difficulty: set.questionSet.difficulty,
+        questionCount: set.questionSet.question_count,
+      })),
+      totalQuestions: createdSets.reduce((sum, set) => sum + set.questionSet.question_count, 0),
+    });
   } catch (error) {
     console.error('Error in generate-questions API:', error);
     return NextResponse.json(
