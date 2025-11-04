@@ -6,7 +6,7 @@
  * Only use in API routes and server components.
  */
 
-import { supabaseAdmin } from './admin';
+import { getSupabaseAdmin } from './admin';
 import { QuestionSet, Question } from '@/types';
 
 /**
@@ -17,6 +17,8 @@ export async function createQuestionSet(
   questionSet: Omit<QuestionSet, 'id' | 'created_at' | 'updated_at'>,
   questions: Omit<Question, 'id' | 'question_set_id'>[]
 ): Promise<{ code: string; questionSet: QuestionSet } | null> {
+  const supabaseAdmin = getSupabaseAdmin();
+
   // Insert question set using admin client
   const { data: newSet, error: setError } = await supabaseAdmin
     .from('question_sets')
@@ -81,7 +83,8 @@ export async function createQuestionSet(
   if (questionsError) {
     console.error('Error creating questions:', questionsError);
     // Rollback: delete the question set
-    await supabaseAdmin.from('question_sets').delete().eq('id', (newSet as any).id);
+    const admin = getSupabaseAdmin();
+    await admin.from('question_sets').delete().eq('id', (newSet as any).id);
     return null;
   }
 
