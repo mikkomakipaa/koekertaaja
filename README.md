@@ -1,152 +1,250 @@
-# Exam Prepper
+# Koekertaaja
 
-Flexible exam preparation web application for Finnish students. Generate AI-powered question sets from study materials and practice with randomized quizzes.
+**Harjoittele kokeisiin ja opi uutta!** 🚀
 
-## Features
+Koekertaaja on interaktiivinen koeharjoittelusovellus, joka auttaa opiskelijoita valmistautumaan kokeisiin pelillistetyn oppimisen avulla. Lataa oppimateriaalisi, anna tekoälyn luoda kysymyksiä, ja kerää pisteitä oikeilla vastauksilla!
 
-- **AI-Powered Question Generation**: Upload PDFs, images, or text to generate custom question sets using Claude AI
-- **Multiple Subjects**: English (with Math, History, and Society coming soon)
-- **Flexible Difficulty**: Four levels from Helppo to Mahdoton
-- **Variable Question Counts**: Generate 20-100 questions per set
-- **Shareable Codes**: Each question set gets a unique 6-character code
-- **Session-Only Progress**: No login required, privacy-focused
-- **Multiple Question Types**: Multiple choice, fill-in-the-blank, true/false, and more
+![Made with Next.js](https://img.shields.io/badge/Next.js-14-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)
+![Anthropic Claude](https://img.shields.io/badge/AI-Claude_Sonnet_4-purple)
 
-## Tech Stack
+## ✨ Ominaisuudet
 
-- **Frontend**: Next.js 14 (App Router), React, TypeScript, Tailwind CSS
-- **UI Components**: shadcn/ui
-- **Database**: Supabase (PostgreSQL)
-- **AI**: Anthropic Claude API (claude-sonnet-4)
-- **Deployment**: Vercel
+### 🎮 Pelillistetty oppiminen
+- **Pistejärjestelmä**: Ansaitse 10 pistettä jokaisesta oikeasta vastauksesta
+- **Putkibonukset**: Saat +5 bonuspistettä kun vastaat 3+ oikein putkeen
+- **Saavutukset**: Avaa erikoismerkkejä täydellisistä suorituksista ja pitkistä putkista
+- **Dynaamiset juhlinnot**: Erilainen juhlinta tulostasosi mukaan
+- **Visuaalinen palaute**: Näe edistyksesi reaaliajassa
 
-## Getting Started
+### 📚 Kysymyssarjojen luonti
+- **AI-avusteinen generointi**: Claude Sonnet 4 -tekoäly luo kysymyksiä materiaalistasi
+- **Monipuoliset lähdemateriaalit**: Lataa PDF-tiedostoja, kuvia tai kirjoita teksti
+- **Vaihtelevia vaikeustasoja**: Helppo, Normaali, Vaikea, Mahdoton
+- **Säädettävä kysymysmäärä**: 20-100 kysymystä per koealue
+- **Jaettavat koodit**: Jokaiselle koealueelle generoidaan uniikki 6-merkkinen koodi
 
-### Prerequisites
+### 🎯 Harjoittelu
+- **Koealueiden selaus**: Selaa kaikkia saatavilla olevia koealueita
+- **Edistymisen seuranta**: Näe pistemääräsi ja nykyinen putki
+- **Välitön palaute**: Saat selityksen jokaisen kysymyksen jälkeen
+- **Tulosyhteenveto**: Katso kokonaissuorituksesi ja oikeat vastaukset
+- **Mobiiliystävällinen**: Toimii saumattomasti kaikilla laitteilla
 
-- Node.js 18+ and npm/pnpm
-- Supabase account and project
-- Anthropic API key
+### 🎨 Moderni käyttöliittymä
+- **Värikkäät gradientit**: Energinen teal-purple-pink -värimaailma
+- **Glassmorphism-efektit**: Nykyaikaiset läpinäkyvät elementit
+- **Tähtiluokitukset**: Visuaaliset vaikeustason indikaattorit
+- **Responsiivinen**: Optimoitu sekä tietokoneelle että mobiilille
+- **Touch-optimoitu**: Suuret kosketustavoitteet mobiililaitteille
 
-### Installation
+## 🚀 Pika-aloitus (ei-teknisille käyttäjille)
 
-1. Clone the repository:
-```bash
-git clone <your-repo-url>
-cd exam-prepper
-```
+### Vaihe 1: Hanki tarvittavat tilit
 
-2. Install dependencies:
-```bash
-npm install
-```
+1. **Supabase-tili** (tietokanta):
+   - Mene osoitteeseen [supabase.com](https://supabase.com)
+   - Luo ilmainen tili
+   - Luo uusi projekti
+   - Kirjaa ylös Project URL ja anon public key (löytyvät Settings → API)
 
-3. Set up environment variables:
-```bash
-cp .env.example .env.local
-```
+2. **Anthropic-tili** (tekoäly):
+   - Mene osoitteeseen [console.anthropic.com](https://console.anthropic.com)
+   - Luo tili ja hanki API-avain
+   - Kirjaa ylös API-avain
 
-Edit `.env.local` and add your credentials:
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-ANTHROPIC_API_KEY=your_anthropic_api_key
-```
+### Vaihe 2: Asenna sovellus
 
-4. Set up Supabase database:
-   - Go to your Supabase project
-   - Run the migration file from `supabase/migrations/20250103_initial_schema.sql`
+1. **Lataa koodi**:
+   ```bash
+   git clone https://github.com/mikkomakipaa/exam-prepper.git
+   cd exam-prepper
+   ```
 
-5. Run the development server:
+2. **Asenna riippuvuudet**:
+   ```bash
+   npm install
+   ```
+
+3. **Konfiguroi ympäristömuuttujat**:
+   - Kopioi `.env.example` → `.env.local`
+   - Avaa `.env.local` tekstieditorissa
+   - Lisää Supabase-tiedot:
+     ```env
+     NEXT_PUBLIC_SUPABASE_URL=sinun_supabase_url_tähän
+     NEXT_PUBLIC_SUPABASE_ANON_KEY=sinun_supabase_anon_key_tähän
+     SUPABASE_SERVICE_ROLE_KEY=sinun_service_role_key_tähän
+     ANTHROPIC_API_KEY=sinun_anthropic_api_key_tähän
+     ```
+
+### Vaihe 3: Alusta tietokanta
+
+1. Mene Supabase-projektiisi
+2. Avaa SQL Editor
+3. Kopioi ja aja tiedosto `supabase/migrations/20250103_initial_schema.sql`
+4. Tämä luo tarvittavat taulut: `question_sets` ja `questions`
+
+### Vaihe 4: Käynnistä sovellus
+
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Avaa selaimessa [http://localhost:3000](http://localhost:3000)
 
-## Project Structure
+## 📖 Käyttöohje
+
+### Koealueen luominen
+
+1. Klikkaa **"Luo uusi koealue"** etusivulla
+2. Valitse **aine** (esim. Englanti)
+3. Valitse **luokka-aste** (valinnainen)
+4. Valitse **vaikeustaso** (Helppo, Normaali, Vaikea, Mahdoton)
+5. Valitse **kysymysten määrä** (20-100)
+6. Lisää **oppimateriaali**:
+   - Kirjoita tekstiä tekstikenttään
+   - TAI lataa PDF-tiedostoja
+   - TAI lataa kuvia
+7. Klikkaa **"Luo kysymyssarja"**
+8. Odota että tekoäly generoi kysymykset (20-60 sekuntia)
+9. Saat **jakokelpoisen koodin** (esim. `A3B7XY`)
+
+### Harjoittelu
+
+1. Klikkaa **"Aloita harjoittelu"** etusivulla
+2. Selaa **koealueita** ja klikkaa haluamaasi
+3. Vastaa kysymyksiin:
+   - Valitse vastauksesi
+   - Klikkaa **"Tarkista vastaus"**
+   - Lue selitys ja kerää pisteitä
+   - Klikkaa **"Seuraava kysymys"**
+4. Katso **tuloksesi**:
+   - Kokonaispistemäärä
+   - Paras putki
+   - Avatut saavutukset
+   - Kaikki vastaukset selityksineen
+5. Pelaa uudestaan tai palaa valikkoon
+
+### Pisteiden ansaitseminen
+
+- **10 pistettä** jokaisesta oikeasta vastauksesta
+- **+5 bonuspistettä** kun vastaat 3 tai enemmän oikein peräkkäin
+- **Saavutukset**:
+  - 🏆 **Täydellisyys** - 100% oikein
+  - 🔥 **Tuliputki** - 5+ oikein peräkkäin
+
+## 🛠️ Tekniset tiedot
+
+### Teknologiat
+
+- **Frontend**: Next.js 14 (App Router), React, TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Tietokanta**: Supabase (PostgreSQL)
+- **Tekoäly**: Anthropic Claude API (claude-sonnet-4-20250514)
+- **Hosting**: Vercel-valmis
+
+### Projektirakenteen
 
 ```
 exam-prepper/
 ├── src/
-│   ├── app/                    # Next.js App Router pages
-│   │   ├── page.tsx           # Landing page
-│   │   ├── create/            # Create question set
-│   │   ├── play/[code]/       # Play by code
-│   │   └── api/               # API routes
-│   ├── components/            # React components
-│   │   ├── ui/               # shadcn/ui components
-│   │   ├── questions/        # Question renderers
-│   │   ├── create/           # Creation flow
-│   │   └── play/             # Game flow
-│   ├── lib/                  # Utilities and services
-│   │   ├── supabase/        # Database queries
-│   │   ├── ai/              # AI generation
-│   │   └── utils/           # Helper functions
-│   ├── config/              # Configuration
-│   │   ├── subjects.ts      # Subject definitions
-│   │   └── prompts/         # AI prompts
-│   └── types/               # TypeScript types
+│   ├── app/                      # Next.js sivut
+│   │   ├── page.tsx             # Etusivu
+│   │   ├── create/page.tsx      # Luo koealue
+│   │   ├── play/page.tsx        # Selaa koealueita
+│   │   ├── play/[code]/page.tsx # Pelaa kysymyksiä
+│   │   └── api/                 # API-reitit
+│   ├── components/              # React-komponentit
+│   │   ├── ui/                  # shadcn/ui komponentit
+│   │   ├── questions/           # Kysymystyypit
+│   │   ├── create/              # Luontiflow
+│   │   └── play/                # Peliflow
+│   ├── lib/                     # Palvelut ja apurit
+│   │   ├── supabase/            # Tietokantakyselyt
+│   │   ├── ai/                  # Tekoälygenerointi
+│   │   └── utils/               # Apufunktiot
+│   ├── hooks/                   # React hookit
+│   │   └── useGameSession.ts    # Pelin tila ja pisteet
+│   ├── config/                  # Konfiguraatio
+│   │   ├── subjects.ts          # Ainemääritykset
+│   │   └── prompts/             # AI-promptit
+│   └── types/                   # TypeScript-tyypit
 └── supabase/
-    └── migrations/          # Database schema
+    └── migrations/              # Tietokannan skeema
 ```
 
-## Usage
-
-### Creating a Question Set
-
-1. Click "Luo uusi kysymyssarja"
-2. Select subject, grade, and difficulty
-3. Choose how many questions to generate (20-100)
-4. Upload materials (PDF, images, or text)
-5. Submit and wait for AI to generate questions
-6. Share the generated code with others
-
-### Playing a Quiz
-
-1. Enter a 6-character code or select from saved sets
-2. Answer 15 randomly selected questions
-3. Get immediate feedback after each answer
-4. View your final score and review answers
-5. Play again with a new random selection
-
-## Development
+### Kehityskomennot
 
 ```bash
-# Run development server
+# Kehityspalvelin
 npm run dev
 
-# Type checking
+# Tyyppitarkistus
 npm run typecheck
 
-# Build for production
+# Tuotantobuildi
 npm run build
 
-# Start production server
+# Tuotantopalvelin
 npm start
 ```
 
-## Deployment
+## 🚢 Julkaisu Verceliin
 
-The app is designed to deploy seamlessly on Vercel:
+1. **Pushaa koodi GitHubiin**:
+   ```bash
+   git add .
+   git commit -m "Initial commit"
+   git push origin main
+   ```
 
-1. Push your code to GitHub
-2. Import the repository in Vercel
-3. Add environment variables
-4. Deploy
+2. **Luo Vercel-projekti**:
+   - Mene [vercel.com](https://vercel.com)
+   - Klikkaa "Import Project"
+   - Valitse GitHub-repositoriosi
+   - Lisää ympäristömuuttujat (samat kuin `.env.local`)
+   - Klikkaa "Deploy"
 
-## Adding New Subjects
+3. **Valmis!** Sovelluksesi on nyt verkossa
 
-1. Update `src/types/questions.ts` to add the subject to the `Subject` type
-2. Add configuration in `src/config/subjects.ts`
-3. Create a prompt template in `src/config/prompts/[subject].ts`
-4. Update the AI generator in `src/lib/ai/questionGenerator.ts`
-5. Enable the subject in the config
+## 🎨 Värimaailma
 
-## License
+Koekertaaja käyttää modernia, energistä väripalettia:
 
-MIT
+- **Päägradientti**: Cyan → Teal → Purple
+- **Taustat**: Pehmeä cyan-purple-pink gradient
+- **Pisteet**: Violetti (💎)
+- **Putket**: Oranssi-kulta (🔥)
+- **Onnistuminen**: Smaragdinvihreä (✅)
+- **Saavutukset**: Kulta-amber (🏆)
 
-## Support
+## 🔐 Tietoturva
 
-For issues or questions, please open a GitHub issue.
+- **Ei kirjautumista**: Ei henkilökohtaisia tietoja
+- **Julkiset koealueet**: Koodit ovat jaettavia
+- **RLS-käytännöt**: Row-level security Supabasessa
+- **Server-side API**: API-avaimet eivät näy selaimessa
+- **Ei evästeitä**: Privacy-first lähestymistapa
+
+## 📝 Lisenssi
+
+MIT License - vapaa käyttöön ja muokkaukseen
+
+## 🤝 Tuki ja kehitys
+
+- **Ongelmat**: Avaa issue GitHubissa
+- **Kysymykset**: Katso dokumentaatio tai avaa keskustelu
+- **Kehitysideat**: Pull requestit tervetulleita!
+
+## 🌟 Kiitokset
+
+- [Next.js](https://nextjs.org/) - React-framework
+- [Supabase](https://supabase.com/) - Backend-as-a-Service
+- [Anthropic Claude](https://www.anthropic.com/) - Tekoälymalli
+- [shadcn/ui](https://ui.shadcn.com/) - UI-komponentit
+- [Tailwind CSS](https://tailwindcss.com/) - Tyylit
+
+---
+
+Tehty ❤️:llä oppijoille | [GitHub](https://github.com/mikkomakipaa/exam-prepper)
