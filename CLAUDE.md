@@ -39,11 +39,14 @@ src/
 4. **Session State**: Student progress tracked client-side only (not persisted)
 
 ### Key Features
-- **Variable Question Count**: User selects 20-100 questions per set
+- **Multi-Difficulty Set Creation**: Automatically creates 4 question sets (Helppo, Normaali, Vaikea, Mahdoton) from single material upload
+- **Flexible Subject Input**: Users can enter any subject name (not limited to predefined list)
+- **Configurable Question Generation**:
+  - Question pool size: 50-200 questions generated from materials
+  - Exam length: 10-50 questions per difficulty level
 - **Multiple Question Types**: multiple_choice, fill_blank, true_false, matching, short_answer
 - **Subject Extensibility**: Config-driven system for adding subjects (English enabled, Math/History/Society prepared)
 - **Multimodal Input**: PDF, images, text files
-- **Difficulty Levels**: Helppo, Normaali, Vaikea, Mahdoton
 - **No Authentication**: Code-based sharing only
 - **Session-Only Progress**: Student scores not saved to database
 
@@ -134,9 +137,10 @@ npm run lint         # ESLint
 
 ## Important Notes
 
-1. **API Costs**: Variable question count (20-100) helps control costs
-2. **API Key Security**: Server-side only via API routes
-3. **No Client Writes**: All database writes go through API routes
-4. **Session State**: Game progress is client-side React state (not persisted)
-5. **Type Safety**: Full TypeScript coverage with strict mode
-6. **Question Shuffling**: Options shuffled during generation to prevent memorization
+1. **API Costs**: Configurable question pool (50-200) and exam length (10-50) help control costs. Single API call creates all 4 difficulty levels.
+2. **Batch Creation**: One material upload creates 4 question sets automatically (one per difficulty level)
+3. **API Key Security**: Server-side only via API routes
+4. **No Client Writes**: All database writes go through API routes
+5. **Session State**: Game progress is client-side React state (not persisted)
+6. **Type Safety**: Full TypeScript coverage with strict mode
+7. **Question Shuffling**: Options shuffled during generation to prevent memorization
