@@ -31,15 +31,6 @@ export default function HomePage() {
               Aloita harjoittelu
             </Button>
 
-            <Button
-              onClick={() => router.push('/create')}
-              variant="outline"
-              className="w-full text-lg py-6 min-h-[64px] border-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] touch-manipulation"
-            >
-              <span className="text-2xl mr-2">📚</span>
-              Luo uusi koealue
-            </Button>
-
             <div className="mt-6 p-6 bg-gradient-to-r from-violet-50 via-purple-50 to-fuchsia-50 rounded-xl border-2 border-purple-200 shadow-sm">
               <h3 className="font-bold text-purple-900 mb-3 text-lg flex items-center gap-2">
                 <span className="text-2xl">✨</span>

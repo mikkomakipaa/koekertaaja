@@ -17,10 +17,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fi" className="h-full">
-      <body className={`${inter.className} flex flex-col min-h-full`}>
-        <div className="flex-1">
+      <body className={`${inter.className} flex flex-col h-full`}>
+        <main className="flex-1 overflow-auto">
           {children}
-        </div>
+        </main>
         <Footer />
       </body>
     </html>
