@@ -26,112 +26,115 @@ export function ResultsScreen({
 
   // Determine celebration level
   const getCelebration = () => {
-    if (percentage === 100) return { emoji: '🌟', text: 'TÄYDELLINEN SUORITUS!', color: 'from-yellow-400 via-amber-400 to-orange-500' };
-    if (percentage >= 90) return { emoji: '⭐', text: 'ERINOMAISTA!', color: 'from-emerald-400 via-teal-400 to-cyan-500' };
-    if (percentage >= 80) return { emoji: '🎉', text: 'HIENOA TYÖTÄ!', color: 'from-cyan-500 via-teal-500 to-purple-600' };
-    if (percentage >= 60) return { emoji: '👍', text: 'HYVÄ SUORITUS!', color: 'from-purple-500 via-violet-500 to-fuchsia-600' };
-    return { emoji: '💪', text: 'HARJOITTELE LISÄÄ!', color: 'from-pink-500 via-rose-500 to-purple-600' };
+    if (percentage === 100) return { emoji: '🌟', text: 'Täydelliset pisteet!' };
+    if (percentage >= 90) return { emoji: '⭐', text: 'Erinomaista!' };
+    if (percentage >= 80) return { emoji: '🎉', text: 'Hienoa työtä!' };
+    if (percentage >= 60) return { emoji: '👍', text: 'Hyvää työtä!' };
+    return { emoji: '💪', text: 'Jatka harjoittelua!' };
   };
 
   const celebration = getCelebration();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-purple-50 to-pink-50 p-4 md:p-8">
-      <div className="max-w-3xl mx-auto">
-        <Card className="shadow-2xl border-0">
-          <div className={`bg-gradient-to-r ${celebration.color} text-white rounded-t-lg p-8 text-center`}>
-            <div className="flex justify-center mb-4 animate-bounce">
-              <div className="text-8xl drop-shadow-lg">{celebration.emoji}</div>
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-md">{celebration.text}</h1>
-            <div className="text-white space-y-2">
-              <p className="text-3xl font-bold drop-shadow-md">
-                {score} / {total} oikein ({percentage}%)
-              </p>
-              <div className="flex justify-center gap-6 mt-4">
-                <div className="bg-white/30 backdrop-blur-sm rounded-lg px-4 py-2 shadow-lg">
-                  <div className="text-sm font-medium">Pisteet</div>
-                  <div className="text-2xl font-bold">💎 {totalPoints}</div>
-                </div>
-                {bestStreak > 0 && (
-                  <div className="bg-white/30 backdrop-blur-sm rounded-lg px-4 py-2 shadow-lg">
-                    <div className="text-sm font-medium">Paras putki</div>
-                    <div className="text-2xl font-bold">🔥 {bestStreak}</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-white p-4 md:p-8">
+      <div className="max-w-2xl mx-auto">
+        {/* Results Header */}
+        <div className="text-center mb-10">
+          <div className="text-7xl mb-4">{celebration.emoji}</div>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            {celebration.text}
+          </h1>
+          <p className="text-2xl text-gray-600">
+            {score} / {total} oikein ({percentage}%)
+          </p>
+        </div>
 
-          <CardContent className="p-6 space-y-4 bg-white/80 backdrop-blur-sm">
-            {/* Achievement badges */}
+        {/* Stats */}
+        <div className="flex justify-center gap-6 mb-10">
+          <div className="text-center">
+            <div className="text-sm text-gray-600 mb-1">Pisteet</div>
+            <div className="text-3xl font-bold text-purple-600">💎 {totalPoints}</div>
+          </div>
+          {bestStreak > 0 && (
+            <div className="text-center">
+              <div className="text-sm text-gray-600 mb-1">Paras putki</div>
+              <div className="text-3xl font-bold text-orange-600">🔥 {bestStreak}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Achievement badges */}
+        {(percentage === 100 || bestStreak >= 5) && (
+          <div className="space-y-3 mb-10">
             {percentage === 100 && (
-              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-400 rounded-lg p-4 text-center shadow-md">
-                <div className="text-4xl mb-2">🏆</div>
-                <p className="font-bold text-yellow-900 text-lg">Saavutus avattu: Täydellisyys!</p>
+              <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 text-center">
+                <span className="text-2xl mr-2">🏆</span>
+                <span className="font-semibold text-yellow-900">Saavutus avattu: Täydellisyys!</span>
               </div>
             )}
             {bestStreak >= 5 && (
-              <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-400 rounded-lg p-4 text-center shadow-md">
-                <div className="text-4xl mb-2">🔥</div>
-                <p className="font-bold text-orange-900 text-lg">Saavutus avattu: Tuliputki!</p>
+              <div className="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4 text-center">
+                <span className="text-2xl mr-2">🔥</span>
+                <span className="font-semibold text-orange-900">Saavutus avattu: Tulinen putki!</span>
               </div>
             )}
+          </div>
+        )}
 
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              <h3 className="font-bold text-lg text-purple-700">Vastausten yhteenveto:</h3>
-              {answers.map((answer, index) => (
-                <Card
-                  key={index}
-                  className={
-                    answer.isCorrect
-                      ? 'border-emerald-300 bg-gradient-to-r from-emerald-50 to-green-50'
-                      : 'border-rose-300 bg-gradient-to-r from-red-50 to-rose-50'
-                  }
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-2">
-                      {answer.isCorrect ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-1 flex-shrink-0" />
-                      ) : (
-                        <XCircle className="w-5 h-5 text-rose-600 mt-1 flex-shrink-0" />
-                      )}
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-800">{answer.questionText}</p>
-                        {!answer.isCorrect && (
-                          <p className="text-sm text-gray-600 mt-1">
-                            Oikea vastaus:{' '}
-                            <span className="font-semibold">
-                              {typeof answer.correctAnswer === 'object'
-                                ? JSON.stringify(answer.correctAnswer)
-                                : answer.correctAnswer}
-                            </span>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+        {/* Answer Summary */}
+        <div className="mb-10">
+          <h3 className="font-semibold text-gray-900 mb-4">Vastausten yhteenveto</h3>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {answers.map((answer, index) => (
+              <div
+                key={index}
+                className={`p-4 rounded-lg border-l-4 ${
+                  answer.isCorrect
+                    ? 'bg-green-50 border-green-500'
+                    : 'bg-red-50 border-red-500'
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  {answer.isCorrect ? (
+                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  )}
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{answer.questionText}</p>
+                    {!answer.isCorrect && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        Oikea vastaus:{' '}
+                        <span className="font-semibold">
+                          {typeof answer.correctAnswer === 'object'
+                            ? JSON.stringify(answer.correctAnswer)
+                            : answer.correctAnswer}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <Button
-                onClick={onPlayAgain}
-                className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 min-h-[56px] text-lg touch-manipulation shadow-md"
-              >
-                🎮 Pelaa uudestaan
-              </Button>
-              <Button
-                onClick={onBackToMenu}
-                variant="outline"
-                className="flex-1 min-h-[56px] text-lg border-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 touch-manipulation shadow-md"
-              >
-                🏠 Palaa valikkoon
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            onClick={onPlayAgain}
+            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-6 rounded-xl font-medium"
+          >
+            Pelaa uudelleen
+          </Button>
+          <Button
+            onClick={onBackToMenu}
+            variant="outline"
+            className="flex-1 py-6 rounded-xl font-medium"
+          >
+            Takaisin valikkoon
+          </Button>
+        </div>
       </div>
     </div>
   );

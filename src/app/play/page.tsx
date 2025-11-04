@@ -88,31 +88,26 @@ export default function PlayBrowsePage() {
   // Loading screen
   if (state === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-purple-50 to-pink-50 flex items-center justify-center">
-        <Card className="w-96 shadow-lg border-0">
-          <CardContent className="p-12 text-center">
-            <Loader2 className="w-16 h-16 mx-auto mb-4 animate-spin text-teal-500" />
-            <p className="text-xl font-bold text-purple-700">Ladataan kysymyssarjoja...</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-purple-600" />
+          <p className="text-lg text-gray-600">Ladataan kokealueita...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-purple-50 to-pink-50 p-8">
-      <div className="max-w-5xl mx-auto">
-        <Card className="shadow-lg mb-6 border-0">
-          <CardHeader className="bg-gradient-to-r from-cyan-500 via-teal-500 to-purple-600 text-white rounded-t-lg">
-            <CardTitle className="text-3xl flex items-center gap-2 text-white">
-              <BookOpen className="w-8 h-8" />
-              Koekertaaja
-            </CardTitle>
-            <CardDescription className="text-white text-lg font-medium">
-              Valitse koealue
-            </CardDescription>
-          </CardHeader>
-        </Card>
+    <div className="min-h-screen bg-white p-6 md:p-12">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-2">
+            <BookOpen className="w-7 h-7 text-purple-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Kokealueet</h1>
+          </div>
+          <p className="text-gray-600">Valitse alue aloittaaksesi harjoittelun</p>
+        </div>
 
         {state === 'error' && (
           <Alert variant="destructive" className="mb-6">
@@ -129,66 +124,57 @@ export default function PlayBrowsePage() {
         )}
 
         {questionSets.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-purple-900 mb-4">
-              Koealueet ({questionSets.length})
-            </h2>
-
+          <div className="space-y-3">
             {questionSets.map((set) => (
-              <Card
+              <button
                 key={set.id}
-                className="shadow-md hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] touch-manipulation border-0 bg-white/80 backdrop-blur-sm"
                 onClick={() => router.push(`/play/${set.code}`)}
+                className="w-full text-left p-5 rounded-xl border border-gray-200 hover:border-purple-300 hover:bg-purple-50/50 transition-all cursor-pointer group"
               >
-                <CardContent className="p-4 md:p-6">
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="mb-3">
-                        <h3 className="text-xl md:text-2xl font-bold text-purple-700">
-                          {set.name}
-                        </h3>
-                      </div>
+                <div className="flex flex-col gap-3">
+                  {/* Title */}
+                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-purple-700 transition-colors">
+                    {set.name}
+                  </h3>
 
-                      <div className="flex flex-wrap gap-3 mb-3">
-                        <span className="bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
-                          {getSubjectLabel(set.subject)}
-                        </span>
-                        {set.grade && (
-                          <span className="bg-violet-100 text-violet-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
-                            📚 Luokka {set.grade}
-                          </span>
-                        )}
-                        <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
-                          <BarChart3 className="w-4 h-4" />
-                          {set.question_count} kysymystä
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium text-gray-600">Vaikeustaso:</span>
-                        {getDifficultyStars(set.difficulty)}
-                      </div>
-
-                      {(set.topic || set.subtopic) && (
-                        <p className="text-sm text-gray-600 mt-2">
-                          📖 {[set.topic, set.subtopic].filter(Boolean).join(' → ')}
-                        </p>
-                      )}
-                    </div>
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-sm text-gray-600">
+                      {getSubjectLabel(set.subject)}
+                    </span>
+                    {set.grade && (
+                      <span className="text-sm text-gray-500">
+                        • Grade {set.grade}
+                      </span>
+                    )}
+                    <span className="text-sm text-gray-500">
+                      • {set.question_count} questions
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
+
+                  {/* Difficulty */}
+                  <div className="flex items-center gap-2">
+                    {getDifficultyStars(set.difficulty)}
+                  </div>
+
+                  {(set.topic || set.subtopic) && (
+                    <p className="text-sm text-gray-500">
+                      {[set.topic, set.subtopic].filter(Boolean).join(' → ')}
+                    </p>
+                  )}
+                </div>
+              </button>
             ))}
           </div>
         )}
 
-        <div className="mt-8 text-center">
+        <div className="mt-10 text-center">
           <Button
             onClick={() => router.push('/')}
-            variant="outline"
-            className="px-8"
+            variant="ghost"
+            className="text-gray-600 hover:text-gray-900"
           >
-            Takaisin valikkoon
+            ← Takaisin valikkoon
           </Button>
         </div>
       </div>
