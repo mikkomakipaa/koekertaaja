@@ -128,7 +128,6 @@ export default function CreatePage() {
       helppo: 'Helppo',
       normaali: 'Normaali',
       vaikea: 'Vaikea',
-      mahdoton: 'Mahdoton',
     };
 
     return (

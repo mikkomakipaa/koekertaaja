@@ -1,6 +1,7 @@
 import { Question, Subject, Difficulty } from '@/types';
 import { generateWithClaude, MessageContent } from './anthropic';
 import { getEnglishPrompt } from '@/config/prompts/english';
+import { getMathPrompt } from '@/config/prompts/math';
 import { getGenericPrompt } from '@/config/prompts/generic';
 import { shuffleArray } from '@/lib/utils';
 import { aiQuestionArraySchema } from '@/lib/validation/schemas';
@@ -58,9 +59,14 @@ export async function generateQuestions(
 
   // Get prompt based on subject
   let prompt = '';
-  if (subject.toLowerCase() === 'english' || subject.toLowerCase() === 'englanti') {
+  const subjectLower = subject.toLowerCase();
+
+  if (subjectLower === 'english' || subjectLower === 'englanti') {
     // Use specialized English prompt
     prompt = getEnglishPrompt(difficulty, questionCount, grade, materialText);
+  } else if (subjectLower === 'math' || subjectLower === 'matematiikka') {
+    // Use specialized Math prompt
+    prompt = getMathPrompt(difficulty, questionCount, grade, materialText);
   } else {
     // Use generic prompt for all other subjects
     prompt = getGenericPrompt(subject, difficulty, questionCount, grade, materialText);

@@ -112,10 +112,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Define all difficulty levels
-    const difficulties: Difficulty[] = ['helppo', 'normaali', 'vaikea', 'mahdoton'];
+    const difficulties: Difficulty[] = ['helppo', 'normaali', 'vaikea'];
 
-    // Calculate questions per difficulty (25% each)
-    const questionsPerDifficulty = Math.floor(questionCount / 4);
+    // Calculate questions per difficulty (33% each)
+    const questionsPerDifficulty = Math.floor(questionCount / 3);
 
     // Array to store created question sets
     const createdSets: any[] = [];

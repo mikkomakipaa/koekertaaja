@@ -8,7 +8,7 @@ export type QuestionType =
 
 export type Subject = string;
 
-export type Difficulty = 'helppo' | 'normaali' | 'vaikea' | 'mahdoton';
+export type Difficulty = 'helppo' | 'normaali' | 'vaikea';
 
 // Base Question Interface
 export interface BaseQuestion {
