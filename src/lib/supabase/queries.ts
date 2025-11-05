@@ -80,3 +80,20 @@ export async function getQuestionSetsBySubject(
 
   return (data || []) as QuestionSet[];
 }
+
+/**
+ * Get all question sets
+ */
+export async function getAllQuestionSets(): Promise<QuestionSet[]> {
+  const { data, error } = await supabase
+    .from('question_sets')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching all question sets:', error);
+    return [];
+  }
+
+  return (data || []) as QuestionSet[];
+}

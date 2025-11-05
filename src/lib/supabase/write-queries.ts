@@ -112,3 +112,34 @@ export async function createQuestionSet(
     questionSet: newSet as QuestionSet,
   };
 }
+
+/**
+ * Delete a question set and all its questions
+ * Uses admin client to bypass RLS for server-side deletes
+ *
+ * Note: Questions are automatically deleted via CASCADE in the database
+ */
+export async function deleteQuestionSet(questionSetId: string): Promise<boolean> {
+  const supabaseAdmin = getSupabaseAdmin();
+
+  // Delete the question set (questions will be deleted via CASCADE)
+  const { error } = await supabaseAdmin
+    .from('question_sets')
+    .delete()
+    .eq('id', questionSetId);
+
+  if (error) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (isProduction) {
+      console.error('Error deleting question set');
+    } else {
+      console.error('Error deleting question set:', JSON.stringify(error, null, 2));
+      console.error('Question set ID:', questionSetId);
+    }
+
+    return false;
+  }
+
+  return true;
+}
