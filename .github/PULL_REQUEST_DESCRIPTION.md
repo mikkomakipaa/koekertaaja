@@ -85,8 +85,8 @@ This PR implements fixes for **all 16 security vulnerabilities** identified in a
 - `src/app/api/generate-questions/route.ts` - All validations + logging
 
 ### Documentation (2)
-- `SECURITY_REVIEW.md` - Detailed vulnerability analysis (838 lines)
-- `SECURITY_FIXES_SUMMARY.md` - Implementation summary (553 lines)
+- `Documentation/SECURITY_REVIEW.md` - Detailed vulnerability analysis (838 lines)
+- `Documentation/SECURITY_FIXES_SUMMARY.md` - Implementation summary (553 lines)
 
 ## ✅ Testing
 
@@ -157,8 +157,8 @@ Existing environment variables are sufficient. No new secrets needed.
 
 ## 📚 Related Documentation
 
-- See `SECURITY_REVIEW.md` for detailed vulnerability analysis
-- See `SECURITY_FIXES_SUMMARY.md` for complete implementation details
+- See `Documentation/SECURITY_REVIEW.md` for detailed vulnerability analysis
+- See `Documentation/SECURITY_FIXES_SUMMARY.md` for complete implementation details
 
 ## ⚠️ Important Notes
 
