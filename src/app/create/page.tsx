@@ -79,7 +79,9 @@ export default function CreatePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Kysymysten luonti epäonnistui');
+        const errorMessage = data.error || 'Kysymysten luonti epäonnistui';
+        const errorDetails = data.details ? `\n\n${data.details}` : '';
+        throw new Error(errorMessage + errorDetails);
       }
 
       // Success
@@ -88,7 +90,8 @@ export default function CreatePage() {
       setState('success');
     } catch (err) {
       console.error('Error generating questions:', err);
-      setError(err instanceof Error ? err.message : 'Kysymysten luonti epäonnistui');
+      const errorMessage = err instanceof Error ? err.message : 'Kysymysten luonti epäonnistui';
+      setError(errorMessage);
       setState('form');
     }
   };
