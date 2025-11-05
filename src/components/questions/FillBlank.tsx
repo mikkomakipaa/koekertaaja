@@ -1,5 +1,6 @@
 import { FillBlankQuestion } from '@/types';
 import { Input } from '@/components/ui/input';
+import { MathText } from '@/components/ui/math-text';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -52,11 +53,18 @@ export function FillBlank({
       {showExplanation && !isCorrect && (
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm font-medium text-gray-700">
-            Oikea vastaus: <span className="font-bold text-blue-700">{question.correct_answer}</span>
+            Oikea vastaus: <span className="font-bold text-blue-700">
+              <MathText>{question.correct_answer}</MathText>
+            </span>
           </p>
           {question.acceptable_answers && question.acceptable_answers.length > 0 && (
             <p className="text-sm text-gray-600 mt-1">
-              Hyväksyttävät vastaukset: {question.acceptable_answers.join(', ')}
+              Hyväksyttävät vastaukset: {question.acceptable_answers.map((ans, i) => (
+                <span key={i}>
+                  {i > 0 && ', '}
+                  <MathText>{ans}</MathText>
+                </span>
+              ))}
             </p>
           )}
         </div>

@@ -1,5 +1,6 @@
 import { MultipleChoiceQuestion } from '@/types';
 import { Button } from '@/components/ui/button';
+import { MathText } from '@/components/ui/math-text';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -39,7 +40,9 @@ export function MultipleChoice({
             )}
           >
             <div className="flex items-center justify-between">
-              <span className="text-lg">{option}</span>
+              <span className="text-lg">
+                <MathText>{option}</MathText>
+              </span>
               {showCorrect && <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 ml-2" />}
               {showWrong && <XCircle className="w-6 h-6 text-red-600 flex-shrink-0 ml-2" />}
             </div>

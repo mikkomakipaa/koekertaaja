@@ -1,6 +1,7 @@
 import { MatchingQuestion, MatchingPair } from '@/types';
 import { useState, useEffect } from 'react';
 import { shuffleArray } from '@/lib/utils';
+import { MathText } from '@/components/ui/math-text';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -73,7 +74,9 @@ export function Matching({
                   )}
                 >
                   <div className="flex items-center justify-between">
-                    <span>{pair.left}</span>
+                    <span>
+                      <MathText>{pair.left}</MathText>
+                    </span>
                     {showExplanation && matchStatus !== null && (
                       matchStatus ? (
                         <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
@@ -85,7 +88,7 @@ export function Matching({
                 </button>
                 {userMatches[pair.left] && (
                   <div className="text-xs text-gray-500 pl-2">
-                    → {userMatches[pair.left]}
+                    → <MathText>{userMatches[pair.left]}</MathText>
                   </div>
                 )}
               </div>
@@ -112,7 +115,7 @@ export function Matching({
                   showExplanation && "cursor-default border-gray-200"
                 )}
               >
-                {right}
+                <MathText>{right}</MathText>
               </button>
             );
           })}
@@ -125,7 +128,13 @@ export function Matching({
           <div className="space-y-1">
             {question.pairs.map((pair) => (
               <p key={pair.left} className="text-sm text-gray-700">
-                <span className="font-medium">{pair.left}</span> → <span className="font-medium">{pair.right}</span>
+                <span className="font-medium">
+                  <MathText>{pair.left}</MathText>
+                </span>
+                {' → '}
+                <span className="font-medium">
+                  <MathText>{pair.right}</MathText>
+                </span>
               </p>
             ))}
           </div>
