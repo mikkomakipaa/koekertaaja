@@ -79,7 +79,10 @@ export default function CreatePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Kysymysten luonti epäonnistui');
+        const errorMessage = data.details
+          ? `${data.error}: ${data.details.join(', ')}`
+          : data.error || 'Kysymysten luonti epäonnistui';
+        throw new Error(errorMessage);
       }
 
       // Success
