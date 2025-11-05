@@ -3,6 +3,7 @@ import { MultipleChoice } from './MultipleChoice';
 import { FillBlank } from './FillBlank';
 import { TrueFalse } from './TrueFalse';
 import { Matching } from './Matching';
+import { ShortAnswer } from './ShortAnswer';
 
 interface QuestionRendererProps {
   question: Question;
@@ -58,7 +59,17 @@ export function QuestionRenderer({
         />
       );
 
+    case 'short_answer':
+      return (
+        <ShortAnswer
+          question={question}
+          userAnswer={userAnswer || ''}
+          showExplanation={showExplanation}
+          onAnswerChange={onAnswerChange}
+        />
+      );
+
     default:
-      return <div>Tuntematon kysymystyyppi</div>;
+      return <div>Tuntematon kysymystyyppi: {question.question_type}</div>;
   }
 }
