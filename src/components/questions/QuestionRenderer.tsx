@@ -18,7 +18,10 @@ export function QuestionRenderer({
   showExplanation,
   onAnswerChange,
 }: QuestionRendererProps) {
-  switch (question.question_type) {
+  // Store question type for default case (TypeScript exhaustiveness check)
+  const questionType = question.question_type;
+
+  switch (questionType) {
     case 'multiple_choice':
       return (
         <MultipleChoice
@@ -70,6 +73,7 @@ export function QuestionRenderer({
       );
 
     default:
-      return <div>Tuntematon kysymystyyppi: {question.question_type}</div>;
+      // This should never happen due to TypeScript type checking, but handle it gracefully at runtime
+      return <div>Tuntematon kysymystyyppi: {questionType}</div>;
   }
 }
