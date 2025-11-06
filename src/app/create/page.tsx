@@ -140,15 +140,19 @@ export default function CreatePage() {
         body: JSON.stringify({ questionSetId }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to delete question set');
+        const errorMsg = data.error || 'Failed to delete question set';
+        throw new Error(errorMsg);
       }
 
       // Refresh the list
       await loadQuestionSets();
     } catch (error) {
       console.error('Error deleting question set:', error);
-      alert('Kysymyssarjan poistaminen epäonnistui');
+      const errorMessage = error instanceof Error ? error.message : 'Kysymyssarjan poistaminen epäonnistui';
+      alert(`Virhe: ${errorMessage}`);
     } finally {
       setDeletingId(null);
     }

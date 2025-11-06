@@ -117,24 +117,43 @@ export async function createQuestionSet(
  * Delete a question set and all its questions
  * Uses admin client to bypass RLS for server-side deletes
  *
- * Note: Questions are automatically deleted via CASCADE in the database
+ * Explicitly deletes questions first, then the question set
  */
 export async function deleteQuestionSet(questionSetId: string): Promise<boolean> {
   const supabaseAdmin = getSupabaseAdmin();
 
-  // Delete the question set (questions will be deleted via CASCADE)
-  const { error } = await supabaseAdmin
+  // First, delete all questions for this question set
+  const { error: questionsError } = await supabaseAdmin
+    .from('questions')
+    .delete()
+    .eq('question_set_id', questionSetId);
+
+  if (questionsError) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (isProduction) {
+      console.error('Error deleting questions');
+    } else {
+      console.error('Error deleting questions:', JSON.stringify(questionsError, null, 2));
+      console.error('Question set ID:', questionSetId);
+    }
+
+    return false;
+  }
+
+  // Then delete the question set
+  const { error: setError } = await supabaseAdmin
     .from('question_sets')
     .delete()
     .eq('id', questionSetId);
 
-  if (error) {
+  if (setError) {
     const isProduction = process.env.NODE_ENV === 'production';
 
     if (isProduction) {
       console.error('Error deleting question set');
     } else {
-      console.error('Error deleting question set:', JSON.stringify(error, null, 2));
+      console.error('Error deleting question set:', JSON.stringify(setError, null, 2));
       console.error('Question set ID:', questionSetId);
     }
 
