@@ -52,6 +52,7 @@ export interface MatchingQuestion extends BaseQuestion {
 export interface ShortAnswerQuestion extends BaseQuestion {
   question_type: 'short_answer';
   correct_answer: string;
+  acceptable_answers?: string[];
   max_length?: number;
 }
 
