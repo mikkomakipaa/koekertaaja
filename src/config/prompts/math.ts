@@ -61,10 +61,10 @@ VAIKEUSTASO: Normaali
 - 2-3 vaiheen ongelmat
 
 KYSYMYSTYYPPIEN JAKAUMA (Normaali):
-- 50% multiple_choice (monivalinta)
-- 20% fill_blank (täydennä, numeerinen tai lyhyt vastaus)
+- 60% multiple_choice (monivalinta)
+- 25% fill_blank (täydennä, numeerinen vastaus)
 - 15% true_false (totta/tarua)
-- 15% short_answer (lyhyt vastaus, vaatii selitystä tai askelia)
+- ÄLÄ käytä short_answer (liian epämääräinen matematiikassa)
 - Voit käyttää matching jos sopii aiheeseen`,
     vaikea: `
 VAIKEUSTASO: Vaikea
@@ -74,11 +74,10 @@ VAIKEUSTASO: Vaikea
 - Epäsuorat kysymykset ja ongelmanratkaisu
 
 KYSYMYSTYYPPIEN JAKAUMA (Vaikea):
-- 40% short_answer (avoin vastaus, vaatii laskun näyttämistä tai perustelua)
-- 30% multiple_choice (monivalinta, mutta vaikeammat laskut)
-- 20% fill_blank (täydennä, vaatii laskemista)
-- 10% true_false tai matching
-- Suosi kysymyksiä jotka vaativat PERUSTELUA ja LASKUVAIHEIDEN NÄYTTÄMISTÄ`,
+- 50% multiple_choice (monivalinta, mutta vaikeammat laskut)
+- 35% fill_blank (täydennä, vaatii laskemista)
+- 15% true_false tai matching
+- ÄLÄ käytä short_answer (liian epämääräinen matematiikassa)`,
   };
 
   const gradeContext = grade && gradeContent[grade as 4 | 5 | 6]
@@ -114,6 +113,7 @@ MATEMAATTINEN MERKINTÄTAPA:
 - Kreikkalaiset kirjaimet: $$\\pi$$, $$\\alpha$$, $$\\theta$$
 - Trigonometria: $$\\sin(x)$$, $$\\cos(x)$$, $$\\tan(x)$$
 - Erikoismerkit: $$\\times$$ (kertomerkki), $$\\div$$ (jakomerkki), $$\\pm$$ (plus-miinus)
+- TÄRKEÄÄ: Käytä AINA $$\\div$$ jakolaskuissa yhtälöissä, ÄLÄ käytä / -merkkiä
 
 KYSYMYSTYYPPIEN KÄYTTÖOHJEET:
 
@@ -132,16 +132,10 @@ KYSYMYSTYYPPIEN KÄYTTÖOHJEET:
    - Helppo: yksinkertainen numeerinen vastaus
    - Normaali/Vaikea: vaatii laskemista
    - Esim: "Laske: $$7^2 - 5 \\times 3$$ = ___"
+   - Esim: "Laske: $$20 \\div 4 + 3$$ = ___"
    - Anna acceptable_answers listaan vaihtoehtoiset muodot
 
-4. SHORT_ANSWER (lyhyt avoin vastaus):
-   - VAIN normaali ja vaikea vaikeustasoilla
-   - Vaatii selitystä, perustelua tai laskuvaiheiden näyttämistä
-   - Esim: "Selitä miksi $$\\frac{2}{4} = \\frac{1}{2}$$. Näytä laskuvaiheet."
-   - Esim: "Ratkaise yhtälö $$2x + 5 = 13$$ ja näytä välivaiheet."
-   - correct_answer sisältää esimerkkivastauksen laskuvaiheilla
-
-5. MATCHING (paritus):
+4. MATCHING (paritus):
    - Sopii: termit ja määritelmät, kaavat ja nimet
    - Käytä säästeliäästi, vain jos aihe sopii
 
@@ -166,9 +160,9 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
 [
   {
     "question": "kysymysteksti suomeksi (voi sisältää LaTeX-merkintää)",
-    "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching",
+    "type": "multiple_choice" | "fill_blank" | "true_false" | "matching",
     "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"], // vain multiple_choice
-    "correct_answer": "oikea vastaus (voi sisältää LaTeX-merkintää ja selityksen jos short_answer)",
+    "correct_answer": "oikea vastaus (voi sisältää LaTeX-merkintää)",
     "acceptable_answers": ["vaihtoehtoinen muoto 1", "vaihtoehtoinen muoto 2"], // vapaaehtoinen, erityisesti fill_blank
     "explanation": "selitys suomeksi kuinka vastaus saadaan (näytä laskuvaiheet)"
   }

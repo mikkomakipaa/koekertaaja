@@ -2,14 +2,16 @@ import { Question, QuestionSet } from './questions';
 
 /**
  * Safely convert various types to boolean
- * Handles string "true"/"false", numbers 1/0, and actual booleans
+ * Handles string "true"/"false"/"totta", numbers 1/0, and actual booleans
  */
 function convertToBoolean(value: any): boolean {
   if (typeof value === 'boolean') {
     return value;
   }
   if (typeof value === 'string') {
-    return value.toLowerCase() === 'true' || value === '1';
+    // Handle English (true/false), Finnish (totta/tarua), and numeric strings
+    const lowerValue = value.toLowerCase().trim();
+    return lowerValue === 'true' || lowerValue === '1' || lowerValue === 'totta';
   }
   if (typeof value === 'number') {
     return value === 1;
