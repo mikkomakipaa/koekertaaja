@@ -4,143 +4,176 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Flexible exam preparation web application built with Next.js 14, TypeScript, and Supabase. Generates AI-powered question sets from uploaded materials for multiple subjects (starting with English). Uses Anthropic Claude API for question generation and Supabase for permanent storage of question sets.
+**Koekertaaja** (Exam Prepper) is a Finnish exam preparation web app built with Next.js 14, TypeScript, and Supabase. It uses Anthropic Claude AI to generate question sets from uploaded materials (PDF, images, text) and provides a gamified learning experience with points, streaks, and achievements.
 
-## Architecture
+## Tech Stack
 
-### Tech Stack
 - **Framework**: Next.js 14 (App Router) with TypeScript
-- **Database**: Supabase (PostgreSQL)
+- **Database**: Supabase (PostgreSQL with Row Level Security)
 - **AI**: Anthropic Claude API (`claude-sonnet-4-20250514`)
 - **UI**: Tailwind CSS + shadcn/ui components
-- **Deployment**: Vercel
-
-### Application Structure
-```
-src/
-├── app/                      # Next.js pages and API routes
-│   ├── page.tsx             # Landing/menu
-│   ├── create/page.tsx      # Create question set
-│   ├── play/[code]/page.tsx # Play quiz by code
-│   └── api/generate-questions/route.ts
-├── components/              # React components
-├── lib/                     # Core logic
-│   ├── supabase/           # Database queries
-│   ├── ai/                 # Question generation
-│   └── utils/              # Helpers
-├── config/                 # Subject & prompt configuration
-└── types/                  # TypeScript definitions
-```
-
-### Data Flow
-1. **Question Generation**: Server-side API route receives material → calls Anthropic API → stores in Supabase
-2. **Storage**: Permanent storage in Supabase with RLS policies (public read)
-3. **Shareable Codes**: 6-character codes for accessing question sets via `/play/{CODE}`
-4. **Session State**: Student progress tracked client-side only (not persisted)
-
-### Key Features
-- **Multi-Difficulty Set Creation**: Automatically creates 4 question sets (Helppo, Normaali, Vaikea, Mahdoton) from single material upload
-- **Flexible Subject Input**: Users can enter any subject name (not limited to predefined list)
-- **Configurable Question Generation**:
-  - Question pool size: 50-200 questions generated from materials
-  - Exam length: 10-50 questions per difficulty level
-- **Multiple Question Types**: multiple_choice, fill_blank, true_false, matching, short_answer
-- **Subject Extensibility**: Config-driven system for adding subjects (English enabled, Math/History/Society prepared)
-- **Multimodal Input**: PDF, images, text files
-- **No Authentication**: Code-based sharing only
-- **Session-Only Progress**: Student scores not saved to database
-
-## Important Implementation Details
-
-### API Integration
-- **Route**: `/api/generate-questions` (POST, server-side)
-- **Model**: `claude-sonnet-4-20250514`
-- **Max tokens**: 16000
-- **Security**: API key stored server-side only (ANTHROPIC_API_KEY)
-- **Content types**: Supports text, document (PDF), and image sources
-- **Response**: JSON array of questions following strict schema
-
-### Question Types
-1. Vocabulary translations (Finnish ↔ English)
-2. Grammar rules (fill-in-the-blank with verb forms)
-3. Theory questions about grammar rules
-
-### Database Schema (Supabase)
-
-**question_sets table:**
-- `id` (uuid), `code` (varchar, unique), `name`, `subject`, `grade`, `difficulty`
-- `topic`, `subtopic`, `question_count`, `created_at`, `updated_at`
-
-**questions table:**
-- `id`, `question_set_id` (foreign key), `question_text`, `question_type`
-- `correct_answer` (jsonb), `options` (jsonb), `explanation`, `image_url`, `order_index`
-
-**RLS**: Public read access enabled, no client-side writes
-
-### Question Schema
-```typescript
-{
-  question: string,          // Question text in Finnish
-  type: "multiple_choice",
-  options: string[],         // 4 options (shuffled)
-  correct_answer: string,
-  explanation: string        // Explanation in Finnish
-}
-```
-
-## Dependencies
-
-The component imports from:
-- `react` - Core React hooks
-- `@/components/ui/*` - shadcn/ui components (Button, Textarea, Card, Alert)
-- `lucide-react` - Icon components
-
-## Environment Variables
-
-Required variables in `.env.local`:
-```bash
-NEXT_PUBLIC_SUPABASE_URL=          # Supabase project URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY=     # Supabase anonymous key
-ANTHROPIC_API_KEY=                 # Server-side only
-NEXT_PUBLIC_APP_URL=               # Optional, for metadata
-```
-
-## Localization
-
-All UI text and prompts are in **Finnish**. Questions are asked in Finnish but may contain English vocabulary or grammar elements depending on question type.
-
-## State Management
-
-All state is managed within the component using React `useState`:
-- Game flow state machine
-- Question data (all questions vs. current playing set)
-- User inputs (material, files, answers)
-- UI states (loading, errors)
-
-No external state management library is used.
+- **Validation**: Zod schemas
+- **Logging**: Pino with pretty printing
+- **Deployment**: Vercel-ready with CSP headers
 
 ## Development Commands
 
 ```bash
-npm run dev          # Start development server (localhost:3000)
-npm run build        # Build for production
-npm run typecheck    # TypeScript type checking
+# Development
+npm run dev          # Start dev server (localhost:3000)
+
+# Type checking & linting
+npm run typecheck    # TypeScript type checking (REQUIRED before commits)
 npm run lint         # ESLint
+
+# Build
+npm run build        # Production build
+npm start           # Production server
 ```
+
+## Architecture
+
+### Core Data Flow
+
+1. **Question Generation** (Server-side):
+   - User uploads materials via `/create` page
+   - Frontend sends multipart request to `/api/generate-questions` (POST)
+   - API route converts PDFs/images to base64, calls Anthropic Claude API
+   - Single AI call generates **4 difficulty levels** (Helppo/Normaali/Vaikea/Mahdoton)
+   - Questions stored in Supabase with unique 6-character codes
+   - Returns shareable codes for each difficulty level
+
+2. **Question Practice** (Client-side):
+   - Users access exam area via `/play/[code]` or code input
+   - Client fetches question set + questions from Supabase (public read)
+   - Game state managed entirely client-side via `useGameSession` hook
+   - Points system: 10 per correct, +5 bonus for 3+ streak
+   - No user data persisted (session-only progress)
+
+3. **Database** (Supabase):
+   - `question_sets`: Metadata (code, name, subject, difficulty, grade)
+   - `questions`: Question data (text, type, options, correct_answer, explanation)
+   - Public read via RLS, server-side writes only
+   - Cascade delete: deleting question_set removes all questions
+
+### Directory Structure
+
+```
+src/
+├── app/
+│   ├── page.tsx                    # Landing/menu page
+│   ├── create/page.tsx             # Create exam area
+│   ├── play/page.tsx               # Browse exam areas
+│   ├── play/[code]/page.tsx        # Play questions by code
+│   └── api/
+│       ├── generate-questions/route.ts  # AI question generation
+│       └── delete-question-set/route.ts # Delete exam area
+├── components/
+│   ├── questions/                  # Question type renderers (MultipleChoice, FillBlank, etc.)
+│   ├── create/                     # Creation flow components
+│   ├── play/                       # Game flow components (ProgressBar, ResultsScreen)
+│   ├── shared/                     # Shared components (Footer, LoadByCode, ShareCodeDisplay)
+│   └── ui/                         # shadcn/ui components
+├── lib/
+│   ├── ai/
+│   │   ├── anthropic.ts           # Claude API client wrapper
+│   │   └── questionGenerator.ts   # Question generation logic
+│   ├── supabase/
+│   │   ├── client.ts              # Supabase client (public access)
+│   │   ├── admin.ts               # Supabase admin (service role)
+│   │   ├── queries.ts             # Read operations
+│   │   └── write-queries.ts       # Write operations
+│   ├── utils/
+│   │   ├── codeGenerator.ts       # 6-char code generation
+│   │   └── shuffleArray.ts        # Fisher-Yates shuffle
+│   ├── validation/schemas.ts       # Zod schemas for API validation
+│   ├── logger.ts                   # Pino logger setup
+│   └── ratelimit.ts                # Rate limiting logic
+├── config/
+│   ├── subjects.ts                 # Subject definitions
+│   └── prompts/                    # AI prompts per subject
+│       ├── english.ts              # Finnish curriculum-aligned English prompts
+│       ├── math.ts                 # Math prompts (prepared)
+│       └── generic.ts              # Fallback for any subject
+├── hooks/
+│   └── useGameSession.ts           # Game state: points, streaks, answers
+└── types/
+    ├── questions.ts                # Core type definitions
+    └── database.ts                 # Database type parsers
+```
+
+### Key Implementation Details
+
+**Question Types**:
+- `multiple_choice`: 4 options, 1 correct
+- `fill_blank`: Text input with acceptable answers
+- `true_false`: Boolean choice
+- `matching`: Pairs to match
+- `short_answer`: Text input with max length
+
+**Question Generation**:
+- Configurable pool size: 50-200 questions generated from materials
+- Configurable exam length: 10-50 questions per difficulty level
+- Subject-specific prompts: `src/config/prompts/{subject}.ts`
+- Multimodal: Supports PDF (document type) and images
+- Response validated with Zod schemas
+- Options shuffled during generation to prevent memorization
+
+**Game Session** (`useGameSession` hook):
+- Shuffles questions at session start
+- Tracks: points, current streak, best streak, answers
+- Points: 10 per correct + 5 bonus when streak ≥ 3
+- All state is client-side React (not persisted)
+
+**Security**:
+- CSP headers configured in `next.config.js`
+- API keys server-side only (never exposed to client)
+- RLS enabled on Supabase tables (public read, server writes)
+- Input validation via Zod schemas
+- Rate limiting on expensive endpoints
+
+**Localization**:
+- All UI text in **Finnish**
+- Questions/explanations in Finnish
+- English vocabulary/grammar for English subject
+
+## Environment Variables
+
+Required in `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=          # Supabase project URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=     # Supabase anonymous key
+SUPABASE_SERVICE_ROLE_KEY=         # Server-side writes
+ANTHROPIC_API_KEY=                 # Server-side only
+NEXT_PUBLIC_APP_URL=               # Optional, for metadata
+```
+
+## Database Schema
+
+Run `supabase/migrations/20250103_initial_schema.sql` in Supabase SQL Editor.
+
+**Tables**:
+- `question_sets`: id (uuid), code (unique 6-char), name, subject, grade, difficulty, topic, subtopic, question_count, timestamps
+- `questions`: id (uuid), question_set_id (fk), question_text, question_type, correct_answer (jsonb), options (jsonb), explanation, image_url, order_index, created_at
+
+**Indexes**: code, subject, created_at, question_set_id, order_index
+
+**RLS**: Public read enabled, no client writes
 
 ## Adding New Subjects
 
-1. Add subject to `Subject` type in `src/types/questions.ts`
-2. Add config in `src/config/subjects.ts` with `enabled: true`
-3. Create prompt template in `src/config/prompts/[subject].ts`
-4. Update `generateQuestions()` in `src/lib/ai/questionGenerator.ts`
+1. Add config in `src/config/subjects.ts` with `enabled: true`
+2. Create prompt template in `src/config/prompts/{subject}.ts`
+3. Update `generateQuestions()` in `src/lib/ai/questionGenerator.ts` to import and use the new prompt
 
 ## Important Notes
 
-1. **API Costs**: Configurable question pool (50-200) and exam length (10-50) help control costs. Single API call creates all 4 difficulty levels.
-2. **Batch Creation**: One material upload creates 4 question sets automatically (one per difficulty level)
-3. **API Key Security**: Server-side only via API routes
-4. **No Client Writes**: All database writes go through API routes
-5. **Session State**: Game progress is client-side React state (not persisted)
-6. **Type Safety**: Full TypeScript coverage with strict mode
-7. **Question Shuffling**: Options shuffled during generation to prevent memorization
+- **Type safety**: Always run `npm run typecheck` before committing
+- **API costs**: Configurable question pool and exam length help control costs
+- **Batch creation**: One upload creates 4 difficulty levels automatically
+- **Security**: Never commit `.env.local` or expose API keys
+- **Session state**: Game progress is ephemeral (not saved to database)
+- **Code generation**: Uses crypto.randomBytes for 6-character codes (A-Z0-9)
+- **Question shuffling**: Applied at session start via Fisher-Yates algorithm
+- **File uploads**: 30MB limit set in `next.config.js` for server actions
