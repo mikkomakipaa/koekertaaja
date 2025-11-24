@@ -81,10 +81,23 @@ export async function createQuestionSet(
           options: (q as any).max_length ? { max_length: (q as any).max_length } : null,
         };
       default:
-        console.error('Unknown question type:', q.question_type);
-        // Return a basic structure to prevent undefined
+        console.error('Unknown question type:', q.question_type, {
+          question_text: q.question_text?.substring(0, 50),
+        });
+        // For unknown types, try to infer the best match
+        // If it has options, treat as multiple choice
+        if ((q as any).options && Array.isArray((q as any).options) && (q as any).options.length > 0) {
+          return {
+            ...baseQuestion,
+            question_type: 'multiple_choice',
+            correct_answer: (q as any).correct_answer,
+            options: (q as any).options,
+          };
+        }
+        // Otherwise treat as short answer
         return {
           ...baseQuestion,
+          question_type: 'short_answer',
           correct_answer: (q as any).correct_answer || '',
           options: null,
         };
@@ -106,6 +119,20 @@ export async function createQuestionSet(
       });
       return false;
     }
+
+    // Validate multiple_choice questions must have non-empty options
+    if (q.question_type === 'multiple_choice') {
+      if (!q.options || !Array.isArray(q.options) || q.options.length === 0) {
+        console.error('Multiple choice question missing options:', {
+          question_text: q.question_text?.substring(0, 50),
+          has_options: !!q.options,
+          is_array: Array.isArray(q.options),
+          options_length: q.options?.length || 0,
+        });
+        return false;
+      }
+    }
+
     return true;
   });
 
