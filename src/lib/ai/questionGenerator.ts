@@ -111,16 +111,30 @@ export async function generateQuestions(
   // Validate AI response structure with Zod
   const validationResult = aiQuestionArraySchema.safeParse(parsedQuestions);
   if (!validationResult.success) {
+    // Group errors by question index for better debugging
+    const errorsByQuestion = validationResult.error.errors.reduce((acc, e) => {
+      const questionIndex = typeof e.path[0] === 'number' ? e.path[0] : parseInt(String(e.path[0])) || 0;
+      if (!acc[questionIndex]) acc[questionIndex] = [];
+      acc[questionIndex].push({
+        path: e.path.slice(1).join('.'),
+        message: e.message,
+      });
+      return acc;
+    }, {} as Record<number, Array<{ path: string; message: string }>>);
+
     logger.error(
       {
-        errors: validationResult.error.errors.map(e => ({
-          path: e.path.join('.'),
-          message: e.message,
-        })),
-        questionCount: parsedQuestions.length,
-        firstQuestionSample: process.env.NODE_ENV === 'production'
+        totalQuestions: parsedQuestions.length,
+        invalidQuestions: Object.keys(errorsByQuestion).length,
+        errorsByQuestion: process.env.NODE_ENV === 'production'
+          ? Object.entries(errorsByQuestion).map(([idx, errors]) => ({
+              questionIndex: idx,
+              errorCount: errors.length,
+            }))
+          : errorsByQuestion,
+        sampleInvalidQuestion: process.env.NODE_ENV === 'production'
           ? undefined
-          : parsedQuestions[0],
+          : parsedQuestions[parseInt(Object.keys(errorsByQuestion)[0]) || 0],
       },
       'AI response validation failed'
     );
@@ -151,6 +165,7 @@ export async function generateQuestions(
     switch (q.type) {
       case 'multiple_choice':
         // Shuffle options to prevent pattern memorization
+        // Note: Validation ensures options exist and have at least 2 items
         const shuffledOptions = shuffleArray(q.options || []);
         return {
           ...base,
@@ -184,6 +199,7 @@ export async function generateQuestions(
         };
 
       case 'matching':
+        // Note: Validation ensures pairs exist and have at least 2 items
         return {
           ...base,
           question_type: 'matching' as const,
@@ -192,6 +208,11 @@ export async function generateQuestions(
 
       default:
         // Default to multiple choice if type is unclear
+        // Note: Should not happen as validation enforces valid types
+        logger.warn(
+          { questionType: q.type, questionText: q.question.substring(0, 50) },
+          'Unknown question type, defaulting to multiple_choice'
+        );
         return {
           ...base,
           question_type: 'multiple_choice' as const,

@@ -107,21 +107,23 @@ VASTAUSVAIHTOEHTOJEN KIELI:
 KYSYMYSTYYPPIEN KÄYTTÖOHJEET:
 
 1. MULTIPLE_CHOICE (monivalinta):
+   *** PAKOLLINEN: Jokaisessa multiple_choice kysymyksessä TÄYTYY olla TASAN 4 vaihtoehtoa ***
+
    Sanaston käännös (suomesta englanniksi):
    Kysymys: "Mikä on sanan 'koira' englanninkielinen käännös?"
-   Vaihtoehdot: ["dog", "cat", "bird", "fish"] (ENGLANNIKSI)
+   Vaihtoehdot: ["dog", "cat", "bird", "fish"] (ENGLANNIKSI - 4 vaihtoehtoa)
 
    Sanaston käännös (englannista suomeksi):
    Kysymys: "Mitä sana 'happy' tarkoittaa suomeksi?"
-   Vaihtoehdot: ["iloinen", "surullinen", "vihainen", "väsynyt"] (SUOMEKSI)
+   Vaihtoehdot: ["iloinen", "surullinen", "vihainen", "väsynyt"] (SUOMEKSI - 4 vaihtoehtoa)
 
    Kielioppi - oikea verbimuoto:
    Kysymys: "Valitse oikea verbimuoto: 'She ___ to school every day.'"
-   Vaihtoehdot: ["goes", "go", "going", "went"] (ENGLANNIKSI)
+   Vaihtoehdot: ["goes", "go", "going", "went"] (ENGLANNIKSI - 4 vaihtoehtoa)
 
    Kielioppisääntö - teoria:
    Kysymys: "Mitä aikamuotoa käytetään kun puhutaan säännöllisesti toistuvasta toiminnasta?"
-   Vaihtoehdot: ["preesens", "imperfekti", "perfekti", "futuuri"] (SUOMEKSI)
+   Vaihtoehdot: ["preesens", "imperfekti", "perfekti", "futuuri"] (SUOMEKSI - 4 vaihtoehtoa)
 
 2. TRUE_FALSE (totta/tarua):
    Kysymys: "Totta vai tarua: Englannin kielessä käytetään artikkelia 'an' ennen vokaalia alkavaa sanaa."
@@ -158,9 +160,10 @@ KYSYMYSTYYPPIEN KÄYTTÖOHJEET:
 5. MATCHING (parit):
    - Sopii: sanat ja käännökset, verbit ja muodot, kysymykset ja vastaukset
    - Käytä normaali ja vaikea tasoilla
+   *** PAKOLLINEN: Jokaisessa matching kysymyksessä TÄYTYY olla VÄHINTÄÄN 4 paria ***
 
    Esim: Yhdistä englanninkielinen sana suomenkieliseen käännökseen
-   Parit: [{"left": "happy", "right": "iloinen"}, {"left": "sad", "right": "surullinen"}, ...]
+   Parit: [{"left": "happy", "right": "iloinen"}, {"left": "sad", "right": "surullinen"}, {"left": "angry", "right": "vihainen"}, {"left": "tired", "right": "väsynyt"}]
 
 VÄÄRÄT VASTAUKSET (multiple_choice):
 Väärät vastaukset tulee olla uskottavia:
@@ -175,7 +178,8 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
   {
     "question": "kysymysteksti suomeksi",
     "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching",
-    "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"], // vain multiple_choice
+    "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"], // PAKOLLINEN multiple_choice kysymyksille, TÄYTYY olla 4 vaihtoehtoa
+    "pairs": [{"left": "vasen", "right": "oikea"}], // PAKOLLINEN matching kysymyksille, TÄYTYY olla vähintään 4 paria
     "correct_answer": "oikea vastaus",
     "acceptable_answers": ["vaihtoehtoinen vastaus"], // vapaaehtoinen, käytä fill_blank ja short_answer
     "explanation": "selitys suomeksi miksi tämä on oikea vastaus"

@@ -71,9 +71,10 @@ KYSYMYSTYYPPIEN KÄYTTÖOHJEET:
 
 1. MULTIPLE_CHOICE (monivalinta):
    - Sopii: käsitteiden tunnistaminen, faktat, prosessit
+   *** PAKOLLINEN: Jokaisessa multiple_choice kysymyksessä TÄYTYY olla TASAN 4 vaihtoehtoa ***
    Kysymys: "Mikä seuraavista on oikein?"
    Vaihtoehdot: ["vaihtoehto 1", "vaihtoehto 2", "vaihtoehto 3", "vaihtoehto 4"]
-   - 4 vaihtoehtoa, yksi oikea
+   - TÄYTYY olla 4 vaihtoehtoa, yksi oikea
    - Väärät vastaukset uskottavia
 
 2. TRUE_FALSE (totta/tarua):
@@ -105,8 +106,9 @@ KYSYMYSTYYPPIEN KÄYTTÖOHJEET:
 5. MATCHING (parit):
    - Sopii: käsitteet ja määritelmät, termit ja kuvaukset
    - Käytä normaali ja vaikea tasoilla jos aihe sopii
+   *** PAKOLLINEN: Jokaisessa matching kysymyksessä TÄYTYY olla VÄHINTÄÄN 4 paria ***
    Esim: Yhdistä käsite ja määritelmä
-   Parit: [{"left": "käsite1", "right": "määritelmä1"}, ...]
+   Parit: [{"left": "käsite1", "right": "määritelmä1"}, {"left": "käsite2", "right": "määritelmä2"}, {"left": "käsite3", "right": "määritelmä3"}, {"left": "käsite4", "right": "määritelmä4"}]
 
 VÄÄRÄT VASTAUKSET (multiple_choice):
 Väärät vastaukset tulee olla uskottavia:
@@ -121,7 +123,8 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
   {
     "question": "kysymysteksti suomeksi",
     "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching",
-    "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"], // vain multiple_choice
+    "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"], // PAKOLLINEN multiple_choice kysymyksille, TÄYTYY olla 4 vaihtoehtoa
+    "pairs": [{"left": "vasen", "right": "oikea"}], // PAKOLLINEN matching kysymyksille, TÄYTYY olla vähintään 4 paria
     "correct_answer": "oikea vastaus",
     "acceptable_answers": ["vaihtoehtoinen vastaus"], // vapaaehtoinen, fill_blank ja short_answer
     "explanation": "selitys suomeksi miksi tämä on oikea vastaus"
