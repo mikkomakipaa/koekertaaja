@@ -183,10 +183,19 @@ export async function generateQuestions(
         };
 
       case 'true_false':
+        // Robustly convert to boolean (handles true, "true", "True", 1, etc.)
+        const boolAnswer = typeof q.correct_answer === 'boolean'
+          ? q.correct_answer
+          : typeof q.correct_answer === 'string'
+          ? q.correct_answer.toLowerCase() === 'true' || q.correct_answer === '1'
+          : typeof q.correct_answer === 'number'
+          ? q.correct_answer === 1
+          : Boolean(q.correct_answer);
+
         return {
           ...base,
           question_type: 'true_false' as const,
-          correct_answer: q.correct_answer === true || q.correct_answer === 'true',
+          correct_answer: boolAnswer,
         };
 
       case 'matching':

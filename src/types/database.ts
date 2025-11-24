@@ -1,5 +1,22 @@
 import { Question, QuestionSet } from './questions';
 
+/**
+ * Safely convert various types to boolean
+ * Handles string "true"/"false", numbers 1/0, and actual booleans
+ */
+function convertToBoolean(value: any): boolean {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    return value.toLowerCase() === 'true' || value === '1';
+  }
+  if (typeof value === 'number') {
+    return value === 1;
+  }
+  return Boolean(value);
+}
+
 // Supabase Database Types
 export interface Database {
   public: {
@@ -62,7 +79,7 @@ export function parseDatabaseQuestion(dbQuestion: DatabaseQuestion): Question {
       return {
         ...base,
         question_type: 'true_false',
-        correct_answer: dbQuestion.correct_answer as boolean,
+        correct_answer: convertToBoolean(dbQuestion.correct_answer),
       };
     case 'matching':
       return {

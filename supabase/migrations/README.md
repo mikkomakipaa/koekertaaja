@@ -28,6 +28,32 @@ The migration:
 
 3. Explicitly does NOT add a constraint on `subject` field - allows any string value
 
+### 20250105_update_difficulty_constraint.sql
+Updates the difficulty constraint to support additional difficulty levels.
+
+### 20250106_fix_empty_options.sql
+Fixes existing questions with empty or null options/pairs and adds constraints to prevent future occurrences.
+
+This migration:
+1. **Identifies and logs** questions with data issues (empty/null options or pairs)
+2. **Deletes invalid questions**:
+   - Multiple choice questions with empty or null `options` arrays
+   - Matching questions with empty or null `pairs` in `correct_answer`
+3. **Adds database constraints** to prevent future issues:
+   - `questions_multiple_choice_options_check`: Ensures multiple_choice questions have at least 2 options
+   - `questions_matching_pairs_check`: Ensures matching questions have at least 1 pair
+   - `questions_correct_answer_not_null_check`: Ensures correct_answer is never null
+4. **Updates question_count** in question_sets to reflect actual question counts after deletion
+
+**Why this is needed:**
+- Questions without options or pairs cannot be answered by students
+- Prevents data integrity issues that cause UI errors
+- Ensures database constraints match application-level validation
+
+**Complementary changes:**
+- Application-level validation in `src/lib/validation/schemas.ts` enforces the same rules
+- Question generator in `src/lib/ai/questionGenerator.ts` filters out invalid questions before insertion
+
 ## Running Migrations
 
 If you're using Supabase CLI:

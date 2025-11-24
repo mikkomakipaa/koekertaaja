@@ -54,6 +54,8 @@ export function useGameSession(allQuestions: Question[], questionsPerSession = D
         correctAnswer = currentQuestion.correct_answer;
         break;
       case 'true_false':
+        // Ensure boolean comparison (strict equality)
+        // Both userAnswer and correct_answer should already be boolean type
         isCorrect = userAnswer === currentQuestion.correct_answer;
         correctAnswer = currentQuestion.correct_answer;
         break;

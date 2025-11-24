@@ -27,14 +27,13 @@ export async function createQuestionSet(
     .single();
 
   if (setError || !newSet) {
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    if (isProduction) {
-      console.error('Error creating question set');
-    } else {
-      console.error('Error creating question set:', JSON.stringify(setError, null, 2));
-      console.error('Attempted to insert:', JSON.stringify(questionSet, null, 2));
-    }
+    // Log detailed error info (sanitize sensitive data in production)
+    console.error('Error creating question set:', {
+      code: setError?.code,
+      message: setError?.message,
+      details: setError?.details,
+      hint: setError?.hint,
+    });
 
     return null;
   }
@@ -81,24 +80,69 @@ export async function createQuestionSet(
           correct_answer: (q as any).correct_answer,
           options: (q as any).acceptable_answers || ((q as any).max_length ? { max_length: (q as any).max_length } : null),
         };
+      default:
+        console.error('Unknown question type:', q.question_type);
+        // Return a basic structure to prevent undefined
+        return {
+          ...baseQuestion,
+          correct_answer: (q as any).correct_answer || '',
+          options: null,
+        };
     }
   });
 
+  // Filter out any undefined/null questions and validate
+  const validQuestions = questionsToInsert.filter((q) => {
+    if (!q) {
+      console.error('Undefined question found in questionsToInsert');
+      return false;
+    }
+    if (!q.question_text || !q.explanation || q.correct_answer === undefined) {
+      console.error('Invalid question data:', {
+        has_question_text: !!q.question_text,
+        has_explanation: !!q.explanation,
+        has_correct_answer: q.correct_answer !== undefined,
+        question_type: q.question_type,
+      });
+      return false;
+    }
+    return true;
+  });
+
+  if (validQuestions.length !== questionsToInsert.length) {
+    console.error(`Filtered out ${questionsToInsert.length - validQuestions.length} invalid questions`);
+  }
+
+  if (validQuestions.length === 0) {
+    console.error('No valid questions to insert');
+    const admin = getSupabaseAdmin();
+    await admin.from('question_sets').delete().eq('id', (newSet as any).id);
+    return null;
+  }
+
   const { error: questionsError } = await supabaseAdmin
     .from('questions')
-    .insert(questionsToInsert as any);
+    .insert(validQuestions as any);
 
   if (questionsError) {
-    const isProduction = process.env.NODE_ENV === 'production';
+    // Log detailed error info to help diagnose issues
+    console.error('Error creating questions:', {
+      code: questionsError?.code,
+      message: questionsError?.message,
+      details: questionsError?.details,
+      hint: questionsError?.hint,
+      questionSetId: (newSet as any).id,
+      questionCount: questionsToInsert.length,
+    });
 
-    if (isProduction) {
-      console.error('Error creating questions');
-    } else {
-      console.error('Error creating questions:', JSON.stringify(questionsError, null, 2));
-      console.error('Attempted to insert questions count:', questionsToInsert.length);
-      if (questionsToInsert.length > 0) {
-        console.error('First question sample:', JSON.stringify(questionsToInsert[0], null, 2));
-      }
+    // Log first question sample for debugging (without sensitive data)
+    if (questionsToInsert.length > 0) {
+      console.error('Sample question data:', {
+        question_type: questionsToInsert[0].question_type,
+        has_correct_answer: questionsToInsert[0].correct_answer !== undefined,
+        correct_answer_type: typeof questionsToInsert[0].correct_answer,
+        has_explanation: !!questionsToInsert[0].explanation,
+      });
     }
 
     // Rollback: delete the question set

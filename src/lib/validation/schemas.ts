@@ -56,7 +56,7 @@ export const aiQuestionSchema = z.object({
     'matching',
     'short_answer',
   ]),
-  options: z.array(z.string()).optional(),
+  options: z.array(z.string()).min(2, 'Multiple choice questions must have at least 2 options').optional(),
   correct_answer: z.union([
     z.string(),
     z.boolean(),
