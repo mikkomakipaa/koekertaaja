@@ -1,42 +1,132 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { fileTypeFromBuffer } from 'file-type';
+import crypto from 'crypto';
 import { generateQuestions } from '@/lib/ai/questionGenerator';
 import { createQuestionSet } from '@/lib/supabase/write-queries';
 import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty } from '@/types';
+import { createQuestionSetSchema } from '@/lib/validation/schemas';
+import { createLogger } from '@/lib/logger';
+
+// Configure route to handle larger request bodies
+// Max: 5 files × 5MB each = 25MB + text content + overhead = 30MB total
+// Note: Next.js App Router uses bodyParser from next.config.js
+// This route uses FormData which bypasses the default body parser
 
 export async function POST(request: NextRequest) {
+  const requestId = crypto.randomUUID();
+  const logger = createLogger({ requestId, route: '/api/generate-questions' });
+
+  logger.info({ method: 'POST' }, 'Request received');
+
   try {
     const formData = await request.formData();
 
     // Extract form data
-    const subject = formData.get('subject') as Subject;
-    const questionCount = parseInt(formData.get('questionCount') as string);
-    const questionSetName = formData.get('questionSetName') as string;
-    const grade = formData.get('grade') ? parseInt(formData.get('grade') as string) : undefined;
-    const topic = formData.get('topic') as string | undefined;
-    const subtopic = formData.get('subtopic') as string | undefined;
-    const materialText = formData.get('materialText') as string | undefined;
+    const rawData = {
+      subject: formData.get('subject') as string,
+      questionCount: parseInt(formData.get('questionCount') as string),
+      questionSetName: formData.get('questionSetName') as string,
+      grade: formData.get('grade') ? parseInt(formData.get('grade') as string) : undefined,
+      topic: (formData.get('topic') as string | null) || undefined,
+      subtopic: (formData.get('subtopic') as string | null) || undefined,
+      materialText: (formData.get('materialText') as string | null) || undefined,
+    };
 
-    // Validate required fields (no longer need difficulty from form)
-    if (!subject || !questionCount || !questionSetName) {
+    // Validate input with Zod schema
+    const validationResult = createQuestionSetSchema.safeParse(rawData);
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`);
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Validation failed', details: errors },
         { status: 400 }
       );
     }
 
-    // Process uploaded files
+    const { subject, questionCount, questionSetName, grade, topic, subtopic, materialText } = validationResult.data;
+
+    // Process uploaded files with validation
+    // Note: Vercel Hobby tier has 5MB request body limit
+    // Reduced limits to work within this constraint (2MB × 2 files = 4MB + overhead)
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB per file
+    const MAX_FILES = 2; // Max 2 files to stay under 5MB total request limit
+    const ALLOWED_MIME_TYPES = [
+      'application/pdf',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'text/plain',
+    ];
+
     const files: Array<{ type: string; name: string; data: string }> = [];
     const fileEntries = Array.from(formData.entries()).filter(([key]) =>
       key.startsWith('file_')
     );
 
+    // Validate file count
+    if (fileEntries.length > MAX_FILES) {
+      return NextResponse.json(
+        {
+          error: `Maximum ${MAX_FILES} files allowed. This limit ensures requests stay under the 5MB total size limit.`,
+          details: 'For larger uploads, consider splitting materials or using text input instead of files.'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Estimate total request size to prevent "Request Entity Too Large" errors
+    let totalSize = (materialText?.length || 0);
     for (const [, value] of fileEntries) {
       if (value instanceof File) {
+        totalSize += value.size;
+      }
+    }
+
+    // Vercel Hobby tier has 5MB request limit, keep some margin for overhead
+    const MAX_TOTAL_SIZE = 4.5 * 1024 * 1024; // 4.5MB
+    if (totalSize > MAX_TOTAL_SIZE) {
+      return NextResponse.json(
+        {
+          error: `Total request size (${Math.round(totalSize / 1024 / 1024 * 10) / 10}MB) exceeds the 4.5MB limit.`,
+          details: 'Please reduce file sizes, use fewer files, or shorten the text material.'
+        },
+        { status: 413 }
+      );
+    }
+
+    for (const [, value] of fileEntries) {
+      if (value instanceof File) {
+        // Validate file size
+        if (value.size > MAX_FILE_SIZE) {
+          return NextResponse.json(
+            { error: `File "${value.name}" exceeds 2MB limit. Please use smaller files or reduce the number of files.` },
+            { status: 400 }
+          );
+        }
+
         const arrayBuffer = await value.arrayBuffer();
-        const base64 = Buffer.from(arrayBuffer).toString('base64');
+        const buffer = Buffer.from(arrayBuffer);
+
+        // Validate file type using magic bytes (server-side validation)
+        const detectedType = await fileTypeFromBuffer(buffer);
+
+        // For text files, fileTypeFromBuffer returns undefined
+        // Check if it's actually text content
+        const isTextFile = value.type.startsWith('text/') && !detectedType;
+
+        if (!isTextFile && (!detectedType || !ALLOWED_MIME_TYPES.includes(detectedType.mime))) {
+          return NextResponse.json(
+            {
+              error: `File "${value.name}" has invalid type. Allowed: PDF, images (JPEG, PNG, GIF, WebP), or text files.`,
+            },
+            { status: 400 }
+          );
+        }
+
+        const base64 = buffer.toString('base64');
         files.push({
-          type: value.type,
+          type: detectedType?.mime || 'text/plain',
           name: value.name,
           data: base64,
         });
@@ -52,10 +142,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Define all difficulty levels
-    const difficulties: Difficulty[] = ['helppo', 'normaali', 'vaikea', 'mahdoton'];
+    const difficulties: Difficulty[] = ['helppo', 'normaali', 'vaikea'];
 
-    // Calculate questions per difficulty (25% each)
-    const questionsPerDifficulty = Math.floor(questionCount / 4);
+    // Calculate questions per difficulty (33% each)
+    const questionsPerDifficulty = Math.floor(questionCount / 3);
 
     // Array to store created question sets
     const createdSets: any[] = [];
@@ -79,19 +169,19 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Generate unique code
+      // Generate unique code with improved collision handling
       let code = generateCode();
       let attempts = 0;
-      const maxAttempts = 10;
+      const maxAttempts = 50; // Increased from 10 to 50
       let result = null;
 
-      // Ensure code is unique (simple retry logic)
+      // Ensure code is unique (retry with exponential backoff logging)
       while (attempts < maxAttempts && !result) {
         result = await createQuestionSet(
           {
             code,
             name: `${questionSetName} - ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`,
-            subject,
+            subject: subject as Subject,
             difficulty,
             grade,
             topic,
@@ -102,15 +192,26 @@ export async function POST(request: NextRequest) {
         );
 
         if (!result) {
-          // Code collision, try again
-          code = generateCode();
+          // Code collision detected
           attempts++;
+          code = generateCode();
+
+          // Log collision for monitoring (only log every 10 attempts to avoid spam)
+          if (attempts % 10 === 0) {
+            console.warn(`Code collision detected: ${attempts} attempts for difficulty ${difficulty}`);
+          }
+
+          // If we're getting many collisions, alert in logs
+          if (attempts > 30) {
+            console.error(`High collision rate detected: ${attempts} attempts. Consider increasing code length.`);
+          }
         }
       }
 
       if (!result) {
+        console.error(`Failed to generate unique code after ${maxAttempts} attempts for difficulty: ${difficulty}`);
         return NextResponse.json(
-          { error: `Failed to create question set for difficulty: ${difficulty}` },
+          { error: `Failed to create question set. Please try again.` },
           { status: 500 }
         );
       }
@@ -118,7 +219,7 @@ export async function POST(request: NextRequest) {
       createdSets.push(result);
     }
 
-    return NextResponse.json({
+    const response = {
       success: true,
       message: `Created ${createdSets.length} question sets across all difficulty levels`,
       questionSets: createdSets.map(set => ({
@@ -127,11 +228,38 @@ export async function POST(request: NextRequest) {
         questionCount: set.questionSet.question_count,
       })),
       totalQuestions: createdSets.reduce((sum, set) => sum + set.questionSet.question_count, 0),
-    });
+    };
+
+    logger.info(
+      {
+        questionSetsCount: createdSets.length,
+        totalQuestions: response.totalQuestions,
+      },
+      'Request completed successfully'
+    );
+
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Error in generate-questions API:', error);
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // Log full error server-side with logger
+    logger.error(
+      {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: isProduction ? undefined : error instanceof Error ? error.stack : undefined,
+      },
+      'Request failed'
+    );
+
+    // Return sanitized error to client
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
+      {
+        error: isProduction
+          ? 'Failed to generate questions. Please try again later.'
+          : error instanceof Error
+          ? error.message
+          : 'Internal server error',
+      },
       { status: 500 }
     );
   }

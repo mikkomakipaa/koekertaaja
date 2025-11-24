@@ -32,21 +32,18 @@ export default function PlayBrowsePage() {
     helppo: 'Helppo',
     normaali: 'Normaali',
     vaikea: 'Vaikea',
-    mahdoton: 'Mahdoton',
   };
 
   const difficultyColors: Record<string, { bg: string; hover: string; text: string }> = {
     helppo: { bg: 'bg-green-500', hover: 'hover:bg-green-600', text: 'text-green-700' },
     normaali: { bg: 'bg-blue-500', hover: 'hover:bg-blue-600', text: 'text-blue-700' },
     vaikea: { bg: 'bg-orange-500', hover: 'hover:bg-orange-600', text: 'text-orange-700' },
-    mahdoton: { bg: 'bg-red-500', hover: 'hover:bg-red-600', text: 'text-red-700' },
   };
 
   const difficultyEmojis: Record<string, string> = {
     helppo: '😊',
     normaali: '🎯',
     vaikea: '💪',
-    mahdoton: '🔥',
   };
 
   useEffect(() => {
@@ -57,7 +54,7 @@ export default function PlayBrowsePage() {
 
         // Helper function to remove difficulty suffix from name
         const stripDifficultySuffix = (name: string): string => {
-          const suffixes = [' - Helppo', ' - Normaali', ' - Vaikea', ' - Mahdoton'];
+          const suffixes = [' - Helppo', ' - Normaali', ' - Vaikea'];
           for (const suffix of suffixes) {
             if (name.endsWith(suffix)) {
               return name.slice(0, -suffix.length);
@@ -116,7 +113,7 @@ export default function PlayBrowsePage() {
   };
 
   const getAvailableDifficulties = (sets: QuestionSet[]) => {
-    return ['helppo', 'normaali', 'vaikea', 'mahdoton'].filter(difficulty =>
+    return ['helppo', 'normaali', 'vaikea'].filter(difficulty =>
       sets.some(set => set.difficulty === difficulty)
     );
   };
@@ -142,7 +139,7 @@ export default function PlayBrowsePage() {
             <BookOpen className="w-7 h-7 text-purple-600" />
             <h1 className="text-3xl font-bold text-gray-900">Valitse aihealue</h1>
           </div>
-          <p className="text-gray-600">Valitse ensin aihealue, sitten vaikeustaso</p>
+          <p className="text-gray-600">Valitse aihealue ja vaikeustaso</p>
         </div>
 
         {state === 'error' && (

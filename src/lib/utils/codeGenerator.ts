@@ -1,12 +1,20 @@
+import crypto from 'crypto';
+
 /**
- * Generates a random 6-character alphanumeric code
+ * Generates a cryptographically secure random 6-character alphanumeric code
  * Format: XXXXXX (uppercase letters and numbers)
+ * Uses crypto.randomBytes() instead of Math.random() for security
  */
 export function generateCode(): string {
-  return Math.random()
-    .toString(36)
-    .substring(2, 8)
-    .toUpperCase();
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const bytes = crypto.randomBytes(6);
+  let code = '';
+
+  for (let i = 0; i < 6; i++) {
+    code += chars[bytes[i] % chars.length];
+  }
+
+  return code;
 }
 
 /**

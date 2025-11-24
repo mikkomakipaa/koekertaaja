@@ -1,5 +1,24 @@
 import { Question, QuestionSet } from './questions';
 
+/**
+ * Safely convert various types to boolean
+ * Handles string "true"/"false"/"totta", numbers 1/0, and actual booleans
+ */
+function convertToBoolean(value: any): boolean {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    // Handle English (true/false), Finnish (totta/tarua), and numeric strings
+    const lowerValue = value.toLowerCase().trim();
+    return lowerValue === 'true' || lowerValue === '1' || lowerValue === 'totta';
+  }
+  if (typeof value === 'number') {
+    return value === 1;
+  }
+  return Boolean(value);
+}
+
 // Supabase Database Types
 export interface Database {
   public: {
@@ -48,7 +67,7 @@ export function parseDatabaseQuestion(dbQuestion: DatabaseQuestion): Question {
       return {
         ...base,
         question_type: 'multiple_choice',
-        options: dbQuestion.options as string[],
+        options: (dbQuestion.options as string[]) || [],
         correct_answer: dbQuestion.correct_answer as string,
       };
     case 'fill_blank':
@@ -62,20 +81,21 @@ export function parseDatabaseQuestion(dbQuestion: DatabaseQuestion): Question {
       return {
         ...base,
         question_type: 'true_false',
-        correct_answer: dbQuestion.correct_answer as boolean,
+        correct_answer: convertToBoolean(dbQuestion.correct_answer),
       };
     case 'matching':
       return {
         ...base,
         question_type: 'matching',
-        pairs: dbQuestion.correct_answer as Array<{ left: string; right: string }>,
+        pairs: (dbQuestion.correct_answer as Array<{ left: string; right: string }>) || [],
       };
     case 'short_answer':
       return {
         ...base,
         question_type: 'short_answer',
         correct_answer: dbQuestion.correct_answer as string,
-        max_length: dbQuestion.options?.max_length as number | undefined,
+        acceptable_answers: Array.isArray(dbQuestion.options) ? dbQuestion.options as string[] : undefined,
+        max_length: (dbQuestion.options && !Array.isArray(dbQuestion.options)) ? dbQuestion.options.max_length as number | undefined : undefined,
       };
     default:
       throw new Error(`Unknown question type: ${dbQuestion.question_type}`);

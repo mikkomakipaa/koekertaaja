@@ -1,6 +1,7 @@
 import { MatchingQuestion, MatchingPair } from '@/types';
 import { useState, useEffect } from 'react';
 import { shuffleArray } from '@/lib/utils';
+import { MathText } from '@/components/ui/math-text';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,7 +23,9 @@ export function Matching({
 
   useEffect(() => {
     // Shuffle right options once on mount
-    setShuffledRights(shuffleArray(question.pairs.map(p => p.right)));
+    if (question.pairs && question.pairs.length > 0) {
+      setShuffledRights(shuffleArray(question.pairs.map(p => p.right)));
+    }
   }, [question.pairs]);
 
   const handleLeftClick = (left: string) => {
@@ -43,6 +46,15 @@ export function Matching({
     const correctRight = question.pairs.find(p => p.left === left)?.right;
     return userMatches[left] === correctRight;
   };
+
+  // Safety check for empty or missing pairs
+  if (!question.pairs || question.pairs.length === 0) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-red-800 font-medium">Virhe: Kysymyksellä ei ole yhdistettäviä pareja.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -73,7 +85,9 @@ export function Matching({
                   )}
                 >
                   <div className="flex items-center justify-between">
-                    <span>{pair.left}</span>
+                    <span>
+                      <MathText>{pair.left}</MathText>
+                    </span>
                     {showExplanation && matchStatus !== null && (
                       matchStatus ? (
                         <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
@@ -85,7 +99,7 @@ export function Matching({
                 </button>
                 {userMatches[pair.left] && (
                   <div className="text-xs text-gray-500 pl-2">
-                    → {userMatches[pair.left]}
+                    → <MathText>{userMatches[pair.left]}</MathText>
                   </div>
                 )}
               </div>
@@ -112,7 +126,7 @@ export function Matching({
                   showExplanation && "cursor-default border-gray-200"
                 )}
               >
-                {right}
+                <MathText>{right}</MathText>
               </button>
             );
           })}
@@ -125,7 +139,13 @@ export function Matching({
           <div className="space-y-1">
             {question.pairs.map((pair) => (
               <p key={pair.left} className="text-sm text-gray-700">
-                <span className="font-medium">{pair.left}</span> → <span className="font-medium">{pair.right}</span>
+                <span className="font-medium">
+                  <MathText>{pair.left}</MathText>
+                </span>
+                {' → '}
+                <span className="font-medium">
+                  <MathText>{pair.right}</MathText>
+                </span>
               </p>
             ))}
           </div>

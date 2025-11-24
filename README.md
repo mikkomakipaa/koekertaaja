@@ -21,9 +21,12 @@ Koekertaaja is an interactive exam preparation application that helps students p
 ### 📚 Question Set Creation
 - **AI-Assisted Generation**: Claude Sonnet 4 AI creates questions from your materials
 - **Multiple Source Types**: Upload PDFs, images, or write text
-- **Variable Difficulty Levels**: Easy, Normal, Hard, Impossible
-- **Adjustable Question Count**: 20-100 questions per exam area
-- **Shareable Codes**: Each exam area gets a unique 6-character code
+- **Automatic Multi-Difficulty Sets**: Creates 4 exam areas (Easy, Normal, Hard, Impossible) automatically
+- **Flexible Subject Input**: Enter any subject name (English, Math, History, etc.)
+- **Adjustable Parameters**:
+  - Material question pool: 50-200 questions generated from your materials
+  - Exam length: 10-50 questions per difficulty level
+- **Shareable Codes**: Each difficulty level gets its own unique 6-character code
 
 ### 🎯 Practice
 - **Browse Exam Areas**: Browse all available exam areas
@@ -95,20 +98,25 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 📖 User Guide
 
-### Creating an Exam Area
+### Creating Exam Areas
 
 1. Click **"Create New Exam Area"** on the home page
-2. Select **subject** (e.g., English)
-3. Select **grade level** (optional)
-4. Select **difficulty level** (Easy, Normal, Hard, Impossible)
-5. Select **number of questions** (20-100)
-6. Add **study materials**:
+2. Enter a **question set name** (e.g., "English Grade 7 - Chapter 3")
+3. Enter the **subject** (e.g., English, Math, History)
+4. Select **grade level** (optional, 1-12)
+5. Set **exam length**: Number of questions per difficulty level (10-50, default 20)
+6. Set **question pool size**: Total questions AI generates from material (50-200, default 100)
+7. Add **study materials**:
    - Write text in the text field
    - OR upload PDF files
    - OR upload images
-7. Click **"Create Question Set"**
-8. Wait for AI to generate questions (20-60 seconds)
-9. You'll receive a **shareable code** (e.g., `A3B7XY`)
+8. Click **"Create Question Sets"**
+9. Wait for AI to generate questions (may take a few minutes)
+10. You'll receive **4 shareable codes** - one for each difficulty level:
+    - Helppo (Easy)
+    - Normaali (Normal)
+    - Vaikea (Hard)
+    - Mahdoton (Impossible)
 
 ### Practicing
 
