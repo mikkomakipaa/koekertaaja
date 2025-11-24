@@ -1,5 +1,6 @@
 import { MultipleChoiceQuestion } from '@/types';
 import { Button } from '@/components/ui/button';
+import { MathText } from '@/components/ui/math-text';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +17,16 @@ export function MultipleChoice({
   showExplanation,
   onAnswerSelect,
 }: MultipleChoiceProps) {
+  // Safety check for empty or missing options
+  if (!question.options || question.options.length === 0) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-red-800 font-medium">Virhe: Kysymyksellä ei ole vastausvaihtoehtoja.</p>
+        <p className="text-sm text-red-600 mt-1">Oikea vastaus: {question.correct_answer}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       {question.options.map((option, index) => {
@@ -39,7 +50,9 @@ export function MultipleChoice({
             )}
           >
             <div className="flex items-center justify-between">
-              <span className="text-lg">{option}</span>
+              <span className="text-lg">
+                <MathText>{option}</MathText>
+              </span>
               {showCorrect && <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 ml-2" />}
               {showWrong && <XCircle className="w-6 h-6 text-red-600 flex-shrink-0 ml-2" />}
             </div>

@@ -8,7 +8,7 @@ export type QuestionType =
 
 export type Subject = string;
 
-export type Difficulty = 'helppo' | 'normaali' | 'vaikea' | 'mahdoton';
+export type Difficulty = 'helppo' | 'normaali' | 'vaikea';
 
 // Base Question Interface
 export interface BaseQuestion {
@@ -52,6 +52,7 @@ export interface MatchingQuestion extends BaseQuestion {
 export interface ShortAnswerQuestion extends BaseQuestion {
   question_type: 'short_answer';
   correct_answer: string;
+  acceptable_answers?: string[];
   max_length?: number;
 }
 

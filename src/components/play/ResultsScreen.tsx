@@ -1,6 +1,7 @@
 import { Answer } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { MathText } from '@/components/ui/math-text';
 import { Trophy, CheckCircle2, XCircle, Zap, Flame } from 'lucide-react';
 
 interface ResultsScreenProps {
@@ -101,14 +102,18 @@ export function ResultsScreen({
                     <XCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
                   )}
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{answer.questionText}</p>
+                    <p className="font-medium text-gray-900">
+                      <MathText>{answer.questionText}</MathText>
+                    </p>
                     {!answer.isCorrect && (
                       <p className="text-sm text-gray-600 mt-1">
                         Oikea vastaus:{' '}
                         <span className="font-semibold">
-                          {typeof answer.correctAnswer === 'object'
-                            ? JSON.stringify(answer.correctAnswer)
-                            : answer.correctAnswer}
+                          {typeof answer.correctAnswer === 'object' ? (
+                            JSON.stringify(answer.correctAnswer)
+                          ) : (
+                            <MathText>{String(answer.correctAnswer)}</MathText>
+                          )}
                         </span>
                       </p>
                     )}

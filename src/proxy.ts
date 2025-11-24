@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, getClientIp } from '@/lib/ratelimit';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Rate limiting for API routes
   if (request.nextUrl.pathname.startsWith('/api/generate-questions')) {
     const ip = getClientIp(request.headers);

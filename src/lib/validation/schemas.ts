@@ -56,7 +56,7 @@ export const aiQuestionSchema = z.object({
     'matching',
     'short_answer',
   ]),
-  options: z.array(z.string()).optional(),
+  options: z.array(z.string()).min(2, 'Multiple choice questions must have at least 2 options').optional(),
   correct_answer: z.union([
     z.string(),
     z.boolean(),
@@ -71,6 +71,28 @@ export const aiQuestionSchema = z.object({
     left: z.string(),
     right: z.string(),
   })).optional(),
+}).superRefine((data, ctx) => {
+  // Validate that multiple_choice has at least 2 options (ideally 4)
+  if (data.type === 'multiple_choice') {
+    if (!data.options || data.options.length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Multiple choice questions must have at least 2 options',
+        path: ['options'],
+      });
+    }
+  }
+
+  // Validate that matching has at least 2 pairs
+  if (data.type === 'matching') {
+    if (!data.pairs || data.pairs.length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Matching questions must have at least 2 pairs',
+        path: ['pairs'],
+      });
+    }
+  }
 });
 
 export const aiQuestionArraySchema = z.array(aiQuestionSchema);

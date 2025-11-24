@@ -78,7 +78,7 @@ export async function createQuestionSet(
         return {
           ...baseQuestion,
           correct_answer: (q as any).correct_answer,
-          options: (q as any).max_length ? { max_length: (q as any).max_length } : null,
+          options: (q as any).acceptable_answers || ((q as any).max_length ? { max_length: (q as any).max_length } : null),
         };
       default:
         console.error('Unknown question type:', q.question_type, {
@@ -182,4 +182,54 @@ export async function createQuestionSet(
     code: (newSet as any).code,
     questionSet: newSet as QuestionSet,
   };
+}
+
+/**
+ * Delete a question set and all its questions
+ * Uses admin client to bypass RLS for server-side deletes
+ *
+ * Explicitly deletes questions first, then the question set
+ */
+export async function deleteQuestionSet(questionSetId: string): Promise<boolean> {
+  const supabaseAdmin = getSupabaseAdmin();
+
+  // First, delete all questions for this question set
+  const { error: questionsError } = await supabaseAdmin
+    .from('questions')
+    .delete()
+    .eq('question_set_id', questionSetId);
+
+  if (questionsError) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (isProduction) {
+      console.error('Error deleting questions');
+    } else {
+      console.error('Error deleting questions:', JSON.stringify(questionsError, null, 2));
+      console.error('Question set ID:', questionSetId);
+    }
+
+    return false;
+  }
+
+  // Then delete the question set
+  const { error: setError } = await supabaseAdmin
+    .from('question_sets')
+    .delete()
+    .eq('id', questionSetId);
+
+  if (setError) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (isProduction) {
+      console.error('Error deleting question set');
+    } else {
+      console.error('Error deleting question set:', JSON.stringify(setError, null, 2));
+      console.error('Question set ID:', questionSetId);
+    }
+
+    return false;
+  }
+
+  return true;
 }

@@ -1,9 +1,13 @@
 import { Question, Subject, Difficulty } from '@/types';
 import { generateWithClaude, MessageContent } from './anthropic';
 import { getEnglishPrompt } from '@/config/prompts/english';
+import { getMathPrompt } from '@/config/prompts/math';
 import { getGenericPrompt } from '@/config/prompts/generic';
 import { shuffleArray } from '@/lib/utils';
 import { aiQuestionArraySchema } from '@/lib/validation/schemas';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger({ module: 'questionGenerator' });
 
 export interface GenerateQuestionsParams {
   subject: Subject;
@@ -58,9 +62,14 @@ export async function generateQuestions(
 
   // Get prompt based on subject
   let prompt = '';
-  if (subject.toLowerCase() === 'english' || subject.toLowerCase() === 'englanti') {
+  const subjectLower = subject.toLowerCase();
+
+  if (subjectLower === 'english' || subjectLower === 'englanti') {
     // Use specialized English prompt
     prompt = getEnglishPrompt(difficulty, questionCount, grade, materialText);
+  } else if (subjectLower === 'math' || subjectLower === 'matematiikka') {
+    // Use specialized Math prompt
+    prompt = getMathPrompt(difficulty, questionCount, grade, materialText);
   } else {
     // Use generic prompt for all other subjects
     prompt = getGenericPrompt(subject, difficulty, questionCount, grade, materialText);
@@ -80,33 +89,68 @@ export async function generateQuestions(
   let parsedQuestions: any[];
   try {
     parsedQuestions = JSON.parse(cleanContent);
+    logger.info(
+      { questionCount: parsedQuestions.length },
+      'Successfully parsed AI response'
+    );
   } catch (error) {
-    const isProduction = process.env.NODE_ENV === 'production';
+    logger.error(
+      {
+        error: error instanceof Error ? error.message : String(error),
+        contentLength: cleanContent.length,
+        contentPreview: process.env.NODE_ENV === 'production'
+          ? undefined
+          : cleanContent.substring(0, 500),
+      },
+      'Failed to parse AI response as JSON'
+    );
 
-    if (isProduction) {
-      console.error('Failed to parse AI response');
-    } else {
-      console.error('Failed to parse AI response:', cleanContent);
-    }
-
-    throw new Error('AI returned invalid JSON format');
+    throw new Error('AI returned invalid JSON format. The response could not be parsed.');
   }
 
   // Validate AI response structure with Zod
   const validationResult = aiQuestionArraySchema.safeParse(parsedQuestions);
   if (!validationResult.success) {
-    const isProduction = process.env.NODE_ENV === 'production';
+    // Group errors by question index for better debugging
+    const errorsByQuestion = validationResult.error.errors.reduce((acc, e) => {
+      const questionIndex = typeof e.path[0] === 'number' ? e.path[0] : parseInt(String(e.path[0])) || 0;
+      if (!acc[questionIndex]) acc[questionIndex] = [];
+      acc[questionIndex].push({
+        path: e.path.slice(1).join('.'),
+        message: e.message,
+      });
+      return acc;
+    }, {} as Record<number, Array<{ path: string; message: string }>>);
 
-    if (isProduction) {
-      console.error('AI response validation failed');
-    } else {
-      console.error('AI response validation failed:', validationResult.error.errors);
-    }
+    logger.error(
+      {
+        totalQuestions: parsedQuestions.length,
+        invalidQuestions: Object.keys(errorsByQuestion).length,
+        errorsByQuestion: process.env.NODE_ENV === 'production'
+          ? Object.entries(errorsByQuestion).map(([idx, errors]) => ({
+              questionIndex: idx,
+              errorCount: errors.length,
+            }))
+          : errorsByQuestion,
+        sampleInvalidQuestion: process.env.NODE_ENV === 'production'
+          ? undefined
+          : parsedQuestions[parseInt(Object.keys(errorsByQuestion)[0]) || 0],
+      },
+      'AI response validation failed'
+    );
 
-    throw new Error('AI returned invalid question format');
+    throw new Error('AI returned invalid question format. Please try again.');
   }
 
   parsedQuestions = validationResult.data;
+  logger.info(
+    {
+      validatedQuestionCount: parsedQuestions.length,
+      subject,
+      difficulty,
+    },
+    'AI response validated successfully'
+  );
 
   // Validate and transform questions
   const questions: Question[] = parsedQuestions.map((q, index) => {
@@ -121,6 +165,7 @@ export async function generateQuestions(
     switch (q.type) {
       case 'multiple_choice':
         // Shuffle options to prevent pattern memorization
+        // Note: Validation ensures options exist and have at least 2 items
         const shuffledOptions = shuffleArray(q.options || []);
         return {
           ...base,
@@ -154,6 +199,7 @@ export async function generateQuestions(
         };
 
       case 'matching':
+        // Note: Validation ensures pairs exist and have at least 2 items
         return {
           ...base,
           question_type: 'matching' as const,

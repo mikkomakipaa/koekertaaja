@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { MathText } from '@/components/ui/math-text';
 import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
 import { ProgressBar } from '@/components/play/ProgressBar';
 import { ResultsScreen } from '@/components/play/ResultsScreen';
@@ -183,7 +184,7 @@ export default function PlayPage() {
         {/* Question Card */}
         <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8 mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            {currentQuestion.question_text}
+            <MathText>{currentQuestion.question_text}</MathText>
           </h2>
 
           <QuestionRenderer
@@ -213,7 +214,9 @@ export default function PlayPage() {
             )}
             <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
               <p className="text-sm text-blue-900 font-medium mb-1">Selitys:</p>
-              <p className="text-blue-800">{currentQuestion.explanation}</p>
+              <p className="text-blue-800">
+                <MathText>{currentQuestion.explanation}</MathText>
+              </p>
             </div>
           </div>
         )}

@@ -68,9 +68,8 @@ export const SUBJECTS: Record<Subject, SubjectConfig> = {
 
 export const DIFFICULTY_LEVELS = [
   { value: 'helppo', label: 'Helppo', description: 'Perusasiat ja yksinkertaiset kysymykset' },
-  { value: 'normaali', label: 'Normaali', description: 'Monipuolinen sisältö' },
-  { value: 'vaikea', label: 'Vaikea', description: 'Haastavampi sisältö' },
-  { value: 'mahdoton', label: 'Mahdoton', description: 'Erittäin vaativa taso' },
+  { value: 'normaali', label: 'Normaali', description: 'Monipuolinen sisältö ja soveltaminen' },
+  { value: 'vaikea', label: 'Vaikea', description: 'Haastava sisältö ja syvällinen ymmärrys' },
 ] as const;
 
 export const GRADE_LEVELS = [

@@ -8,6 +8,11 @@ import { Subject, Difficulty } from '@/types';
 import { createQuestionSetSchema } from '@/lib/validation/schemas';
 import { createLogger } from '@/lib/logger';
 
+// Configure route to handle larger request bodies
+// Max: 5 files × 5MB each = 25MB + text content + overhead = 30MB total
+// Note: Next.js App Router uses bodyParser from next.config.js
+// This route uses FormData which bypasses the default body parser
+
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
   const logger = createLogger({ requestId, route: '/api/generate-questions' });
@@ -23,9 +28,9 @@ export async function POST(request: NextRequest) {
       questionCount: parseInt(formData.get('questionCount') as string),
       questionSetName: formData.get('questionSetName') as string,
       grade: formData.get('grade') ? parseInt(formData.get('grade') as string) : undefined,
-      topic: formData.get('topic') as string | undefined,
-      subtopic: formData.get('subtopic') as string | undefined,
-      materialText: formData.get('materialText') as string | undefined,
+      topic: (formData.get('topic') as string | null) || undefined,
+      subtopic: (formData.get('subtopic') as string | null) || undefined,
+      materialText: (formData.get('materialText') as string | null) || undefined,
     };
 
     // Validate input with Zod schema
@@ -41,8 +46,10 @@ export async function POST(request: NextRequest) {
     const { subject, questionCount, questionSetName, grade, topic, subtopic, materialText } = validationResult.data;
 
     // Process uploaded files with validation
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    const MAX_FILES = 5;
+    // Note: Vercel Hobby tier has 5MB request body limit
+    // Reduced limits to work within this constraint (2MB × 2 files = 4MB + overhead)
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB per file
+    const MAX_FILES = 2; // Max 2 files to stay under 5MB total request limit
     const ALLOWED_MIME_TYPES = [
       'application/pdf',
       'image/jpeg',
@@ -60,8 +67,31 @@ export async function POST(request: NextRequest) {
     // Validate file count
     if (fileEntries.length > MAX_FILES) {
       return NextResponse.json(
-        { error: `Maximum ${MAX_FILES} files allowed` },
+        {
+          error: `Maximum ${MAX_FILES} files allowed. This limit ensures requests stay under the 5MB total size limit.`,
+          details: 'For larger uploads, consider splitting materials or using text input instead of files.'
+        },
         { status: 400 }
+      );
+    }
+
+    // Estimate total request size to prevent "Request Entity Too Large" errors
+    let totalSize = (materialText?.length || 0);
+    for (const [, value] of fileEntries) {
+      if (value instanceof File) {
+        totalSize += value.size;
+      }
+    }
+
+    // Vercel Hobby tier has 5MB request limit, keep some margin for overhead
+    const MAX_TOTAL_SIZE = 4.5 * 1024 * 1024; // 4.5MB
+    if (totalSize > MAX_TOTAL_SIZE) {
+      return NextResponse.json(
+        {
+          error: `Total request size (${Math.round(totalSize / 1024 / 1024 * 10) / 10}MB) exceeds the 4.5MB limit.`,
+          details: 'Please reduce file sizes, use fewer files, or shorten the text material.'
+        },
+        { status: 413 }
       );
     }
 
@@ -70,7 +100,7 @@ export async function POST(request: NextRequest) {
         // Validate file size
         if (value.size > MAX_FILE_SIZE) {
           return NextResponse.json(
-            { error: `File "${value.name}" exceeds 5MB limit` },
+            { error: `File "${value.name}" exceeds 2MB limit. Please use smaller files or reduce the number of files.` },
             { status: 400 }
           );
         }
@@ -112,10 +142,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Define all difficulty levels
-    const difficulties: Difficulty[] = ['helppo', 'normaali', 'vaikea', 'mahdoton'];
+    const difficulties: Difficulty[] = ['helppo', 'normaali', 'vaikea'];
 
-    // Calculate questions per difficulty (25% each)
-    const questionsPerDifficulty = Math.floor(questionCount / 4);
+    // Calculate questions per difficulty (33% each)
+    const questionsPerDifficulty = Math.floor(questionCount / 3);
 
     // Array to store created question sets
     const createdSets: any[] = [];

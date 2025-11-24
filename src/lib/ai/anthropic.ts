@@ -1,4 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger({ module: 'anthropic' });
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -32,6 +35,15 @@ export async function generateWithClaude(
   maxTokens = 16000
 ): Promise<AnthropicResponse> {
   try {
+    logger.info(
+      {
+        messageCount: messages.length,
+        maxTokens,
+        model: 'claude-sonnet-4-20250514',
+      },
+      'Calling Anthropic API'
+    );
+
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: maxTokens,
@@ -42,6 +54,15 @@ export async function generateWithClaude(
         },
       ],
     });
+
+    logger.info(
+      {
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+        totalTokens: response.usage.input_tokens + response.usage.output_tokens,
+      },
+      'Anthropic API call successful'
+    );
 
     const textContent = response.content
       .filter((item) => item.type === 'text')
@@ -56,14 +77,59 @@ export async function generateWithClaude(
       },
     };
   } catch (error) {
-    const isProduction = process.env.NODE_ENV === 'production';
+    // Extract error details for better debugging
+    let errorMessage = 'Unknown error';
+    let errorType = 'unknown';
+    let statusCode: number | undefined;
 
-    if (isProduction) {
-      console.error('Error calling Anthropic API');
+    if (error instanceof Anthropic.APIError) {
+      errorMessage = error.message;
+      errorType = 'api_error';
+      statusCode = error.status;
+
+      // Log detailed error information
+      logger.error(
+        {
+          errorType,
+          errorMessage,
+          statusCode,
+          errorName: error.name,
+        },
+        'Anthropic API error'
+      );
+
+      // Categorize common errors for better user feedback
+      if (error.status === 401) {
+        throw new Error('Invalid API key. Please check your ANTHROPIC_API_KEY environment variable.');
+      } else if (error.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again in a few moments.');
+      } else if (error.status === 400) {
+        throw new Error('Invalid request format. Please check your input and try again.');
+      } else if (error.status === 413) {
+        throw new Error('Request too large. Please reduce the size of your materials.');
+      } else if (error.status === 500 || error.status === 502 || error.status === 503) {
+        throw new Error('Anthropic API is temporarily unavailable. Please try again later.');
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+      logger.error(
+        {
+          errorMessage,
+          errorName: error.name,
+          stack: process.env.NODE_ENV === 'production' ? undefined : error.stack,
+        },
+        'Error calling Anthropic API'
+      );
     } else {
-      console.error('Error calling Anthropic API:', error);
+      logger.error(
+        {
+          error: String(error),
+        },
+        'Unknown error calling Anthropic API'
+      );
     }
 
-    throw new Error('Failed to generate content with AI');
+    // Throw with original error message if not categorized
+    throw new Error(`Failed to generate content with AI: ${errorMessage}`);
   }
 }
