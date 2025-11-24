@@ -152,7 +152,7 @@ export async function generateQuestions(
       switch (q.type) {
         case 'multiple_choice':
           // Shuffle options to prevent pattern memorization
-          const shuffledOptions = shuffleArray(q.options || []);
+          const shuffledOptions = shuffleArray((q.options || []) as string[]);
 
           // Validate that we have at least 2 options
           if (!shuffledOptions || shuffledOptions.length < 2) {
@@ -167,15 +167,15 @@ export async function generateQuestions(
             ...base,
             question_type: 'multiple_choice' as const,
             options: shuffledOptions,
-            correct_answer: q.correct_answer,
+            correct_answer: q.correct_answer as string,
           };
 
         case 'fill_blank':
           return {
             ...base,
             question_type: 'fill_blank' as const,
-            correct_answer: q.correct_answer,
-            acceptable_answers: q.acceptable_answers,
+            correct_answer: q.correct_answer as string,
+            acceptable_answers: q.acceptable_answers as string[] | undefined,
           };
 
         case 'true_false':
@@ -198,12 +198,12 @@ export async function generateQuestions(
           return {
             ...base,
             question_type: 'matching' as const,
-            pairs: q.pairs,
+            pairs: q.pairs as Array<{ left: string; right: string }>,
           };
 
         default:
           // Default to multiple choice if type is unclear
-          const defaultOptions = q.options || [];
+          const defaultOptions = (q.options || []) as string[];
           if (defaultOptions.length < 2) {
             logger.warn(
               { questionText: q.question.substring(0, 100) },
@@ -216,7 +216,7 @@ export async function generateQuestions(
             ...base,
             question_type: 'multiple_choice' as const,
             options: defaultOptions,
-            correct_answer: q.correct_answer,
+            correct_answer: q.correct_answer as string,
           };
       }
     });
