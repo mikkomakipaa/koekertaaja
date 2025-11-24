@@ -1,6 +1,6 @@
 {
   "functions": {
-    "src/app/api/generate-questions/route.ts": {
+    "api/generate-questions": {
       "maxDuration": 300,
       "memory": 1024
     }
