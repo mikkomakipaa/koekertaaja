@@ -152,7 +152,7 @@ export async function generateQuestions(
       switch (q.type) {
         case 'multiple_choice':
           // Shuffle options to prevent pattern memorization
-          const shuffledOptions = shuffleArray((q.options || []) as string[]);
+          const shuffledOptions = shuffleArray<string>((q.options || []) as string[]);
 
           // Validate that we have at least 2 options
           if (!shuffledOptions || shuffledOptions.length < 2) {
