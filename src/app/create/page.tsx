@@ -259,12 +259,15 @@ export default function CreatePage() {
           </CardContent>
         </Card>
       </div>
+      </AuthGuard>
     );
   }
 
   // Form screen
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+    <AuthGuard>
+      <UserMenu />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
       <div className="max-w-3xl mx-auto">
         <Card className="shadow-lg">
           <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
