@@ -8,6 +8,9 @@ import { Subject, Difficulty } from '@/types';
 import { createQuestionSetSchema } from '@/lib/validation/schemas';
 import { createLogger } from '@/lib/logger';
 
+// Configure route segment for Vercel deployment
+export const maxDuration = 300; // 5 minutes timeout for AI generation
+
 // Configure route to handle larger request bodies
 // Max: 5 files × 5MB each = 25MB + text content + overhead = 30MB total
 // Note: Next.js App Router uses bodyParser from next.config.js
