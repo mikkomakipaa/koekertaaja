@@ -9,29 +9,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { deleteQuestionSet } from '@/lib/supabase/write-queries';
 import { requireAuth } from '@/lib/supabase/server-auth';
 
-// Helper function to add CORS headers
-function getCorsHeaders() {
-  return {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
-}
-
-// Handle preflight OPTIONS request
-export async function OPTIONS() {
-  return NextResponse.json({}, { headers: getCorsHeaders() });
-}
-
 export async function DELETE(request: NextRequest) {
   try {
     // Verify authentication
+    let user;
     try {
-      await requireAuth();
+      user = await requireAuth();
+      console.log('User authenticated:', user.id);
     } catch (authError) {
+      console.error('Authentication failed:', authError);
       return NextResponse.json(
         { error: 'Unauthorized. Please log in to delete question sets.' },
-        { status: 401, headers: getCorsHeaders() }
+        { status: 401 }
       );
     }
 
@@ -40,9 +29,10 @@ export async function DELETE(request: NextRequest) {
 
     // Validate input
     if (!questionSetId) {
+      console.error('Missing question set ID in request');
       return NextResponse.json(
         { error: 'Question set ID is required' },
-        { status: 400, headers: getCorsHeaders() }
+        { status: 400 }
       );
     }
 
@@ -51,30 +41,31 @@ export async function DELETE(request: NextRequest) {
       console.error('SUPABASE_SERVICE_ROLE_KEY is not set');
       return NextResponse.json(
         { error: 'Server configuration error: Missing service role key' },
-        { status: 500, headers: getCorsHeaders() }
+        { status: 500 }
       );
     }
+
+    console.log('Attempting to delete question set:', questionSetId);
 
     // Delete the question set
     const success = await deleteQuestionSet(questionSetId);
 
     if (!success) {
+      console.error('Failed to delete question set:', questionSetId);
       return NextResponse.json(
         { error: 'Failed to delete question set. Check server logs for details.' },
-        { status: 500, headers: getCorsHeaders() }
+        { status: 500 }
       );
     }
 
-    return NextResponse.json(
-      { success: true },
-      { headers: getCorsHeaders() }
-    );
+    console.log('Successfully deleted question set:', questionSetId);
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error in delete-question-set API:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json(
       { error: errorMessage },
-      { status: 500, headers: getCorsHeaders() }
+      { status: 500 }
     );
   }
 }
