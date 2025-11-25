@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteQuestionSet } from '@/lib/supabase/write-queries';
+import { requireAuth } from '@/lib/supabase/server-auth';
 
 // Helper function to add CORS headers
 function getCorsHeaders() {
@@ -24,6 +25,16 @@ export async function OPTIONS() {
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Verify authentication
+    try {
+      await requireAuth();
+    } catch (authError) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Please log in to delete question sets.' },
+        { status: 401, headers: getCorsHeaders() }
+      );
+    }
+
     const body = await request.json();
     const { questionSetId } = body;
 
