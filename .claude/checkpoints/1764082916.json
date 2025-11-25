@@ -1,0 +1,1 @@
+{"tag": "checkpoint-20251125-170156", "file": "/Users/mikko.makipaa/koekertaaja/src/lib/supabase/auth.ts", "timestamp": "2025-11-25T15:01:56Z", "type": "post-edit", "branch": "main", "diff_summary": " .claude/checkpoints/task-1764082799.json |  1 +  src/lib/supabase/auth.ts                 | 45 ++++++++++++++++++++++++++++++++  2 files changed, 46 insertions(+) "}
