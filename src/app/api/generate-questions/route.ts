@@ -7,6 +7,7 @@ import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty } from '@/types';
 import { createQuestionSetSchema } from '@/lib/validation/schemas';
 import { createLogger } from '@/lib/logger';
+import { requireAuth } from '@/lib/supabase/server-auth';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 300; // 5 minutes timeout for AI generation
@@ -23,6 +24,18 @@ export async function POST(request: NextRequest) {
   logger.info({ method: 'POST' }, 'Request received');
 
   try {
+    // Verify authentication
+    try {
+      await requireAuth();
+      logger.info('Authentication successful');
+    } catch (authError) {
+      logger.warn('Authentication failed');
+      return NextResponse.json(
+        { error: 'Unauthorized. Please log in to create question sets.' },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
 
     // Extract form data
