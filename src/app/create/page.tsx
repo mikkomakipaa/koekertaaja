@@ -16,6 +16,8 @@ import { MaterialUpload } from '@/components/create/MaterialUpload';
 import { getAllQuestionSets } from '@/lib/supabase/queries';
 import { QuestionSet } from '@/types';
 import { Loader2, Star, Trash2, List } from 'lucide-react';
+import { AuthGuard } from '@/components/auth/AuthGuard';
+import { UserMenu } from '@/components/auth/UserMenu';
 
 type CreateState = 'form' | 'loading' | 'success';
 
