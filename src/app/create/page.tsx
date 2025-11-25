@@ -171,18 +171,21 @@ export default function CreatePage() {
   // Loading screen
   if (state === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <Card className="w-96 shadow-lg">
-          <CardContent className="p-12 text-center">
-            <Loader2 className="w-16 h-16 mx-auto mb-4 animate-spin text-blue-500" />
-            <p className="text-xl font-bold text-indigo-700">
-              Luodaan kysymyssarjoja...
-            </p>
-            <p className="text-gray-600 mt-2 font-medium">4 vaikeustasoa × {examLength} kysymystä</p>
-            <p className="text-gray-500 text-sm mt-1">Tämä kestää muutaman minuutin</p>
-          </CardContent>
-        </Card>
-      </div>
+      <AuthGuard>
+        <UserMenu />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+          <Card className="w-96 shadow-lg">
+            <CardContent className="p-12 text-center">
+              <Loader2 className="w-16 h-16 mx-auto mb-4 animate-spin text-blue-500" />
+              <p className="text-xl font-bold text-indigo-700">
+                Luodaan kysymyssarjoja...
+              </p>
+              <p className="text-gray-600 mt-2 font-medium">4 vaikeustasoa × {examLength} kysymystä</p>
+              <p className="text-gray-500 text-sm mt-1">Tämä kestää muutaman minuutin</p>
+            </CardContent>
+          </Card>
+        </div>
+      </AuthGuard>
     );
   }
 
