@@ -37,3 +37,7 @@ next-env.d.ts
 
 # old files
 english-exam-game.tsx
+
+# claude-flow and swarm
+.claude-flow/
+.swarm/
