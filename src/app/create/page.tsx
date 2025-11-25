@@ -484,5 +484,6 @@ export default function CreatePage() {
         </Card>
       </div>
     </div>
+    </AuthGuard>
   );
 }
