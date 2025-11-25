@@ -142,6 +142,7 @@ export default function CreatePage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'same-origin', // Ensure cookies are sent
         body: JSON.stringify({ questionSetId }),
       });
 
