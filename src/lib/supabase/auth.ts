@@ -1,11 +1,11 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient as createSSRBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/database';
 
 /**
  * Client-side Supabase client for authentication
- * This instance is used for auth operations on the client side
+ * Uses @supabase/ssr to properly handle cookies for Next.js
  */
-export function createBrowserClient(): SupabaseClient<Database> {
+export function createBrowserClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -13,11 +13,42 @@ export function createBrowserClient(): SupabaseClient<Database> {
     throw new Error('Missing Supabase environment variables');
   }
 
-  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
+  return createSSRBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      get(name: string) {
+        const cookies = document.cookie.split(';');
+        for (const cookie of cookies) {
+          const [cookieName, cookieValue] = cookie.split('=').map(c => c.trim());
+          if (cookieName === name) {
+            return decodeURIComponent(cookieValue);
+          }
+        }
+        return null;
+      },
+      set(name: string, value: string, options: any) {
+        let cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
+
+        if (options?.maxAge) {
+          cookie += `; max-age=${options.maxAge}`;
+        }
+        if (options?.path) {
+          cookie += `; path=${options.path}`;
+        }
+        if (options?.domain) {
+          cookie += `; domain=${options.domain}`;
+        }
+        if (options?.sameSite) {
+          cookie += `; samesite=${options.sameSite}`;
+        }
+        if (options?.secure) {
+          cookie += '; secure';
+        }
+
+        document.cookie = cookie;
+      },
+      remove(name: string, options: any) {
+        this.set(name, '', { ...options, maxAge: 0 });
+      },
     },
   });
 }
