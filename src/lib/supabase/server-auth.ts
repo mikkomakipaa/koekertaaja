@@ -1,10 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient as createSSRServerClient } from '@supabase/ssr';
 import { Database } from '@/types/database';
 import { cookies } from 'next/headers';
 
 /**
  * Create a Supabase client for server-side authentication
- * This uses cookies to maintain session
+ * Uses @supabase/ssr to properly handle cookies in Next.js App Router
  */
 export async function createServerClient() {
   const cookieStore = await cookies();
@@ -12,13 +12,24 @@ export async function createServerClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-    },
-    global: {
-      headers: {
-        cookie: cookieStore.toString(),
+  return createSSRServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      get(name: string) {
+        return cookieStore.get(name)?.value;
+      },
+      set(name: string, value: string, options: any) {
+        try {
+          cookieStore.set({ name, value, ...options });
+        } catch {
+          // Cookie setting can fail in middleware
+        }
+      },
+      remove(name: string, options: any) {
+        try {
+          cookieStore.set({ name, value: '', ...options, maxAge: 0 });
+        } catch {
+          // Cookie removal can fail in middleware
+        }
       },
     },
   });
