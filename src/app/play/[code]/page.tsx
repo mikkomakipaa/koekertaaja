@@ -88,17 +88,26 @@ export default function PlayPage() {
       setState('results');
     } else {
       nextQuestion();
-      // Scroll to top for next question (especially important on mobile)
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Scroll to top for next question (instant scroll for Safari compatibility)
+      setTimeout(() => {
+        topRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
+        // Fallback for older browsers
+        window.scrollTo(0, 0);
+      }, 0);
     }
   };
 
   // Scroll to top when a new question loads
   useEffect(() => {
     if (currentQuestion && !showExplanation) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Use setTimeout to ensure DOM is updated
+      setTimeout(() => {
+        topRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
+        // Fallback for older browsers
+        window.scrollTo(0, 0);
+      }, 0);
     }
-  }, [currentQuestionIndex, showExplanation]);
+  }, [currentQuestionIndex]);
 
   const handlePlayAgain = () => {
     startNewSession();
