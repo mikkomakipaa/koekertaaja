@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
     const rawData = {
       subject: formData.get('subject') as string,
       questionCount: parseInt(formData.get('questionCount') as string),
+      examLength: parseInt(formData.get('examLength') as string),
       questionSetName: formData.get('questionSetName') as string,
       grade: formData.get('grade') ? parseInt(formData.get('grade') as string) : undefined,
       topic: (formData.get('topic') as string | null) || undefined,
