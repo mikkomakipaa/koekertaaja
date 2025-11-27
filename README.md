@@ -104,19 +104,18 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 2. Enter a **question set name** (e.g., "English Grade 7 - Chapter 3")
 3. Enter the **subject** (e.g., English, Math, History)
 4. Select **grade level** (optional, 1-12)
-5. Set **exam length**: Number of questions per difficulty level (10-50, default 20)
-6. Set **question pool size**: Total questions AI generates from material (50-200, default 100)
+5. Set **exam length**: Number of questions per difficulty level (5-20, default 15)
+6. Set **question pool size**: Total questions AI generates from material (10-100, default 50)
 7. Add **study materials**:
    - Write text in the text field
    - OR upload PDF files
    - OR upload images
 8. Click **"Create Question Sets"**
 9. Wait for AI to generate questions (may take a few minutes)
-10. You'll receive **4 shareable codes** - one for each difficulty level:
+10. You'll receive **3 shareable codes** - one for each difficulty level:
     - Helppo (Easy)
     - Normaali (Normal)
     - Vaikea (Hard)
-    - Mahdoton (Impossible)
 
 ### Practicing
 
