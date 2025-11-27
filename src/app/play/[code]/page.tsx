@@ -179,7 +179,7 @@ export default function PlayPage() {
 
   return (
     <div className="min-h-screen bg-white p-4 md:p-8 pb-safe">
-      <div className="max-w-2xl mx-auto pt-2">
+      <div ref={topRef} className="max-w-2xl mx-auto pt-2">
         {/* Stats Bar */}
         <div className="mb-6 flex items-center justify-between text-sm">
           <div className="flex items-center gap-4">
