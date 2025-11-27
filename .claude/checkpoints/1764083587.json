@@ -1,1 +1,0 @@
-{"tag": "checkpoint-20251125-171307", "file": "/Users/mikko.makipaa/koekertaaja/src/app/login/page.tsx", "timestamp": "2025-11-25T15:13:07Z", "type": "post-edit", "branch": "main", "diff_summary": " .claude/checkpoints/task-1764083563.json | 1 +  src/app/login/page.tsx                   | 4 ++--  2 files changed, 3 insertions(+), 2 deletions(-) "}

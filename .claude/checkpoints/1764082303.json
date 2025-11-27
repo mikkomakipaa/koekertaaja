@@ -1,1 +1,0 @@
-{"tag": "checkpoint-20251125-165143", "file": "/Users/mikko.makipaa/koekertaaja/vercel.json", "timestamp": "2025-11-25T14:51:43Z", "type": "post-edit", "branch": "main", "diff_summary": " .claude/checkpoints/task-1764082008.json | 1 +  vercel.json                              | 3 +++  2 files changed, 4 insertions(+) "}

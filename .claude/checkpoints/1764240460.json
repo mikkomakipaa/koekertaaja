@@ -1,1 +1,0 @@
-{"tag": "checkpoint-20251127-124740", "file": "/Users/mikko.makipaa/koekertaaja/src/components/shared/Footer.tsx", "timestamp": "2025-11-27T10:47:40Z", "type": "post-edit", "branch": "main", "diff_summary": " .claude/checkpoints/task-1764240296.json | 1 +  src/components/shared/Footer.tsx         | 2 +-  2 files changed, 2 insertions(+), 1 deletion(-) "}
