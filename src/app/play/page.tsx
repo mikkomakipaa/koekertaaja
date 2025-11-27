@@ -207,7 +207,6 @@ export default function PlayBrowsePage() {
                         >
                           <span className="mr-1.5">{emoji}</span>
                           {difficultyLabels[difficulty]}
-                          <span className="ml-1.5 opacity-90">({set?.question_count || 0})</span>
                         </button>
                       );
                     })}
