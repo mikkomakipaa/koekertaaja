@@ -21,11 +21,11 @@ Koekertaaja is an interactive exam preparation application that helps students p
 ### 📚 Question Set Creation
 - **AI-Assisted Generation**: Claude Sonnet 4 AI creates questions from your materials
 - **Multiple Source Types**: Upload PDFs, images, or write text
-- **Automatic Multi-Difficulty Sets**: Creates 4 exam areas (Easy, Normal, Hard, Impossible) automatically
+- **Automatic Multi-Difficulty Sets**: Creates 3 exam areas (Helppo, Normaali, Vaikea) automatically
 - **Flexible Subject Input**: Enter any subject name (English, Math, History, etc.)
 - **Adjustable Parameters**:
-  - Material question pool: 50-200 questions generated from your materials
-  - Exam length: 10-50 questions per difficulty level
+  - Material question pool: 10-100 questions generated from your materials
+  - Exam length: 5-20 questions per difficulty level
 - **Shareable Codes**: Each difficulty level gets its own unique 6-character code
 
 ### 🎯 Practice
