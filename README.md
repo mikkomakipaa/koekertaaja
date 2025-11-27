@@ -254,4 +254,4 @@ MIT License - free to use and modify
 
 ---
 
-Made with ❤️ for learners | [GitHub](https://github.com/mikkomakipaa/exam-prepper)
+Made with ❤️ for learners | [GitHub](https://github.com/mikkomakipaa/koekertaaja)
