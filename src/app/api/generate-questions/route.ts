@@ -161,19 +161,17 @@ export async function POST(request: NextRequest) {
     // Define all difficulty levels
     const difficulties: Difficulty[] = ['helppo', 'normaali', 'vaikea'];
 
-    // Calculate questions per difficulty (33% each)
-    const questionsPerDifficulty = Math.floor(questionCount / 3);
-
     // Array to store created question sets
     const createdSets: any[] = [];
 
     // Generate questions for each difficulty level
     for (const difficulty of difficulties) {
       // Generate questions using AI
+      // Uses examLength for questions per exam, questionCount for total pool size hint
       const questions = await generateQuestions({
         subject,
         difficulty,
-        questionCount: questionsPerDifficulty,
+        questionCount: examLength,
         grade,
         materialText,
         materialFiles: files.length > 0 ? files : undefined,
