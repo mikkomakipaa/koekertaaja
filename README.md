@@ -61,8 +61,8 @@ Koekertaaja is an interactive exam preparation application that helps students p
 
 1. **Download the code**:
    ```bash
-   git clone https://github.com/mikkomakipaa/exam-prepper.git
-   cd exam-prepper
+   git clone https://github.com/mikkomakipaa/koekertaaja.git
+   cd koekertaaja
    ```
 
 2. **Install dependencies**:
