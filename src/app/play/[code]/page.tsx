@@ -20,6 +20,7 @@ export default function PlayPage() {
   const params = useParams();
   const router = useRouter();
   const code = params.code as string;
+  const topRef = useRef<HTMLDivElement>(null);
 
   const [state, setState] = useState<PlayState>('loading');
   const [questionSet, setQuestionSet] = useState<QuestionSetWithQuestions | null>(null);
