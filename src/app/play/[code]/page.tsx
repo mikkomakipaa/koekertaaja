@@ -87,8 +87,17 @@ export default function PlayPage() {
       setState('results');
     } else {
       nextQuestion();
+      // Scroll to top for next question (especially important on mobile)
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+  // Scroll to top when a new question loads
+  useEffect(() => {
+    if (currentQuestion && !showExplanation) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentQuestionIndex, showExplanation]);
 
   const handlePlayAgain = () => {
     startNewSession();
