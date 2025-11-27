@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { subject, questionCount, questionSetName, grade, topic, subtopic, materialText } = validationResult.data;
+    const { subject, questionCount, examLength, questionSetName, grade, topic, subtopic, materialText } = validationResult.data;
 
     // Process uploaded files with validation
     // Note: Vercel Hobby tier has 5MB request body limit
