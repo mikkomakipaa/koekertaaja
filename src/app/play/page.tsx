@@ -181,6 +181,9 @@ export default function PlayBrowsePage() {
                         • Luokka {group.grade}
                       </span>
                     )}
+                    <span className="text-sm text-gray-500">
+                      • {group.sets[0]?.question_count || 0} kysymystä
+                    </span>
                   </div>
 
                   {(group.topic || group.subtopic) && (
