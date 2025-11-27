@@ -41,3 +41,4 @@ english-exam-game.tsx
 # claude-flow and swarm
 .claude-flow/
 .swarm/
+.claude/checkpoints
