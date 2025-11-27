@@ -85,7 +85,7 @@ export function ResultsScreen({
         {/* Answer Summary */}
         <div className="mb-10">
           <h3 className="font-semibold text-gray-900 mb-4">Vastausten yhteenveto</h3>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
+          <div className="space-y-2">
             {answers.map((answer, index) => (
               <div
                 key={index}
