@@ -181,9 +181,9 @@ export async function createQuestionSet(
   // Update question_count with actual number of questions inserted
   if (validQuestions.length !== questionSet.question_count) {
     console.log(`Updating question_count from ${questionSet.question_count} to ${validQuestions.length} for question set ${(newSet as any).id}`);
-    await supabaseAdmin
+    await (supabaseAdmin as any)
       .from('question_sets')
-      .update({ question_count: validQuestions.length } as any)
+      .update({ question_count: validQuestions.length })
       .eq('id', (newSet as any).id);
 
     // Update the returned newSet object with correct count
