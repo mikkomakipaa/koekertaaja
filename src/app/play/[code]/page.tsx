@@ -168,8 +168,8 @@ export default function PlayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-white p-4 md:p-8 pb-safe">
+      <div className="max-w-2xl mx-auto pt-2">
         {/* Streak Banner */}
         {currentStreak >= 3 && !showExplanation && (
           <div className="mb-6 bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4 text-center">
