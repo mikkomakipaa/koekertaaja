@@ -16,6 +16,58 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Logging**: Pino with pretty printing
 - **Deployment**: Vercel-ready with CSP headers
 
+## Development vs Production Environments
+
+**Status**: The application is now **live in production** (published 2025-11-27).
+
+### Environment Separation
+
+**Production**:
+- Live user-facing application
+- Stable, tested features only
+- Production Supabase database (contains real user-generated question sets)
+- Production Vercel deployment
+- **DO NOT** make experimental changes directly to production
+
+**Development**:
+- Separate Supabase project for testing
+- Development branch deployments
+- Safe environment for testing new features
+- Isolated from production data
+
+### Development Workflow
+
+1. **Always use development environment** for new features and experiments
+2. **Environment variables**: Maintain separate `.env.local` files:
+   - `.env.local` (development) - points to dev Supabase
+   - `.env.production` - points to prod Supabase (used by Vercel)
+3. **Testing**: Thoroughly test in dev before merging to main
+4. **Database changes**: Test migrations in dev Supabase first
+5. **Deployment**: Only merge to main when feature is production-ready
+
+### Required Environment Setup
+
+For development, create a **separate Supabase project** and configure `.env.local`:
+
+```bash
+# Development environment (.env.local)
+NEXT_PUBLIC_SUPABASE_URL=          # Dev Supabase project URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=     # Dev Supabase anonymous key
+SUPABASE_SERVICE_ROLE_KEY=         # Dev service role key
+ANTHROPIC_API_KEY=                 # Shared or separate dev key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+Production environment variables are configured in **Vercel project settings** (never in code).
+
+### Critical Guidelines
+
+- **Never test experimental features against production database**
+- **Always verify which environment you're connected to** before making changes
+- **Database migrations**: Apply to dev first, then production after validation
+- **Feature flags**: Consider using environment-based feature flags for gradual rollouts
+- **Monitoring**: Check production logs/errors regularly via Vercel dashboard
+
 ## Development Commands
 
 ```bash
