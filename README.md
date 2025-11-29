@@ -224,16 +224,29 @@ npm start
 
 3. **Done!** Your app is now online
 
-## 🎨 Color Palette
+## 🎨 Design System
 
-Koekertaaja uses a modern, energetic color palette:
+Koekertaaja uses a cohesive, child-friendly design system:
 
-- **Primary Gradient**: Cyan → Teal → Purple
-- **Backgrounds**: Soft cyan-purple-pink gradient
-- **Points**: Violet (💎)
-- **Streaks**: Orange-Gold (🔥)
-- **Success**: Emerald Green (✅)
-- **Achievements**: Gold-Amber (🏆)
+### Color Palette
+- **Primary**: Purple (#a855f7) - App theme and CTAs
+- **Points**: Amber (#f59e0b) - Gem/diamond icons
+- **Streaks**: Orange (#f97316) - Fire icons
+- **Success**: Green (#22c55e) - Correct answers
+- **Error**: Red (#ef4444) - Wrong answers
+- **Info**: Blue (#3b82f6) - Information and explanations
+
+### Badge Categories
+- **Purple**: Practice/Milestone badges (session counts)
+- **Gold/Yellow**: Performance badges (perfect scores, personal bests)
+- **Blue/Cyan**: Speed badges (fast completion)
+- **Green/Emerald**: Exploration badges (trying different levels)
+- **Orange/Red**: Streak badges (consecutive correct answers)
+
+### Dark Mode
+- Automatic system preference detection
+- Optimized color schemes for both modes
+- Smooth transitions between modes
 
 ## 🔐 Security
 
