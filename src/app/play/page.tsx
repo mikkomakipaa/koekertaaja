@@ -8,6 +8,17 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { QuestionSet, Difficulty } from '@/types';
 import { Loader2, BookOpen } from 'lucide-react';
+import {
+  GlobeHemisphereWest,
+  MathOperations,
+  Scroll,
+  Bank,
+  Books,
+  Smiley,
+  Target,
+  Barbell,
+  Sparkle
+} from '@phosphor-icons/react';
 
 type BrowseState = 'loading' | 'loaded' | 'error';
 
