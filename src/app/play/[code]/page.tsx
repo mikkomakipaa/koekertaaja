@@ -203,6 +203,13 @@ export default function PlayPage() {
           </span>
         </div>
 
+        {/* Progress Bar */}
+        <ProgressBar
+          current={currentQuestionIndex + 1}
+          total={selectedQuestions.length}
+          score={score}
+        />
+
         {/* Question Card */}
         <div className="bg-white border border-gray-200 rounded-xl p-4 md:p-8 mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
