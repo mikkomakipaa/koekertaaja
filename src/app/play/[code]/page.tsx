@@ -261,8 +261,38 @@ export default function PlayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 p-4 md:p-8 pb-safe transition-colors">
-      <div ref={topRef} className="max-w-2xl mx-auto pt-2">
+    <div className="min-h-screen bg-white dark:bg-gray-900 pb-safe transition-colors">
+      {/* Mode Toggle */}
+      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setStudyMode('pelaa')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${
+                studyMode === 'pelaa'
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              <GameController size={20} weight={studyMode === 'pelaa' ? 'fill' : 'regular'} />
+              Pelaa
+            </button>
+            <button
+              onClick={() => setStudyMode('opettele')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${
+                studyMode === 'opettele'
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              <Book size={20} weight={studyMode === 'opettele' ? 'fill' : 'regular'} />
+              Opettele
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div ref={topRef} className="max-w-2xl mx-auto pt-2 p-4 md:p-8">
         {/* Stats Bar */}
         <div className="mb-6 flex items-center justify-between">
           <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
