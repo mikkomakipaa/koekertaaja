@@ -63,11 +63,11 @@ export function SequentialQuestion({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Question Text */}
       <div className="text-lg font-medium text-gray-900 dark:text-gray-100 flex items-start gap-2">
         <ListNumbers size={24} weight="duotone" className="text-purple-600 dark:text-purple-400 flex-shrink-0 mt-1" />
-        <MathText>{questionText}</MathText>
+        <MathText>{question.question_text}</MathText>
       </div>
 
       {/* Items List */}
