@@ -36,22 +36,22 @@ export default function HomePage() {
           <div className="flex items-start gap-3">
             <span className="text-2xl">💎</span>
             <div>
-              <h3 className="font-semibold text-gray-900">Kerää pisteitä</h3>
-              <p className="text-gray-600 text-sm">Saat 10 pistettä per oikea vastaus, +5 putkesta</p>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">Kerää pisteitä</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">Saat 10 pistettä per oikea vastaus, +5 putkesta</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <span className="text-2xl">🔥</span>
             <div>
-              <h3 className="font-semibold text-gray-900">Rakenna putkia</h3>
-              <p className="text-gray-600 text-sm">Vastaa 3+ oikein peräkkäin bonuspisteisiin</p>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">Rakenna putkia</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">Vastaa 3+ oikein peräkkäin bonuspisteisiin</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <span className="text-2xl">🏆</span>
             <div>
-              <h3 className="font-semibold text-gray-900">Avaa saavutuksia</h3>
-              <p className="text-gray-600 text-sm">Täydelliset pisteet ja pitkät putket ansaitsevat merkkejä</p>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">Avaa saavutuksia</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">Täydelliset pisteet ja pitkät putket ansaitsevat merkkejä</p>
             </div>
           </div>
         </div>
