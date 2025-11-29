@@ -130,6 +130,8 @@ export async function generateQuestions(
           ? Object.entries(errorsByQuestion).map(([idx, errors]) => ({
               questionIndex: idx,
               errorCount: errors.length,
+              errorPaths: errors.map(e => e.path), // Include paths for debugging
+              questionType: parsedQuestions[parseInt(idx)]?.type, // Include type for context
             }))
           : errorsByQuestion,
         sampleInvalidQuestion: process.env.NODE_ENV === 'production'
