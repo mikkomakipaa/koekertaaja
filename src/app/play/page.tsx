@@ -153,6 +153,35 @@ export default function PlayBrowsePage() {
     );
   };
 
+  const getGradeColors = (grade: number) => {
+    // Color scheme based on grade level
+    if (grade <= 3) {
+      // Grades 1-3: Green (beginner)
+      return {
+        bg: 'bg-green-100 dark:bg-green-900/30',
+        text: 'text-green-800 dark:text-green-200',
+      };
+    } else if (grade <= 6) {
+      // Grades 4-6: Blue (intermediate)
+      return {
+        bg: 'bg-blue-100 dark:bg-blue-900/30',
+        text: 'text-blue-800 dark:text-blue-200',
+      };
+    } else if (grade <= 9) {
+      // Grades 7-9: Orange (advanced)
+      return {
+        bg: 'bg-orange-100 dark:bg-orange-900/30',
+        text: 'text-orange-800 dark:text-orange-200',
+      };
+    } else {
+      // Grade 10+: Purple (high school)
+      return {
+        bg: 'bg-purple-100 dark:bg-purple-900/30',
+        text: 'text-purple-800 dark:text-purple-200',
+      };
+    }
+  };
+
   // Loading screen
   if (state === 'loading') {
     return (
