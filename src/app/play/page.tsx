@@ -166,10 +166,17 @@ export default function PlayBrowsePage() {
                   key={group.key}
                   className="border border-gray-200 dark:border-gray-700 rounded-xl p-5 bg-white dark:bg-gray-800 hover:shadow-md transition-all"
                 >
-                  {/* Title */}
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-                    {group.name}
-                  </h3>
+                  {/* Title and Grade */}
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                      {group.name}
+                    </h3>
+                    {group.grade && (
+                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 flex-shrink-0">
+                        Luokka: {group.grade}
+                      </span>
+                    )}
+                  </div>
 
                   {/* Subject */}
                   <div className="mb-3">
@@ -180,11 +187,6 @@ export default function PlayBrowsePage() {
 
                   {/* Info Badges */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {group.grade && (
-                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
-                        Luokka: {group.grade}
-                      </span>
-                    )}
                     {(group.topic || group.subtopic) && (
                       <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                         Aihealue: {[group.topic, group.subtopic].filter(Boolean).join(' → ')}
