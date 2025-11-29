@@ -197,12 +197,14 @@ export default function PlayPage() {
             Kysymys {currentQuestionIndex + 1} / {selectedQuestions.length}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-            <span>
-              <span role="img" aria-label="Pisteet">💎</span> {totalPoints}
+            <span className="flex items-center gap-1.5">
+              <DiamondsFour size={20} weight="duotone" className="text-amber-500" />
+              {totalPoints}
             </span>
             {currentStreak > 0 && (
-              <span>
-                <span role="img" aria-label="Putki">🔥</span> {currentStreak}
+              <span className="flex items-center gap-1.5">
+                <Fire size={20} weight="duotone" className="text-orange-500" />
+                {currentStreak}
               </span>
             )}
           </div>
