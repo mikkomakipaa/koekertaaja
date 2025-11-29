@@ -165,15 +165,20 @@ export default function PlayBrowsePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 transition-colors">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+      {/* Mode Toggle */}
+      <ModeToggle currentMode={studyMode} onModeChange={setStudyMode} />
+
+      <div className="max-w-4xl mx-auto p-6 md:p-12">
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-2">
             <BookOpenText size={28} weight="duotone" className="text-purple-600 dark:text-purple-400" />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Valitse aihealue</h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">Valitse aihealue ja vaikeustaso</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {studyMode === 'pelaa' ? 'Pelaa kysymyspeliä pisteiden kanssa' : 'Opettele korttien avulla'}
+          </p>
         </div>
 
         {state === 'error' && (
