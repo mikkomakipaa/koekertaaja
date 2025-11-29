@@ -218,10 +218,12 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
 [
   {
     "question": "kysymysteksti suomeksi",
-    "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching",
+    "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching" | "sequential",
     "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"], // PAKOLLINEN multiple_choice kysymyksille, TÄYTYY olla 4 vaihtoehtoa
     "pairs": [{"left": "vasen", "right": "oikea"}], // PAKOLLINEN matching kysymyksille, TÄYTYY olla vähintään 4 paria
-    "correct_answer": "oikea vastaus",
+    "items": ["kohta1", "kohta2", "kohta3", "kohta4"], // PAKOLLINEN sequential kysymyksille
+    "correct_order": [1, 3, 0, 2], // PAKOLLINEN sequential kysymyksille - indeksit (0-based) oikeassa järjestyksessä
+    "correct_answer": "oikea vastaus",  // EI käytetä sequential kysymyksissä
     "acceptable_answers": ["vaihtoehtoinen vastaus"], // vapaaehtoinen, käytä fill_blank ja short_answer
     "explanation": "selitys suomeksi miksi tämä on oikea vastaus"
   }
