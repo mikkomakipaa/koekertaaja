@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ModeToggle } from '@/components/play/ModeToggle';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
-import { QuestionSet, Difficulty } from '@/types';
+import { QuestionSet, Difficulty, StudyMode } from '@/types';
 import { Loader2 } from 'lucide-react';
 import {
   GlobeHemisphereWest,
