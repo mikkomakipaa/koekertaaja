@@ -209,14 +209,11 @@ export default function PlayPage() {
     }
 
     return (
-      <div>
-        <ModeToggle currentMode={studyMode} onModeChange={setStudyMode} />
-        <FlashcardSession
-          flashcards={flashcards}
-          questionSetName={questionSet?.name || 'Kysymyssarja'}
-          onExit={handleBackToMenu}
-        />
-      </div>
+      <FlashcardSession
+        flashcards={flashcards}
+        questionSetName={questionSet?.name || 'Kysymyssarja'}
+        onExit={handleBackToMenu}
+      />
     );
   }
 
