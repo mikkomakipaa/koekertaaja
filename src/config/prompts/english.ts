@@ -43,9 +43,10 @@ VAIKEUSTASO: Helppo
 - Keskittyminen tunnistamiseen ja perusymmärrykseen
 
 KYSYMYSTYYPPIEN JAKAUMA (Helppo):
-- 60% multiple_choice (monivalinta - sanaston tunnistaminen, yksinkertaiset kielioppivalinnat)
-- 25% true_false (totta/tarua - yksinkertaiset väitteet)
+- 55% multiple_choice (monivalinta - sanaston tunnistaminen, yksinkertaiset kielioppivalinnat)
+- 20% true_false (totta/tarua - yksinkertaiset väitteet)
 - 15% fill_blank (täydennä - yksi puuttuva sana)
+- 10% sequential (järjestys - 4 kohtaa)
 - ÄLÄ käytä short_answer tai matching`,
     normaali: `
 VAIKEUSTASO: Normaali
