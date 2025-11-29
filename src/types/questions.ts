@@ -4,7 +4,8 @@ export type QuestionType =
   | 'fill_blank'
   | 'true_false'
   | 'matching'
-  | 'short_answer';
+  | 'short_answer'
+  | 'sequential';
 
 export type Subject = string;
 
