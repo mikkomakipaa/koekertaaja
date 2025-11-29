@@ -55,18 +55,18 @@ export function ShortAnswer({
       </div>
 
       {showExplanation && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
+        <div className="p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg space-y-3">
           <div>
-            <p className="text-sm font-semibold text-blue-900 mb-2">Esimerkkivastaus:</p>
-            <div className="text-sm text-blue-800 whitespace-pre-wrap">
+            <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">Esimerkkivastaus:</p>
+            <div className="text-sm text-blue-800 dark:text-blue-300 whitespace-pre-wrap">
               <MathText>{question.correct_answer}</MathText>
             </div>
           </div>
 
           {question.acceptable_answers && question.acceptable_answers.length > 0 && (
             <div>
-              <p className="text-sm font-semibold text-blue-900 mb-1">Muita hyväksyttäviä vastauksia:</p>
-              <ul className="text-sm text-blue-700 list-disc pl-5">
+              <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">Muita hyväksyttäviä vastauksia:</p>
+              <ul className="text-sm text-blue-700 dark:text-blue-300 list-disc pl-5">
                 {question.acceptable_answers.map((ans, i) => (
                   <li key={i}>
                     <MathText>{ans}</MathText>
@@ -76,8 +76,8 @@ export function ShortAnswer({
             </div>
           )}
 
-          <div className="pt-2 border-t border-blue-200">
-            <p className="text-xs text-blue-700">
+          <div className="pt-2 border-t border-blue-200 dark:border-blue-700">
+            <p className="text-xs text-blue-700 dark:text-blue-300">
               💡 Avoimissa kysymyksissä voit vertailla omaa vastaustasi esimerkkivastaukseen.
             </p>
           </div>
