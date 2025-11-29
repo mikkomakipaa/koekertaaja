@@ -4,7 +4,7 @@ import { getEnglishPrompt } from '@/config/prompts/english';
 import { getMathPrompt } from '@/config/prompts/math';
 import { getGenericPrompt } from '@/config/prompts/generic';
 import { shuffleArray } from '@/lib/utils';
-import { aiQuestionArraySchema } from '@/lib/validation/schemas';
+import { aiQuestionSchema, aiQuestionArraySchema } from '@/lib/validation/schemas';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger({ module: 'questionGenerator' });
