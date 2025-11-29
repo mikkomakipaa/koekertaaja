@@ -183,6 +183,71 @@ export default function PlayPage() {
     );
   }
 
+  // Flashcard mode
+  if (studyMode === 'opettele') {
+    if (flashcards.length === 0) {
+      return (
+        <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center transition-colors">
+          <div className="text-center max-w-md p-6">
+            <Book size={64} weight="duotone" className="text-purple-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+              Ei kortteja opeteltavaksi
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Tämä kysymyssarja ei sisällä kysymyksiä, joita voi opetella korttitilassa.
+            </p>
+            <Button
+              onClick={() => setStudyMode('pelaa')}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Siirry pelaamaan
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        {/* Mode Toggle */}
+        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setStudyMode('pelaa')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${
+                  studyMode === 'pelaa'
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                <GameController size={20} weight={studyMode === 'pelaa' ? 'fill' : 'regular'} />
+                Pelaa
+              </button>
+              <button
+                onClick={() => setStudyMode('opettele')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${
+                  studyMode === 'opettele'
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                <Book size={20} weight={studyMode === 'opettele' ? 'fill' : 'regular'} />
+                Opettele
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <FlashcardSession
+          flashcards={flashcards}
+          questionSetName={questionSet?.name || 'Kysymyssarja'}
+          onExit={handleBackToMenu}
+        />
+      </div>
+    );
+  }
+
   // Playing screen - show loading while session initializes
   if (!currentQuestion || selectedQuestions.length === 0) {
     return (
