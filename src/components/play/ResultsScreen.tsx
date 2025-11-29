@@ -181,37 +181,43 @@ export function ResultsScreen({
             </div>
             {showAllBadges ? (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                {badges.map(badge => (
-                  <div
-                    key={badge.id}
-                    className={`p-3 rounded-lg text-center ${
-                      badge.unlocked
-                        ? 'bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900 dark:to-orange-900 border-2 border-yellow-400 dark:border-yellow-600'
-                        : 'bg-gray-100 dark:bg-gray-800 opacity-50'
-                    }`}
-                    title={badge.unlocked ? badge.name : '🔒 Lukittu'}
-                  >
-                    <div className="text-3xl mb-1">{badge.unlocked ? badge.emoji : '🔒'}</div>
-                    {badge.unlocked && (
-                      <div className="text-xs font-medium text-gray-700 dark:text-gray-300 leading-tight">
-                        {badge.name}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {badges.map(badge => {
+                  const colors = getBadgeColors(badge.id);
+                  return (
+                    <div
+                      key={badge.id}
+                      className={`p-3 rounded-lg text-center ${
+                        badge.unlocked
+                          ? `bg-gradient-to-br ${colors.light} ${colors.dark} border-2`
+                          : 'bg-gray-100 dark:bg-gray-800 opacity-50'
+                      }`}
+                      title={badge.unlocked ? badge.name : '🔒 Lukittu'}
+                    >
+                      <div className="text-3xl mb-1">{badge.unlocked ? badge.emoji : '🔒'}</div>
+                      {badge.unlocked && (
+                        <div className={`text-xs font-medium leading-tight ${colors.text}`}>
+                          {badge.name}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {badges.filter(b => b.unlocked).map(badge => (
-                  <div
-                    key={badge.id}
-                    className="flex items-center gap-1 px-3 py-2 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900 dark:to-orange-900 border border-yellow-400 dark:border-yellow-600 rounded-lg"
-                    title={badge.name}
-                  >
-                    <span className="text-xl">{badge.emoji}</span>
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{badge.name}</span>
-                  </div>
-                ))}
+                {badges.filter(b => b.unlocked).map(badge => {
+                  const colors = getBadgeColors(badge.id);
+                  return (
+                    <div
+                      key={badge.id}
+                      className={`flex items-center gap-1 px-3 py-2 bg-gradient-to-br ${colors.light} ${colors.dark} border rounded-lg`}
+                      title={badge.name}
+                    >
+                      <span className="text-xl">{badge.emoji}</span>
+                      <span className={`text-xs font-medium ${colors.text}`}>{badge.name}</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
