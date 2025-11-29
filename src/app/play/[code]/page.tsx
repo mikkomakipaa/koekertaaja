@@ -191,14 +191,14 @@ export default function PlayPage() {
     <div className="min-h-screen bg-white p-4 md:p-8 pb-safe">
       <div ref={topRef} className="max-w-2xl mx-auto pt-2">
         {/* Stats Bar */}
-        <div className="mb-6 flex items-center justify-between text-sm">
+        <div className="mb-6 flex items-center justify-between text-base">
           <div className="flex items-center gap-4">
-            <span className="text-gray-600">💎 {totalPoints} pistettä</span>
+            <span className="text-gray-700">💎 {totalPoints} pistettä</span>
             {currentStreak > 0 && (
-              <span className="text-gray-600">🔥 {currentStreak} putki</span>
+              <span className="text-gray-700">🔥 {currentStreak} putki</span>
             )}
           </div>
-          <span className="text-gray-500">
+          <span className="text-gray-600">
             {currentQuestionIndex + 1} / {selectedQuestions.length}
           </span>
         </div>
