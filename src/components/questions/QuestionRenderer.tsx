@@ -4,6 +4,7 @@ import { FillBlank } from './FillBlank';
 import { TrueFalse } from './TrueFalse';
 import { Matching } from './Matching';
 import { ShortAnswer } from './ShortAnswer';
+import { SequentialQuestion } from './SequentialQuestion';
 
 interface QuestionRendererProps {
   question: Question;
