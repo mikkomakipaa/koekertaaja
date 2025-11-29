@@ -198,10 +198,10 @@ export default function PlayPage() {
               Tämä kysymyssarja ei sisällä kysymyksiä, joita voi opetella korttitilassa.
             </p>
             <Button
-              onClick={() => setStudyMode('pelaa')}
+              onClick={() => router.push('/play')}
               className="bg-purple-600 hover:bg-purple-700 text-white"
             >
-              Siirry pelaamaan
+              Takaisin valintaan
             </Button>
           </div>
         </div>
