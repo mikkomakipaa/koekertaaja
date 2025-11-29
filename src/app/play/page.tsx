@@ -182,7 +182,9 @@ export default function PlayBrowsePage() {
         {groupedSets.length === 0 && state === 'loaded' && (
           <div className="text-center py-16 px-6">
             <div className="max-w-md mx-auto">
-              <div className="text-6xl mb-6">📚</div>
+              <div className="mb-6 flex justify-center">
+                <Books size={80} weight="duotone" className="text-purple-500" />
+              </div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                 Ei vielä harjoituksia
               </h2>
