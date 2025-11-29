@@ -1,96 +1,66 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { SequentialQuestion as SequentialQuestionType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
 import { ArrowUp, ArrowDown, ListNumbers, CheckCircle, XCircle } from '@phosphor-icons/react';
 
-export interface SequentialQuestionProps {
-  questionText: string;
-  items: string[];
-  correctOrder: number[];
-  explanation: string;
-  onAnswer: (isCorrect: boolean, userAnswer: number[]) => void;
-  disabled?: boolean;
+interface SequentialQuestionProps {
+  question: SequentialQuestionType;
+  userAnswer: number[] | null;
+  showExplanation: boolean;
+  onAnswerChange: (answer: number[]) => void;
 }
 
 export function SequentialQuestion({
-  questionText,
-  items,
-  correctOrder,
-  explanation,
-  onAnswer,
-  disabled = false,
+  question,
+  userAnswer,
+  showExplanation,
+  onAnswerChange,
 }: SequentialQuestionProps) {
   // State: current order of items (indices)
   const [currentOrder, setCurrentOrder] = useState<number[]>([]);
-  const [submitted, setSubmitted] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
 
-  // Initialize: shuffle items on mount
+  // Initialize: shuffle items on mount or use userAnswer if it exists
   useEffect(() => {
-    // Fisher-Yates shuffle
-    const indices = items.map((_, i) => i);
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
+    if (userAnswer && userAnswer.length > 0) {
+      setCurrentOrder(userAnswer);
+    } else {
+      // Fisher-Yates shuffle
+      const indices = question.items.map((_, i) => i);
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+      setCurrentOrder(indices);
+      onAnswerChange(indices); // Set initial answer
     }
-    setCurrentOrder(indices);
-  }, [items]);
+  }, [question.items]);
 
   // Move item up
   const moveUp = (index: number) => {
-    if (index === 0 || submitted) return;
+    if (index === 0 || showExplanation) return;
     const newOrder = [...currentOrder];
     [newOrder[index], newOrder[index - 1]] = [newOrder[index - 1], newOrder[index]];
     setCurrentOrder(newOrder);
+    onAnswerChange(newOrder);
   };
 
   // Move item down
   const moveDown = (index: number) => {
-    if (index === currentOrder.length - 1 || submitted) return;
+    if (index === currentOrder.length - 1 || showExplanation) return;
     const newOrder = [...currentOrder];
     [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
     setCurrentOrder(newOrder);
-  };
-
-  // Submit answer
-  const handleSubmit = () => {
-    if (submitted || disabled) return;
-
-    // Check if the order is correct
-    const correct = JSON.stringify(currentOrder) === JSON.stringify(correctOrder);
-    setIsCorrect(correct);
-    setSubmitted(true);
-    onAnswer(correct, currentOrder);
+    onAnswerChange(newOrder);
   };
 
   // Get item status (correct position / incorrect position / not submitted yet)
   const getItemStatus = (index: number): 'correct' | 'incorrect' | 'pending' => {
-    if (!submitted) return 'pending';
-    return currentOrder[index] === correctOrder[index] ? 'correct' : 'incorrect';
+    if (!showExplanation) return 'pending';
+    return currentOrder[index] === question.correct_order[index] ? 'correct' : 'incorrect';
   };
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    if (submitted || disabled) return;
-
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // Don't handle if user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-
-      // Enter to submit
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleSubmit();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [submitted, disabled, currentOrder]);
 
   return (
     <div className="space-y-6">
