@@ -294,7 +294,7 @@ export default function PlayBrowsePage() {
                         aria-label="Opettele korttien avulla"
                       >
                         <Book size={20} weight="duotone" />
-                        Opettele ({group.sets.length} tasoa)
+                        Opettele
                       </button>
                     )}
                   </div>
