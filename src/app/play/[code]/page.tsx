@@ -13,6 +13,7 @@ import { useGameSession } from '@/hooks/useGameSession';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { QuestionSetWithQuestions } from '@/types';
 import { Loader2, List } from 'lucide-react';
+import { DiamondsFour, Fire } from '@phosphor-icons/react';
 
 type PlayState = 'loading' | 'error' | 'playing' | 'results';
 
