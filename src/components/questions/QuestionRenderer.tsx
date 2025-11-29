@@ -4,6 +4,7 @@ import { FillBlank } from './FillBlank';
 import { TrueFalse } from './TrueFalse';
 import { Matching } from './Matching';
 import { ShortAnswer } from './ShortAnswer';
+import { SequentialQuestion } from './SequentialQuestion';
 
 interface QuestionRendererProps {
   question: Question;
@@ -67,6 +68,16 @@ export function QuestionRenderer({
         <ShortAnswer
           question={question}
           userAnswer={userAnswer || ''}
+          showExplanation={showExplanation}
+          onAnswerChange={onAnswerChange}
+        />
+      );
+
+    case 'sequential':
+      return (
+        <SequentialQuestion
+          question={question}
+          userAnswer={userAnswer || null}
           showExplanation={showExplanation}
           onAnswerChange={onAnswerChange}
         />

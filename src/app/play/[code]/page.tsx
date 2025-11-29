@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -9,24 +9,30 @@ import { MathText } from '@/components/ui/math-text';
 import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
 import { ProgressBar } from '@/components/play/ProgressBar';
 import { ResultsScreen } from '@/components/play/ResultsScreen';
+import { FlashcardSession } from '@/components/play/FlashcardSession';
 import { useGameSession } from '@/hooks/useGameSession';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
-import { QuestionSetWithQuestions } from '@/types';
+import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
+import { QuestionSetWithQuestions, StudyMode, Flashcard } from '@/types';
 import { Loader2, List } from 'lucide-react';
-import { DiamondsFour, Fire } from '@phosphor-icons/react';
+import { DiamondsFour, Fire, Book } from '@phosphor-icons/react';
 
 type PlayState = 'loading' | 'error' | 'playing' | 'results';
 
 export default function PlayPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const code = params.code as string;
+  const studyMode = (searchParams.get('mode') as StudyMode) || 'pelaa';
+  const allCodes = searchParams.get('all'); // Comma-separated codes for study mode
   const topRef = useRef<HTMLDivElement>(null);
 
   const [state, setState] = useState<PlayState>('loading');
   const [questionSet, setQuestionSet] = useState<QuestionSetWithQuestions | null>(null);
   const [error, setError] = useState('');
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
 
   const {
     currentQuestion,
@@ -46,21 +52,56 @@ export default function PlayPage() {
     startNewSession,
   } = useGameSession(questionSet?.questions || []);
 
-  // Load question set
+  // Load question set(s)
   useEffect(() => {
     const loadQuestionSet = async () => {
       try {
         setState('loading');
-        const data = await getQuestionSetByCode(code);
 
-        if (!data) {
-          setError(`Kysymyssarjaa ei löytynyt koodilla: ${code}`);
-          setState('error');
-          return;
+        // If allCodes parameter exists, load all question sets for study mode
+        if (allCodes && studyMode === 'opettele') {
+          const codes = allCodes.split(',');
+          const allSets = await Promise.all(
+            codes.map(c => getQuestionSetByCode(c.trim()))
+          );
+
+          // Filter out any null results and combine questions
+          const validSets = allSets.filter(s => s !== null) as QuestionSetWithQuestions[];
+
+          if (validSets.length === 0) {
+            setError('Kysymyssarjoja ei löytynyt');
+            setState('error');
+            return;
+          }
+
+          // Use first set as the base, but combine all questions
+          const combinedSet = {
+            ...validSets[0],
+            questions: validSets.flatMap(s => s.questions),
+            question_count: validSets.reduce((sum, s) => sum + s.question_count, 0)
+          };
+
+          setQuestionSet(combinedSet);
+          // Convert all questions to flashcards (excludes sequential questions)
+          const cards = convertQuestionsToFlashcards(combinedSet.questions);
+          setFlashcards(cards);
+          setState('playing');
+        } else {
+          // Normal single question set loading
+          const data = await getQuestionSetByCode(code);
+
+          if (!data) {
+            setError(`Kysymyssarjaa ei löytynyt koodilla: ${code}`);
+            setState('error');
+            return;
+          }
+
+          setQuestionSet(data);
+          // Convert questions to flashcards (excludes sequential questions)
+          const cards = convertQuestionsToFlashcards(data.questions);
+          setFlashcards(cards);
+          setState('playing');
         }
-
-        setQuestionSet(data);
-        setState('playing');
       } catch (err) {
         console.error('Error loading question set:', err);
         setError('Kysymyssarjan lataaminen epäonnistui');
@@ -71,7 +112,7 @@ export default function PlayPage() {
     if (code) {
       loadQuestionSet();
     }
-  }, [code]);
+  }, [code, allCodes, studyMode]);
 
   // Start new session when question set loads
   useEffect(() => {
@@ -172,6 +213,52 @@ export default function PlayPage() {
         durationSeconds={durationSeconds}
         onPlayAgain={handlePlayAgain}
         onBackToMenu={handleBackToMenu}
+      />
+    );
+  }
+
+  // Flashcard mode
+  if (studyMode === 'opettele') {
+    if (flashcards.length === 0) {
+      return (
+        <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center transition-colors">
+          <div className="text-center max-w-md p-6">
+            <Book size={64} weight="duotone" className="text-purple-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+              Ei kortteja opeteltavaksi
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Tämä kysymyssarja ei sisällä kysymyksiä, joita voi opetella korttitilassa.
+            </p>
+            <Button
+              onClick={() => router.push('/play')}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Takaisin valintaan
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // Strip difficulty suffix from name for flashcard mode
+    const stripDifficultySuffix = (name: string): string => {
+      const suffixes = [' - Helppo', ' - Normaali', ' - Vaikea'];
+      for (const suffix of suffixes) {
+        if (name.endsWith(suffix)) {
+          return name.slice(0, -suffix.length);
+        }
+      }
+      return name;
+    };
+
+    const displayName = questionSet?.name ? stripDifficultySuffix(questionSet.name) : 'Kysymyssarja';
+
+    return (
+      <FlashcardSession
+        flashcards={flashcards}
+        questionSetName={displayName}
+        onExit={handleBackToMenu}
       />
     );
   }

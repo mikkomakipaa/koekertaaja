@@ -49,9 +49,10 @@ VAIKEUSTASO: Helppo
 - Yksivaiheiset laskut ja selkeät tehtävät
 
 KYSYMYSTYYPPIEN JAKAUMA (Helppo):
-- 70% multiple_choice (monivalinta)
+- 60% multiple_choice (monivalinta)
 - 20% true_false (totta/tarua)
 - 10% fill_blank (täydennä, yksinkertainen numeerinen vastaus)
+- 10% sequential (järjestys - 4 vaihetta)
 - ÄLÄ käytä short_answer tai matching`,
     normaali: `
 VAIKEUSTASO: Normaali
@@ -61,9 +62,10 @@ VAIKEUSTASO: Normaali
 - 2-3 vaiheen ongelmat
 
 KYSYMYSTYYPPIEN JAKAUMA (Normaali):
-- 60% multiple_choice (monivalinta)
+- 55% multiple_choice (monivalinta)
 - 25% fill_blank (täydennä, numeerinen vastaus)
-- 15% true_false (totta/tarua)
+- 10% sequential (järjestys - 5-6 vaihetta)
+- 10% true_false (totta/tarua)
 - ÄLÄ käytä short_answer (liian epämääräinen matematiikassa)
 - Voit käyttää matching jos sopii aiheeseen`,
     vaikea: `
@@ -139,6 +141,42 @@ KYSYMYSTYYPPIEN KÄYTTÖOHJEET:
    - Sopii: termit ja määritelmät, kaavat ja nimet
    - Käytä säästeliäästi, vain jos aihe sopii
 
+5. SEQUENTIAL (järjestys):
+   - Sopii: ratkaisun vaiheet, laskujärjestys, ongelman ratkaisuprosessi
+   - Käytä helppo ja normaali tasoilla
+   - Helppo taso: 4 vaihetta, Normaali taso: 5-6 vaihetta
+
+   Helppo taso - Laskujärjestys:
+   Kysymys: "Järjestä nämä laskun vaiheet oikeaan järjestykseen laskettaessa $$3 + 4 \\times 5$$:"
+   items: [
+     "Laske kertolasku: $$4 \\times 5 = 20$$",
+     "Laske yhteenlasku: $$3 + 20 = 23$$",
+     "Tunnista operaatiot: yhteenlasku ja kertolasku",
+     "Vastaus on 23"
+   ]
+   correct_order: [2, 0, 1, 3]
+
+   Normaali taso - Yhtälön ratkaisu:
+   Kysymys: "Järjestä nämä vaiheet oikeaan järjestykseen kun ratkaistaan yhtälö $$2x + 6 = 14$$:"
+   items: [
+     "Vähennä molemmilta puolilta 6: $$2x = 8$$",
+     "Jaa molemmat puolet luvulla 2: $$x = 4$$",
+     "Tarkista vastaus: $$2 \\times 4 + 6 = 14$$ ✓",
+     "Aloitetilanne: $$2x + 6 = 14$$",
+     "Vastaus on $$x = 4$$"
+   ]
+   correct_order: [3, 0, 1, 4, 2]
+
+   Normaali taso - Pinta-alan laskeminen:
+   Kysymys: "Järjestä nämä vaiheet oikeaan järjestykseen kun lasketaan suorakulmion pinta-ala (leveys 5 cm, korkeus 8 cm):"
+   items: [
+     "Pinta-ala = $$5 \\times 8 = 40$$ neliösenttimetriä",
+     "Käytetään kaavaa: Pinta-ala = leveys $$\\times$$ korkeus",
+     "Tunnetaan mitat: leveys = 5 cm, korkeus = 8 cm",
+     "Sijoitetaan arvot kaavaan"
+   ]
+   correct_order: [2, 1, 3, 0]
+
 NUMEERISTEN VASTAUSTEN KÄSITTELY:
 - Anna pääasiallinen oikea vastaus "correct_answer" -kentässä
 - Lisää "acceptable_answers" -taulukkoon vaihtoehtoiset hyväksyttävät muodot:
@@ -160,9 +198,11 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
 [
   {
     "question": "kysymysteksti suomeksi (voi sisältää LaTeX-merkintää)",
-    "type": "multiple_choice" | "fill_blank" | "true_false" | "matching",
+    "type": "multiple_choice" | "fill_blank" | "true_false" | "matching" | "sequential",
     "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"], // vain multiple_choice
-    "correct_answer": "oikea vastaus (voi sisältää LaTeX-merkintää)",
+    "items": ["vaihe1", "vaihe2", "vaihe3", "vaihe4"], // PAKOLLINEN sequential kysymyksille
+    "correct_order": [2, 0, 1, 3], // PAKOLLINEN sequential kysymyksille - indeksit oikeassa järjestyksessä
+    "correct_answer": "oikea vastaus (voi sisältää LaTeX-merkintää)",  // EI käytetä sequential kysymyksissä
     "acceptable_answers": ["vaihtoehtoinen muoto 1", "vaihtoehtoinen muoto 2"], // vapaaehtoinen, erityisesti fill_blank
     "explanation": "selitys suomeksi kuinka vastaus saadaan (näytä laskuvaiheet)"
   }

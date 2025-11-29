@@ -17,9 +17,10 @@ VAIKEUSTASO: Helppo
 - Suoraviivainen sisältö ja tunnistaminen
 
 KYSYMYSTYYPPIEN JAKAUMA (Helppo):
-- 65% multiple_choice (monivalinta)
+- 55% multiple_choice (monivalinta)
 - 25% true_false (totta/tarua)
 - 10% fill_blank (täydennä, yksinkertainen)
+- 10% sequential (järjestys - 4 kohtaa)
 - ÄLÄ käytä short_answer tai matching`,
     normaali: `
 VAIKEUSTASO: Normaali
@@ -29,10 +30,11 @@ VAIKEUSTASO: Normaali
 - Kohtuullisen haastava
 
 KYSYMYSTYYPPIEN JAKAUMA (Normaali):
-- 50% multiple_choice (monivalinta)
+- 45% multiple_choice (monivalinta)
 - 20% fill_blank (täydennä)
 - 15% true_false (totta/tarua)
-- 10% short_answer (lyhyt vastaus)
+- 10% sequential (järjestys - 5-6 kohtaa)
+- 5% short_answer (lyhyt vastaus)
 - 5% matching (parit, jos sopii aiheeseen)`,
     vaikea: `
 VAIKEUSTASO: Vaikea

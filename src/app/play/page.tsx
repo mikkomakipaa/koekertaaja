@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ModeToggle } from '@/components/play/ModeToggle';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
-import { QuestionSet, Difficulty } from '@/types';
+import { QuestionSet, Difficulty, StudyMode } from '@/types';
 import { Loader2 } from 'lucide-react';
 import {
   GlobeHemisphereWest,
@@ -18,7 +19,8 @@ import {
   Target,
   Barbell,
   Sparkle,
-  BookOpenText
+  BookOpenText,
+  Book
 } from '@phosphor-icons/react';
 
 type BrowseState = 'loading' | 'loaded' | 'error';
@@ -39,6 +41,7 @@ export default function PlayBrowsePage() {
   const [state, setState] = useState<BrowseState>('loading');
   const [groupedSets, setGroupedSets] = useState<GroupedQuestionSets[]>([]);
   const [error, setError] = useState('');
+  const [studyMode, setStudyMode] = useState<StudyMode>('pelaa');
 
   const difficultyLabels: Record<string, string> = {
     helppo: 'Helppo',
@@ -163,15 +166,20 @@ export default function PlayBrowsePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 transition-colors">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+      {/* Mode Toggle */}
+      <ModeToggle currentMode={studyMode} onModeChange={setStudyMode} />
+
+      <div className="max-w-4xl mx-auto p-6 md:p-12">
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-2">
             <BookOpenText size={28} weight="duotone" className="text-purple-600 dark:text-purple-400" />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Valitse aihealue</h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">Valitse aihealue ja vaikeustaso</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {studyMode === 'pelaa' ? 'Pelaa kysymyspeliä pisteiden kanssa' : 'Opettele korttien avulla'}
+          </p>
         </div>
 
         {state === 'error' && (
@@ -250,25 +258,45 @@ export default function PlayBrowsePage() {
                     </div>
                   )}
 
-                  {/* Difficulty Buttons - Inline */}
+                  {/* Difficulty Buttons (Play mode) or Single Study Button (Study mode) */}
                   <div className="flex flex-wrap gap-2">
-                    {availableDifficulties.map((difficulty) => {
-                      const set = group.sets.find(s => s.difficulty === difficulty);
-                      const colors = difficultyColors[difficulty];
-                      const icon = difficultyIcons[difficulty];
+                    {studyMode === 'pelaa' ? (
+                      // Play mode: Show difficulty buttons
+                      availableDifficulties.map((difficulty) => {
+                        const set = group.sets.find(s => s.difficulty === difficulty);
+                        const colors = difficultyColors[difficulty];
+                        const icon = difficultyIcons[difficulty];
 
-                      return (
-                        <button
-                          key={difficulty}
-                          onClick={() => set && router.push(`/play/${set.code}`)}
-                          className={`${colors.bg} ${colors.hover} text-white px-4 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-1.5`}
-                          aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
-                        >
-                          {icon}
-                          {difficultyLabels[difficulty]}
-                        </button>
-                      );
-                    })}
+                        return (
+                          <button
+                            key={difficulty}
+                            onClick={() => set && router.push(`/play/${set.code}?mode=${studyMode}`)}
+                            className={`${colors.bg} ${colors.hover} text-white px-4 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-1.5`}
+                            aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
+                          >
+                            {icon}
+                            {difficultyLabels[difficulty]}
+                          </button>
+                        );
+                      })
+                    ) : (
+                      // Study mode: Single button for all flashcards
+                      <button
+                        onClick={() => {
+                          const firstSet = group.sets[0];
+                          if (firstSet) {
+                            // Pass all set codes as comma-separated list
+                            const codes = group.sets.map(s => s.code).join(',');
+                            router.push(`/play/${firstSet.code}?mode=opettele&all=${codes}`);
+                          }
+                        }}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2"
+                        aria-label="Opettele korttien avulla"
+                      >
+                        <Book size={20} weight="duotone" />
+                        Opettele
+                      </button>
+                    )}
                   </div>
                 </div>
               );

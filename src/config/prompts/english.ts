@@ -43,9 +43,10 @@ VAIKEUSTASO: Helppo
 - Keskittyminen tunnistamiseen ja perusymmärrykseen
 
 KYSYMYSTYYPPIEN JAKAUMA (Helppo):
-- 60% multiple_choice (monivalinta - sanaston tunnistaminen, yksinkertaiset kielioppivalinnat)
-- 25% true_false (totta/tarua - yksinkertaiset väitteet)
+- 55% multiple_choice (monivalinta - sanaston tunnistaminen, yksinkertaiset kielioppivalinnat)
+- 20% true_false (totta/tarua - yksinkertaiset väitteet)
 - 15% fill_blank (täydennä - yksi puuttuva sana)
+- 10% sequential (järjestys - 4 kohtaa)
 - ÄLÄ käytä short_answer tai matching`,
     normaali: `
 VAIKEUSTASO: Normaali
@@ -55,10 +56,11 @@ VAIKEUSTASO: Normaali
 - Käytännön viestintätilanteet
 
 KYSYMYSTYYPPIEN JAKAUMA (Normaali):
-- 45% multiple_choice (monivalinta)
+- 40% multiple_choice (monivalinta)
 - 25% fill_blank (täydennä - sanat tai lyhyet ilmaisut)
 - 15% true_false (totta/tarua)
-- 10% matching (parit - esim. sanat ja määritelmät)
+- 10% sequential (järjestys - 5-6 kohtaa)
+- 5% matching (parit - esim. sanat ja määritelmät)
 - 5% short_answer (lyhyt vastaus - 1-2 sanaa tai lyhyt lause)`,
     vaikea: `
 VAIKEUSTASO: Vaikea
@@ -165,6 +167,45 @@ KYSYMYSTYYPPIEN KÄYTTÖOHJEET:
    Esim: Yhdistä englanninkielinen sana suomenkieliseen käännökseen
    Parit: [{"left": "happy", "right": "iloinen"}, {"left": "sad", "right": "surullinen"}, {"left": "angry", "right": "vihainen"}, {"left": "tired", "right": "väsynyt"}]
 
+6. SEQUENTIAL (järjestys):
+   - Sopii: lauseiden järjestäminen kappaleeksi, tapahtumien aikajärjestys, dialogin järjestys
+   - Käytä helppo ja normaali tasoilla
+   *** PAKOLLINEN: Helppo taso 4 kohtaa, Normaali taso 5-6 kohtaa ***
+
+   Helppo taso - Lauseet järjestykseen:
+   Kysymys: "Järjestä nämä lauseet oikeaan järjestykseen muodostaaksesi loogisen tarinan:"
+   items: [
+     "I ate my breakfast.",
+     "I woke up at 7 o'clock.",
+     "I went to school.",
+     "I brushed my teeth."
+   ]
+   correct_order: [1, 3, 0, 2]  // Oikea järjestys: woke up -> brushed teeth -> ate breakfast -> went to school
+   Huom: correct_order sisältää ALKUPERÄISTEN kohtien indeksit (0-pohjainen) oikeassa järjestyksessä
+
+   Normaali taso - Dialogi järjestykseen:
+   Kysymys: "Järjestä nämä vuorosanatloogiseksi keskusteluksi:"
+   items: [
+     "Nice to meet you too!",
+     "I'm fine, thank you. And you?",
+     "Hello! How are you?",
+     "My name is Sarah. What's your name?",
+     "I'm doing well, thanks!",
+     "I'm John."
+   ]
+   correct_order: [2, 1, 4, 3, 5, 0]
+
+   Normaali taso - Ohjeiden järjestäminen:
+   Kysymys: "Järjestä nämä ohjeet oikeaan järjestykseen:"
+   items: [
+     "Put the bread in the toaster.",
+     "Wait for the bread to become brown.",
+     "Take a slice of bread.",
+     "Put butter on the toast.",
+     "Take the toast out of the toaster."
+   ]
+   correct_order: [2, 0, 1, 4, 3]
+
 VÄÄRÄT VASTAUKSET (multiple_choice):
 Väärät vastaukset tulee olla uskottavia:
 - Samaan aihealueeseen liittyviä sanoja
@@ -177,10 +218,12 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
 [
   {
     "question": "kysymysteksti suomeksi",
-    "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching",
+    "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching" | "sequential",
     "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"], // PAKOLLINEN multiple_choice kysymyksille, TÄYTYY olla 4 vaihtoehtoa
     "pairs": [{"left": "vasen", "right": "oikea"}], // PAKOLLINEN matching kysymyksille, TÄYTYY olla vähintään 4 paria
-    "correct_answer": "oikea vastaus",
+    "items": ["kohta1", "kohta2", "kohta3", "kohta4"], // PAKOLLINEN sequential kysymyksille
+    "correct_order": [1, 3, 0, 2], // PAKOLLINEN sequential kysymyksille - indeksit (0-based) oikeassa järjestyksessä
+    "correct_answer": "oikea vastaus",  // EI käytetä sequential kysymyksissä
     "acceptable_answers": ["vaihtoehtoinen vastaus"], // vapaaehtoinen, käytä fill_blank ja short_answer
     "explanation": "selitys suomeksi miksi tämä on oikea vastaus"
   }

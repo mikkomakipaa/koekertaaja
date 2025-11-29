@@ -4,7 +4,8 @@ export type QuestionType =
   | 'fill_blank'
   | 'true_false'
   | 'matching'
-  | 'short_answer';
+  | 'short_answer'
+  | 'sequential';
 
 export type Subject = string;
 
@@ -56,13 +57,20 @@ export interface ShortAnswerQuestion extends BaseQuestion {
   max_length?: number;
 }
 
+export interface SequentialQuestion extends BaseQuestion {
+  question_type: 'sequential';
+  items: string[];  // Items in scrambled order (displayed to user)
+  correct_order: number[];  // Correct indices [0, 2, 1, 3] representing original item positions
+}
+
 // Union type of all question types
 export type Question =
   | MultipleChoiceQuestion
   | FillBlankQuestion
   | TrueFalseQuestion
   | MatchingQuestion
-  | ShortAnswerQuestion;
+  | ShortAnswerQuestion
+  | SequentialQuestion;
 
 // Question Set
 export interface QuestionSet {
@@ -82,6 +90,35 @@ export interface QuestionSet {
 // Question Set with Questions
 export interface QuestionSetWithQuestions extends QuestionSet {
   questions: Question[];
+}
+
+// Study Mode
+export type StudyMode = 'pelaa' | 'opettele';
+
+// Flashcard (converted from questions, excludes sequential)
+export type FlashcardCompatibleQuestion = Exclude<Question, SequentialQuestion>;
+
+export interface Flashcard {
+  id: string;
+  questionId: string;
+  front: string;  // Question text
+  back: {
+    answer: string;  // Formatted answer display
+    explanation: string;  // Why this is correct
+  };
+  questionType: QuestionType;
+  originalQuestion: FlashcardCompatibleQuestion;
+}
+
+// Flashcard Session (client-side only, not stored in DB)
+export interface FlashcardSession {
+  questionSetCode: string;
+  questionSetName: string;
+  flashcards: Flashcard[];
+  currentIndex: number;
+  reviewedCount: number;
+  flippedCards: Set<string>;  // Track which cards have been flipped
+  startedAt: Date;
 }
 
 // Game Session (not stored in DB)
