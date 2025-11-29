@@ -284,7 +284,7 @@ export default function PlayBrowsePage() {
 
         {groupedSets.length > 0 && (
           <div className="space-y-4">
-            {groupedSets.map((group) => {
+            {filteredSets.map((group) => {
               const availableDifficulties = getAvailableDifficulties(group.sets);
 
               return (
