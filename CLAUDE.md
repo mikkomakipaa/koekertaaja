@@ -16,6 +16,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Database**: Supabase (PostgreSQL with Row Level Security)
 - **AI**: Anthropic Claude API (`claude-sonnet-4-20250514`)
 - **UI**: Tailwind CSS + shadcn/ui components
+- **Icons**: Phosphor Icons (duotone vector icons)
+- **Dark Mode**: Automatic system preference detection
 - **Validation**: Zod schemas
 - **Logging**: Pino with pretty printing
 - **Deployment**: Vercel-ready with CSP headers
