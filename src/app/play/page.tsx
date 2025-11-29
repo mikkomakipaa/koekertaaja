@@ -178,24 +178,24 @@ export default function PlayBrowsePage() {
                     )}
                   </div>
 
-                  {/* Subject */}
-                  <div className="mb-3">
+                  {/* Subject and Question Count */}
+                  <div className="flex items-center justify-between gap-3 mb-3">
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       {getSubjectLabel(group.subject)}
                     </span>
-                  </div>
-
-                  {/* Info Badges */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {(group.topic || group.subtopic) && (
-                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                        Aihealue: {[group.topic, group.subtopic].filter(Boolean).join(' → ')}
-                      </span>
-                    )}
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 flex-shrink-0">
                       {group.sets[0]?.question_count || 0} kysymystä
                     </span>
                   </div>
+
+                  {/* Area Badge */}
+                  {(group.topic || group.subtopic) && (
+                    <div className="mb-4">
+                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                        Aihealue: {[group.topic, group.subtopic].filter(Boolean).join(' → ')}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Difficulty Buttons - Inline */}
                   <div className="flex flex-wrap gap-2">
