@@ -199,7 +199,7 @@ export default function CreatePage() {
         <UserMenu />
         <div className="min-h-screen bg-white p-6 md:p-12 flex items-center justify-center">
         <Card className="max-w-3xl shadow-2xl">
-          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
+          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white rounded-t-lg">
             <CardTitle className="text-3xl flex items-center gap-2">
               ✓ Kysymyssarjat luotu onnistuneesti!
             </CardTitle>
