@@ -153,51 +153,18 @@ export function SequentialQuestion({
       </div>
 
       {/* Correct Order Display (after wrong answer) */}
-      {submitted && !isCorrect && (
-        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 dark:border-blue-600 rounded-lg">
+      {showExplanation && JSON.stringify(currentOrder) !== JSON.stringify(question.correct_order) && (
+        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 dark:border-blue-600 rounded-lg">
           <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">Oikea järjestys:</h4>
           <ol className="space-y-2">
-            {correctOrder.map((itemIndex, position) => (
+            {question.correct_order.map((itemIndex, position) => (
               <li key={position} className="flex items-start gap-2 text-blue-900 dark:text-blue-100">
                 <span className="font-bold">{position + 1}.</span>
-                <MathText>{items[itemIndex]}</MathText>
+                <MathText>{question.items[itemIndex]}</MathText>
               </li>
             ))}
           </ol>
         </div>
-      )}
-
-      {/* Explanation (after submission) */}
-      {submitted && (
-        <div className={`
-          p-4 rounded-lg border-l-4
-          ${isCorrect
-            ? 'bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-600'
-            : 'bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-600'
-          }
-        `}>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            <MathText>{explanation}</MathText>
-          </p>
-        </div>
-      )}
-
-      {/* Submit Button */}
-      {!submitted && (
-        <Button
-          onClick={handleSubmit}
-          disabled={disabled}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white py-6 rounded-xl font-semibold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Tarkista vastaus
-        </Button>
-      )}
-
-      {/* Keyboard Hint */}
-      {!submitted && (
-        <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-          Käytä nuolia järjestämiseen • Paina Enter lähettääksesi
-        </p>
       )}
     </div>
   );
