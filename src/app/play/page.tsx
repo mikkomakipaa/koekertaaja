@@ -164,7 +164,7 @@ export default function PlayBrowsePage() {
               return (
                 <div
                   key={group.key}
-                  className="border border-gray-200 rounded-xl p-5 bg-white hover:shadow-md transition-all"
+                  className="border border-gray-200 dark:border-gray-700 rounded-xl p-5 bg-white dark:bg-gray-800 hover:shadow-md transition-all"
                 >
                   {/* Title */}
                   <h3 className="text-xl font-bold text-gray-900 mb-3">
