@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -10,27 +10,27 @@ import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
 import { ProgressBar } from '@/components/play/ProgressBar';
 import { ResultsScreen } from '@/components/play/ResultsScreen';
 import { FlashcardSession } from '@/components/play/FlashcardSession';
-import { ModeToggle } from '@/components/play/ModeToggle';
 import { useGameSession } from '@/hooks/useGameSession';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
 import { QuestionSetWithQuestions, StudyMode, Flashcard } from '@/types';
 import { Loader2, List } from 'lucide-react';
-import { DiamondsFour, Fire, GameController, Book } from '@phosphor-icons/react';
+import { DiamondsFour, Fire } from '@phosphor-icons/react';
 
 type PlayState = 'loading' | 'error' | 'playing' | 'results';
 
 export default function PlayPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const code = params.code as string;
+  const studyMode = (searchParams.get('mode') as StudyMode) || 'pelaa';
   const topRef = useRef<HTMLDivElement>(null);
 
   const [state, setState] = useState<PlayState>('loading');
   const [questionSet, setQuestionSet] = useState<QuestionSetWithQuestions | null>(null);
   const [error, setError] = useState('');
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
-  const [studyMode, setStudyMode] = useState<StudyMode>('pelaa');
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
 
   const {
