@@ -271,7 +271,7 @@ export function ResultsScreen({
                       className={`flex items-center gap-1 px-3 py-2 bg-gradient-to-br ${colors.light} ${colors.dark} border rounded-lg`}
                       title={badge.name}
                     >
-                      <span className="text-xl">{badge.emoji}</span>
+                      <span className="text-xl">{getBadgeIcon(badge.id, 20)}</span>
                       <span className={`text-xs font-medium ${colors.text}`}>{badge.name}</span>
                     </div>
                   );
