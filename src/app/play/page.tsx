@@ -178,13 +178,10 @@ export default function PlayBrowsePage() {
                     )}
                   </div>
 
-                  {/* Subject and Question Count */}
-                  <div className="flex items-center justify-between gap-3 mb-3">
+                  {/* Subject */}
+                  <div className="mb-3">
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       {getSubjectLabel(group.subject)}
-                    </span>
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 flex-shrink-0">
-                      {group.sets[0]?.question_count || 0} kysymystä
                     </span>
                   </div>
 
