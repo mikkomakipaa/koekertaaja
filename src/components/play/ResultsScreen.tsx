@@ -42,6 +42,7 @@ export function ResultsScreen({
 
   const [personalBest, setPersonalBest] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState(false);
+  const [showAllAnswers, setShowAllAnswers] = useState(false);
 
   // Record session and check for new badges/records
   useEffect(() => {
