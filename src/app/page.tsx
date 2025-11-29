@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Footer } from '@/components/shared/Footer';
 import { Star } from 'lucide-react';
 import {
   DiamondsFour,
