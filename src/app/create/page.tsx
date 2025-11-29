@@ -210,25 +210,25 @@ export default function CreatePage() {
 
           <CardContent className="p-6 space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">Luodut kysymyssarjat:</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200">Luodut kysymyssarjat:</h3>
               <div className="space-y-2">
                 {questionSetsCreated.map((set, index) => (
                   <div
                     key={index}
-                    className="p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                    className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
                           {difficultyLabels[set.difficulty] || set.difficulty}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           {set.questionCount} kysymystä
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500 mb-1">Koodi:</p>
-                        <code className="px-3 py-1 bg-gray-100 rounded font-mono text-lg font-bold">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Koodi:</p>
+                        <code className="px-3 py-1 bg-gray-100 dark:bg-gray-600 rounded font-mono text-lg font-bold text-gray-900 dark:text-gray-100">
                           {set.code}
                         </code>
                       </div>
