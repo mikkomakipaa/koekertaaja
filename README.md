@@ -154,10 +154,11 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### Technologies
 
 - **Frontend**: Next.js 14 (App Router), React, TypeScript
-- **Styling**: Tailwind CSS + shadcn/ui
-- **Database**: Supabase (PostgreSQL)
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **Icons**: Phosphor Icons (duotone vector icons)
+- **Database**: Supabase (PostgreSQL with RLS)
 - **AI**: Anthropic Claude API (claude-sonnet-4-20250514)
-- **Hosting**: Vercel-ready
+- **Hosting**: Vercel-ready with CSP headers
 
 ### Project Structure
 
