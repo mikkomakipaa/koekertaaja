@@ -98,7 +98,7 @@ export function Matching({
                   </div>
                 </button>
                 {userMatches[pair.left] && (
-                  <div className="text-xs text-gray-500 pl-2">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 pl-2">
                     → <MathText>{userMatches[pair.left]}</MathText>
                   </div>
                 )}
@@ -109,7 +109,7 @@ export function Matching({
 
         {/* Right column */}
         <div className="space-y-2">
-          <h4 className="text-sm font-bold text-gray-700 mb-3">Oikea</h4>
+          <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Oikea</h4>
           {shuffledRights.map((right) => {
             const isUsed = Object.values(userMatches).includes(right);
 
@@ -119,11 +119,11 @@ export function Matching({
                 onClick={() => handleRightClick(right)}
                 disabled={showExplanation || !selectedLeft}
                 className={cn(
-                  "w-full p-3 text-left rounded-lg border-2 transition-all",
+                  "w-full p-3 text-left rounded-lg border-2 transition-all text-gray-900 dark:text-gray-100",
                   isUsed && "opacity-50",
-                  !isUsed && selectedLeft && !showExplanation && "border-gray-300 hover:border-blue-400 hover:bg-blue-50",
-                  !selectedLeft && "border-gray-200 cursor-not-allowed",
-                  showExplanation && "cursor-default border-gray-200"
+                  !isUsed && selectedLeft && !showExplanation && "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900",
+                  !selectedLeft && "border-gray-200 dark:border-gray-700 cursor-not-allowed",
+                  showExplanation && "cursor-default border-gray-200 dark:border-gray-700"
                 )}
               >
                 <MathText>{right}</MathText>
