@@ -154,6 +154,16 @@ export default function PlayBrowsePage() {
     );
   };
 
+  // Get unique grades from all question sets, sorted
+  const availableGrades = Array.from(
+    new Set(groupedSets.map(g => g.grade).filter((g): g is number => g !== undefined))
+  ).sort((a, b) => a - b);
+
+  // Filter question sets by selected grade
+  const filteredSets = selectedGrade
+    ? groupedSets.filter(g => g.grade === selectedGrade)
+    : groupedSets;
+
   const getGradeColors = (grade: number) => {
     // Each grade has its own unique color (grades 1-9)
     const gradeColorMap: Record<number, { bg: string; text: string }> = {
