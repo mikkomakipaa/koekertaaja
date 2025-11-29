@@ -76,11 +76,11 @@ export function Matching({
                   onClick={() => handleLeftClick(pair.left)}
                   disabled={showExplanation}
                   className={cn(
-                    "w-full p-3 text-left rounded-lg border-2 transition-all",
-                    isSelected && "border-blue-500 bg-blue-50",
-                    !isSelected && !showExplanation && "border-gray-200 hover:border-blue-300",
-                    showExplanation && matchStatus === true && "border-green-500 bg-green-50",
-                    showExplanation && matchStatus === false && "border-red-500 bg-red-50",
+                    "w-full p-3 text-left rounded-lg border-2 transition-all text-gray-900 dark:text-gray-100",
+                    isSelected && "border-blue-500 bg-blue-50 dark:bg-blue-900 dark:border-blue-400",
+                    !isSelected && !showExplanation && "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500",
+                    showExplanation && matchStatus === true && "border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-400",
+                    showExplanation && matchStatus === false && "border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-400",
                     showExplanation ? "cursor-default" : "cursor-pointer"
                   )}
                 >
