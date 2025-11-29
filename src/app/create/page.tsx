@@ -197,7 +197,7 @@ export default function CreatePage() {
     return (
       <AuthGuard>
         <UserMenu />
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-8 flex items-center justify-center">
+        <div className="min-h-screen bg-white p-6 md:p-12 flex items-center justify-center">
         <Card className="max-w-3xl shadow-2xl">
           <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
             <CardTitle className="text-3xl flex items-center gap-2">
