@@ -141,6 +141,42 @@ KYSYMYSTYYPPIEN KÄYTTÖOHJEET:
    - Sopii: termit ja määritelmät, kaavat ja nimet
    - Käytä säästeliäästi, vain jos aihe sopii
 
+5. SEQUENTIAL (järjestys):
+   - Sopii: ratkaisun vaiheet, laskujärjestys, ongelman ratkaisuprosessi
+   - Käytä helppo ja normaali tasoilla
+   - Helppo taso: 4 vaihetta, Normaali taso: 5-6 vaihetta
+
+   Helppo taso - Laskujärjestys:
+   Kysymys: "Järjestä nämä laskun vaiheet oikeaan järjestykseen laskettaessa $$3 + 4 \\times 5$$:"
+   items: [
+     "Laske kertolasku: $$4 \\times 5 = 20$$",
+     "Laske yhteenlasku: $$3 + 20 = 23$$",
+     "Tunnista operaatiot: yhteenlasku ja kertolasku",
+     "Vastaus on 23"
+   ]
+   correct_order: [2, 0, 1, 3]
+
+   Normaali taso - Yhtälön ratkaisu:
+   Kysymys: "Järjestä nämä vaiheet oikeaan järjestykseen kun ratkaistaan yhtälö $$2x + 6 = 14$$:"
+   items: [
+     "Vähennä molemmilta puolilta 6: $$2x = 8$$",
+     "Jaa molemmat puolet luvulla 2: $$x = 4$$",
+     "Tarkista vastaus: $$2 \\times 4 + 6 = 14$$ ✓",
+     "Aloitetilanne: $$2x + 6 = 14$$",
+     "Vastaus on $$x = 4$$"
+   ]
+   correct_order: [3, 0, 1, 4, 2]
+
+   Normaali taso - Pinta-alan laskeminen:
+   Kysymys: "Järjestä nämä vaiheet oikeaan järjestykseen kun lasketaan suorakulmion pinta-ala (leveys 5 cm, korkeus 8 cm):"
+   items: [
+     "Pinta-ala = $$5 \\times 8 = 40$$ neliösenttimetriä",
+     "Käytetään kaavaa: Pinta-ala = leveys $$\\times$$ korkeus",
+     "Tunnetaan mitat: leveys = 5 cm, korkeus = 8 cm",
+     "Sijoitetaan arvot kaavaan"
+   ]
+   correct_order: [2, 1, 3, 0]
+
 NUMEERISTEN VASTAUSTEN KÄSITTELY:
 - Anna pääasiallinen oikea vastaus "correct_answer" -kentässä
 - Lisää "acceptable_answers" -taulukkoon vaihtoehtoiset hyväksyttävät muodot:
