@@ -292,7 +292,7 @@ export default function CreatePage() {
 
               <TabsContent value="create" className="space-y-6">
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-800">
+              <label className="block text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">
                 📌 Kysymyssarjan nimi
               </label>
               <Input
@@ -305,7 +305,7 @@ export default function CreatePage() {
             </div>
 
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-800">
+              <label className="block text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">
                 📚 Aine
               </label>
               <Input
