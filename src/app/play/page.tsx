@@ -40,6 +40,7 @@ export default function PlayBrowsePage() {
   const [state, setState] = useState<BrowseState>('loading');
   const [groupedSets, setGroupedSets] = useState<GroupedQuestionSets[]>([]);
   const [error, setError] = useState('');
+  const [studyMode, setStudyMode] = useState<StudyMode>('pelaa');
 
   const difficultyLabels: Record<string, string> = {
     helppo: 'Helppo',
