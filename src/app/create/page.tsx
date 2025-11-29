@@ -320,7 +320,7 @@ export default function CreatePage() {
             <GradeSelector selectedGrade={grade} onGradeChange={setGrade} />
 
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-800">
+              <label className="block text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">
                 📊 Kokeen pituus (kysymystä per vaikeustaso)
               </label>
               <div className="space-y-4">
@@ -333,18 +333,18 @@ export default function CreatePage() {
                   className="w-full"
                 />
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">5 kysymystä</span>
-                  <span className="text-2xl font-bold text-indigo-600">{examLength}</span>
-                  <span className="text-sm text-gray-600">20 kysymystä</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">5 kysymystä</span>
+                  <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{examLength}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">20 kysymystä</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                 Jokainen vaikeustaso sisältää tämän määrän kysymyksiä
               </p>
             </div>
 
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-800">
+              <label className="block text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">
                 🔢 Materiaalista luotavien kysymysten määrä
               </label>
               <div className="space-y-4">
@@ -357,12 +357,12 @@ export default function CreatePage() {
                   className="w-full"
                 />
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">40 kysymystä</span>
-                  <span className="text-2xl font-bold text-indigo-600">{questionCount}</span>
-                  <span className="text-sm text-gray-600">400 kysymystä</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">40 kysymystä</span>
+                  <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{questionCount}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">400 kysymystä</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                 AI luo tämän määrän kysymyksiä materiaalista (jaetaan vaikeusasteille)
               </p>
             </div>
