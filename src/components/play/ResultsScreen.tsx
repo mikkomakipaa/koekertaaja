@@ -12,8 +12,13 @@ import {
   Star,
   Confetti,
   ThumbsUp,
-  Barbell
+  Barbell,
+  Target,
+  Rocket,
+  Lightning,
+  Palette
 } from '@phosphor-icons/react';
+import { BadgeId } from '@/types';
 
 interface ResultsScreenProps {
   score: number;
