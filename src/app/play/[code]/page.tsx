@@ -193,9 +193,13 @@ export default function PlayPage() {
         {/* Stats Bar */}
         <div className="mb-6 flex items-center justify-between text-base">
           <div className="flex items-center gap-4">
-            <span className="text-gray-700">💎 {totalPoints} pistettä</span>
+            <span className="text-gray-700">
+              <span role="img" aria-label="Pisteet">💎</span> {totalPoints} pistettä
+            </span>
             {currentStreak > 0 && (
-              <span className="text-gray-700">🔥 {currentStreak} putki</span>
+              <span className="text-gray-700">
+                <span role="img" aria-label="Putki">🔥</span> {currentStreak} putki
+              </span>
             )}
           </div>
           <span className="text-gray-600">
