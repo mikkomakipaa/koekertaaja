@@ -214,6 +214,15 @@ export async function generateQuestions(
           max_length: q.max_length,
         };
 
+      case 'sequential':
+        // Note: Validation ensures items and correct_order exist
+        return {
+          ...base,
+          question_type: 'sequential' as const,
+          items: q.items || [],
+          correct_order: q.correct_order || [],
+        };
+
       default:
         // Log unknown type and default to multiple choice
         console.warn(`Unknown question type: ${q.type}, defaulting to multiple_choice`, {
