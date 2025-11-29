@@ -64,6 +64,9 @@ export default function PlayPage() {
         }
 
         setQuestionSet(data);
+        // Convert questions to flashcards (excludes sequential questions)
+        const cards = convertQuestionsToFlashcards(data.questions);
+        setFlashcards(cards);
         setState('playing');
       } catch (err) {
         console.error('Error loading question set:', err);
