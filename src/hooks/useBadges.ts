@@ -1,0 +1,272 @@
+import { useState, useEffect, useCallback } from 'react';
+import { Badge, BadgeId } from '@/types';
+
+const STORAGE_KEY = 'koekertaaja_badges';
+
+interface BadgeStats {
+  totalSessions: number;
+  perfectScores: number;
+  personalBest: number;
+  levelsPlayed: string[];
+}
+
+interface StoredBadgeData {
+  unlockedBadges: BadgeId[];
+  stats: BadgeStats;
+}
+
+const BADGE_DEFINITIONS: Record<BadgeId, Omit<Badge, 'unlocked' | 'unlockedAt'>> = {
+  first_session: {
+    id: 'first_session',
+    name: 'Ensimmäinen yritys',
+    description: 'Suorita ensimmäinen harjoituskierros',
+    emoji: '🌟',
+  },
+  '5_sessions': {
+    id: '5_sessions',
+    name: 'Harjoittelija',
+    description: 'Suorita 5 harjoituskierrosta',
+    emoji: '🔥',
+  },
+  '10_sessions': {
+    id: '10_sessions',
+    name: 'Ahkera opiskelija',
+    description: 'Suorita 10 harjoituskierrosta',
+    emoji: '💪',
+  },
+  '25_sessions': {
+    id: '25_sessions',
+    name: 'Mestari',
+    description: 'Suorita 25 harjoituskierrosta',
+    emoji: '🎯',
+  },
+  perfect_score: {
+    id: 'perfect_score',
+    name: 'Täydellinen',
+    description: 'Saa kaikki kysymykset oikein',
+    emoji: '⭐',
+  },
+  beat_personal_best: {
+    id: 'beat_personal_best',
+    name: 'Huippupisteet',
+    description: 'Päihitä henkilökohtainen ennätyksesi',
+    emoji: '🚀',
+  },
+  speed_demon: {
+    id: 'speed_demon',
+    name: 'Salamanopea',
+    description: 'Suorita kierros alle 5 minuutissa',
+    emoji: '⚡',
+  },
+  tried_both_levels: {
+    id: 'tried_both_levels',
+    name: 'Monipuolinen',
+    description: 'Kokeile molempia vaikeustasoja',
+    emoji: '🎪',
+  },
+  streak_3: {
+    id: 'streak_3',
+    name: 'Putki 3',
+    description: 'Vastaa 3 kysymykseen oikein peräkkäin',
+    emoji: '🔥',
+  },
+  streak_5: {
+    id: 'streak_5',
+    name: 'Putki 5',
+    description: 'Vastaa 5 kysymykseen oikein peräkkäin',
+    emoji: '🔥🔥',
+  },
+  streak_10: {
+    id: 'streak_10',
+    name: 'Putki 10',
+    description: 'Vastaa 10 kysymykseen oikein peräkkäin',
+    emoji: '🔥🔥🔥',
+  },
+};
+
+export function useBadges(questionSetCode?: string) {
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [newlyUnlocked, setNewlyUnlocked] = useState<BadgeId[]>([]);
+  const [stats, setStats] = useState<BadgeStats>({
+    totalSessions: 0,
+    perfectScores: 0,
+    personalBest: 0,
+    levelsPlayed: [],
+  });
+
+  // Load badges from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const data: StoredBadgeData = JSON.parse(stored);
+        setStats(data.stats);
+
+        // Initialize all badges
+        const allBadges = Object.values(BADGE_DEFINITIONS).map(def => ({
+          ...def,
+          unlocked: data.unlockedBadges.includes(def.id),
+          unlockedAt: undefined,
+        }));
+
+        setBadges(allBadges);
+      } else {
+        // Initialize with all badges locked
+        const allBadges = Object.values(BADGE_DEFINITIONS).map(def => ({
+          ...def,
+          unlocked: false,
+          unlockedAt: undefined,
+        }));
+        setBadges(allBadges);
+      }
+    } catch (error) {
+      console.error('Error loading badges:', error);
+    }
+  }, []);
+
+  // Save badges to localStorage
+  const saveBadges = useCallback((updatedBadges: Badge[], updatedStats: BadgeStats) => {
+    try {
+      const unlockedBadges = updatedBadges
+        .filter(b => b.unlocked)
+        .map(b => b.id);
+
+      const data: StoredBadgeData = {
+        unlockedBadges,
+        stats: updatedStats,
+      };
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (error) {
+      console.error('Error saving badges:', error);
+    }
+  }, []);
+
+  // Unlock a badge
+  const unlockBadge = useCallback((badgeId: BadgeId) => {
+    setBadges(prev => {
+      const updated = prev.map(badge =>
+        badge.id === badgeId && !badge.unlocked
+          ? { ...badge, unlocked: true, unlockedAt: new Date() }
+          : badge
+      );
+
+      // Check if this is newly unlocked
+      const wasUnlocked = prev.find(b => b.id === badgeId)?.unlocked;
+      if (!wasUnlocked) {
+        setNewlyUnlocked(current => [...current, badgeId]);
+      }
+
+      return updated;
+    });
+  }, []);
+
+  // Record session completion and check for badge unlocks
+  const recordSession = useCallback((params: {
+    score: number;
+    totalQuestions: number;
+    bestStreak: number;
+    totalPoints: number;
+    durationSeconds?: number;
+    difficulty?: string;
+  }) => {
+    const { score, totalQuestions, bestStreak, totalPoints, durationSeconds, difficulty } = params;
+
+    // Update stats
+    const newStats: BadgeStats = {
+      totalSessions: stats.totalSessions + 1,
+      perfectScores: stats.perfectScores + (score === totalQuestions ? 1 : 0),
+      personalBest: Math.max(stats.personalBest, totalPoints),
+      levelsPlayed: difficulty && !stats.levelsPlayed.includes(difficulty)
+        ? [...stats.levelsPlayed, difficulty]
+        : stats.levelsPlayed,
+    };
+
+    setStats(newStats);
+
+    // Check badge criteria
+    const newBadges: BadgeId[] = [];
+
+    // Session count badges
+    if (newStats.totalSessions >= 1) newBadges.push('first_session');
+    if (newStats.totalSessions >= 5) newBadges.push('5_sessions');
+    if (newStats.totalSessions >= 10) newBadges.push('10_sessions');
+    if (newStats.totalSessions >= 25) newBadges.push('25_sessions');
+
+    // Perfect score
+    if (score === totalQuestions) newBadges.push('perfect_score');
+
+    // Beat personal best
+    if (totalPoints > stats.personalBest && stats.personalBest > 0) {
+      newBadges.push('beat_personal_best');
+    }
+
+    // Speed demon (5 minutes = 300 seconds)
+    if (durationSeconds && durationSeconds < 300) {
+      newBadges.push('speed_demon');
+    }
+
+    // Tried both levels
+    if (newStats.levelsPlayed.length >= 2) {
+      newBadges.push('tried_both_levels');
+    }
+
+    // Streak badges
+    if (bestStreak >= 3) newBadges.push('streak_3');
+    if (bestStreak >= 5) newBadges.push('streak_5');
+    if (bestStreak >= 10) newBadges.push('streak_10');
+
+    // Unlock all earned badges
+    newBadges.forEach(badgeId => unlockBadge(badgeId));
+
+    // Save to localStorage
+    setBadges(currentBadges => {
+      const updated = currentBadges.map(badge =>
+        newBadges.includes(badge.id) && !badge.unlocked
+          ? { ...badge, unlocked: true, unlockedAt: new Date() }
+          : badge
+      );
+      saveBadges(updated, newStats);
+      return updated;
+    });
+  }, [stats, unlockBadge, saveBadges]);
+
+  // Clear newly unlocked badges (call after showing notification)
+  const clearNewlyUnlocked = useCallback(() => {
+    setNewlyUnlocked([]);
+  }, []);
+
+  // Get personal best for specific question set
+  const getPersonalBest = useCallback((code: string): number => {
+    try {
+      const stored = localStorage.getItem(`pb_${code}`);
+      return stored ? parseInt(stored, 10) : 0;
+    } catch {
+      return 0;
+    }
+  }, []);
+
+  // Update personal best for specific question set
+  const updatePersonalBest = useCallback((code: string, points: number) => {
+    try {
+      const current = getPersonalBest(code);
+      if (points > current) {
+        localStorage.setItem(`pb_${code}`, points.toString());
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, [getPersonalBest]);
+
+  return {
+    badges,
+    newlyUnlocked,
+    stats,
+    recordSession,
+    clearNewlyUnlocked,
+    getPersonalBest,
+    updatePersonalBest,
+  };
+}

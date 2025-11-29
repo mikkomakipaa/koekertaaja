@@ -17,8 +17,8 @@ export const createQuestionSetSchema = z.object({
   questionCount: z
     .number()
     .int('Question count must be an integer')
-    .min(10, 'Minimum 10 questions required')
-    .max(100, 'Maximum 100 questions allowed'),
+    .min(40, 'Minimum 40 questions required')
+    .max(400, 'Maximum 400 questions allowed'),
   examLength: z
     .number()
     .int('Exam length must be an integer')

@@ -8,7 +8,7 @@ export type QuestionType =
 
 export type Subject = string;
 
-export type Difficulty = 'helppo' | 'normaali' | 'vaikea';
+export type Difficulty = 'helppo' | 'normaali';
 
 // Base Question Interface
 export interface BaseQuestion {
@@ -105,6 +105,39 @@ export interface Answer {
   explanation: string;
   pointsEarned?: number;
   streakAtAnswer?: number;
+}
+
+// Badge System
+export type BadgeId =
+  | 'first_session'
+  | '5_sessions'
+  | '10_sessions'
+  | '25_sessions'
+  | 'perfect_score'
+  | 'beat_personal_best'
+  | 'speed_demon'
+  | 'tried_both_levels'
+  | 'streak_3'
+  | 'streak_5'
+  | 'streak_10';
+
+export interface Badge {
+  id: BadgeId;
+  name: string;
+  description: string;
+  emoji: string;
+  unlocked: boolean;
+  unlockedAt?: Date;
+}
+
+export interface BadgeProgress {
+  badges: Record<BadgeId, Badge>;
+  stats: {
+    totalSessions: number;
+    perfectScores: number;
+    personalBest: number;
+    levelsPlayed: Set<string>;
+  };
 }
 
 // Material Upload

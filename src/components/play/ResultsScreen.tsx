@@ -1,8 +1,10 @@
-import { Answer } from '@/types';
+import { useEffect, useState } from 'react';
+import { Answer, Badge } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
-import { Trophy, CheckCircle2, XCircle, Zap, Flame } from 'lucide-react';
+import { useBadges } from '@/hooks/useBadges';
+import { Trophy, CheckCircle2, XCircle, Zap, Flame, Award } from 'lucide-react';
 
 interface ResultsScreenProps {
   score: number;
@@ -10,6 +12,9 @@ interface ResultsScreenProps {
   answers: Answer[];
   totalPoints: number;
   bestStreak: number;
+  questionSetCode?: string;
+  difficulty?: string;
+  durationSeconds?: number;
   onPlayAgain: () => void;
   onBackToMenu: () => void;
 }
@@ -20,10 +25,44 @@ export function ResultsScreen({
   answers,
   totalPoints,
   bestStreak,
+  questionSetCode,
+  difficulty,
+  durationSeconds,
   onPlayAgain,
   onBackToMenu,
 }: ResultsScreenProps) {
   const percentage = Math.round((score / total) * 100);
+  const {
+    badges,
+    newlyUnlocked,
+    recordSession,
+    getPersonalBest,
+    updatePersonalBest,
+  } = useBadges(questionSetCode);
+
+  const [personalBest, setPersonalBest] = useState(0);
+  const [isNewRecord, setIsNewRecord] = useState(false);
+
+  // Record session and check for new badges/records
+  useEffect(() => {
+    if (questionSetCode) {
+      const currentBest = getPersonalBest(questionSetCode);
+      setPersonalBest(currentBest);
+
+      const newRecord = updatePersonalBest(questionSetCode, totalPoints);
+      setIsNewRecord(newRecord);
+
+      recordSession({
+        score,
+        totalQuestions: total,
+        bestStreak,
+        totalPoints,
+        durationSeconds,
+        difficulty,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Determine celebration level
   const getCelebration = () => {
@@ -55,6 +94,15 @@ export function ResultsScreen({
           <div className="text-center">
             <div className="text-sm text-gray-600 mb-1">Pisteet</div>
             <div className="text-3xl font-bold text-purple-600">💎 {totalPoints}</div>
+            {personalBest > 0 && (
+              <div className="text-xs text-gray-500 mt-1">
+                {isNewRecord ? (
+                  <span className="text-green-600 font-semibold">Uusi ennätys! 🎉</span>
+                ) : (
+                  <span>Ennätys: {personalBest}</span>
+                )}
+              </div>
+            )}
           </div>
           {bestStreak > 0 && (
             <div className="text-center">
@@ -64,21 +112,56 @@ export function ResultsScreen({
           )}
         </div>
 
-        {/* Achievement badges */}
-        {(percentage === 100 || bestStreak >= 5) && (
+        {/* Newly Unlocked Badges */}
+        {newlyUnlocked.length > 0 && (
           <div className="space-y-3 mb-10">
-            {percentage === 100 && (
-              <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 text-center">
-                <span className="text-2xl mr-2">🏆</span>
-                <span className="font-semibold text-yellow-900">Saavutus avattu: Täydellisyys!</span>
-              </div>
-            )}
-            {bestStreak >= 5 && (
-              <div className="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4 text-center">
-                <span className="text-2xl mr-2">🔥</span>
-                <span className="font-semibold text-orange-900">Saavutus avattu: Tulinen putki!</span>
-              </div>
-            )}
+            <h3 className="font-semibold text-gray-900 text-center mb-3">
+              🎉 Uudet merkit avattu!
+            </h3>
+            {newlyUnlocked.map(badgeId => {
+              const badge = badges.find(b => b.id === badgeId);
+              if (!badge) return null;
+              return (
+                <div
+                  key={badgeId}
+                  className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-500 rounded-lg p-4 text-center animate-pulse"
+                >
+                  <span className="text-3xl mr-2">{badge.emoji}</span>
+                  <span className="font-semibold text-yellow-900">{badge.name}</span>
+                  <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* All Badges Section */}
+        {badges.some(b => b.unlocked) && (
+          <div className="mb-10">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Award className="w-5 h-5" />
+              Saavutetut merkit ({badges.filter(b => b.unlocked).length}/{badges.length})
+            </h3>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+              {badges.map(badge => (
+                <div
+                  key={badge.id}
+                  className={`p-3 rounded-lg text-center ${
+                    badge.unlocked
+                      ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-400'
+                      : 'bg-gray-100 opacity-50'
+                  }`}
+                  title={badge.unlocked ? badge.name : '🔒 Lukittu'}
+                >
+                  <div className="text-3xl mb-1">{badge.unlocked ? badge.emoji : '🔒'}</div>
+                  {badge.unlocked && (
+                    <div className="text-xs font-medium text-gray-700 leading-tight">
+                      {badge.name}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
