@@ -156,7 +156,7 @@ export function ResultsScreen({
       <div className="max-w-2xl mx-auto">
         {/* Results Header */}
         <div className="text-center mb-10">
-          <div className="text-7xl mb-4">{celebration.emoji}</div>
+          <div className="mb-4 flex justify-center">{celebration.icon}</div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             {celebration.text}
           </h1>
