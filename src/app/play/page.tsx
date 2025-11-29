@@ -114,13 +114,33 @@ export default function PlayBrowsePage() {
   }, []);
 
   const getSubjectLabel = (subject: string) => {
-    const labels: Record<string, string> = {
-      english: '🇬🇧 Englanti',
-      math: '🔢 Matematiikka',
-      history: '📜 Historia',
-      society: '🏛️ Yhteiskuntaoppi',
+    const iconMap: Record<string, React.ReactNode> = {
+      english: (
+        <span className="flex items-center gap-1.5">
+          <GlobeHemisphereWest size={18} weight="duotone" className="text-blue-500" />
+          Englanti
+        </span>
+      ),
+      math: (
+        <span className="flex items-center gap-1.5">
+          <MathOperations size={18} weight="duotone" className="text-purple-500" />
+          Matematiikka
+        </span>
+      ),
+      history: (
+        <span className="flex items-center gap-1.5">
+          <Scroll size={18} weight="duotone" className="text-amber-600" />
+          Historia
+        </span>
+      ),
+      society: (
+        <span className="flex items-center gap-1.5">
+          <Bank size={18} weight="duotone" className="text-gray-600 dark:text-gray-400" />
+          Yhteiskuntaoppi
+        </span>
+      ),
     };
-    return labels[subject] || subject;
+    return iconMap[subject] || <span>{subject}</span>;
   };
 
   const getAvailableDifficulties = (sets: QuestionSet[]) => {
