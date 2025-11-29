@@ -9,11 +9,13 @@ import { MathText } from '@/components/ui/math-text';
 import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
 import { ProgressBar } from '@/components/play/ProgressBar';
 import { ResultsScreen } from '@/components/play/ResultsScreen';
+import { FlashcardSession } from '@/components/play/FlashcardSession';
 import { useGameSession } from '@/hooks/useGameSession';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
-import { QuestionSetWithQuestions } from '@/types';
+import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
+import { QuestionSetWithQuestions, StudyMode, Flashcard } from '@/types';
 import { Loader2, List } from 'lucide-react';
-import { DiamondsFour, Fire } from '@phosphor-icons/react';
+import { DiamondsFour, Fire, GameController, Book } from '@phosphor-icons/react';
 
 type PlayState = 'loading' | 'error' | 'playing' | 'results';
 
