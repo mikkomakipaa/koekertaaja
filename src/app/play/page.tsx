@@ -265,7 +265,7 @@ export default function PlayBrowsePage() {
                       {group.name}
                     </h3>
                     {group.grade && (
-                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 flex-shrink-0">
+                      <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium flex-shrink-0 ${getGradeColors(group.grade).bg} ${getGradeColors(group.grade).text}`}>
                         Luokka: {group.grade}
                       </span>
                     )}
