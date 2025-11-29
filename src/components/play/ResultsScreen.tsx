@@ -4,7 +4,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
 import { useBadges } from '@/hooks/useBadges';
-import { Trophy, CheckCircle2, XCircle, Zap, Flame, Award } from 'lucide-react';
+import { CheckCircle2, XCircle, Award } from 'lucide-react';
+import {
+  DiamondsFour,
+  Fire,
+  Sparkle,
+  Star,
+  Confetti,
+  ThumbsUp,
+  Barbell
+} from '@phosphor-icons/react';
 
 interface ResultsScreenProps {
   score: number;
