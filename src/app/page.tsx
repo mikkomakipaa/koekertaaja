@@ -9,15 +9,15 @@ export default function HomePage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-white p-6 md:p-12">
+    <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 transition-colors">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 mb-3">
-            <Star className="w-8 h-8 text-purple-500" />
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">Koekertaaja</h1>
+            <Star className="w-8 h-8 text-purple-500 dark:text-purple-400" />
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100">Koekertaaja</h1>
           </div>
-          <p className="text-lg text-gray-600 mt-2">Harjoittele kokeisiin ja opi uutta</p>
+          <p className="text-lg text-gray-600 dark:text-gray-400 mt-2">Harjoittele kokeisiin ja opi uutta</p>
         </div>
 
         {/* Start Button */}
