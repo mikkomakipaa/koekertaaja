@@ -131,15 +131,15 @@ export default function PlayBrowsePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-6 md:p-12">
+    <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 transition-colors">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-2">
-            <BookOpen className="w-7 h-7 text-purple-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Valitse aihealue</h1>
+            <BookOpen className="w-7 h-7 text-purple-600 dark:text-purple-400" />
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Valitse aihealue</h1>
           </div>
-          <p className="text-gray-600">Valitse aihealue ja vaikeustaso</p>
+          <p className="text-gray-600 dark:text-gray-400">Valitse aihealue ja vaikeustaso</p>
         </div>
 
         {state === 'error' && (
