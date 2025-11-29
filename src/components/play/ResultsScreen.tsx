@@ -77,6 +77,56 @@ export function ResultsScreen({
 
   const celebration = getCelebration();
 
+  // Get badge colors based on category
+  const getBadgeColors = (badgeId: string) => {
+    // Practice/Milestone badges (purple - matches app theme)
+    if (['first_session', '5_sessions', '10_sessions', '25_sessions'].includes(badgeId)) {
+      return {
+        light: 'from-purple-50 to-purple-100 border-purple-400',
+        dark: 'dark:from-purple-900 dark:to-purple-800 dark:border-purple-600',
+        text: 'text-purple-900 dark:text-purple-100'
+      };
+    }
+    // Performance badges (gold/yellow - achievement)
+    if (['perfect_score', 'beat_personal_best'].includes(badgeId)) {
+      return {
+        light: 'from-yellow-50 to-amber-100 border-yellow-400',
+        dark: 'dark:from-yellow-900 dark:to-amber-900 dark:border-yellow-600',
+        text: 'text-yellow-900 dark:text-yellow-100'
+      };
+    }
+    // Speed badge (blue - fast, energetic)
+    if (badgeId === 'speed_demon') {
+      return {
+        light: 'from-blue-50 to-cyan-100 border-blue-400',
+        dark: 'dark:from-blue-900 dark:to-cyan-900 dark:border-blue-600',
+        text: 'text-blue-900 dark:text-blue-100'
+      };
+    }
+    // Exploration badge (green - variety, growth)
+    if (badgeId === 'tried_both_levels') {
+      return {
+        light: 'from-green-50 to-emerald-100 border-green-400',
+        dark: 'dark:from-green-900 dark:to-emerald-900 dark:border-green-600',
+        text: 'text-green-900 dark:text-green-100'
+      };
+    }
+    // Streak badges (orange/red - fire, consistency)
+    if (['streak_3', 'streak_5', 'streak_10'].includes(badgeId)) {
+      return {
+        light: 'from-orange-50 to-red-100 border-orange-400',
+        dark: 'dark:from-orange-900 dark:to-red-900 dark:border-orange-600',
+        text: 'text-orange-900 dark:text-orange-100'
+      };
+    }
+    // Default (shouldn't happen)
+    return {
+      light: 'from-gray-50 to-gray-100 border-gray-400',
+      dark: 'dark:from-gray-800 dark:to-gray-700 dark:border-gray-600',
+      text: 'text-gray-900 dark:text-gray-100'
+    };
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 p-4 md:p-8 transition-colors">
       <div className="max-w-2xl mx-auto">
