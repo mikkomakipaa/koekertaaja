@@ -4,7 +4,7 @@ import { getEnglishPrompt } from '@/config/prompts/english';
 import { getMathPrompt } from '@/config/prompts/math';
 import { getGenericPrompt } from '@/config/prompts/generic';
 import { shuffleArray } from '@/lib/utils';
-import { aiQuestionArraySchema } from '@/lib/validation/schemas';
+import { aiQuestionSchema, aiQuestionArraySchema } from '@/lib/validation/schemas';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger({ module: 'questionGenerator' });
@@ -108,46 +108,69 @@ export async function generateQuestions(
     throw new Error('AI returned invalid JSON format. The response could not be parsed.');
   }
 
-  // Validate AI response structure with Zod
-  const validationResult = aiQuestionArraySchema.safeParse(parsedQuestions);
-  if (!validationResult.success) {
-    // Group errors by question index for better debugging
-    const errorsByQuestion = validationResult.error.errors.reduce((acc, e) => {
-      const questionIndex = typeof e.path[0] === 'number' ? e.path[0] : parseInt(String(e.path[0])) || 0;
-      if (!acc[questionIndex]) acc[questionIndex] = [];
-      acc[questionIndex].push({
-        path: e.path.slice(1).join('.'),
-        message: e.message,
-      });
-      return acc;
-    }, {} as Record<number, Array<{ path: string; message: string }>>);
+  // Validate AI response structure with Zod - filter out invalid questions gracefully
+  const validQuestions: any[] = [];
+  const invalidQuestions: Array<{ index: number; errors: any[]; question: any }> = [];
 
-    logger.error(
+  // Validate each question individually
+  parsedQuestions.forEach((question, index) => {
+    const result = aiQuestionSchema.safeParse(question);
+    if (result.success) {
+      validQuestions.push(result.data);
+    } else {
+      invalidQuestions.push({
+        index,
+        errors: result.error.errors.map(e => ({
+          path: e.path.join('.'),
+          message: e.message,
+        })),
+        question: {
+          type: question.type,
+          questionPreview: question.question?.substring(0, 50),
+        },
+      });
+    }
+  });
+
+  // Log invalid questions as warnings (not errors) since we can continue without them
+  if (invalidQuestions.length > 0) {
+    logger.warn(
       {
         totalQuestions: parsedQuestions.length,
-        invalidQuestions: Object.keys(errorsByQuestion).length,
-        errorsByQuestion: process.env.NODE_ENV === 'production'
-          ? Object.entries(errorsByQuestion).map(([idx, errors]) => ({
-              questionIndex: idx,
+        validQuestions: validQuestions.length,
+        invalidQuestions: invalidQuestions.length,
+        invalidQuestionDetails: process.env.NODE_ENV === 'production'
+          ? invalidQuestions.map(({ index, errors, question }) => ({
+              questionIndex: index,
               errorCount: errors.length,
-              errorPaths: errors.map(e => e.path), // Include paths for debugging
-              questionType: parsedQuestions[parseInt(idx)]?.type, // Include type for context
+              errorPaths: errors.map(e => e.path),
+              questionType: question.type,
             }))
-          : errorsByQuestion,
-        sampleInvalidQuestion: process.env.NODE_ENV === 'production'
-          ? undefined
-          : parsedQuestions[parseInt(Object.keys(errorsByQuestion)[0]) || 0],
+          : invalidQuestions,
       },
-      'AI response validation failed'
+      'Some AI-generated questions failed validation and were skipped'
     );
-
-    throw new Error('AI returned invalid question format. Please try again.');
   }
 
-  parsedQuestions = validationResult.data;
+  // Fail only if we don't have enough valid questions (at least 70% of requested)
+  const minRequiredQuestions = Math.ceil(questionCount * 0.7);
+  if (validQuestions.length < minRequiredQuestions) {
+    logger.error(
+      {
+        validQuestions: validQuestions.length,
+        requestedQuestions: questionCount,
+        minRequired: minRequiredQuestions,
+        invalidCount: invalidQuestions.length,
+      },
+      'Too many invalid questions - insufficient valid questions generated'
+    );
+    throw new Error(`AI generated too few valid questions (${validQuestions.length}/${questionCount}). Please try again.`);
+  }
+
+  parsedQuestions = validQuestions;
   logger.info(
     {
-      validatedQuestionCount: parsedQuestions.length,
+      validatedQuestionCount: validQuestions.length,
       subject,
       difficulty,
     },
