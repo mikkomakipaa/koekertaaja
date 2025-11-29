@@ -58,14 +58,14 @@ export function Matching({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-600 font-medium">
+      <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
         Yhdistä vasen ja oikea puoli klikkaamalla ensin vasenta, sitten oikeaa.
       </p>
 
       <div className="grid grid-cols-2 gap-4">
         {/* Left column */}
         <div className="space-y-2">
-          <h4 className="text-sm font-bold text-gray-700 mb-3">Vasen</h4>
+          <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Vasen</h4>
           {question.pairs.map((pair) => {
             const isSelected = selectedLeft === pair.left;
             const matchStatus = getMatchStatus(pair.left);
