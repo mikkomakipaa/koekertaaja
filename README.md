@@ -36,11 +36,13 @@ Koekertaaja is an interactive exam preparation application that helps students p
 - **Mobile-Friendly**: Works seamlessly on all devices
 
 ### 🎨 Modern UI
-- **Colorful Gradients**: Energetic teal-purple-pink color scheme
-- **Glassmorphism Effects**: Modern semi-transparent elements
-- **Star Ratings**: Visual difficulty indicators
-- **Responsive**: Optimized for both desktop and mobile
-- **Touch-Optimized**: Large touch targets for mobile devices
+- **Dark Mode Support**: Automatic system preference detection with smooth transitions
+- **Phosphor Icons**: Beautiful duotone vector icons throughout the app
+- **Mobile-First Design**: Optimized for 10-12 year-old students on tablets and phones
+- **Accessibility**: WCAG AAA contrast ratios, 48px+ touch targets
+- **Responsive Layout**: Seamless experience across all screen sizes
+- **Visual Hierarchy**: Clear information organization with color-coded badges
+- **Empty States**: Helpful guidance for first-time users
 
 ## 🚀 Quick Start (For Non-Technical Users)
 
