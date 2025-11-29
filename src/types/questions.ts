@@ -57,13 +57,20 @@ export interface ShortAnswerQuestion extends BaseQuestion {
   max_length?: number;
 }
 
+export interface SequentialQuestion extends BaseQuestion {
+  question_type: 'sequential';
+  items: string[];  // Items in scrambled order (displayed to user)
+  correct_order: number[];  // Correct indices [0, 2, 1, 3] representing original item positions
+}
+
 // Union type of all question types
 export type Question =
   | MultipleChoiceQuestion
   | FillBlankQuestion
   | TrueFalseQuestion
   | MatchingQuestion
-  | ShortAnswerQuestion;
+  | ShortAnswerQuestion
+  | SequentialQuestion;
 
 // Question Set
 export interface QuestionSet {
