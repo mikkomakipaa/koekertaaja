@@ -203,7 +203,7 @@ export default function PlayBrowsePage() {
                         <button
                           key={difficulty}
                           onClick={() => set && router.push(`/play/${set.code}`)}
-                          className={`${colors.bg} ${colors.hover} text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95`}
+                          className={`${colors.bg} ${colors.hover} text-white px-4 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95`}
                         >
                           <span className="mr-1.5">{emoji}</span>
                           {difficultyLabels[difficulty]}
