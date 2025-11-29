@@ -167,6 +167,45 @@ KYSYMYSTYYPPIEN KÄYTTÖOHJEET:
    Esim: Yhdistä englanninkielinen sana suomenkieliseen käännökseen
    Parit: [{"left": "happy", "right": "iloinen"}, {"left": "sad", "right": "surullinen"}, {"left": "angry", "right": "vihainen"}, {"left": "tired", "right": "väsynyt"}]
 
+6. SEQUENTIAL (järjestys):
+   - Sopii: lauseiden järjestäminen kappaleeksi, tapahtumien aikajärjestys, dialogin järjestys
+   - Käytä helppo ja normaali tasoilla
+   *** PAKOLLINEN: Helppo taso 4 kohtaa, Normaali taso 5-6 kohtaa ***
+
+   Helppo taso - Lauseet järjestykseen:
+   Kysymys: "Järjestä nämä lauseet oikeaan järjestykseen muodostaaksesi loogisen tarinan:"
+   items: [
+     "I ate my breakfast.",
+     "I woke up at 7 o'clock.",
+     "I went to school.",
+     "I brushed my teeth."
+   ]
+   correct_order: [1, 3, 0, 2]  // Oikea järjestys: woke up -> brushed teeth -> ate breakfast -> went to school
+   Huom: correct_order sisältää ALKUPERÄISTEN kohtien indeksit (0-pohjainen) oikeassa järjestyksessä
+
+   Normaali taso - Dialogi järjestykseen:
+   Kysymys: "Järjestä nämä vuorosanatloogiseksi keskusteluksi:"
+   items: [
+     "Nice to meet you too!",
+     "I'm fine, thank you. And you?",
+     "Hello! How are you?",
+     "My name is Sarah. What's your name?",
+     "I'm doing well, thanks!",
+     "I'm John."
+   ]
+   correct_order: [2, 1, 4, 3, 5, 0]
+
+   Normaali taso - Ohjeiden järjestäminen:
+   Kysymys: "Järjestä nämä ohjeet oikeaan järjestykseen:"
+   items: [
+     "Put the bread in the toaster.",
+     "Wait for the bread to become brown.",
+     "Take a slice of bread.",
+     "Put butter on the toast.",
+     "Take the toast out of the toaster."
+   ]
+   correct_order: [2, 0, 1, 4, 3]
+
 VÄÄRÄT VASTAUKSET (multiple_choice):
 Väärät vastaukset tulee olla uskottavia:
 - Samaan aihealueeseen liittyviä sanoja
