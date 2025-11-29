@@ -262,7 +262,7 @@ export default function PlayBrowsePage() {
                       return (
                         <button
                           key={difficulty}
-                          onClick={() => set && router.push(`/play/${set.code}`)}
+                          onClick={() => set && router.push(`/play/${set.code}?mode=${studyMode}`)}
                           className={`${colors.bg} ${colors.hover} text-white px-4 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-1.5`}
                           aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
                         >
