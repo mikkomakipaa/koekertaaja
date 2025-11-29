@@ -41,11 +41,11 @@ export function MultipleChoice({
             onClick={() => !showExplanation && onAnswerSelect(option)}
             disabled={showExplanation}
             className={cn(
-              "w-full p-5 text-left rounded-lg border-2 transition-all active:scale-[0.98]",
-              showCorrect && "border-green-500 bg-green-50",
-              showWrong && "border-red-500 bg-red-50",
-              !showCorrect && !showWrong && isSelected && "border-blue-500 bg-blue-50",
-              !showCorrect && !showWrong && !isSelected && "border-gray-200 hover:border-blue-300 hover:bg-blue-50",
+              "w-full p-5 text-left rounded-lg border-2 transition-all active:scale-[0.98] text-gray-900 dark:text-gray-100",
+              showCorrect && "border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-400",
+              showWrong && "border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-400",
+              !showCorrect && !showWrong && isSelected && "border-blue-500 bg-blue-50 dark:bg-blue-900 dark:border-blue-400",
+              !showCorrect && !showWrong && !isSelected && "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900",
               showExplanation ? "cursor-default" : "cursor-pointer"
             )}
           >
