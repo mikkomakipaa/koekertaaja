@@ -10,6 +10,7 @@ import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
 import { ProgressBar } from '@/components/play/ProgressBar';
 import { ResultsScreen } from '@/components/play/ResultsScreen';
 import { FlashcardSession } from '@/components/play/FlashcardSession';
+import { ModeToggle } from '@/components/play/ModeToggle';
 import { useGameSession } from '@/hooks/useGameSession';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
