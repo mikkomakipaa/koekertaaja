@@ -198,9 +198,11 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
 [
   {
     "question": "kysymysteksti suomeksi (voi sisältää LaTeX-merkintää)",
-    "type": "multiple_choice" | "fill_blank" | "true_false" | "matching",
+    "type": "multiple_choice" | "fill_blank" | "true_false" | "matching" | "sequential",
     "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"], // vain multiple_choice
-    "correct_answer": "oikea vastaus (voi sisältää LaTeX-merkintää)",
+    "items": ["vaihe1", "vaihe2", "vaihe3", "vaihe4"], // PAKOLLINEN sequential kysymyksille
+    "correct_order": [2, 0, 1, 3], // PAKOLLINEN sequential kysymyksille - indeksit oikeassa järjestyksessä
+    "correct_answer": "oikea vastaus (voi sisältää LaTeX-merkintää)",  // EI käytetä sequential kysymyksissä
     "acceptable_answers": ["vaihtoehtoinen muoto 1", "vaihtoehtoinen muoto 2"], // vapaaehtoinen, erityisesti fill_blank
     "explanation": "selitys suomeksi kuinka vastaus saadaan (näytä laskuvaiheet)"
   }
