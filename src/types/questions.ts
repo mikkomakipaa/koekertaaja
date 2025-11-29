@@ -92,6 +92,35 @@ export interface QuestionSetWithQuestions extends QuestionSet {
   questions: Question[];
 }
 
+// Study Mode
+export type StudyMode = 'pelaa' | 'opettele';
+
+// Flashcard (converted from questions, excludes sequential)
+export type FlashcardCompatibleQuestion = Exclude<Question, SequentialQuestion>;
+
+export interface Flashcard {
+  id: string;
+  questionId: string;
+  front: string;  // Question text
+  back: {
+    answer: string;  // Formatted answer display
+    explanation: string;  // Why this is correct
+  };
+  questionType: QuestionType;
+  originalQuestion: FlashcardCompatibleQuestion;
+}
+
+// Flashcard Session (client-side only, not stored in DB)
+export interface FlashcardSession {
+  questionSetCode: string;
+  questionSetName: string;
+  flashcards: Flashcard[];
+  currentIndex: number;
+  reviewedCount: number;
+  flippedCards: Set<string>;  // Track which cards have been flipped
+  startedAt: Date;
+}
+
 // Game Session (not stored in DB)
 export interface GameSession {
   questionSetCode: string;
