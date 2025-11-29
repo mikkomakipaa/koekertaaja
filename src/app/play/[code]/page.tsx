@@ -119,7 +119,7 @@ export default function PlayPage() {
   };
 
   const handleBackToMenu = () => {
-    router.push('/');
+    router.push('/play');
   };
 
   // Loading screen
