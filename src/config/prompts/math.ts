@@ -49,9 +49,10 @@ VAIKEUSTASO: Helppo
 - Yksivaiheiset laskut ja selkeät tehtävät
 
 KYSYMYSTYYPPIEN JAKAUMA (Helppo):
-- 70% multiple_choice (monivalinta)
+- 60% multiple_choice (monivalinta)
 - 20% true_false (totta/tarua)
 - 10% fill_blank (täydennä, yksinkertainen numeerinen vastaus)
+- 10% sequential (järjestys - 4 vaihetta)
 - ÄLÄ käytä short_answer tai matching`,
     normaali: `
 VAIKEUSTASO: Normaali
