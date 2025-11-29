@@ -14,9 +14,15 @@ Koekertaaja is an interactive exam preparation application that helps students p
 ### 🎮 Gamified Learning
 - **Points System**: Earn 10 points for each correct answer
 - **Streak Bonuses**: Get +5 bonus points when you answer 3+ correct in a row
-- **Achievements**: Unlock special badges for perfect scores and long streaks
-- **Dynamic Celebrations**: Different celebration animations based on your score
-- **Visual Feedback**: See your progress in real-time
+- **Badge System**: Unlock 10+ achievements including:
+  - Practice milestones (First session, 5 sessions, 10 sessions, 25 sessions)
+  - Performance badges (Perfect score, Beat personal best)
+  - Speed achievements (Complete in under 5 minutes)
+  - Streak badges (3, 5, and 10 correct in a row)
+  - Exploration badges (Try different difficulty levels)
+- **Dynamic Celebrations**: Different icons and messages based on your score percentage
+- **Visual Feedback**: Real-time progress tracking with color-coded icons
+- **Personal Bests**: Track and beat your highest scores per question set
 
 ### 📚 Question Set Creation
 - **AI-Assisted Generation**: Claude Sonnet 4 AI creates questions from your materials
