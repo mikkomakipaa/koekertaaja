@@ -71,6 +71,11 @@ export function useGameSession(allQuestions: Question[], questionsPerSession = D
         isCorrect = userAnswer.toLowerCase().trim() === currentQuestion.correct_answer.toLowerCase().trim();
         correctAnswer = currentQuestion.correct_answer;
         break;
+      case 'sequential':
+        // Check if the order matches exactly
+        isCorrect = JSON.stringify(userAnswer) === JSON.stringify(currentQuestion.correct_order);
+        correctAnswer = currentQuestion.correct_order;
+        break;
       default:
         isCorrect = false;
         correctAnswer = null;
