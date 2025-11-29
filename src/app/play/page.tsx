@@ -194,9 +194,10 @@ export default function PlayBrowsePage() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button
                   onClick={() => router.push('/create')}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 rounded-xl text-lg font-semibold"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 rounded-xl text-lg font-semibold flex items-center gap-2"
                 >
-                  ✨ Luo kysymyssarja
+                  <Sparkle size={20} weight="fill" />
+                  Luo kysymyssarja
                 </Button>
                 <Button
                   onClick={() => router.push('/')}
