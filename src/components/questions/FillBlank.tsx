@@ -51,14 +51,14 @@ export function FillBlank({
       </div>
 
       {showExplanation && !isCorrect && (
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm font-medium text-gray-700">
-            Oikea vastaus: <span className="font-bold text-blue-700">
+        <div className="p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Oikea vastaus: <span className="font-bold text-blue-700 dark:text-blue-300">
               <MathText>{question.correct_answer}</MathText>
             </span>
           </p>
           {question.acceptable_answers && question.acceptable_answers.length > 0 && (
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Hyväksyttävät vastaukset: {question.acceptable_answers.map((ans, i) => (
                 <span key={i}>
                   {i > 0 && ', '}
