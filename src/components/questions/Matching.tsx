@@ -58,14 +58,14 @@ export function Matching({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-600 font-medium">
+      <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
         Yhdistä vasen ja oikea puoli klikkaamalla ensin vasenta, sitten oikeaa.
       </p>
 
       <div className="grid grid-cols-2 gap-4">
         {/* Left column */}
         <div className="space-y-2">
-          <h4 className="text-sm font-bold text-gray-700 mb-3">Vasen</h4>
+          <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Vasen</h4>
           {question.pairs.map((pair) => {
             const isSelected = selectedLeft === pair.left;
             const matchStatus = getMatchStatus(pair.left);
@@ -76,11 +76,11 @@ export function Matching({
                   onClick={() => handleLeftClick(pair.left)}
                   disabled={showExplanation}
                   className={cn(
-                    "w-full p-3 text-left rounded-lg border-2 transition-all",
-                    isSelected && "border-blue-500 bg-blue-50",
-                    !isSelected && !showExplanation && "border-gray-200 hover:border-blue-300",
-                    showExplanation && matchStatus === true && "border-green-500 bg-green-50",
-                    showExplanation && matchStatus === false && "border-red-500 bg-red-50",
+                    "w-full p-3 text-left rounded-lg border-2 transition-all text-gray-900 dark:text-gray-100",
+                    isSelected && "border-blue-500 bg-blue-50 dark:bg-blue-900 dark:border-blue-400",
+                    !isSelected && !showExplanation && "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500",
+                    showExplanation && matchStatus === true && "border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-400",
+                    showExplanation && matchStatus === false && "border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-400",
                     showExplanation ? "cursor-default" : "cursor-pointer"
                   )}
                 >
@@ -98,7 +98,7 @@ export function Matching({
                   </div>
                 </button>
                 {userMatches[pair.left] && (
-                  <div className="text-xs text-gray-500 pl-2">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 pl-2">
                     → <MathText>{userMatches[pair.left]}</MathText>
                   </div>
                 )}
@@ -109,7 +109,7 @@ export function Matching({
 
         {/* Right column */}
         <div className="space-y-2">
-          <h4 className="text-sm font-bold text-gray-700 mb-3">Oikea</h4>
+          <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Oikea</h4>
           {shuffledRights.map((right) => {
             const isUsed = Object.values(userMatches).includes(right);
 
@@ -119,11 +119,11 @@ export function Matching({
                 onClick={() => handleRightClick(right)}
                 disabled={showExplanation || !selectedLeft}
                 className={cn(
-                  "w-full p-3 text-left rounded-lg border-2 transition-all",
+                  "w-full p-3 text-left rounded-lg border-2 transition-all text-gray-900 dark:text-gray-100",
                   isUsed && "opacity-50",
-                  !isUsed && selectedLeft && !showExplanation && "border-gray-300 hover:border-blue-400 hover:bg-blue-50",
-                  !selectedLeft && "border-gray-200 cursor-not-allowed",
-                  showExplanation && "cursor-default border-gray-200"
+                  !isUsed && selectedLeft && !showExplanation && "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900",
+                  !selectedLeft && "border-gray-200 dark:border-gray-700 cursor-not-allowed",
+                  showExplanation && "cursor-default border-gray-200 dark:border-gray-700"
                 )}
               >
                 <MathText>{right}</MathText>
@@ -134,11 +134,11 @@ export function Matching({
       </div>
 
       {showExplanation && (
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm font-bold text-gray-800 mb-2">Oikeat vastaukset:</p>
+        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+          <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">Oikeat vastaukset:</p>
           <div className="space-y-1">
             {question.pairs.map((pair) => (
-              <p key={pair.left} className="text-sm text-gray-700">
+              <p key={pair.left} className="text-sm text-gray-700 dark:text-gray-300">
                 <span className="font-medium">
                   <MathText>{pair.left}</MathText>
                 </span>

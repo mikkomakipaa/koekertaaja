@@ -14,9 +14,15 @@ Koekertaaja is an interactive exam preparation application that helps students p
 ### 🎮 Gamified Learning
 - **Points System**: Earn 10 points for each correct answer
 - **Streak Bonuses**: Get +5 bonus points when you answer 3+ correct in a row
-- **Achievements**: Unlock special badges for perfect scores and long streaks
-- **Dynamic Celebrations**: Different celebration animations based on your score
-- **Visual Feedback**: See your progress in real-time
+- **Badge System**: Unlock 10+ achievements including:
+  - Practice milestones (First session, 5 sessions, 10 sessions, 25 sessions)
+  - Performance badges (Perfect score, Beat personal best)
+  - Speed achievements (Complete in under 5 minutes)
+  - Streak badges (3, 5, and 10 correct in a row)
+  - Exploration badges (Try different difficulty levels)
+- **Dynamic Celebrations**: Different icons and messages based on your score percentage
+- **Visual Feedback**: Real-time progress tracking with color-coded icons
+- **Personal Bests**: Track and beat your highest scores per question set
 
 ### 📚 Question Set Creation
 - **AI-Assisted Generation**: Claude Sonnet 4 AI creates questions from your materials
@@ -36,11 +42,13 @@ Koekertaaja is an interactive exam preparation application that helps students p
 - **Mobile-Friendly**: Works seamlessly on all devices
 
 ### 🎨 Modern UI
-- **Colorful Gradients**: Energetic teal-purple-pink color scheme
-- **Glassmorphism Effects**: Modern semi-transparent elements
-- **Star Ratings**: Visual difficulty indicators
-- **Responsive**: Optimized for both desktop and mobile
-- **Touch-Optimized**: Large touch targets for mobile devices
+- **Dark Mode Support**: Automatic system preference detection with smooth transitions
+- **Phosphor Icons**: Beautiful duotone vector icons throughout the app
+- **Mobile-First Design**: Optimized for 10-12 year-old students on tablets and phones
+- **Accessibility**: WCAG AAA contrast ratios, 48px+ touch targets
+- **Responsive Layout**: Seamless experience across all screen sizes
+- **Visual Hierarchy**: Clear information organization with color-coded badges
+- **Empty States**: Helpful guidance for first-time users
 
 ## 🚀 Quick Start (For Non-Technical Users)
 
@@ -146,10 +154,11 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### Technologies
 
 - **Frontend**: Next.js 14 (App Router), React, TypeScript
-- **Styling**: Tailwind CSS + shadcn/ui
-- **Database**: Supabase (PostgreSQL)
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **Icons**: Phosphor Icons (duotone vector icons)
+- **Database**: Supabase (PostgreSQL with RLS)
 - **AI**: Anthropic Claude API (claude-sonnet-4-20250514)
-- **Hosting**: Vercel-ready
+- **Hosting**: Vercel-ready with CSP headers
 
 ### Project Structure
 
@@ -215,16 +224,29 @@ npm start
 
 3. **Done!** Your app is now online
 
-## 🎨 Color Palette
+## 🎨 Design System
 
-Koekertaaja uses a modern, energetic color palette:
+Koekertaaja uses a cohesive, child-friendly design system:
 
-- **Primary Gradient**: Cyan → Teal → Purple
-- **Backgrounds**: Soft cyan-purple-pink gradient
-- **Points**: Violet (💎)
-- **Streaks**: Orange-Gold (🔥)
-- **Success**: Emerald Green (✅)
-- **Achievements**: Gold-Amber (🏆)
+### Color Palette
+- **Primary**: Purple (#a855f7) - App theme and CTAs
+- **Points**: Amber (#f59e0b) - Gem/diamond icons
+- **Streaks**: Orange (#f97316) - Fire icons
+- **Success**: Green (#22c55e) - Correct answers
+- **Error**: Red (#ef4444) - Wrong answers
+- **Info**: Blue (#3b82f6) - Information and explanations
+
+### Badge Categories
+- **Purple**: Practice/Milestone badges (session counts)
+- **Gold/Yellow**: Performance badges (perfect scores, personal bests)
+- **Blue/Cyan**: Speed badges (fast completion)
+- **Green/Emerald**: Exploration badges (trying different levels)
+- **Orange/Red**: Streak badges (consecutive correct answers)
+
+### Dark Mode
+- Automatic system preference detection
+- Optimized color schemes for both modes
+- Smooth transitions between modes
 
 ## 🔐 Security
 
@@ -251,6 +273,7 @@ MIT License - free to use and modify
 - [Anthropic Claude](https://www.anthropic.com/) - AI model
 - [shadcn/ui](https://ui.shadcn.com/) - UI components
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [Phosphor Icons](https://phosphoricons.com/) - Icon system
 
 ---
 

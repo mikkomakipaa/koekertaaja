@@ -197,9 +197,9 @@ export default function CreatePage() {
     return (
       <AuthGuard>
         <UserMenu />
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-8 flex items-center justify-center">
-        <Card className="max-w-3xl shadow-2xl">
-          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
+        <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 flex items-center justify-center transition-colors">
+        <Card className="max-w-3xl shadow-2xl dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white rounded-t-lg">
             <CardTitle className="text-3xl flex items-center gap-2">
               ✓ Kysymyssarjat luotu onnistuneesti!
             </CardTitle>
@@ -210,25 +210,25 @@ export default function CreatePage() {
 
           <CardContent className="p-6 space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">Luodut kysymyssarjat:</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200">Luodut kysymyssarjat:</h3>
               <div className="space-y-2">
                 {questionSetsCreated.map((set, index) => (
                   <div
                     key={index}
-                    className="p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                    className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
                           {difficultyLabels[set.difficulty] || set.difficulty}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           {set.questionCount} kysymystä
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500 mb-1">Koodi:</p>
-                        <code className="px-3 py-1 bg-gray-100 rounded font-mono text-lg font-bold">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Koodi:</p>
+                        <code className="px-3 py-1 bg-gray-100 dark:bg-gray-600 rounded font-mono text-lg font-bold text-gray-900 dark:text-gray-100">
                           {set.code}
                         </code>
                       </div>
@@ -264,10 +264,10 @@ export default function CreatePage() {
   return (
     <AuthGuard>
       <UserMenu />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+      <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 transition-colors">
       <div className="max-w-3xl mx-auto">
-        <Card className="shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
+        <Card className="shadow-lg dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white rounded-t-lg">
             <CardTitle className="text-3xl flex items-center gap-2 text-white">
               <Star className="w-8 h-8" />
               Kysymyssarjat
@@ -292,7 +292,7 @@ export default function CreatePage() {
 
               <TabsContent value="create" className="space-y-6">
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-800">
+              <label className="block text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">
                 📌 Kysymyssarjan nimi
               </label>
               <Input
@@ -305,7 +305,7 @@ export default function CreatePage() {
             </div>
 
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-800">
+              <label className="block text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">
                 📚 Aine
               </label>
               <Input
@@ -320,7 +320,7 @@ export default function CreatePage() {
             <GradeSelector selectedGrade={grade} onGradeChange={setGrade} />
 
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-800">
+              <label className="block text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">
                 📊 Kokeen pituus (kysymystä per vaikeustaso)
               </label>
               <div className="space-y-4">
@@ -333,18 +333,18 @@ export default function CreatePage() {
                   className="w-full"
                 />
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">5 kysymystä</span>
-                  <span className="text-2xl font-bold text-indigo-600">{examLength}</span>
-                  <span className="text-sm text-gray-600">20 kysymystä</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">5 kysymystä</span>
+                  <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{examLength}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">20 kysymystä</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                 Jokainen vaikeustaso sisältää tämän määrän kysymyksiä
               </p>
             </div>
 
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-800">
+              <label className="block text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">
                 🔢 Materiaalista luotavien kysymysten määrä
               </label>
               <div className="space-y-4">
@@ -357,12 +357,12 @@ export default function CreatePage() {
                   className="w-full"
                 />
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">40 kysymystä</span>
-                  <span className="text-2xl font-bold text-indigo-600">{questionCount}</span>
-                  <span className="text-sm text-gray-600">400 kysymystä</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">40 kysymystä</span>
+                  <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{questionCount}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">400 kysymystä</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                 AI luo tämän määrän kysymyksiä materiaalista (jaetaan vaikeusasteille)
               </p>
             </div>
@@ -397,17 +397,17 @@ export default function CreatePage() {
               <TabsContent value="manage" className="space-y-4">
                 {loadingQuestionSets ? (
                   <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
                   </div>
                 ) : allQuestionSets.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                     <p className="text-lg">Ei kysymyssarjoja vielä.</p>
                     <p className="text-sm mt-2">Luo ensimmäinen sarjasi "Luo uusi" -välilehdeltä.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                         Kaikki kysymyssarjat ({allQuestionSets.length})
                       </h3>
                       <Button
@@ -422,23 +422,23 @@ export default function CreatePage() {
                     {allQuestionSets.map((set) => (
                       <div
                         key={set.id}
-                        className="p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                        className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{set.name}</h4>
-                            <div className="flex gap-3 mt-2 text-sm text-gray-600">
+                            <h4 className="font-semibold text-gray-900 dark:text-gray-100">{set.name}</h4>
+                            <div className="flex gap-3 mt-2 text-sm text-gray-600 dark:text-gray-400">
                               <span>📚 {set.subject}</span>
                               {set.grade && <span>🎓 Luokka {set.grade}</span>}
                               <span>📊 {set.difficulty}</span>
                             </div>
-                            <div className="flex gap-3 mt-1 text-sm text-gray-500">
+                            <div className="flex gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
                               <span>{set.question_count} kysymystä</span>
                               <span>•</span>
-                              <span>Koodi: <code className="font-mono font-bold">{set.code}</code></span>
+                              <span>Koodi: <code className="font-mono font-bold text-gray-900 dark:text-gray-100">{set.code}</code></span>
                             </div>
                             {set.created_at && (
-                              <p className="text-xs text-gray-400 mt-1">
+                              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                 Luotu: {new Date(set.created_at).toLocaleDateString('fi-FI')}
                               </p>
                             )}
@@ -456,6 +456,7 @@ export default function CreatePage() {
                               variant="destructive"
                               size="sm"
                               disabled={deletingId === set.id}
+                              aria-label="Poista kysymyssarja"
                             >
                               {deletingId === set.id ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />

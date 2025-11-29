@@ -1,5 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Badge, BadgeId } from '@/types';
+import {
+  Sparkle,
+  Fire,
+  Barbell,
+  Target,
+  Star,
+  Rocket,
+  Lightning,
+  Palette
+} from '@phosphor-icons/react';
 
 const STORAGE_KEY = 'koekertaaja_badges';
 

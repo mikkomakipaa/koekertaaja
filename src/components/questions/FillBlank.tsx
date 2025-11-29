@@ -34,9 +34,9 @@ export function FillBlank({
           disabled={showExplanation}
           placeholder="Kirjoita vastauksesi tähän..."
           className={cn(
-            "text-lg",
-            showExplanation && isCorrect && "border-green-500 bg-green-50",
-            showExplanation && !isCorrect && "border-red-500 bg-red-50"
+            "text-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700",
+            showExplanation && isCorrect && "border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-400",
+            showExplanation && !isCorrect && "border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-400"
           )}
         />
         {showExplanation && (
@@ -51,14 +51,14 @@ export function FillBlank({
       </div>
 
       {showExplanation && !isCorrect && (
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm font-medium text-gray-700">
-            Oikea vastaus: <span className="font-bold text-blue-700">
+        <div className="p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Oikea vastaus: <span className="font-bold text-blue-700 dark:text-blue-300">
               <MathText>{question.correct_answer}</MathText>
             </span>
           </p>
           {question.acceptable_answers && question.acceptable_answers.length > 0 && (
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Hyväksyttävät vastaukset: {question.acceptable_answers.map((ans, i) => (
                 <span key={i}>
                   {i > 0 && ', '}

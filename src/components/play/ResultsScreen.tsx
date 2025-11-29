@@ -4,7 +4,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
 import { useBadges } from '@/hooks/useBadges';
-import { Trophy, CheckCircle2, XCircle, Zap, Flame, Award } from 'lucide-react';
+import { CheckCircle2, XCircle, Award } from 'lucide-react';
+import {
+  DiamondsFour,
+  Fire,
+  Sparkle,
+  Star,
+  Confetti,
+  ThumbsUp,
+  Barbell,
+  Target,
+  Rocket,
+  Lightning,
+  Palette,
+  LockSimple
+} from '@phosphor-icons/react';
+import { BadgeId } from '@/types';
 
 interface ResultsScreenProps {
   score: number;
@@ -42,6 +57,8 @@ export function ResultsScreen({
 
   const [personalBest, setPersonalBest] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState(false);
+  const [showAllAnswers, setShowAllAnswers] = useState(false);
+  const [showAllBadges, setShowAllBadges] = useState(false);
 
   // Record session and check for new badges/records
   useEffect(() => {
@@ -66,25 +83,108 @@ export function ResultsScreen({
 
   // Determine celebration level
   const getCelebration = () => {
-    if (percentage === 100) return { emoji: '🌟', text: 'Täydelliset pisteet!' };
-    if (percentage >= 90) return { emoji: '⭐', text: 'Erinomaista!' };
-    if (percentage >= 80) return { emoji: '🎉', text: 'Hienoa työtä!' };
-    if (percentage >= 60) return { emoji: '👍', text: 'Hyvää työtä!' };
-    return { emoji: '💪', text: 'Jatka harjoittelua!' };
+    if (percentage === 100) return {
+      icon: <Sparkle size={80} weight="fill" className="text-yellow-500" />,
+      text: 'Täydelliset pisteet!'
+    };
+    if (percentage >= 90) return {
+      icon: <Star size={80} weight="fill" className="text-yellow-500" />,
+      text: 'Erinomaista!'
+    };
+    if (percentage >= 80) return {
+      icon: <Confetti size={80} weight="duotone" className="text-purple-500" />,
+      text: 'Hienoa työtä!'
+    };
+    if (percentage >= 60) return {
+      icon: <ThumbsUp size={80} weight="fill" className="text-blue-500" />,
+      text: 'Hyvää työtä!'
+    };
+    return {
+      icon: <Barbell size={80} weight="bold" className="text-orange-500" />,
+      text: 'Jatka harjoittelua!'
+    };
   };
 
   const celebration = getCelebration();
 
+  // Get badge icon based on ID
+  const getBadgeIcon = (badgeId: BadgeId, size: number = 32) => {
+    const iconMap = {
+      first_session: <Sparkle size={size} weight="fill" className="inline" />,
+      '5_sessions': <Fire size={size} weight="duotone" className="inline" />,
+      '10_sessions': <Barbell size={size} weight="bold" className="inline" />,
+      '25_sessions': <Target size={size} weight="duotone" className="inline" />,
+      perfect_score: <Star size={size} weight="fill" className="inline" />,
+      beat_personal_best: <Rocket size={size} weight="duotone" className="inline" />,
+      speed_demon: <Lightning size={size} weight="fill" className="inline" />,
+      tried_both_levels: <Palette size={size} weight="duotone" className="inline" />,
+      streak_3: <Fire size={size} weight="duotone" className="inline" />,
+      streak_5: <Fire size={size} weight="fill" className="inline" />,
+      streak_10: <Fire size={size} weight="fill" className="inline text-orange-600" />,
+    };
+    return iconMap[badgeId] || <Star size={size} weight="regular" className="inline" />;
+  };
+
+  // Get badge colors based on category
+  const getBadgeColors = (badgeId: string) => {
+    // Practice/Milestone badges (purple - matches app theme)
+    if (['first_session', '5_sessions', '10_sessions', '25_sessions'].includes(badgeId)) {
+      return {
+        light: 'from-purple-50 to-purple-100 border-purple-400',
+        dark: 'dark:from-purple-900 dark:to-purple-800 dark:border-purple-600',
+        text: 'text-purple-900 dark:text-purple-100'
+      };
+    }
+    // Performance badges (gold/yellow - achievement)
+    if (['perfect_score', 'beat_personal_best'].includes(badgeId)) {
+      return {
+        light: 'from-yellow-50 to-amber-100 border-yellow-400',
+        dark: 'dark:from-yellow-900 dark:to-amber-900 dark:border-yellow-600',
+        text: 'text-yellow-900 dark:text-yellow-100'
+      };
+    }
+    // Speed badge (blue - fast, energetic)
+    if (badgeId === 'speed_demon') {
+      return {
+        light: 'from-blue-50 to-cyan-100 border-blue-400',
+        dark: 'dark:from-blue-900 dark:to-cyan-900 dark:border-blue-600',
+        text: 'text-blue-900 dark:text-blue-100'
+      };
+    }
+    // Exploration badge (green - variety, growth)
+    if (badgeId === 'tried_both_levels') {
+      return {
+        light: 'from-green-50 to-emerald-100 border-green-400',
+        dark: 'dark:from-green-900 dark:to-emerald-900 dark:border-green-600',
+        text: 'text-green-900 dark:text-green-100'
+      };
+    }
+    // Streak badges (orange/red - fire, consistency)
+    if (['streak_3', 'streak_5', 'streak_10'].includes(badgeId)) {
+      return {
+        light: 'from-orange-50 to-red-100 border-orange-400',
+        dark: 'dark:from-orange-900 dark:to-red-900 dark:border-orange-600',
+        text: 'text-orange-900 dark:text-orange-100'
+      };
+    }
+    // Default (shouldn't happen)
+    return {
+      light: 'from-gray-50 to-gray-100 border-gray-400',
+      dark: 'dark:from-gray-800 dark:to-gray-700 dark:border-gray-600',
+      text: 'text-gray-900 dark:text-gray-100'
+    };
+  };
+
   return (
-    <div className="min-h-screen bg-white p-4 md:p-8">
+    <div className="min-h-screen bg-white dark:bg-gray-900 p-4 md:p-8 transition-colors">
       <div className="max-w-2xl mx-auto">
         {/* Results Header */}
         <div className="text-center mb-10">
-          <div className="text-7xl mb-4">{celebration.emoji}</div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+          <div className="mb-4 flex justify-center">{celebration.icon}</div>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             {celebration.text}
           </h1>
-          <p className="text-2xl text-gray-600">
+          <p className="text-2xl text-gray-600 dark:text-gray-400">
             {score} / {total} oikein ({percentage}%)
           </p>
         </div>
@@ -92,12 +192,17 @@ export function ResultsScreen({
         {/* Stats */}
         <div className="flex justify-center gap-6 mb-10">
           <div className="text-center">
-            <div className="text-sm text-gray-600 mb-1">Pisteet</div>
-            <div className="text-3xl font-bold text-purple-600">💎 {totalPoints}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pisteet</div>
+            <div className="flex items-center justify-center gap-2 text-3xl font-bold text-purple-600 dark:text-purple-400">
+              <DiamondsFour size={32} weight="duotone" className="text-amber-500" />
+              {totalPoints}
+            </div>
             {personalBest > 0 && (
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {isNewRecord ? (
-                  <span className="text-green-600 font-semibold">Uusi ennätys! 🎉</span>
+                  <span className="text-green-600 dark:text-green-400 font-semibold flex items-center justify-center gap-1">
+                    Uusi ennätys! <Confetti size={16} weight="fill" />
+                  </span>
                 ) : (
                   <span>Ennätys: {personalBest}</span>
                 )}
@@ -106,70 +211,89 @@ export function ResultsScreen({
           </div>
           {bestStreak > 0 && (
             <div className="text-center">
-              <div className="text-sm text-gray-600 mb-1">Paras putki</div>
-              <div className="text-3xl font-bold text-orange-600">🔥 {bestStreak}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Paras putki</div>
+              <div className="flex items-center justify-center gap-2 text-3xl font-bold text-orange-600 dark:text-orange-400">
+                <Fire size={32} weight="duotone" className="text-orange-500" />
+                {bestStreak}
+              </div>
             </div>
           )}
         </div>
 
-        {/* Newly Unlocked Badges */}
-        {newlyUnlocked.length > 0 && (
-          <div className="space-y-3 mb-10">
-            <h3 className="font-semibold text-gray-900 text-center mb-3">
-              🎉 Uudet merkit avattu!
-            </h3>
-            {newlyUnlocked.map(badgeId => {
-              const badge = badges.find(b => b.id === badgeId);
-              if (!badge) return null;
-              return (
-                <div
-                  key={badgeId}
-                  className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-500 rounded-lg p-4 text-center animate-pulse"
-                >
-                  <span className="text-3xl mr-2">{badge.emoji}</span>
-                  <span className="font-semibold text-yellow-900">{badge.name}</span>
-                  <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
         {/* All Badges Section */}
         {badges.some(b => b.unlocked) && (
           <div className="mb-10">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <Award className="w-5 h-5" />
-              Saavutetut merkit ({badges.filter(b => b.unlocked).length}/{badges.length})
-            </h3>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-              {badges.map(badge => (
-                <div
-                  key={badge.id}
-                  className={`p-3 rounded-lg text-center ${
-                    badge.unlocked
-                      ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-400'
-                      : 'bg-gray-100 opacity-50'
-                  }`}
-                  title={badge.unlocked ? badge.name : '🔒 Lukittu'}
-                >
-                  <div className="text-3xl mb-1">{badge.unlocked ? badge.emoji : '🔒'}</div>
-                  {badge.unlocked && (
-                    <div className="text-xs font-medium text-gray-700 leading-tight">
-                      {badge.name}
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                Saavutetut merkit ({badges.filter(b => b.unlocked).length}/{badges.length})
+              </h3>
+              <button
+                onClick={() => setShowAllBadges(!showAllBadges)}
+                className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+              >
+                {showAllBadges ? 'Piilota merkit' : 'Näytä kaikki merkit'}
+              </button>
             </div>
+            {showAllBadges ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
+                {badges.map(badge => {
+                  const colors = getBadgeColors(badge.id);
+                  return (
+                    <div
+                      key={badge.id}
+                      className={`p-3 rounded-lg text-center ${
+                        badge.unlocked
+                          ? `bg-gradient-to-br ${colors.light} ${colors.dark} border-2`
+                          : 'bg-gray-100 dark:bg-gray-800 opacity-50'
+                      }`}
+                      title={badge.unlocked ? badge.name : 'Lukittu'}
+                    >
+                      <div className="text-3xl mb-1 flex justify-center">
+                        {badge.unlocked ? getBadgeIcon(badge.id) : <LockSimple size={32} weight="fill" className="text-gray-400" />}
+                      </div>
+                      {badge.unlocked && (
+                        <div className={`text-xs font-medium leading-tight ${colors.text}`}>
+                          {badge.name}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {badges.filter(b => b.unlocked).map(badge => {
+                  const colors = getBadgeColors(badge.id);
+                  return (
+                    <div
+                      key={badge.id}
+                      className={`flex items-center gap-1 px-3 py-2 bg-gradient-to-br ${colors.light} ${colors.dark} border rounded-lg`}
+                      title={badge.name}
+                    >
+                      <span className="text-xl">{getBadgeIcon(badge.id, 20)}</span>
+                      <span className={`text-xs font-medium ${colors.text}`}>{badge.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
         {/* Answer Summary */}
         <div className="mb-10">
-          <h3 className="font-semibold text-gray-900 mb-4">Vastausten yhteenveto</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Vastausten yhteenveto</h3>
+            <button
+              onClick={() => setShowAllAnswers(!showAllAnswers)}
+              className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+            >
+              {showAllAnswers ? 'Näytä vain virheet' : 'Näytä kaikki'}
+            </button>
+          </div>
           <div className="space-y-2">
-            {answers.map((answer, index) => (
+            {answers.filter(answer => showAllAnswers || !answer.isCorrect).map((answer, index) => (
               <div
                 key={index}
                 className={`p-4 rounded-lg border-l-4 ${

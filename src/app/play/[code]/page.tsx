@@ -13,6 +13,7 @@ import { useGameSession } from '@/hooks/useGameSession';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { QuestionSetWithQuestions } from '@/types';
 import { Loader2, List } from 'lucide-react';
+import { DiamondsFour, Fire } from '@phosphor-icons/react';
 
 type PlayState = 'loading' | 'error' | 'playing' | 'results';
 
@@ -122,7 +123,7 @@ export default function PlayPage() {
   };
 
   const handleBackToMenu = () => {
-    router.push('/');
+    router.push('/play');
   };
 
   // Loading screen
@@ -188,24 +189,37 @@ export default function PlayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-8 pb-safe">
+    <div className="min-h-screen bg-white dark:bg-gray-900 p-4 md:p-8 pb-safe transition-colors">
       <div ref={topRef} className="max-w-2xl mx-auto pt-2">
         {/* Stats Bar */}
-        <div className="mb-6 flex items-center justify-between text-sm">
-          <div className="flex items-center gap-4">
-            <span className="text-gray-600">💎 {totalPoints} pistettä</span>
+        <div className="mb-6 flex items-center justify-between">
+          <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
+            Kysymys {currentQuestionIndex + 1} / {selectedQuestions.length}
+          </div>
+          <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+            <span className="flex items-center gap-1.5">
+              <DiamondsFour size={20} weight="duotone" className="text-amber-500" />
+              {totalPoints}
+            </span>
             {currentStreak > 0 && (
-              <span className="text-gray-600">🔥 {currentStreak} putki</span>
+              <span className="flex items-center gap-1.5">
+                <Fire size={20} weight="duotone" className="text-orange-500" />
+                {currentStreak}
+              </span>
             )}
           </div>
-          <span className="text-gray-500">
-            {currentQuestionIndex + 1} / {selectedQuestions.length}
-          </span>
         </div>
 
+        {/* Progress Bar */}
+        <ProgressBar
+          current={currentQuestionIndex + 1}
+          total={selectedQuestions.length}
+          score={score}
+        />
+
         {/* Question Card */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4 md:p-8 mb-6">
-          <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-8 mb-6 transition-colors">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4 md:mb-6">
             <MathText>{currentQuestion.question_text}</MathText>
           </h2>
 

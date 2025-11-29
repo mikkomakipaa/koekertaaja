@@ -7,7 +7,19 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { QuestionSet, Difficulty } from '@/types';
-import { Loader2, BookOpen } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import {
+  GlobeHemisphereWest,
+  MathOperations,
+  Scroll,
+  Bank,
+  Books,
+  Smiley,
+  Target,
+  Barbell,
+  Sparkle,
+  BookOpenText
+} from '@phosphor-icons/react';
 
 type BrowseState = 'loading' | 'loaded' | 'error';
 
@@ -40,10 +52,10 @@ export default function PlayBrowsePage() {
     vaikea: { bg: 'bg-orange-500', hover: 'hover:bg-orange-600', text: 'text-orange-700' },
   };
 
-  const difficultyEmojis: Record<string, string> = {
-    helppo: '😊',
-    normaali: '🎯',
-    vaikea: '💪',
+  const difficultyIcons: Record<string, React.ReactNode> = {
+    helppo: <Smiley size={20} weight="fill" className="inline" />,
+    normaali: <Target size={20} weight="duotone" className="inline" />,
+    vaikea: <Barbell size={20} weight="bold" className="inline" />,
   };
 
   useEffect(() => {
@@ -103,13 +115,33 @@ export default function PlayBrowsePage() {
   }, []);
 
   const getSubjectLabel = (subject: string) => {
-    const labels: Record<string, string> = {
-      english: '🇬🇧 Englanti',
-      math: '🔢 Matematiikka',
-      history: '📜 Historia',
-      society: '🏛️ Yhteiskuntaoppi',
+    const iconMap: Record<string, React.ReactNode> = {
+      english: (
+        <span className="flex items-center gap-1.5">
+          <GlobeHemisphereWest size={18} weight="duotone" className="text-blue-500" />
+          Englanti
+        </span>
+      ),
+      math: (
+        <span className="flex items-center gap-1.5">
+          <MathOperations size={18} weight="duotone" className="text-purple-500" />
+          Matematiikka
+        </span>
+      ),
+      history: (
+        <span className="flex items-center gap-1.5">
+          <Scroll size={18} weight="duotone" className="text-amber-600" />
+          Historia
+        </span>
+      ),
+      society: (
+        <span className="flex items-center gap-1.5">
+          <Bank size={18} weight="duotone" className="text-gray-600 dark:text-gray-400" />
+          Yhteiskuntaoppi
+        </span>
+      ),
     };
-    return labels[subject] || subject;
+    return iconMap[subject] || <span>{subject}</span>;
   };
 
   const getAvailableDifficulties = (sets: QuestionSet[]) => {
@@ -131,15 +163,15 @@ export default function PlayBrowsePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-6 md:p-12">
+    <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 transition-colors">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-2">
-            <BookOpen className="w-7 h-7 text-purple-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Valitse aihealue</h1>
+            <BookOpenText size={28} weight="duotone" className="text-purple-600 dark:text-purple-400" />
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Valitse aihealue</h1>
           </div>
-          <p className="text-gray-600">Valitse aihealue ja vaikeustaso</p>
+          <p className="text-gray-600 dark:text-gray-400">Valitse aihealue ja vaikeustaso</p>
         </div>
 
         {state === 'error' && (
@@ -149,11 +181,35 @@ export default function PlayBrowsePage() {
         )}
 
         {groupedSets.length === 0 && state === 'loaded' && (
-          <Alert className="mb-6">
-            <AlertDescription>
-              Ei vielä kysymyssarjoja. Luo ensimmäinen kysymyssarja!
-            </AlertDescription>
-          </Alert>
+          <div className="text-center py-16 px-6">
+            <div className="max-w-md mx-auto">
+              <div className="mb-6 flex justify-center">
+                <Books size={80} weight="duotone" className="text-purple-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+                Ei vielä harjoituksia
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                Luo ensimmäinen kysymyssarja aloittaaksesi harjoittelun
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button
+                  onClick={() => router.push('/create')}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 rounded-xl text-lg font-semibold flex items-center gap-2"
+                >
+                  <Sparkle size={20} weight="fill" />
+                  Luo kysymyssarja
+                </Button>
+                <Button
+                  onClick={() => router.push('/')}
+                  variant="outline"
+                  className="px-8 py-6 rounded-xl text-lg font-semibold"
+                >
+                  Takaisin valikkoon
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
 
         {groupedSets.length > 0 && (
@@ -164,32 +220,34 @@ export default function PlayBrowsePage() {
               return (
                 <div
                   key={group.key}
-                  className="border border-gray-200 rounded-xl p-5 bg-white hover:shadow-md transition-all"
+                  className="border border-gray-200 dark:border-gray-700 rounded-xl p-5 bg-white dark:bg-gray-800 hover:shadow-md transition-all"
                 >
-                  {/* Title */}
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    {group.name}
-                  </h3>
-
-                  {/* Badges */}
-                  <div className="flex flex-wrap gap-2 items-center mb-4">
-                    <span className="text-sm text-gray-600">
-                      {getSubjectLabel(group.subject)}
-                    </span>
+                  {/* Title and Grade */}
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                      {group.name}
+                    </h3>
                     {group.grade && (
-                      <span className="text-sm text-gray-500">
-                        • Luokka {group.grade}
+                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 flex-shrink-0">
+                        Luokka: {group.grade}
                       </span>
                     )}
-                    <span className="text-sm text-gray-500">
-                      • {group.sets[0]?.question_count || 0} kysymystä
+                  </div>
+
+                  {/* Subject */}
+                  <div className="mb-3">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      {getSubjectLabel(group.subject)}
                     </span>
                   </div>
 
+                  {/* Area Badge */}
                   {(group.topic || group.subtopic) && (
-                    <p className="text-sm text-gray-500 mb-4">
-                      {[group.topic, group.subtopic].filter(Boolean).join(' → ')}
-                    </p>
+                    <div className="mb-4">
+                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                        Aihealue: {[group.topic, group.subtopic].filter(Boolean).join(' → ')}
+                      </span>
+                    </div>
                   )}
 
                   {/* Difficulty Buttons - Inline */}
@@ -197,15 +255,16 @@ export default function PlayBrowsePage() {
                     {availableDifficulties.map((difficulty) => {
                       const set = group.sets.find(s => s.difficulty === difficulty);
                       const colors = difficultyColors[difficulty];
-                      const emoji = difficultyEmojis[difficulty];
+                      const icon = difficultyIcons[difficulty];
 
                       return (
                         <button
                           key={difficulty}
                           onClick={() => set && router.push(`/play/${set.code}`)}
-                          className={`${colors.bg} ${colors.hover} text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95`}
+                          className={`${colors.bg} ${colors.hover} text-white px-4 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-1.5`}
+                          aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
                         >
-                          <span className="mr-1.5">{emoji}</span>
+                          {icon}
                           {difficultyLabels[difficulty]}
                         </button>
                       );
