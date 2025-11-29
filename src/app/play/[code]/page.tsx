@@ -230,10 +230,8 @@ export default function PlayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 pb-safe transition-colors">
-      <ModeToggle currentMode={studyMode} onModeChange={setStudyMode} />
-
-      <div ref={topRef} className="max-w-2xl mx-auto pt-2 p-4 md:p-8">
+    <div className="min-h-screen bg-white dark:bg-gray-900 p-4 md:p-8 pb-safe transition-colors">
+      <div ref={topRef} className="max-w-2xl mx-auto pt-2">
         {/* Stats Bar */}
         <div className="mb-6 flex items-center justify-between">
           <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
