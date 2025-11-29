@@ -17,9 +17,10 @@ VAIKEUSTASO: Helppo
 - Suoraviivainen sisältö ja tunnistaminen
 
 KYSYMYSTYYPPIEN JAKAUMA (Helppo):
-- 65% multiple_choice (monivalinta)
+- 55% multiple_choice (monivalinta)
 - 25% true_false (totta/tarua)
 - 10% fill_blank (täydennä, yksinkertainen)
+- 10% sequential (järjestys - 4 kohtaa)
 - ÄLÄ käytä short_answer tai matching`,
     normaali: `
 VAIKEUSTASO: Normaali
