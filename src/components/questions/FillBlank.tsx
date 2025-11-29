@@ -34,9 +34,9 @@ export function FillBlank({
           disabled={showExplanation}
           placeholder="Kirjoita vastauksesi tähän..."
           className={cn(
-            "text-lg",
-            showExplanation && isCorrect && "border-green-500 bg-green-50",
-            showExplanation && !isCorrect && "border-red-500 bg-red-50"
+            "text-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700",
+            showExplanation && isCorrect && "border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-400",
+            showExplanation && !isCorrect && "border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-400"
           )}
         />
         {showExplanation && (
