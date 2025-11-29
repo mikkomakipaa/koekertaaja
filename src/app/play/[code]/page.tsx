@@ -191,20 +191,20 @@ export default function PlayPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900 p-4 md:p-8 pb-safe transition-colors">
       <div ref={topRef} className="max-w-2xl mx-auto pt-2">
         {/* Stats Bar */}
-        <div className="mb-6 flex items-center justify-between text-base">
-          <div className="flex items-center gap-4">
-            <span className="text-gray-700 dark:text-gray-300">
-              <span role="img" aria-label="Pisteet">💎</span> {totalPoints} pistettä
+        <div className="mb-6 flex items-center justify-between">
+          <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
+            Kysymys {currentQuestionIndex + 1} / {selectedQuestions.length}
+          </div>
+          <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+            <span>
+              <span role="img" aria-label="Pisteet">💎</span> {totalPoints}
             </span>
             {currentStreak > 0 && (
-              <span className="text-gray-700 dark:text-gray-300">
-                <span role="img" aria-label="Putki">🔥</span> {currentStreak} putki
+              <span>
+                <span role="img" aria-label="Putki">🔥</span> {currentStreak}
               </span>
             )}
           </div>
-          <span className="text-gray-600 dark:text-gray-400">
-            {currentQuestionIndex + 1} / {selectedQuestions.length}
-          </span>
         </div>
 
         {/* Progress Bar */}
