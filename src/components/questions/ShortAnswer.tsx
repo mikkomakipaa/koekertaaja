@@ -36,9 +36,9 @@ export function ShortAnswer({
           placeholder="Kirjoita vastauksesi tähän... (Voit kirjoittaa useamman lauseen)"
           rows={6}
           className={cn(
-            "text-base resize-none",
-            showExplanation && isCorrect && "border-green-500 bg-green-50",
-            showExplanation && !isCorrect && "border-yellow-500 bg-yellow-50"
+            "text-base resize-none text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700",
+            showExplanation && isCorrect && "border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-400",
+            showExplanation && !isCorrect && "border-yellow-500 bg-yellow-50 dark:bg-yellow-900 dark:border-yellow-600"
           )}
         />
         {showExplanation && (
