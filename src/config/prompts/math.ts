@@ -62,9 +62,10 @@ VAIKEUSTASO: Normaali
 - 2-3 vaiheen ongelmat
 
 KYSYMYSTYYPPIEN JAKAUMA (Normaali):
-- 60% multiple_choice (monivalinta)
+- 55% multiple_choice (monivalinta)
 - 25% fill_blank (täydennä, numeerinen vastaus)
-- 15% true_false (totta/tarua)
+- 10% sequential (järjestys - 5-6 vaihetta)
+- 10% true_false (totta/tarua)
 - ÄLÄ käytä short_answer (liian epämääräinen matematiikassa)
 - Voit käyttää matching jos sopii aiheeseen`,
     vaikea: `
