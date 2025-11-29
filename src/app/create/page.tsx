@@ -397,17 +397,17 @@ export default function CreatePage() {
               <TabsContent value="manage" className="space-y-4">
                 {loadingQuestionSets ? (
                   <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
                   </div>
                 ) : allQuestionSets.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                     <p className="text-lg">Ei kysymyssarjoja vielä.</p>
                     <p className="text-sm mt-2">Luo ensimmäinen sarjasi "Luo uusi" -välilehdeltä.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                         Kaikki kysymyssarjat ({allQuestionSets.length})
                       </h3>
                       <Button
