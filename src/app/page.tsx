@@ -3,7 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Star, BookOpen } from 'lucide-react';
+import { Star } from 'lucide-react';
+import {
+  DiamondsFour,
+  Fire,
+  Trophy,
+  BookOpenText
+} from '@phosphor-icons/react';
 
 export default function HomePage() {
   const router = useRouter();
