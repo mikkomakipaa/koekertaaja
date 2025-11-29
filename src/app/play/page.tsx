@@ -51,10 +51,10 @@ export default function PlayBrowsePage() {
     vaikea: { bg: 'bg-orange-500', hover: 'hover:bg-orange-600', text: 'text-orange-700' },
   };
 
-  const difficultyEmojis: Record<string, string> = {
-    helppo: '😊',
-    normaali: '🎯',
-    vaikea: '💪',
+  const difficultyIcons: Record<string, React.ReactNode> = {
+    helppo: <Smiley size={20} weight="fill" className="inline" />,
+    normaali: <Target size={20} weight="duotone" className="inline" />,
+    vaikea: <Barbell size={20} weight="bold" className="inline" />,
   };
 
   useEffect(() => {
