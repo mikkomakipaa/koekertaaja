@@ -247,9 +247,11 @@ export function ResultsScreen({
                           ? `bg-gradient-to-br ${colors.light} ${colors.dark} border-2`
                           : 'bg-gray-100 dark:bg-gray-800 opacity-50'
                       }`}
-                      title={badge.unlocked ? badge.name : '🔒 Lukittu'}
+                      title={badge.unlocked ? badge.name : 'Lukittu'}
                     >
-                      <div className="text-3xl mb-1">{badge.unlocked ? badge.emoji : '🔒'}</div>
+                      <div className="text-3xl mb-1 flex justify-center">
+                        {badge.unlocked ? getBadgeIcon(badge.id) : <LockSimple size={32} weight="fill" className="text-gray-400" />}
+                      </div>
                       {badge.unlocked && (
                         <div className={`text-xs font-medium leading-tight ${colors.text}`}>
                           {badge.name}
