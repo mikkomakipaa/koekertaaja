@@ -42,6 +42,7 @@ export default function PlayBrowsePage() {
   const [groupedSets, setGroupedSets] = useState<GroupedQuestionSets[]>([]);
   const [error, setError] = useState('');
   const [studyMode, setStudyMode] = useState<StudyMode>('pelaa');
+  const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
 
   const difficultyLabels: Record<string, string> = {
     helppo: 'Helppo',
@@ -153,6 +154,33 @@ export default function PlayBrowsePage() {
     );
   };
 
+  // Get unique grades from all question sets, sorted
+  const availableGrades = Array.from(
+    new Set(groupedSets.map(g => g.grade).filter((g): g is number => g !== undefined))
+  ).sort((a, b) => a - b);
+
+  // Filter question sets by selected grade
+  const filteredSets = selectedGrade
+    ? groupedSets.filter(g => g.grade === selectedGrade)
+    : groupedSets;
+
+  const getGradeColors = (grade: number) => {
+    // Each grade has its own unique color (grades 1-9)
+    const gradeColorMap: Record<number, { bg: string; text: string }> = {
+      1: { bg: 'bg-pink-100 dark:bg-pink-900/30', text: 'text-pink-800 dark:text-pink-200' },
+      2: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-200' },
+      3: { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-800 dark:text-orange-200' },
+      4: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-800 dark:text-amber-200' },
+      5: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-200' },
+      6: { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-800 dark:text-emerald-200' },
+      7: { bg: 'bg-cyan-100 dark:bg-cyan-900/30', text: 'text-cyan-800 dark:text-cyan-200' },
+      8: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-800 dark:text-blue-200' },
+      9: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-800 dark:text-purple-200' },
+    };
+
+    return gradeColorMap[grade] || { bg: 'bg-gray-100 dark:bg-gray-900/30', text: 'text-gray-800 dark:text-gray-200' };
+  };
+
   // Loading screen
   if (state === 'loading') {
     return (
@@ -181,6 +209,40 @@ export default function PlayBrowsePage() {
             {studyMode === 'pelaa' ? 'Pelaa kysymyspeliä pisteiden kanssa' : 'Opettele korttien avulla'}
           </p>
         </div>
+
+        {/* Grade Filter Buttons */}
+        {availableGrades.length > 0 && (
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedGrade(null)}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                  selectedGrade === null
+                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 shadow-md'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                Kaikki
+              </button>
+              {availableGrades.map((grade) => {
+                const colors = getGradeColors(grade);
+                return (
+                  <button
+                    key={grade}
+                    onClick={() => setSelectedGrade(grade)}
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                      selectedGrade === grade
+                        ? `${colors.bg} ${colors.text} shadow-md ring-2 ring-offset-2 ${colors.text.replace('text-', 'ring-')}`
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    Luokka: {grade}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {state === 'error' && (
           <Alert variant="destructive" className="mb-6">
@@ -222,7 +284,7 @@ export default function PlayBrowsePage() {
 
         {groupedSets.length > 0 && (
           <div className="space-y-4">
-            {groupedSets.map((group) => {
+            {filteredSets.map((group) => {
               const availableDifficulties = getAvailableDifficulties(group.sets);
 
               return (
@@ -236,7 +298,7 @@ export default function PlayBrowsePage() {
                       {group.name}
                     </h3>
                     {group.grade && (
-                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 flex-shrink-0">
+                      <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium flex-shrink-0 ${getGradeColors(group.grade).bg} ${getGradeColors(group.grade).text}`}>
                         Luokka: {group.grade}
                       </span>
                     )}
