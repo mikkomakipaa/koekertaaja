@@ -134,11 +134,11 @@ export function Matching({
       </div>
 
       {showExplanation && (
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm font-bold text-gray-800 mb-2">Oikeat vastaukset:</p>
+        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+          <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">Oikeat vastaukset:</p>
           <div className="space-y-1">
             {question.pairs.map((pair) => (
-              <p key={pair.left} className="text-sm text-gray-700">
+              <p key={pair.left} className="text-sm text-gray-700 dark:text-gray-300">
                 <span className="font-medium">
                   <MathText>{pair.left}</MathText>
                 </span>
