@@ -30,9 +30,9 @@ export default function HomePage() {
         <div className="space-y-4">
           <Button
             onClick={() => router.push('/play')}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-8 rounded-xl font-bold text-2xl shadow-lg hover:shadow-xl transition-all"
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-8 rounded-xl font-bold text-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
           >
-            <BookOpen className="w-8 h-8 mr-3" />
+            <BookOpenText size={32} weight="duotone" />
             Aloita harjoittelu
           </Button>
         </div>
