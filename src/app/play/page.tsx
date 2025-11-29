@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { QuestionSet, Difficulty } from '@/types';
-import { Loader2, BookOpen } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import {
   GlobeHemisphereWest,
   MathOperations,
@@ -17,7 +17,8 @@ import {
   Smiley,
   Target,
   Barbell,
-  Sparkle
+  Sparkle,
+  BookOpenText
 } from '@phosphor-icons/react';
 
 type BrowseState = 'loading' | 'loaded' | 'error';
