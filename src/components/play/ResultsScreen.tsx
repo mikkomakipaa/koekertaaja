@@ -140,30 +140,53 @@ export function ResultsScreen({
         {/* All Badges Section */}
         {badges.some(b => b.unlocked) && (
           <div className="mb-10">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <Award className="w-5 h-5" />
-              Saavutetut merkit ({badges.filter(b => b.unlocked).length}/{badges.length})
-            </h3>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-              {badges.map(badge => (
-                <div
-                  key={badge.id}
-                  className={`p-3 rounded-lg text-center ${
-                    badge.unlocked
-                      ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-400'
-                      : 'bg-gray-100 opacity-50'
-                  }`}
-                  title={badge.unlocked ? badge.name : '🔒 Lukittu'}
-                >
-                  <div className="text-3xl mb-1">{badge.unlocked ? badge.emoji : '🔒'}</div>
-                  {badge.unlocked && (
-                    <div className="text-xs font-medium text-gray-700 leading-tight">
-                      {badge.name}
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                Saavutetut merkit ({badges.filter(b => b.unlocked).length}/{badges.length})
+              </h3>
+              <button
+                onClick={() => setShowAllBadges(!showAllBadges)}
+                className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+              >
+                {showAllBadges ? 'Piilota merkit' : 'Näytä kaikki merkit'}
+              </button>
             </div>
+            {showAllBadges ? (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                {badges.map(badge => (
+                  <div
+                    key={badge.id}
+                    className={`p-3 rounded-lg text-center ${
+                      badge.unlocked
+                        ? 'bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900 dark:to-orange-900 border-2 border-yellow-400 dark:border-yellow-600'
+                        : 'bg-gray-100 dark:bg-gray-800 opacity-50'
+                    }`}
+                    title={badge.unlocked ? badge.name : '🔒 Lukittu'}
+                  >
+                    <div className="text-3xl mb-1">{badge.unlocked ? badge.emoji : '🔒'}</div>
+                    {badge.unlocked && (
+                      <div className="text-xs font-medium text-gray-700 dark:text-gray-300 leading-tight">
+                        {badge.name}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {badges.filter(b => b.unlocked).map(badge => (
+                  <div
+                    key={badge.id}
+                    className="flex items-center gap-1 px-3 py-2 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900 dark:to-orange-900 border border-yellow-400 dark:border-yellow-600 rounded-lg"
+                    title={badge.name}
+                  >
+                    <span className="text-xl">{badge.emoji}</span>
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{badge.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
