@@ -35,7 +35,6 @@ export default function RootLayout({
         <main className="flex-1 overflow-auto">
           {children}
         </main>
-        <Footer />
         <Analytics />
       </body>
     </html>
