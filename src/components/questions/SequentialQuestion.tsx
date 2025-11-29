@@ -74,7 +74,7 @@ export function SequentialQuestion({
       <div className="space-y-2">
         {currentOrder.map((itemIndex, displayIndex) => {
           const status = getItemStatus(displayIndex);
-          const item = items[itemIndex];
+          const item = question.items[itemIndex];
 
           return (
             <div
