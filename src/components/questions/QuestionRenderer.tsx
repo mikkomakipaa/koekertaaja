@@ -73,6 +73,16 @@ export function QuestionRenderer({
         />
       );
 
+    case 'sequential':
+      return (
+        <SequentialQuestion
+          question={question}
+          userAnswer={userAnswer || null}
+          showExplanation={showExplanation}
+          onAnswerChange={onAnswerChange}
+        />
+      );
+
     default:
       // This should never happen due to TypeScript type checking, but handle it gracefully at runtime
       return <div>Tuntematon kysymystyyppi: {questionType}</div>;
