@@ -168,9 +168,17 @@ export function ResultsScreen({
 
         {/* Answer Summary */}
         <div className="mb-10">
-          <h3 className="font-semibold text-gray-900 mb-4">Vastausten yhteenveto</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-900">Vastausten yhteenveto</h3>
+            <button
+              onClick={() => setShowAllAnswers(!showAllAnswers)}
+              className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+            >
+              {showAllAnswers ? 'Näytä vain virheet' : 'Näytä kaikki'}
+            </button>
+          </div>
           <div className="space-y-2">
-            {answers.map((answer, index) => (
+            {answers.filter(answer => showAllAnswers || !answer.isCorrect).map((answer, index) => (
               <div
                 key={index}
                 className={`p-4 rounded-lg border-l-4 ${
