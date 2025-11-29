@@ -104,7 +104,7 @@ export function SequentialQuestion({
               </div>
 
               {/* Status Icon (after submission) */}
-              {submitted && (
+              {showExplanation && (
                 <div className="flex-shrink-0">
                   {status === 'correct' ? (
                     <CheckCircle size={24} weight="fill" className="text-green-600 dark:text-green-400" />
@@ -115,14 +115,14 @@ export function SequentialQuestion({
               )}
 
               {/* Arrow Controls (before submission) */}
-              {!submitted && (
+              {!showExplanation && (
                 <div className="flex flex-col gap-1 flex-shrink-0">
                   <button
                     onClick={() => moveUp(displayIndex)}
-                    disabled={displayIndex === 0 || disabled}
+                    disabled={displayIndex === 0}
                     className={`
                       p-1.5 rounded transition-colors
-                      ${displayIndex === 0 || disabled
+                      ${displayIndex === 0
                         ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
                         : 'text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
                       }
@@ -133,10 +133,10 @@ export function SequentialQuestion({
                   </button>
                   <button
                     onClick={() => moveDown(displayIndex)}
-                    disabled={displayIndex === currentOrder.length - 1 || disabled}
+                    disabled={displayIndex === currentOrder.length - 1}
                     className={`
                       p-1.5 rounded transition-colors
-                      ${displayIndex === currentOrder.length - 1 || disabled
+                      ${displayIndex === currentOrder.length - 1
                         ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
                         : 'text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
                       }
