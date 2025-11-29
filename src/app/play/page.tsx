@@ -210,6 +210,40 @@ export default function PlayBrowsePage() {
           </p>
         </div>
 
+        {/* Grade Filter Buttons */}
+        {availableGrades.length > 0 && (
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedGrade(null)}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                  selectedGrade === null
+                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 shadow-md'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                Kaikki
+              </button>
+              {availableGrades.map((grade) => {
+                const colors = getGradeColors(grade);
+                return (
+                  <button
+                    key={grade}
+                    onClick={() => setSelectedGrade(grade)}
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                      selectedGrade === grade
+                        ? `${colors.bg} ${colors.text} shadow-md ring-2 ring-offset-2 ${colors.text.replace('text-', 'ring-')}`
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {grade}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {state === 'error' && (
           <Alert variant="destructive" className="mb-6">
             <AlertDescription>{error}</AlertDescription>
