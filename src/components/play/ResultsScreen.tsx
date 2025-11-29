@@ -77,15 +77,15 @@ export function ResultsScreen({
   const celebration = getCelebration();
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-8">
+    <div className="min-h-screen bg-white dark:bg-gray-900 p-4 md:p-8 transition-colors">
       <div className="max-w-2xl mx-auto">
         {/* Results Header */}
         <div className="text-center mb-10">
           <div className="text-7xl mb-4">{celebration.emoji}</div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             {celebration.text}
           </h1>
-          <p className="text-2xl text-gray-600">
+          <p className="text-2xl text-gray-600 dark:text-gray-400">
             {score} / {total} oikein ({percentage}%)
           </p>
         </div>
@@ -93,12 +93,12 @@ export function ResultsScreen({
         {/* Stats */}
         <div className="flex justify-center gap-6 mb-10">
           <div className="text-center">
-            <div className="text-sm text-gray-600 mb-1">Pisteet</div>
-            <div className="text-3xl font-bold text-purple-600">💎 {totalPoints}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pisteet</div>
+            <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">💎 {totalPoints}</div>
             {personalBest > 0 && (
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {isNewRecord ? (
-                  <span className="text-green-600 font-semibold">Uusi ennätys! 🎉</span>
+                  <span className="text-green-600 dark:text-green-400 font-semibold">Uusi ennätys! 🎉</span>
                 ) : (
                   <span>Ennätys: {personalBest}</span>
                 )}
@@ -107,8 +107,8 @@ export function ResultsScreen({
           </div>
           {bestStreak > 0 && (
             <div className="text-center">
-              <div className="text-sm text-gray-600 mb-1">Paras putki</div>
-              <div className="text-3xl font-bold text-orange-600">🔥 {bestStreak}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Paras putki</div>
+              <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">🔥 {bestStreak}</div>
             </div>
           )}
         </div>
