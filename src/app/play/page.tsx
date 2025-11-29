@@ -168,7 +168,7 @@ export default function PlayBrowsePage() {
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-2">
-            <BookOpen className="w-7 h-7 text-purple-600 dark:text-purple-400" />
+            <BookOpenText size={28} weight="duotone" className="text-purple-600 dark:text-purple-400" />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Valitse aihealue</h1>
           </div>
           <p className="text-gray-600 dark:text-gray-400">Valitse aihealue ja vaikeustaso</p>
