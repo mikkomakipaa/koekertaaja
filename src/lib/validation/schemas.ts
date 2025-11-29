@@ -60,6 +60,7 @@ export const aiQuestionSchema = z.object({
     'true_false',
     'matching',
     'short_answer',
+    'sequential',
   ]),
   options: z.array(z.string()).min(2, 'Multiple choice questions must have at least 2 options').optional(),
   correct_answer: z.union([
@@ -76,6 +77,8 @@ export const aiQuestionSchema = z.object({
     left: z.string(),
     right: z.string(),
   })).optional(),
+  items: z.array(z.string()).min(3, 'Sequential questions must have at least 3 items').max(8, 'Sequential questions must have at most 8 items').optional(),
+  correct_order: z.array(z.number()).optional(),
 }).superRefine((data, ctx) => {
   // Validate that multiple_choice has at least 2 options (ideally 4)
   if (data.type === 'multiple_choice') {
@@ -96,6 +99,36 @@ export const aiQuestionSchema = z.object({
         message: 'Matching questions must have at least 2 pairs',
         path: ['pairs'],
       });
+    }
+  }
+
+  // Validate that sequential has items and correct_order
+  if (data.type === 'sequential') {
+    if (!data.items || data.items.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Sequential questions must have at least 3 items',
+        path: ['items'],
+      });
+    }
+    if (!data.correct_order || data.correct_order.length !== data.items?.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Sequential questions must have correct_order matching items length',
+        path: ['correct_order'],
+      });
+    }
+    // Validate that correct_order contains valid indices
+    if (data.correct_order && data.items) {
+      const maxIndex = data.items.length - 1;
+      const hasInvalidIndex = data.correct_order.some(idx => idx < 0 || idx > maxIndex);
+      if (hasInvalidIndex) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Sequential correct_order contains invalid indices',
+          path: ['correct_order'],
+        });
+      }
     }
   }
 });
