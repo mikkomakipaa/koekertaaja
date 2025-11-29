@@ -169,11 +169,16 @@ export function ResultsScreen({
         <div className="flex justify-center gap-6 mb-10">
           <div className="text-center">
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pisteet</div>
-            <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">💎 {totalPoints}</div>
+            <div className="flex items-center justify-center gap-2 text-3xl font-bold text-purple-600 dark:text-purple-400">
+              <DiamondsFour size={32} weight="duotone" className="text-amber-500" />
+              {totalPoints}
+            </div>
             {personalBest > 0 && (
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {isNewRecord ? (
-                  <span className="text-green-600 dark:text-green-400 font-semibold">Uusi ennätys! 🎉</span>
+                  <span className="text-green-600 dark:text-green-400 font-semibold flex items-center justify-center gap-1">
+                    Uusi ennätys! <Confetti size={16} weight="fill" />
+                  </span>
                 ) : (
                   <span>Ennätys: {personalBest}</span>
                 )}
@@ -183,7 +188,10 @@ export function ResultsScreen({
           {bestStreak > 0 && (
             <div className="text-center">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Paras putki</div>
-              <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">🔥 {bestStreak}</div>
+              <div className="flex items-center justify-center gap-2 text-3xl font-bold text-orange-600 dark:text-orange-400">
+                <Fire size={32} weight="duotone" className="text-orange-500" />
+                {bestStreak}
+              </div>
             </div>
           )}
         </div>
