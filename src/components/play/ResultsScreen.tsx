@@ -193,10 +193,10 @@ export function ResultsScreen({
         {/* Answer Summary */}
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Vastausten yhteenveto</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Vastausten yhteenveto</h3>
             <button
               onClick={() => setShowAllAnswers(!showAllAnswers)}
-              className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+              className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
             >
               {showAllAnswers ? 'Näytä vain virheet' : 'Näytä kaikki'}
             </button>
