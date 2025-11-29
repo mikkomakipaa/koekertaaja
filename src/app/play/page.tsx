@@ -149,11 +149,32 @@ export default function PlayBrowsePage() {
         )}
 
         {groupedSets.length === 0 && state === 'loaded' && (
-          <Alert className="mb-6">
-            <AlertDescription>
-              Ei vielä kysymyssarjoja. Luo ensimmäinen kysymyssarja!
-            </AlertDescription>
-          </Alert>
+          <div className="text-center py-16 px-6">
+            <div className="max-w-md mx-auto">
+              <div className="text-6xl mb-6">📚</div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+                Ei vielä harjoituksia
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                Luo ensimmäinen kysymyssarja aloittaaksesi harjoittelun
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button
+                  onClick={() => router.push('/create')}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 rounded-xl text-lg font-semibold"
+                >
+                  ✨ Luo kysymyssarja
+                </Button>
+                <Button
+                  onClick={() => router.push('/')}
+                  variant="outline"
+                  className="px-8 py-6 rounded-xl text-lg font-semibold"
+                >
+                  Takaisin valikkoon
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
 
         {groupedSets.length > 0 && (
