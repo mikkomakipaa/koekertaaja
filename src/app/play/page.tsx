@@ -251,16 +251,16 @@ export default function PlayBrowsePage() {
                     {availableDifficulties.map((difficulty) => {
                       const set = group.sets.find(s => s.difficulty === difficulty);
                       const colors = difficultyColors[difficulty];
-                      const emoji = difficultyEmojis[difficulty];
+                      const icon = difficultyIcons[difficulty];
 
                       return (
                         <button
                           key={difficulty}
                           onClick={() => set && router.push(`/play/${set.code}`)}
-                          className={`${colors.bg} ${colors.hover} text-white px-4 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95`}
+                          className={`${colors.bg} ${colors.hover} text-white px-4 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-1.5`}
                           aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
                         >
-                          <span className="mr-1.5" role="img" aria-hidden="true">{emoji}</span>
+                          {icon}
                           {difficultyLabels[difficulty]}
                         </button>
                       );
