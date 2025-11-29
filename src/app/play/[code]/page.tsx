@@ -29,6 +29,8 @@ export default function PlayPage() {
   const [questionSet, setQuestionSet] = useState<QuestionSetWithQuestions | null>(null);
   const [error, setError] = useState('');
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  const [studyMode, setStudyMode] = useState<StudyMode>('pelaa');
+  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
 
   const {
     currentQuestion,
