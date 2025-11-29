@@ -19,7 +19,8 @@ import {
   Target,
   Barbell,
   Sparkle,
-  BookOpenText
+  BookOpenText,
+  Book
 } from '@phosphor-icons/react';
 
 type BrowseState = 'loading' | 'loaded' | 'error';
