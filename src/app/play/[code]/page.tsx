@@ -25,6 +25,7 @@ export default function PlayPage() {
   const searchParams = useSearchParams();
   const code = params.code as string;
   const studyMode = (searchParams.get('mode') as StudyMode) || 'pelaa';
+  const allCodes = searchParams.get('all'); // Comma-separated codes for study mode
   const topRef = useRef<HTMLDivElement>(null);
 
   const [state, setState] = useState<PlayState>('loading');
