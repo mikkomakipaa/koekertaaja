@@ -106,6 +106,24 @@ export function ResultsScreen({
 
   const celebration = getCelebration();
 
+  // Get badge icon based on ID
+  const getBadgeIcon = (badgeId: BadgeId, size: number = 32) => {
+    const iconMap = {
+      first_session: <Sparkle size={size} weight="fill" className="inline" />,
+      '5_sessions': <Fire size={size} weight="duotone" className="inline" />,
+      '10_sessions': <Barbell size={size} weight="bold" className="inline" />,
+      '25_sessions': <Target size={size} weight="duotone" className="inline" />,
+      perfect_score: <Star size={size} weight="fill" className="inline" />,
+      beat_personal_best: <Rocket size={size} weight="duotone" className="inline" />,
+      speed_demon: <Lightning size={size} weight="fill" className="inline" />,
+      tried_both_levels: <Palette size={size} weight="duotone" className="inline" />,
+      streak_3: <Fire size={size} weight="duotone" className="inline" />,
+      streak_5: <Fire size={size} weight="fill" className="inline" />,
+      streak_10: <Fire size={size} weight="fill" className="inline text-orange-600" />,
+    };
+    return iconMap[badgeId] || <Star size={size} weight="regular" className="inline" />;
+  };
+
   // Get badge colors based on category
   const getBadgeColors = (badgeId: string) => {
     // Practice/Milestone badges (purple - matches app theme)
