@@ -456,6 +456,7 @@ export default function CreatePage() {
                               variant="destructive"
                               size="sm"
                               disabled={deletingId === set.id}
+                              aria-label="Poista kysymyssarja"
                             >
                               {deletingId === set.id ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
