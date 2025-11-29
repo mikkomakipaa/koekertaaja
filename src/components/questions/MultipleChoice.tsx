@@ -41,7 +41,7 @@ export function MultipleChoice({
             onClick={() => !showExplanation && onAnswerSelect(option)}
             disabled={showExplanation}
             className={cn(
-              "w-full p-4 text-left rounded-lg border-2 transition-all",
+              "w-full p-5 text-left rounded-lg border-2 transition-all active:scale-[0.98]",
               showCorrect && "border-green-500 bg-green-50",
               showWrong && "border-red-500 bg-red-50",
               !showCorrect && !showWrong && isSelected && "border-blue-500 bg-blue-50",
