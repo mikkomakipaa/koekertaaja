@@ -215,8 +215,8 @@ export default function PlayPage() {
         />
 
         {/* Question Card */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4 md:p-8 mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-8 mb-6 transition-colors">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4 md:mb-6">
             <MathText>{currentQuestion.question_text}</MathText>
           </h2>
 
