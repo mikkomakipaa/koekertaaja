@@ -26,7 +26,7 @@ export default function CreatePage() {
   const [subject, setSubject] = useState('');
   const [grade, setGrade] = useState<number | undefined>(undefined);
   const [examLength, setExamLength] = useState(15);
-  const [questionCount, setQuestionCount] = useState(50);
+  const [questionCount, setQuestionCount] = useState(100);
   const [questionSetName, setQuestionSetName] = useState('');
   const [materialText, setMaterialText] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -178,7 +178,7 @@ export default function CreatePage() {
               <p className="text-xl font-bold text-indigo-700">
                 Luodaan kysymyssarjoja...
               </p>
-              <p className="text-gray-600 mt-2 font-medium">3 vaikeustasoa × {examLength} kysymystä</p>
+              <p className="text-gray-600 mt-2 font-medium">2 vaikeustasoa × {examLength} kysymystä</p>
               <p className="text-gray-500 text-sm mt-1">Tämä kestää muutaman minuutin</p>
             </CardContent>
           </Card>
@@ -192,7 +192,6 @@ export default function CreatePage() {
     const difficultyLabels: Record<string, string> = {
       helppo: 'Helppo',
       normaali: 'Normaali',
-      vaikea: 'Vaikea',
     };
 
     return (
@@ -350,17 +349,17 @@ export default function CreatePage() {
               </label>
               <div className="space-y-4">
                 <Slider
-                  min={10}
-                  max={100}
-                  step={5}
+                  min={40}
+                  max={400}
+                  step={20}
                   value={[questionCount]}
                   onValueChange={(value) => setQuestionCount(value[0])}
                   className="w-full"
                 />
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">10 kysymystä</span>
+                  <span className="text-sm text-gray-600">40 kysymystä</span>
                   <span className="text-2xl font-bold text-indigo-600">{questionCount}</span>
-                  <span className="text-sm text-gray-600">100 kysymystä</span>
+                  <span className="text-sm text-gray-600">400 kysymystä</span>
                 </div>
               </div>
               <p className="text-sm text-gray-600 mt-2">

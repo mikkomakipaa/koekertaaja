@@ -25,6 +25,7 @@ export default function PlayPage() {
   const [state, setState] = useState<PlayState>('loading');
   const [questionSet, setQuestionSet] = useState<QuestionSetWithQuestions | null>(null);
   const [error, setError] = useState('');
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
 
   const {
     currentQuestion,
@@ -75,6 +76,7 @@ export default function PlayPage() {
   useEffect(() => {
     if (questionSet && state === 'playing' && selectedQuestions.length === 0) {
       startNewSession();
+      setSessionStartTime(Date.now());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionSet, state]);
@@ -111,6 +113,7 @@ export default function PlayPage() {
 
   const handlePlayAgain = () => {
     startNewSession();
+    setSessionStartTime(Date.now());
     setState('playing');
   };
 
@@ -152,6 +155,10 @@ export default function PlayPage() {
 
   // Results screen
   if (state === 'results') {
+    const durationSeconds = sessionStartTime
+      ? Math.round((Date.now() - sessionStartTime) / 1000)
+      : undefined;
+
     return (
       <ResultsScreen
         score={score}
@@ -159,6 +166,9 @@ export default function PlayPage() {
         answers={answers}
         totalPoints={totalPoints}
         bestStreak={bestStreak}
+        questionSetCode={code}
+        difficulty={questionSet?.difficulty}
+        durationSeconds={durationSeconds}
         onPlayAgain={handlePlayAgain}
         onBackToMenu={handleBackToMenu}
       />

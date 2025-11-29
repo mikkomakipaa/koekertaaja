@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Koekertaaja** (Exam Prepper) is a Finnish exam preparation web app built with Next.js 14, TypeScript, and Supabase. It uses Anthropic Claude AI to generate question sets from uploaded materials (PDF, images, text) and provides a gamified learning experience with points, streaks, and achievements.
+**Koekertaaja** (Exam Prepper) is a Finnish exam preparation web app built with Next.js 14, TypeScript, and Supabase. It uses Anthropic Claude AI to generate question sets from uploaded materials (PDF, images, text) and provides a gamified learning experience with points, streaks, and achievement badges.
+
+**Target Audience**: Primary school students (ages 10-12, grades 4-6)
+
+**Design Philosophy**: Age-appropriate gamification focusing on personal growth over competition. No leaderboards or public rankings - uses achievement badges and personal best tracking to encourage practice without social pressure.
 
 ## Tech Stack
 
@@ -15,6 +19,58 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Validation**: Zod schemas
 - **Logging**: Pino with pretty printing
 - **Deployment**: Vercel-ready with CSP headers
+
+## Development vs Production Environments
+
+**Status**: The application is now **live in production** (published 2025-11-27).
+
+### Environment Separation
+
+**Production**:
+- Live user-facing application
+- Stable, tested features only
+- Production Supabase database (contains real user-generated question sets)
+- Production Vercel deployment
+- **DO NOT** make experimental changes directly to production
+
+**Development**:
+- Separate Supabase project for testing
+- Development branch deployments
+- Safe environment for testing new features
+- Isolated from production data
+
+### Development Workflow
+
+1. **Always use development environment** for new features and experiments
+2. **Environment variables**: Maintain separate `.env.local` files:
+   - `.env.local` (development) - points to dev Supabase
+   - `.env.production` - points to prod Supabase (used by Vercel)
+3. **Testing**: Thoroughly test in dev before merging to main
+4. **Database changes**: Test migrations in dev Supabase first
+5. **Deployment**: Only merge to main when feature is production-ready
+
+### Required Environment Setup
+
+For development, create a **separate Supabase project** and configure `.env.local`:
+
+```bash
+# Development environment (.env.local)
+NEXT_PUBLIC_SUPABASE_URL=          # Dev Supabase project URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=     # Dev Supabase anonymous key
+SUPABASE_SERVICE_ROLE_KEY=         # Dev service role key
+ANTHROPIC_API_KEY=                 # Shared or separate dev key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+Production environment variables are configured in **Vercel project settings** (never in code).
+
+### Critical Guidelines
+
+- **Never test experimental features against production database**
+- **Always verify which environment you're connected to** before making changes
+- **Database migrations**: Apply to dev first, then production after validation
+- **Feature flags**: Consider using environment-based feature flags for gradual rollouts
+- **Monitoring**: Check production logs/errors regularly via Vercel dashboard
 
 ## Development Commands
 
@@ -39,7 +95,7 @@ npm start           # Production server
    - User uploads materials via `/create` page
    - Frontend sends multipart request to `/api/generate-questions` (POST)
    - API route converts PDFs/images to base64, calls Anthropic Claude API
-   - Single AI call generates **4 difficulty levels** (Helppo/Normaali/Vaikea/Mahdoton)
+   - Single AI call generates **2 difficulty levels** (Helppo/Normaali)
    - Questions stored in Supabase with unique 6-character codes
    - Returns shareable codes for each difficulty level
 
@@ -48,7 +104,9 @@ npm start           # Production server
    - Client fetches question set + questions from Supabase (public read)
    - Game state managed entirely client-side via `useGameSession` hook
    - Points system: 10 per correct, +5 bonus for 3+ streak
-   - No user data persisted (session-only progress)
+   - Badge system tracks achievements in localStorage
+   - Personal best scores tracked per question set
+   - Session duration tracked for speed badges
 
 3. **Database** (Supabase):
    - `question_sets`: Metadata (code, name, subject, difficulty, grade)
@@ -96,7 +154,8 @@ src/
 │       ├── math.ts                 # Math prompts (prepared)
 │       └── generic.ts              # Fallback for any subject
 ├── hooks/
-│   └── useGameSession.ts           # Game state: points, streaks, answers
+│   ├── useGameSession.ts           # Game state: points, streaks, answers
+│   └── useBadges.ts                # Badge tracking with localStorage
 └── types/
     ├── questions.ts                # Core type definitions
     └── database.ts                 # Database type parsers
@@ -112,8 +171,9 @@ src/
 - `short_answer`: Text input with max length
 
 **Question Generation**:
-- Configurable pool size: 50-200 questions generated from materials
-- Configurable exam length: 10-50 questions per difficulty level
+- Configurable pool size: 40-400 questions generated from materials (default: 100)
+- Configurable exam length: 5-20 questions per session (default: 15)
+- 2 difficulty levels: Helppo (Easy), Normaali (Normal)
 - Subject-specific prompts: `src/config/prompts/{subject}.ts`
 - Multimodal: Supports PDF (document type) and images
 - Response validated with Zod schemas
@@ -124,6 +184,19 @@ src/
 - Tracks: points, current streak, best streak, answers
 - Points: 10 per correct + 5 bonus when streak ≥ 3
 - All state is client-side React (not persisted)
+
+**Badge System** (`useBadges` hook):
+- 11 achievement badges stored in localStorage
+- Badge categories:
+  - **Practice milestones**: 1st, 5th, 10th, 25th session completed
+  - **Performance**: Perfect score, beat personal best
+  - **Speed**: Complete session under 5 minutes
+  - **Streaks**: 3, 5, or 10 correct answers in a row
+  - **Exploration**: Try both difficulty levels
+- Personal best scores tracked per question set (localStorage)
+- Session duration tracking for speed-based achievements
+- Age-appropriate: No leaderboards, no public comparison
+- All badges displayed on results screen (unlocked/locked states)
 
 **Security**:
 - CSP headers configured in `next.config.js`
@@ -171,9 +244,11 @@ Run `supabase/migrations/20250103_initial_schema.sql` in Supabase SQL Editor.
 
 - **Type safety**: Always run `npm run typecheck` before committing
 - **API costs**: Configurable question pool and exam length help control costs
-- **Batch creation**: One upload creates 4 difficulty levels automatically
+- **Batch creation**: One upload creates 2 difficulty levels automatically
 - **Security**: Never commit `.env.local` or expose API keys
 - **Session state**: Game progress is ephemeral (not saved to database)
+- **Badge persistence**: Stored locally via localStorage (no server sync)
 - **Code generation**: Uses crypto.randomBytes for 6-character codes (A-Z0-9)
 - **Question shuffling**: Applied at session start via Fisher-Yates algorithm
 - **File uploads**: 30MB limit set in `next.config.js` for server actions
+- **Age-appropriate design**: No leaderboards or public rankings for 10-12 year olds
