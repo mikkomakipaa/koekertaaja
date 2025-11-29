@@ -204,8 +204,9 @@ export default function PlayBrowsePage() {
                           key={difficulty}
                           onClick={() => set && router.push(`/play/${set.code}`)}
                           className={`${colors.bg} ${colors.hover} text-white px-4 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95`}
+                          aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
                         >
-                          <span className="mr-1.5">{emoji}</span>
+                          <span className="mr-1.5" role="img" aria-hidden="true">{emoji}</span>
                           {difficultyLabels[difficulty]}
                         </button>
                       );
