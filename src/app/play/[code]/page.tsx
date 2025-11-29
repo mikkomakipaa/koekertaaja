@@ -52,24 +52,56 @@ export default function PlayPage() {
     startNewSession,
   } = useGameSession(questionSet?.questions || []);
 
-  // Load question set
+  // Load question set(s)
   useEffect(() => {
     const loadQuestionSet = async () => {
       try {
         setState('loading');
-        const data = await getQuestionSetByCode(code);
 
-        if (!data) {
-          setError(`Kysymyssarjaa ei löytynyt koodilla: ${code}`);
-          setState('error');
-          return;
+        // If allCodes parameter exists, load all question sets for study mode
+        if (allCodes && studyMode === 'opettele') {
+          const codes = allCodes.split(',');
+          const allSets = await Promise.all(
+            codes.map(c => getQuestionSetByCode(c.trim()))
+          );
+
+          // Filter out any null results and combine questions
+          const validSets = allSets.filter(s => s !== null) as QuestionSetWithQuestions[];
+
+          if (validSets.length === 0) {
+            setError('Kysymyssarjoja ei löytynyt');
+            setState('error');
+            return;
+          }
+
+          // Use first set as the base, but combine all questions
+          const combinedSet = {
+            ...validSets[0],
+            questions: validSets.flatMap(s => s.questions),
+            question_count: validSets.reduce((sum, s) => sum + s.question_count, 0)
+          };
+
+          setQuestionSet(combinedSet);
+          // Convert all questions to flashcards (excludes sequential questions)
+          const cards = convertQuestionsToFlashcards(combinedSet.questions);
+          setFlashcards(cards);
+          setState('playing');
+        } else {
+          // Normal single question set loading
+          const data = await getQuestionSetByCode(code);
+
+          if (!data) {
+            setError(`Kysymyssarjaa ei löytynyt koodilla: ${code}`);
+            setState('error');
+            return;
+          }
+
+          setQuestionSet(data);
+          // Convert questions to flashcards (excludes sequential questions)
+          const cards = convertQuestionsToFlashcards(data.questions);
+          setFlashcards(cards);
+          setState('playing');
         }
-
-        setQuestionSet(data);
-        // Convert questions to flashcards (excludes sequential questions)
-        const cards = convertQuestionsToFlashcards(data.questions);
-        setFlashcards(cards);
-        setState('playing');
       } catch (err) {
         console.error('Error loading question set:', err);
         setError('Kysymyssarjan lataaminen epäonnistui');
@@ -80,7 +112,7 @@ export default function PlayPage() {
     if (code) {
       loadQuestionSet();
     }
-  }, [code]);
+  }, [code, allCodes, studyMode]);
 
   // Start new session when question set loads
   useEffect(() => {
