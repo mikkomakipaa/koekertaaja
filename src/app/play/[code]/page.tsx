@@ -241,10 +241,23 @@ export default function PlayPage() {
       );
     }
 
+    // Strip difficulty suffix from name for flashcard mode
+    const stripDifficultySuffix = (name: string): string => {
+      const suffixes = [' - Helppo', ' - Normaali', ' - Vaikea'];
+      for (const suffix of suffixes) {
+        if (name.endsWith(suffix)) {
+          return name.slice(0, -suffix.length);
+        }
+      }
+      return name;
+    };
+
+    const displayName = questionSet?.name ? stripDifficultySuffix(questionSet.name) : 'Kysymyssarja';
+
     return (
       <FlashcardSession
         flashcards={flashcards}
-        questionSetName={questionSet?.name || 'Kysymyssarja'}
+        questionSetName={displayName}
         onExit={handleBackToMenu}
       />
     );
