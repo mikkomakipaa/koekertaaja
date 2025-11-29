@@ -154,32 +154,20 @@ export default function PlayBrowsePage() {
   };
 
   const getGradeColors = (grade: number) => {
-    // Color scheme based on grade level
-    if (grade <= 3) {
-      // Grades 1-3: Green (beginner)
-      return {
-        bg: 'bg-green-100 dark:bg-green-900/30',
-        text: 'text-green-800 dark:text-green-200',
-      };
-    } else if (grade <= 6) {
-      // Grades 4-6: Blue (intermediate)
-      return {
-        bg: 'bg-blue-100 dark:bg-blue-900/30',
-        text: 'text-blue-800 dark:text-blue-200',
-      };
-    } else if (grade <= 9) {
-      // Grades 7-9: Orange (advanced)
-      return {
-        bg: 'bg-orange-100 dark:bg-orange-900/30',
-        text: 'text-orange-800 dark:text-orange-200',
-      };
-    } else {
-      // Grade 10+: Purple (high school)
-      return {
-        bg: 'bg-purple-100 dark:bg-purple-900/30',
-        text: 'text-purple-800 dark:text-purple-200',
-      };
-    }
+    // Each grade has its own unique color (grades 1-9)
+    const gradeColorMap: Record<number, { bg: string; text: string }> = {
+      1: { bg: 'bg-pink-100 dark:bg-pink-900/30', text: 'text-pink-800 dark:text-pink-200' },
+      2: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-200' },
+      3: { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-800 dark:text-orange-200' },
+      4: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-800 dark:text-amber-200' },
+      5: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-200' },
+      6: { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-800 dark:text-emerald-200' },
+      7: { bg: 'bg-cyan-100 dark:bg-cyan-900/30', text: 'text-cyan-800 dark:text-cyan-200' },
+      8: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-800 dark:text-blue-200' },
+      9: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-800 dark:text-purple-200' },
+    };
+
+    return gradeColorMap[grade] || { bg: 'bg-gray-100 dark:bg-gray-900/30', text: 'text-gray-800 dark:text-gray-200' };
   };
 
   // Loading screen
