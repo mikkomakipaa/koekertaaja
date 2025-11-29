@@ -264,9 +264,9 @@ export default function CreatePage() {
   return (
     <AuthGuard>
       <UserMenu />
-      <div className="min-h-screen bg-white p-6 md:p-12">
+      <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 transition-colors">
       <div className="max-w-3xl mx-auto">
-        <Card className="shadow-lg">
+        <Card className="shadow-lg dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white rounded-t-lg">
             <CardTitle className="text-3xl flex items-center gap-2 text-white">
               <Star className="w-8 h-8" />
