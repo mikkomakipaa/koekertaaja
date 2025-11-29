@@ -16,7 +16,8 @@ import {
   Target,
   Rocket,
   Lightning,
-  Palette
+  Palette,
+  LockSimple
 } from '@phosphor-icons/react';
 import { BadgeId } from '@/types';
 
