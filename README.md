@@ -273,6 +273,7 @@ MIT License - free to use and modify
 - [Anthropic Claude](https://www.anthropic.com/) - AI model
 - [shadcn/ui](https://ui.shadcn.com/) - UI components
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [Phosphor Icons](https://phosphoricons.com/) - Icon system
 
 ---
 
