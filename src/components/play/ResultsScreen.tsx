@@ -77,11 +77,26 @@ export function ResultsScreen({
 
   // Determine celebration level
   const getCelebration = () => {
-    if (percentage === 100) return { emoji: '🌟', text: 'Täydelliset pisteet!' };
-    if (percentage >= 90) return { emoji: '⭐', text: 'Erinomaista!' };
-    if (percentage >= 80) return { emoji: '🎉', text: 'Hienoa työtä!' };
-    if (percentage >= 60) return { emoji: '👍', text: 'Hyvää työtä!' };
-    return { emoji: '💪', text: 'Jatka harjoittelua!' };
+    if (percentage === 100) return {
+      icon: <Sparkle size={80} weight="fill" className="text-yellow-500" />,
+      text: 'Täydelliset pisteet!'
+    };
+    if (percentage >= 90) return {
+      icon: <Star size={80} weight="fill" className="text-yellow-500" />,
+      text: 'Erinomaista!'
+    };
+    if (percentage >= 80) return {
+      icon: <Confetti size={80} weight="duotone" className="text-purple-500" />,
+      text: 'Hienoa työtä!'
+    };
+    if (percentage >= 60) return {
+      icon: <ThumbsUp size={80} weight="fill" className="text-blue-500" />,
+      text: 'Hyvää työtä!'
+    };
+    return {
+      icon: <Barbell size={80} weight="bold" className="text-orange-500" />,
+      text: 'Jatka harjoittelua!'
+    };
   };
 
   const celebration = getCelebration();
