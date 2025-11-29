@@ -242,6 +242,48 @@ Run `supabase/migrations/20250103_initial_schema.sql` in Supabase SQL Editor.
 2. Create prompt template in `src/config/prompts/{subject}.ts`
 3. Update `generateQuestions()` in `src/lib/ai/questionGenerator.ts` to import and use the new prompt
 
+## Recent UX/UI Improvements (2025-11-29)
+
+### Dark Mode Implementation
+- **Automatic detection**: Respects system `prefers-color-scheme` setting
+- **CSS variables**: Full dark theme palette in `globals.css`
+- **Component coverage**: All pages and components support dark mode
+- **Color optimization**: Adjusted text contrast for WCAG AAA compliance
+- **Smooth transitions**: `transition-colors` class for seamless mode switching
+
+### Phosphor Icons Migration
+- **Replaced emojis**: All emojis replaced with Phosphor vector icons
+- **Icon categories**:
+  - Points: `<DiamondsFour />` (duotone, amber)
+  - Streaks: `<Fire />` (duotone, orange)
+  - Badges: Category-specific icons (Sparkle, Star, Fire, Barbell, Target, Rocket, Lightning, Palette)
+  - Subjects: GlobeHemisphereWest, MathOperations, Scroll, Bank
+  - Celebrations: Sparkle, Star, Confetti, ThumbsUp, Barbell
+- **Duotone weight**: Primary style for depth and visual interest
+- **Color coding**: Semantic colors match icon meaning
+- **Bundle size**: ~5-7KB (tree-shaken)
+
+### Mobile-First UX Enhancements
+- **Badge grid optimization**: 2 columns on mobile (320px) for better touch targets
+- **Stats bar hierarchy**: Question progress prominent, points/streak secondary
+- **Touch targets**: Minimum 48px for all interactive elements
+- **Text sizes**: Increased for readability on small screens (text-lg, text-xl)
+- **Empty states**: Helpful guidance for first-time users
+- **Play page metadata**: Labeled badges (Grade, Aihealue) with clear visual hierarchy
+
+### Accessibility Improvements
+- **WCAG AAA compliance**: Enhanced text contrast in dark mode
+- **Explicit text colors**: `text-gray-900 dark:text-gray-100` on all text elements
+- **ARIA labels**: Added to icon buttons and emojis
+- **Focus states**: Maintained keyboard navigation support
+- **Reduced cognitive load**: Simplified results screen, show only incorrect answers by default
+
+### Visual Design Refinements
+- **Badge color categories**: Color-coded by achievement type (purple, gold, blue, green, orange)
+- **Collapsible sections**: Badges section toggleable on results screen
+- **Consistent spacing**: Standardized padding and gaps across components
+- **Branded icons**: Phosphor icons create cohesive visual language
+
 ## Important Notes
 
 - **Type safety**: Always run `npm run typecheck` before committing
