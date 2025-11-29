@@ -56,10 +56,11 @@ VAIKEUSTASO: Normaali
 - Käytännön viestintätilanteet
 
 KYSYMYSTYYPPIEN JAKAUMA (Normaali):
-- 45% multiple_choice (monivalinta)
+- 40% multiple_choice (monivalinta)
 - 25% fill_blank (täydennä - sanat tai lyhyet ilmaisut)
 - 15% true_false (totta/tarua)
-- 10% matching (parit - esim. sanat ja määritelmät)
+- 10% sequential (järjestys - 5-6 kohtaa)
+- 5% matching (parit - esim. sanat ja määritelmät)
 - 5% short_answer (lyhyt vastaus - 1-2 sanaa tai lyhyt lause)`,
     vaikea: `
 VAIKEUSTASO: Vaikea
