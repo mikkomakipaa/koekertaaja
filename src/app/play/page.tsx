@@ -171,26 +171,29 @@ export default function PlayBrowsePage() {
                     {group.name}
                   </h3>
 
-                  {/* Badges */}
-                  <div className="flex flex-wrap gap-2 items-center mb-4">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {/* Subject */}
+                  <div className="mb-3">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       {getSubjectLabel(group.subject)}
-                    </span>
-                    {group.grade && (
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                        • Luokka {group.grade}
-                      </span>
-                    )}
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      • {group.sets[0]?.question_count || 0} kysymystä
                     </span>
                   </div>
 
-                  {(group.topic || group.subtopic) && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                      {[group.topic, group.subtopic].filter(Boolean).join(' → ')}
-                    </p>
-                  )}
+                  {/* Info Badges */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {group.grade && (
+                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
+                        Luokka: {group.grade}
+                      </span>
+                    )}
+                    {(group.topic || group.subtopic) && (
+                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                        Aihealue: {[group.topic, group.subtopic].filter(Boolean).join(' → ')}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                      {group.sets[0]?.question_count || 0} kysymystä
+                    </span>
+                  </div>
 
                   {/* Difficulty Buttons - Inline */}
                   <div className="flex flex-wrap gap-2">
