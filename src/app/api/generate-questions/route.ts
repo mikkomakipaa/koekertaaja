@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Define all difficulty levels
-    const difficulties: Difficulty[] = ['helppo', 'normaali', 'vaikea'];
+    const difficulties: Difficulty[] = ['helppo', 'normaali'];
 
     // Array to store created question sets
     const createdSets: any[] = [];
