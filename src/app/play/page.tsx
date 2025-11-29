@@ -167,27 +167,27 @@ export default function PlayBrowsePage() {
                   className="border border-gray-200 dark:border-gray-700 rounded-xl p-5 bg-white dark:bg-gray-800 hover:shadow-md transition-all"
                 >
                   {/* Title */}
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                     {group.name}
                   </h3>
 
                   {/* Badges */}
                   <div className="flex flex-wrap gap-2 items-center mb-4">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {getSubjectLabel(group.subject)}
                     </span>
                     {group.grade && (
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
                         • Luokka {group.grade}
                       </span>
                     )}
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
                       • {group.sets[0]?.question_count || 0} kysymystä
                     </span>
                   </div>
 
                   {(group.topic || group.subtopic) && (
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                       {[group.topic, group.subtopic].filter(Boolean).join(' → ')}
                     </p>
                   )}
