@@ -182,6 +182,12 @@ src/
 - **Dual-mode generation**:
   - **Quiz mode**: 2 difficulty levels (Helppo/Normaali) with grade-specific question type distributions
   - **Flashcard mode**: Optional, single set optimized for memorization and active recall
+- **Topic-balanced generation** (NEW):
+  - AI analyzes material and identifies 3-5 high-level topics
+  - Questions distributed evenly across all identified topics
+  - Each question tagged with its primary topic (stored in `questions.topic` column)
+  - Example: Material covering grammar, vocabulary, reading → ~33% questions per topic
+  - High-level topics (not detailed): "Grammar" vs "Grammar - Past Tense"
 - Grade-specific distributions (4-6):
   - Grade 4: More basic question types (60% multiple_choice in helppo)
   - Grade 5: Balanced mix (50% multiple_choice in helppo, 35% in normaali)
@@ -191,6 +197,7 @@ src/
   - Math: 70% fill_blank, 20% matching, 10% short_answer
   - Excludes: multiple_choice, true_false, sequential (passive recognition)
   - Focus: Active recall, memorization techniques, clear explanations
+  - Also uses topic-balanced generation
 - Subject-specific prompts: `src/config/prompts/{subject}.ts`
 - Multimodal: Supports PDF (document type) and images
 - Response validated with Zod schemas (graceful failure: accepts 70%+ valid questions)
