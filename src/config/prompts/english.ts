@@ -82,7 +82,21 @@ VUOSILUOKKA 6 - A1-ENGLANNIN OPETUSSUUNNITELMA:
 - Kulttuurinen osaaminen: elämä englanninkielisissä maissa`,
   };
 
-  // Difficulty-specific instructions with question type guidance
+  // Get grade-specific distribution or use defaults
+  const getDistribution = () => {
+    if (grade && GRADE_DISTRIBUTIONS[grade as 4 | 5 | 6]) {
+      const dist = GRADE_DISTRIBUTIONS[grade as 4 | 5 | 6][difficulty];
+      return Object.entries(dist)
+        .map(([type, percent]) => `- ${percent}% ${type}`)
+        .join('\n');
+    }
+    // Default fallback if grade not specified
+    return difficulty === 'helppo'
+      ? '- 55% multiple_choice\n- 25% true_false\n- 20% fill_blank'
+      : '- 40% multiple_choice\n- 30% fill_blank\n- 15% true_false\n- 10% sequential\n- 5% short_answer';
+  };
+
+  // Difficulty-specific instructions
   const difficultyInstructions = {
     helppo: `
 VAIKEUSTASO: Helppo
@@ -91,12 +105,9 @@ VAIKEUSTASO: Helppo
 - Yleisimmät sanat ja perusrakenteet
 - Keskittyminen tunnistamiseen ja perusymmärrykseen
 
-KYSYMYSTYYPPIEN JAKAUMA (Helppo):
-- 55% multiple_choice (monivalinta - sanaston tunnistaminen, yksinkertaiset kielioppivalinnat)
-- 20% true_false (totta/tarua - yksinkertaiset väitteet)
-- 15% fill_blank (täydennä - yksi puuttuva sana)
-- 10% sequential (järjestys - 4 kohtaa)
-- ÄLÄ käytä short_answer tai matching`,
+KYSYMYSTYYPPIEN JAKAUMA (Luokka ${grade}, Helppo):
+${getDistribution()}
+- ÄLÄ käytä short_answer helppo-tasolla`,
     normaali: `
 VAIKEUSTASO: Normaali
 - Monipuolinen sanasto ja keskitason kielioppi
@@ -104,26 +115,9 @@ VAIKEUSTASO: Normaali
 - Lauserakenteet ja kontekstin ymmärtäminen
 - Käytännön viestintätilanteet
 
-KYSYMYSTYYPPIEN JAKAUMA (Normaali):
-- 40% multiple_choice (monivalinta)
-- 25% fill_blank (täydennä - sanat tai lyhyet ilmaisut)
-- 15% true_false (totta/tarua)
-- 10% sequential (järjestys - 5-6 kohtaa)
-- 5% matching (parit - esim. sanat ja määritelmät)
-- 5% short_answer (lyhyt vastaus - 1-2 sanaa tai lyhyt lause)`,
-    vaikea: `
-VAIKEUSTASO: Vaikea
-- Laaja sanasto ja monimutkaiset rakenteet
-- Vaatii syvällistä ymmärrystä ja tuottamista
-- Kontekstin tulkinta ja soveltaminen
-- Viestintä ja ilmaisu englanniksi
-
-KYSYMYSTYYPPIEN JAKAUMA (Vaikea):
-- 35% short_answer (avoin vastaus - lauseiden muodostus, selitykset)
-- 30% multiple_choice (monimutkaisempi konteksti)
-- 20% fill_blank (täydennä - useita sanoja tai lauserakenteet)
-- 15% matching (parit - monimutkaisemmat yhteydet)
-- Suosi kysymyksiä jotka vaativat TUOTTAMISTA ja SOVELTAMISTA`,
+KYSYMYSTYYPPIEN JAKAUMA (Luokka ${grade}, Normaali):
+${getDistribution()}
+- Suosi kysymyksiä jotka vaativat SOVELTAMISTA`,
   };
 
   const gradeContext = grade && gradeContent[grade as 4 | 5 | 6]
