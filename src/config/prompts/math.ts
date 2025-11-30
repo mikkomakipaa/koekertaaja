@@ -1,5 +1,52 @@
 import { Difficulty } from '@/types';
 
+// GRADE-SPECIFIC QUESTION TYPE DISTRIBUTIONS
+// Easy to modify - adjust percentages as needed
+const GRADE_DISTRIBUTIONS = {
+  4: {
+    helppo: {
+      multiple_choice: 60,
+      true_false: 25,
+      fill_blank: 15,
+    },
+    normaali: {
+      multiple_choice: 45,
+      fill_blank: 30,
+      true_false: 15,
+      sequential: 10,
+    },
+  },
+  5: {
+    helppo: {
+      multiple_choice: 50,
+      true_false: 20,
+      fill_blank: 20,
+      matching: 10,
+    },
+    normaali: {
+      multiple_choice: 35,
+      fill_blank: 40,
+      true_false: 15,
+      sequential: 10,
+    },
+  },
+  6: {
+    helppo: {
+      multiple_choice: 45,
+      true_false: 15,
+      fill_blank: 30,
+      matching: 10,
+    },
+    normaali: {
+      multiple_choice: 25,
+      fill_blank: 50,
+      true_false: 10,
+      sequential: 10,
+      matching: 5,
+    },
+  },
+} as const;
+
 export function getMathPrompt(
   difficulty: Difficulty,
   questionCount: number,
