@@ -74,6 +74,10 @@ export default function CreatePage() {
         formData.append('grade', grade.toString());
       }
 
+      if (generateFlashcards) {
+        formData.append('generateFlashcards', 'true');
+      }
+
       if (materialText.trim()) {
         formData.append('materialText', materialText);
       }
