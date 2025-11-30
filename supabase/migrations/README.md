@@ -118,6 +118,43 @@ This migration:
 - Client-side requests still only have SELECT access
 - Service role key is never exposed to clients
 
+### 20250130_add_topic_to_questions.sql
+Adds `topic` column to questions table for topic-based stratified sampling.
+
+This migration:
+1. **Adds topic column** to `questions` table
+   - Type: TEXT (nullable for gradual migration)
+   - Stores high-level topic tags (e.g., "Grammar", "Vocabulary", "Laskutoimitukset")
+2. **Creates indexes** for efficient topic-based queries
+   - `idx_questions_topic`: Single column index
+   - `idx_questions_set_topic`: Composite index for common query pattern
+3. **Enables balanced question distribution** across topics in test sessions
+
+**Why this is needed:**
+- Ensures fair topic coverage in tests (e.g., 5 Grammar + 5 Vocabulary + 5 Reading vs. random 12 Grammar + 3 Vocabulary)
+- AI identifies 3-5 high-level topics from material during generation
+- Stratified sampling ensures equal distribution when selecting questions
+- Foundation for future topic-specific analytics and practice modes
+
+**How it works:**
+1. During generation: AI analyzes material, identifies topics, tags each question
+2. During test selection: Questions grouped by topic, sampled evenly from each
+3. Graceful fallback: If <70% questions have topics, falls back to random sampling
+
+**Testing the migration:**
+```sql
+-- Verify topic column exists
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_name = 'questions' AND column_name = 'topic';
+
+-- Check topic distribution in a question set
+SELECT topic, COUNT(*) as count
+FROM questions
+WHERE question_set_id = 'YOUR_QUESTION_SET_ID'
+GROUP BY topic;
+```
+
 ## Running Migrations
 
 If you're using Supabase CLI:
