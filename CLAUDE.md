@@ -204,6 +204,11 @@ src/
 - Options shuffled during generation to prevent memorization
 
 **Game Session** (`useGameSession` hook):
+- **Stratified sampling** for balanced topic coverage:
+  - Groups questions by topic
+  - Samples evenly from each topic (e.g., 5 from each of 3 topics for 15-question session)
+  - Graceful fallback: Uses random sampling if <70% questions have topics
+  - Works for both quiz and flashcard modes
 - Shuffles questions at session start
 - Tracks: points, current streak, best streak, answers
 - Points: 10 per correct + 5 bonus when streak ≥ 3
