@@ -38,10 +38,12 @@ Koekertaaja is an interactive exam preparation application that helps students p
 - **Shareable Codes**: Each difficulty level gets its own unique 6-character code
 
 ### 🎯 Practice
-- **Browse Exam Areas**: Browse all available exam areas
+- **Browse Exam Areas**: Browse all available exam areas with grade filtering
+- **Balanced Topic Coverage**: Stratified sampling ensures equal coverage of all topics
 - **Progress Tracking**: See your points and current streak
 - **Immediate Feedback**: Get explanations after each question
 - **Results Summary**: View your overall performance and correct answers
+- **Flashcard Mode**: Practice with memorization-optimized questions
 - **Mobile-Friendly**: Works seamlessly on all devices
 
 ### 🎨 Modern UI
