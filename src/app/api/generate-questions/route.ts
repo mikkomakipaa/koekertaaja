@@ -236,6 +236,51 @@ export async function POST(request: NextRequest) {
       createdSets.push(result);
     }
 
+    // Generate flashcard set if requested
+    if (generateFlashcards) {
+      const flashcardQuestions = await generateQuestions({
+        subject,
+        difficulty: 'normaali', // Flashcards don't use difficulty, but we need to pass something
+        questionCount: examLength,
+        grade,
+        materialText,
+        materialFiles: files.length > 0 ? files : undefined,
+        mode: 'flashcard', // Use flashcard mode
+      });
+
+      if (flashcardQuestions.length > 0) {
+        let code = generateCode();
+        let attempts = 0;
+        const maxAttempts = 50;
+        let result = null;
+
+        while (attempts < maxAttempts && !result) {
+          result = await createQuestionSet(
+            {
+              code,
+              name: `${questionSetName} - Kortit`,
+              subject: subject as Subject,
+              difficulty: 'normaali', // Store as normaali, but it's flashcard-optimized
+              grade,
+              topic,
+              subtopic,
+              question_count: flashcardQuestions.length,
+            },
+            flashcardQuestions
+          );
+
+          if (!result) {
+            attempts++;
+            code = generateCode();
+          }
+        }
+
+        if (result) {
+          createdSets.push(result);
+        }
+      }
+    }
+
     const response = {
       success: true,
       message: `Created ${createdSets.length} question sets across all difficulty levels`,
