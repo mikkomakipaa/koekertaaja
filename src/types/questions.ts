@@ -22,6 +22,7 @@ export interface BaseQuestion {
   explanation: string;
   image_url?: string;
   order_index: number;
+  topic?: string;  // High-level topic (e.g., "Grammar", "Vocabulary", "Reading")
 }
 
 // Specific Question Types
