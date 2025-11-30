@@ -121,8 +121,6 @@ VAIKEUSTASO: Normaali
 
 KYSYMYSTYYPPIEN JAKAUMA (Luokka ${grade}, Normaali):
 ${getDistribution()}
-- ÄLÄ käytä short_answer (liian epämääräinen matematiikassa)
-- 15% true_false tai matching
 - ÄLÄ käytä short_answer (liian epämääräinen matematiikassa)`,
   };
 
