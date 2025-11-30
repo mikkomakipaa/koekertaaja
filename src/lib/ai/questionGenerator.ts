@@ -198,6 +198,7 @@ export async function generateQuestions(
       question_text: q.question,
       explanation: q.explanation || '',
       order_index: index,
+      topic: q.topic,  // High-level topic for stratified sampling
     };
 
     switch (q.type) {
