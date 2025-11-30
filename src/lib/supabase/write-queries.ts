@@ -47,6 +47,7 @@ export async function createQuestionSet(
       explanation: q.explanation,
       image_url: q.image_url,
       order_index: index,
+      topic: (q as any).topic || null,  // High-level topic for stratified sampling
     };
 
     switch (q.question_type) {
