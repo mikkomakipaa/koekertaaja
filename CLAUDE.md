@@ -273,6 +273,23 @@ Run `supabase/migrations/20250103_initial_schema.sql` in Supabase SQL Editor.
 
 ## Recent Features & Improvements
 
+### Topic-Balanced Question Generation & Selection (2025-11-30)
+- **Problem**: Random question selection could result in unbalanced coverage (e.g., 12 grammar + 3 vocabulary)
+- **Solution**: AI identifies topics during generation, stratified sampling ensures balanced selection
+- **Implementation**:
+  - Added `topic TEXT` column to `questions` table (nullable)
+  - Updated all prompts (quiz + flashcard) with topic identification instructions
+  - AI generates 3-5 high-level topics and tags each question
+  - `useGameSession` hook implements stratified sampling algorithm
+  - Equal distribution across topics (e.g., 15 questions = 5 per topic for 3 topics)
+- **Benefits**:
+  - Fair assessment across all topics
+  - Better learning outcomes (students practice all areas)
+  - Foundation for future topic-specific practice modes
+  - Works seamlessly for both quiz and flashcard modes
+- **Graceful fallback**: If <70% questions tagged, falls back to random sampling
+- **Migration**: `20250130_add_topic_to_questions.sql`
+
 ### Flashcard Optimization (2025-11-30)
 - **Optional flashcard generation**: Purple checkbox in create form
 - **Memorization-focused**: Excludes passive question types (multiple_choice, true_false)
