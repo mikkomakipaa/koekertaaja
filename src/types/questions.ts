@@ -82,6 +82,7 @@ export interface QuestionSet {
   subject: Subject;
   grade?: number;
   difficulty: Difficulty;
+  mode: Mode;  // 'quiz' for traditional assessment, 'flashcard' for memorization-focused
   topic?: string;
   subtopic?: string;
   question_count: number;
