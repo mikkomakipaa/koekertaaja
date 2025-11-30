@@ -95,6 +95,29 @@ DROP INDEX IF EXISTS idx_question_sets_mode;
 ALTER TABLE question_sets DROP COLUMN IF EXISTS mode;
 ```
 
+### 20250130_add_delete_policies.sql
+Adds explicit RLS policies for DELETE, INSERT, and UPDATE operations.
+
+This migration:
+1. **Adds DELETE policies** for service role operations
+   - `question_sets`: Allow DELETE with service role
+   - `questions`: Allow DELETE with service role
+2. **Adds INSERT policies** for question creation
+   - Required for server-side question generation
+3. **Adds UPDATE policies** for future flexibility
+4. **Verifies RLS remains enabled** on both tables
+
+**Why this is needed:**
+- Service role should bypass RLS, but explicit policies are best practice
+- Fixes 403 errors when deleting question sets
+- Ensures all CRUD operations have proper policies
+- Improves security posture with explicit permissions
+
+**Note:** These policies use `USING (true)` and `WITH CHECK (true)` which means they allow all operations. This is safe because:
+- These policies only apply when using the service role key (server-side)
+- Client-side requests still only have SELECT access
+- Service role key is never exposed to clients
+
 ## Running Migrations
 
 If you're using Supabase CLI:
