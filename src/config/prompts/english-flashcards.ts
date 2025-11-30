@@ -139,3 +139,5 @@ MUISTA:
 - Jokainen kysymys keskittyy YHTEEN ASIAAN
 - Selitykset ovat OPETTAVAISIA ja MUISTAMISEN TUKENA
 - ÄLÄ käytä multiple_choice, true_false tai sequential
+`;
+}
