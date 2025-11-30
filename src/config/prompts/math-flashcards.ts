@@ -162,3 +162,5 @@ MUISTA:
 - Jokainen kysymys keskittyy YHTEEN ASIAAN
 - Näytä LASKUVAIHEET selityksissä
 - ÄLÄ käytä multiple_choice, true_false tai sequential
+`;
+}
