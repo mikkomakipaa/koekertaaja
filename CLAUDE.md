@@ -257,7 +257,28 @@ Run `supabase/migrations/20250103_initial_schema.sql` in Supabase SQL Editor.
 2. Create prompt template in `src/config/prompts/{subject}.ts`
 3. Update `generateQuestions()` in `src/lib/ai/questionGenerator.ts` to import and use the new prompt
 
-## Recent UX/UI Improvements (2025-11-29)
+## Recent Features & Improvements
+
+### Flashcard Optimization (2025-11-30)
+- **Optional flashcard generation**: Purple checkbox in create form
+- **Memorization-focused**: Excludes passive question types (multiple_choice, true_false)
+- **Active recall optimization**:
+  - English: 60% fill_blank + 30% short_answer + 10% matching
+  - Math: 70% fill_blank + 20% matching + 10% short_answer
+- **Separate prompts**: Dedicated flashcard prompt files with memory techniques
+- **Single set per topic**: Named "Topic - Kortit", stored as normaali difficulty
+- **Enhanced explanations**: Step-by-step solutions, memory aids, examples
+- **Dual-mode architecture**: `mode: 'quiz' | 'flashcard'` in question generator
+
+### Grade-Specific Question Distributions (2025-11-30)
+- **Difficulty progression**: Higher grades get more open-ended questions
+- **Per-grade distributions**: Grades 4-6 each have unique question type percentages
+- **Easy to modify**: `GRADE_DISTRIBUTIONS` constant at top of each prompt file
+- **Curriculum-aligned**: Based on Finnish national curriculum requirements
+- **Visual differentiation**: Color-coded grade badges (pink→purple spectrum)
+- **Grade filtering**: Filter question sets by grade on play page
+
+### UX/UI Improvements (2025-11-29)
 
 ### Dark Mode Implementation
 - **Automatic detection**: Respects system `prefers-color-scheme` setting
