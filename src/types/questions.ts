@@ -11,6 +11,8 @@ export type Subject = string;
 
 export type Difficulty = 'helppo' | 'normaali';
 
+export type Mode = 'quiz' | 'flashcard';
+
 // Base Question Interface
 export interface BaseQuestion {
   id: string;
