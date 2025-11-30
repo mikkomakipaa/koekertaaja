@@ -324,6 +324,27 @@ export default function CreatePage() {
 
             <GradeSelector selectedGrade={grade} onGradeChange={setGrade} />
 
+            {/* Flashcard Generation Checkbox */}
+            <div className="border-2 border-purple-200 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-5">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={generateFlashcards}
+                  onChange={(e) => setGenerateFlashcards(e.target.checked)}
+                  className="mt-1 w-5 h-5 rounded border-purple-300 text-purple-600 focus:ring-purple-500 dark:border-purple-600 dark:bg-gray-800"
+                />
+                <div className="flex-1">
+                  <div className="text-lg font-bold text-purple-900 dark:text-purple-100 mb-1">
+                    🎴 Luo myös korttisarja oppimista varten
+                  </div>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Generoi erillinen kysymyssarja, joka on optimoitu korttitilassa opetteluun.
+                    Sisältää enemmän avoimia kysymyksiä ja selkeämpiä selityksiä muistamisen tueksi.
+                  </p>
+                </div>
+              </label>
+            </div>
+
             <div>
               <label className="block text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">
                 📊 Kokeen pituus (kysymystä per vaikeustaso)
