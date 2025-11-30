@@ -54,6 +54,47 @@ This migration:
 - Application-level validation in `src/lib/validation/schemas.ts` enforces the same rules
 - Question generator in `src/lib/ai/questionGenerator.ts` filters out invalid questions before insertion
 
+### 20250130_add_mode_column.sql
+Adds `mode` column to distinguish quiz sets from flashcard sets.
+
+This migration:
+1. **Adds mode column** to `question_sets` table
+   - Type: VARCHAR(20) with CHECK constraint ('quiz' | 'flashcard')
+   - Default value: 'quiz' for all existing records
+2. **Creates index** on mode column for efficient filtering
+3. **Migrates existing flashcard sets** identified by "- Kortit" naming convention
+4. **Adds column comment** for documentation
+
+**Why this is needed:**
+- Explicitly identifies flashcard sets vs quiz sets (replaces naming convention)
+- Enables future flashcard-specific features (spaced repetition, different UI)
+- Allows proper filtering and querying by mode
+- Removes fragile dependency on naming patterns
+
+**Testing the migration:**
+```sql
+-- Verify mode column exists
+SELECT column_name, data_type, column_default
+FROM information_schema.columns
+WHERE table_name = 'question_sets' AND column_name = 'mode';
+
+-- Check existing flashcard sets were migrated
+SELECT name, difficulty, mode
+FROM question_sets
+WHERE name LIKE '% - Kortit';
+
+-- Count question sets by mode
+SELECT mode, COUNT(*)
+FROM question_sets
+GROUP BY mode;
+```
+
+**Rollback (if needed):**
+```sql
+DROP INDEX IF EXISTS idx_question_sets_mode;
+ALTER TABLE question_sets DROP COLUMN IF EXISTS mode;
+```
+
 ## Running Migrations
 
 If you're using Supabase CLI:
