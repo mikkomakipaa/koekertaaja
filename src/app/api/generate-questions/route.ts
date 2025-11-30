@@ -200,6 +200,7 @@ export async function POST(request: NextRequest) {
             name: `${questionSetName} - ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`,
             subject: subject as Subject,
             difficulty,
+            mode: 'quiz',
             grade,
             topic,
             subtopic,
