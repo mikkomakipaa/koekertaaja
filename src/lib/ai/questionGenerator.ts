@@ -3,6 +3,8 @@ import { generateWithClaude, MessageContent } from './anthropic';
 import { getEnglishPrompt } from '@/config/prompts/english';
 import { getMathPrompt } from '@/config/prompts/math';
 import { getGenericPrompt } from '@/config/prompts/generic';
+import { getEnglishFlashcardsPrompt } from '@/config/prompts/english-flashcards';
+import { getMathFlashcardsPrompt } from '@/config/prompts/math-flashcards';
 import { shuffleArray } from '@/lib/utils';
 import { aiQuestionSchema, aiQuestionArraySchema } from '@/lib/validation/schemas';
 import { createLogger } from '@/lib/logger';
@@ -20,6 +22,7 @@ export interface GenerateQuestionsParams {
     name: string;
     data: string; // base64
   }>;
+  mode?: 'quiz' | 'flashcard'; // NEW: mode for quiz or flashcard generation
 }
 
 /**
