@@ -154,8 +154,10 @@ src/
 ├── config/
 │   ├── subjects.ts                 # Subject definitions
 │   └── prompts/                    # AI prompts per subject
-│       ├── english.ts              # Finnish curriculum-aligned English prompts
-│       ├── math.ts                 # Math prompts (prepared)
+│       ├── english.ts              # Quiz prompts with grade-specific distributions
+│       ├── math.ts                 # Math quiz prompts with grade-specific distributions
+│       ├── english-flashcards.ts   # Flashcard-optimized prompts (60/30/10)
+│       ├── math-flashcards.ts      # Math flashcard prompts (70/20/10)
 │       └── generic.ts              # Fallback for any subject
 ├── hooks/
 │   ├── useGameSession.ts           # Game state: points, streaks, answers
