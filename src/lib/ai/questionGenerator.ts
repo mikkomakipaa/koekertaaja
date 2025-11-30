@@ -3,6 +3,8 @@ import { generateWithClaude, MessageContent } from './anthropic';
 import { getEnglishPrompt } from '@/config/prompts/english';
 import { getMathPrompt } from '@/config/prompts/math';
 import { getGenericPrompt } from '@/config/prompts/generic';
+import { getEnglishFlashcardsPrompt } from '@/config/prompts/english-flashcards';
+import { getMathFlashcardsPrompt } from '@/config/prompts/math-flashcards';
 import { shuffleArray } from '@/lib/utils';
 import { aiQuestionSchema, aiQuestionArraySchema } from '@/lib/validation/schemas';
 import { createLogger } from '@/lib/logger';
@@ -20,6 +22,7 @@ export interface GenerateQuestionsParams {
     name: string;
     data: string; // base64
   }>;
+  mode?: 'quiz' | 'flashcard'; // NEW: mode for quiz or flashcard generation
 }
 
 /**
@@ -28,7 +31,7 @@ export interface GenerateQuestionsParams {
 export async function generateQuestions(
   params: GenerateQuestionsParams
 ): Promise<Question[]> {
-  const { subject, difficulty, questionCount, grade, materialText, materialFiles } = params;
+  const { subject, difficulty, questionCount, grade, materialText, materialFiles, mode = 'quiz' } = params;
 
   // Build message content
   const messageContent: MessageContent[] = [];
@@ -60,19 +63,29 @@ export async function generateQuestions(
     }
   }
 
-  // Get prompt based on subject
+  // Get prompt based on subject and mode
   let prompt = '';
   const subjectLower = subject.toLowerCase();
 
-  if (subjectLower === 'english' || subjectLower === 'englanti') {
-    // Use specialized English prompt
-    prompt = getEnglishPrompt(difficulty, questionCount, grade, materialText);
-  } else if (subjectLower === 'math' || subjectLower === 'matematiikka') {
-    // Use specialized Math prompt
-    prompt = getMathPrompt(difficulty, questionCount, grade, materialText);
+  if (mode === 'flashcard') {
+    // Use flashcard-optimized prompts (no difficulty, optimized for memorization)
+    if (subjectLower === 'english' || subjectLower === 'englanti') {
+      prompt = getEnglishFlashcardsPrompt(questionCount, grade, materialText);
+    } else if (subjectLower === 'math' || subjectLower === 'matematiikka') {
+      prompt = getMathFlashcardsPrompt(questionCount, grade, materialText);
+    } else {
+      // For other subjects, use generic quiz prompt for now
+      prompt = getGenericPrompt(subject, difficulty, questionCount, grade, materialText);
+    }
   } else {
-    // Use generic prompt for all other subjects
-    prompt = getGenericPrompt(subject, difficulty, questionCount, grade, materialText);
+    // Use quiz prompts (original behavior)
+    if (subjectLower === 'english' || subjectLower === 'englanti') {
+      prompt = getEnglishPrompt(difficulty, questionCount, grade, materialText);
+    } else if (subjectLower === 'math' || subjectLower === 'matematiikka') {
+      prompt = getMathPrompt(difficulty, questionCount, grade, materialText);
+    } else {
+      prompt = getGenericPrompt(subject, difficulty, questionCount, grade, materialText);
+    }
   }
 
   messageContent.push({
