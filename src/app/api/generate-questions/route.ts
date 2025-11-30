@@ -50,6 +50,8 @@ export async function POST(request: NextRequest) {
       materialText: (formData.get('materialText') as string | null) || undefined,
     };
 
+    const generateFlashcards = formData.get('generateFlashcards') === 'true';
+
     // Validate input with Zod schema
     const validationResult = createQuestionSetSchema.safeParse(rawData);
     if (!validationResult.success) {
