@@ -63,19 +63,29 @@ export async function generateQuestions(
     }
   }
 
-  // Get prompt based on subject
+  // Get prompt based on subject and mode
   let prompt = '';
   const subjectLower = subject.toLowerCase();
 
-  if (subjectLower === 'english' || subjectLower === 'englanti') {
-    // Use specialized English prompt
-    prompt = getEnglishPrompt(difficulty, questionCount, grade, materialText);
-  } else if (subjectLower === 'math' || subjectLower === 'matematiikka') {
-    // Use specialized Math prompt
-    prompt = getMathPrompt(difficulty, questionCount, grade, materialText);
+  if (mode === 'flashcard') {
+    // Use flashcard-optimized prompts (no difficulty, optimized for memorization)
+    if (subjectLower === 'english' || subjectLower === 'englanti') {
+      prompt = getEnglishFlashcardsPrompt(questionCount, grade, materialText);
+    } else if (subjectLower === 'math' || subjectLower === 'matematiikka') {
+      prompt = getMathFlashcardsPrompt(questionCount, grade, materialText);
+    } else {
+      // For other subjects, use generic quiz prompt for now
+      prompt = getGenericPrompt(subject, difficulty, questionCount, grade, materialText);
+    }
   } else {
-    // Use generic prompt for all other subjects
-    prompt = getGenericPrompt(subject, difficulty, questionCount, grade, materialText);
+    // Use quiz prompts (original behavior)
+    if (subjectLower === 'english' || subjectLower === 'englanti') {
+      prompt = getEnglishPrompt(difficulty, questionCount, grade, materialText);
+    } else if (subjectLower === 'math' || subjectLower === 'matematiikka') {
+      prompt = getMathPrompt(difficulty, questionCount, grade, materialText);
+    } else {
+      prompt = getGenericPrompt(subject, difficulty, questionCount, grade, materialText);
+    }
   }
 
   messageContent.push({
