@@ -132,6 +132,7 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
   {
     "question": "kysymysteksti suomeksi (voi sisältää LaTeX-merkintää)",
     "type": "fill_blank" | "short_answer" | "matching",
+    "topic": "Grammar" | "Vocabulary" | "Pronunciation", // PAKOLLINEN - korkeantason aihealue (3-5 aihealuetta)
     "correct_answer": "oikea vastaus",
     "acceptable_answers": ["vaihtoehtoinen muoto 1", "vaihtoehtoinen muoto 2"], // vapaaehtoinen
     "pairs": [{"left": "kohta1", "right": "kohta2"}], // vain matching-tyypille, 3-6 paria
