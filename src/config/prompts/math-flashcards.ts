@@ -154,6 +154,7 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
   {
     "question": "kysymysteksti (voi sisältää LaTeX-merkintää $$...$$)",
     "type": "fill_blank" | "matching" | "short_answer",
+    "topic": "Laskutoimitukset" | "Geometria" | "Luvut", // PAKOLLINEN - korkeantason aihealue (3-5 aihealuetta)
     "correct_answer": "oikea vastaus (numero tai matemaattinen ilmaisu)",
     "acceptable_answers": ["vaihtoehtoinen muoto 1", "vaihtoehtoinen muoto 2"], // vapaaehtoinen
     "pairs": [{"left": "käsite", "right": "määritelmä"}], // vain matching-tyypille, 3-6 paria
