@@ -261,7 +261,8 @@ export async function POST(request: NextRequest) {
               code,
               name: `${questionSetName} - Kortit`,
               subject: subject as Subject,
-              difficulty: 'normaali', // Store as normaali, but it's flashcard-optimized
+              difficulty: 'normaali', // Flashcards use normaali as placeholder
+              mode: 'flashcard', // Explicitly mark as flashcard mode
               grade,
               topic,
               subtopic,
