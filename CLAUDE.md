@@ -254,8 +254,10 @@ Run `supabase/migrations/20250103_initial_schema.sql` in Supabase SQL Editor.
 ## Adding New Subjects
 
 1. Add config in `src/config/subjects.ts` with `enabled: true`
-2. Create prompt template in `src/config/prompts/{subject}.ts`
-3. Update `generateQuestions()` in `src/lib/ai/questionGenerator.ts` to import and use the new prompt
+2. Create quiz prompt template in `src/config/prompts/{subject}.ts` with grade-specific distributions
+3. Create flashcard prompt template in `src/config/prompts/{subject}-flashcards.ts` (optional)
+4. Update `generateQuestions()` in `src/lib/ai/questionGenerator.ts` to import and route both prompts
+5. Consider question type distributions appropriate for the subject (math uses more fill_blank, languages may use more matching)
 
 ## Recent Features & Improvements
 
