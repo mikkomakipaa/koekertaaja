@@ -77,7 +77,13 @@ ${gradeNote}
 - true_false (arvaaminen)
 - sequential (ei toimi korttina)
 
-${material ? `MATERIAALI:\n${material}\n\n` : ''}TÄRKEÄÄ - KORTTIEN MUOTO:
+${material ? `MATERIAALI:\n${material}\n\n` : ''}KRIITTINEN VAATIMUS - AIHEIDEN TASAPAINO:
+1. ANALYSOI materiaali ja TUNNISTA 3-5 korkeantason aihealuetta (esim. "Laskutoimitukset", "Geometria", "Luvut")
+2. JAKA kysymykset TASAISESTI kaikkien tunnistettujen aihealueiden kesken
+3. MERKITSE jokainen kysymys sen pääaihealueella "topic"-kenttään
+4. VARMISTA että kaikki aihealueet saavat tasapuolisen määrän kysymyksiä
+
+TÄRKEÄÄ - KORTTIEN MUOTO:
 
 1. FILL_BLANK (täydennä - SUOSITUIN matematiikassa):
    - Puuttuva luku, laskutoimitus tai kaava
