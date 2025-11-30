@@ -18,8 +18,54 @@ export function useGameSession(allQuestions: Question[], questionsPerSession = D
   const [bestStreak, setBestStreak] = useState(0);
 
   const startNewSession = useCallback(() => {
-    const shuffled = shuffleArray(allQuestions).slice(0, Math.min(questionsPerSession, allQuestions.length));
-    setSelectedQuestions(shuffled);
+    // STRATIFIED SAMPLING: Ensure balanced topic coverage
+    // Group questions by topic
+    const byTopic: Record<string, Question[]> = {};
+    const questionsWithTopics: Question[] = [];
+    const questionsWithoutTopics: Question[] = [];
+
+    allQuestions.forEach(q => {
+      if (q.topic) {
+        if (!byTopic[q.topic]) {
+          byTopic[q.topic] = [];
+        }
+        byTopic[q.topic].push(q);
+        questionsWithTopics.push(q);
+      } else {
+        questionsWithoutTopics.push(q);
+      }
+    });
+
+    const topics = Object.keys(byTopic);
+    let selectedQuestions: Question[] = [];
+
+    if (topics.length > 0 && questionsWithTopics.length >= Math.min(questionsPerSession, allQuestions.length) * 0.7) {
+      // Use stratified sampling if we have topics and most questions are tagged
+      const questionsPerTopic = Math.ceil(Math.min(questionsPerSession, allQuestions.length) / topics.length);
+
+      // Sample evenly from each topic
+      topics.forEach(topic => {
+        const topicQuestions = shuffleArray(byTopic[topic]);
+        const sampled = topicQuestions.slice(0, Math.min(questionsPerTopic, topicQuestions.length));
+        selectedQuestions = selectedQuestions.concat(sampled);
+      });
+
+      // If we don't have enough questions, fill with remaining questions
+      if (selectedQuestions.length < Math.min(questionsPerSession, allQuestions.length)) {
+        const remaining = allQuestions.filter(q => !selectedQuestions.includes(q));
+        const shuffledRemaining = shuffleArray(remaining);
+        const needed = Math.min(questionsPerSession, allQuestions.length) - selectedQuestions.length;
+        selectedQuestions = selectedQuestions.concat(shuffledRemaining.slice(0, needed));
+      }
+
+      // Trim to exact count and shuffle final selection
+      selectedQuestions = shuffleArray(selectedQuestions).slice(0, Math.min(questionsPerSession, allQuestions.length));
+    } else {
+      // Fallback to random sampling if no topics or too few tagged questions
+      selectedQuestions = shuffleArray(allQuestions).slice(0, Math.min(questionsPerSession, allQuestions.length));
+    }
+
+    setSelectedQuestions(selectedQuestions);
     setCurrentQuestionIndex(0);
     setUserAnswer(null);
     setShowExplanation(false);
