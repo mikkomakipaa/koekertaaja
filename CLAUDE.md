@@ -95,11 +95,13 @@ npm start           # Production server
 
 1. **Question Generation** (Server-side):
    - User uploads materials via `/create` page
+   - Optional: User can select flashcard generation checkbox
    - Frontend sends multipart request to `/api/generate-questions` (POST)
    - API route converts PDFs/images to base64, calls Anthropic Claude API
-   - Single AI call generates **2 difficulty levels** (Helppo/Normaali)
+   - Generates **2 difficulty levels** (Helppo/Normaali) for quiz mode
+   - Optional: Generates **1 flashcard set** optimized for memorization
    - Questions stored in Supabase with unique 6-character codes
-   - Returns shareable codes for each difficulty level
+   - Returns shareable codes for each difficulty level + flashcard set (if requested)
 
 2. **Question Practice** (Client-side):
    - Users access exam area via `/play/[code]` or code input
