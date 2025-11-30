@@ -62,6 +62,11 @@ export const aiQuestionSchema = z.object({
     'short_answer',
     'sequential',
   ]),
+  topic: z
+    .string()
+    .min(1, 'Topic must not be empty')
+    .max(100, 'Topic must be 100 characters or less')
+    .optional(),  // Optional for backward compatibility with existing questions
   options: z.array(z.string()).min(2, 'Multiple choice questions must have at least 2 options').optional(),
   correct_answer: z.union([
     z.string(),
