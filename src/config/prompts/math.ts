@@ -86,7 +86,21 @@ VUOSILUOKKA 6 - OPETUSSUUNNITELMAN SISÄLTÖ:
 - Tilastot ja todennäköisyys: keskiarvon laskeminen, todennäköisyyden alkeet`,
   };
 
-  // Difficulty-specific instructions with question type guidance
+  // Get grade-specific distribution or use defaults
+  const getDistribution = () => {
+    if (grade && GRADE_DISTRIBUTIONS[grade as 4 | 5 | 6]) {
+      const dist = GRADE_DISTRIBUTIONS[grade as 4 | 5 | 6][difficulty];
+      return Object.entries(dist)
+        .map(([type, percent]) => `- ${percent}% ${type}`)
+        .join('\n');
+    }
+    // Default fallback if grade not specified
+    return difficulty === 'helppo'
+      ? '- 60% multiple_choice\n- 25% true_false\n- 15% fill_blank'
+      : '- 45% multiple_choice\n- 30% fill_blank\n- 15% true_false\n- 10% sequential';
+  };
+
+  // Difficulty-specific instructions
   const difficultyInstructions = {
     helppo: `
 VAIKEUSTASO: Helppo
@@ -95,12 +109,9 @@ VAIKEUSTASO: Helppo
 - Pääpaino: YMMÄRRYKSEN TESTAAMINEN perusasioissa
 - Yksivaiheiset laskut ja selkeät tehtävät
 
-KYSYMYSTYYPPIEN JAKAUMA (Helppo):
-- 60% multiple_choice (monivalinta)
-- 20% true_false (totta/tarua)
-- 10% fill_blank (täydennä, yksinkertainen numeerinen vastaus)
-- 10% sequential (järjestys - 4 vaihetta)
-- ÄLÄ käytä short_answer tai matching`,
+KYSYMYSTYYPPIEN JAKAUMA (Luokka ${grade}, Helppo):
+${getDistribution()}
+- ÄLÄ käytä short_answer helppo-tasolla`,
     normaali: `
 VAIKEUSTASO: Normaali
 - Monivaiheinen laskenta ja yhdistelmätehtävät
@@ -108,23 +119,9 @@ VAIKEUSTASO: Normaali
 - Sanallisia tehtäviä ja käytännön sovelluksia
 - 2-3 vaiheen ongelmat
 
-KYSYMYSTYYPPIEN JAKAUMA (Normaali):
-- 55% multiple_choice (monivalinta)
-- 25% fill_blank (täydennä, numeerinen vastaus)
-- 10% sequential (järjestys - 5-6 vaihetta)
-- 10% true_false (totta/tarua)
+KYSYMYSTYYPPIEN JAKAUMA (Luokka ${grade}, Normaali):
+${getDistribution()}
 - ÄLÄ käytä short_answer (liian epämääräinen matematiikassa)
-- Voit käyttää matching jos sopii aiheeseen`,
-    vaikea: `
-VAIKEUSTASO: Vaikea
-- Monimutkaisia ongelmia ja useamman käsitteen yhdistämistä
-- Vaatii syvällistä ymmärrystä ja analyyttista ajattelua
-- Todistukset, perustelut ja monivaiheisia ratkaisuja
-- Epäsuorat kysymykset ja ongelmanratkaisu
-
-KYSYMYSTYYPPIEN JAKAUMA (Vaikea):
-- 50% multiple_choice (monivalinta, mutta vaikeammat laskut)
-- 35% fill_blank (täydennä, vaatii laskemista)
 - 15% true_false tai matching
 - ÄLÄ käytä short_answer (liian epämääräinen matematiikassa)`,
   };
