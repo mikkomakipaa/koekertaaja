@@ -30,6 +30,7 @@ export default function CreatePage() {
   const [questionSetName, setQuestionSetName] = useState('');
   const [materialText, setMaterialText] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [generateFlashcards, setGenerateFlashcards] = useState(false);
   const [error, setError] = useState('');
 
   // Success state
