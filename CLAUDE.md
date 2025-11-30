@@ -179,10 +179,21 @@ src/
 **Question Generation**:
 - Configurable pool size: 40-400 questions generated from materials (default: 100)
 - Configurable exam length: 5-20 questions per session (default: 15)
-- 2 difficulty levels: Helppo (Easy), Normaali (Normal)
+- **Dual-mode generation**:
+  - **Quiz mode**: 2 difficulty levels (Helppo/Normaali) with grade-specific question type distributions
+  - **Flashcard mode**: Optional, single set optimized for memorization and active recall
+- Grade-specific distributions (4-6):
+  - Grade 4: More basic question types (60% multiple_choice in helppo)
+  - Grade 5: Balanced mix (50% multiple_choice in helppo, 35% in normaali)
+  - Grade 6: More open-ended (45% multiple_choice in helppo, 25% + 40% fill_blank in normaali)
+- **Flashcard optimization**:
+  - English: 60% fill_blank, 30% short_answer, 10% matching
+  - Math: 70% fill_blank, 20% matching, 10% short_answer
+  - Excludes: multiple_choice, true_false, sequential (passive recognition)
+  - Focus: Active recall, memorization techniques, clear explanations
 - Subject-specific prompts: `src/config/prompts/{subject}.ts`
 - Multimodal: Supports PDF (document type) and images
-- Response validated with Zod schemas
+- Response validated with Zod schemas (graceful failure: accepts 70%+ valid questions)
 - Options shuffled during generation to prevent memorization
 
 **Game Session** (`useGameSession` hook):
