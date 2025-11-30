@@ -98,8 +98,15 @@ Koekertaaja is an interactive exam preparation application that helps students p
 
 1. Go to your Supabase project
 2. Open SQL Editor
-3. Copy and run the file `supabase/migrations/20250103_initial_schema.sql`
-4. This creates the required tables: `question_sets` and `questions`
+3. Run all migration files in order from `supabase/migrations/`:
+   - `20250103_initial_schema.sql` - Creates tables
+   - `20250104_add_check_constraints.sql` - Adds validation
+   - `20250105_update_difficulty_constraint.sql` - Updates difficulty levels
+   - `20250106_fix_empty_options.sql` - Fixes data integrity
+   - `20250130_add_mode_column.sql` - Adds quiz/flashcard distinction
+   - `20250130_add_delete_policies.sql` - Adds RLS policies
+   - `20250130_add_topic_to_questions.sql` - Enables topic-balanced selection
+4. This creates all required tables, indexes, and security policies
 
 ### Step 4: Start the Application
 
