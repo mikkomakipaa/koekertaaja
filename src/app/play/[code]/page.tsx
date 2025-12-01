@@ -33,6 +33,8 @@ export default function PlayPage() {
   const [error, setError] = useState('');
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [availableTopics, setAvailableTopics] = useState<string[]>([]);
 
   const {
     currentQuestion,
