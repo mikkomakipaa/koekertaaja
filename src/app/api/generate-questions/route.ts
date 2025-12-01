@@ -169,49 +169,112 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // STEP 1: Identify topics from material (orchestrated AI architecture)
+    logger.info('Step 1: Identifying topics from material');
+    const topicAnalysis = await identifyTopics({
+      subject,
+      grade,
+      materialText,
+      materialFiles: files.length > 0 ? files : undefined,
+    });
+
+    logger.info(
+      {
+        identifiedTopics: topicAnalysis.topics,
+        topicCount: topicAnalysis.topics.length,
+      },
+      'Topics identified successfully'
+    );
+
     // Define all difficulty levels
     const difficulties: Difficulty[] = ['helppo', 'normaali'];
 
-    // Array to store created question sets
-    const createdSets: any[] = [];
+    // STEP 2: Generate questions in parallel (Quiz + Flashcard)
+    logger.info('Step 2: Generating questions (parallel execution)');
 
-    // Generate quiz questions if mode is 'quiz' or 'both'
+    // Prepare parallel generation tasks
+    const generationTasks: Promise<{
+      questions: any[];
+      difficulty?: Difficulty;
+      mode: 'quiz' | 'flashcard';
+    }>[] = [];
+
+    // Add quiz generation tasks
     if (generationMode === 'quiz' || generationMode === 'both') {
-      // Generate questions for each difficulty level
       for (const difficulty of difficulties) {
-      // Generate questions using AI
-      // Uses examLength for questions per exam, questionCount for total pool size hint
-      const questions = await generateQuestions({
-        subject,
-        difficulty,
-        questionCount: examLength,
-        grade,
-        materialText,
-        materialFiles: files.length > 0 ? files : undefined,
-      });
-
-      if (questions.length === 0) {
-        return NextResponse.json(
-          { error: `Failed to generate questions for difficulty: ${difficulty}` },
-          { status: 500 }
+        generationTasks.push(
+          generateQuestions({
+            subject,
+            difficulty,
+            questionCount: examLength,
+            grade,
+            materialText,
+            materialFiles: files.length > 0 ? files : undefined,
+            mode: 'quiz',
+            identifiedTopics: topicAnalysis.topics, // Pass identified topics
+          }).then((questions) => ({ questions, difficulty, mode: 'quiz' as const }))
         );
       }
+    }
 
-      // Generate unique code with improved collision handling
+    // Add flashcard generation task
+    if (generationMode === 'flashcard' || generationMode === 'both') {
+      generationTasks.push(
+        generateQuestions({
+          subject,
+          difficulty: 'normaali', // Flashcards use normaali as placeholder
+          questionCount: examLength,
+          grade,
+          materialText,
+          materialFiles: files.length > 0 ? files : undefined,
+          mode: 'flashcard',
+          identifiedTopics: topicAnalysis.topics, // Pass identified topics
+        }).then((questions) => ({ questions, mode: 'flashcard' as const }))
+      );
+    }
+
+    // Execute all generation tasks in parallel
+    const generationResults = await Promise.all(generationTasks);
+
+    logger.info(
+      {
+        totalSets: generationResults.length,
+        modes: generationResults.map(r => r.mode),
+      },
+      'Question generation completed'
+    );
+
+    // STEP 3: Create question sets in database
+    logger.info('Step 3: Saving question sets to database');
+    const createdSets: any[] = [];
+
+    for (const result of generationResults) {
+      const { questions, difficulty, mode } = result;
+
+      if (questions.length === 0) {
+        logger.warn({ mode, difficulty }, 'No questions generated for this set');
+        continue;
+      }
+
+      // Generate unique code with collision handling
       let code = generateCode();
       let attempts = 0;
-      const maxAttempts = 50; // Increased from 10 to 50
-      let result = null;
+      const maxAttempts = 50;
+      let dbResult = null;
 
-      // Ensure code is unique (retry with exponential backoff logging)
-      while (attempts < maxAttempts && !result) {
-        result = await createQuestionSet(
+      // Determine set name based on mode and difficulty
+      const setName = mode === 'flashcard'
+        ? `${questionSetName} - Kortit`
+        : `${questionSetName} - ${difficulty!.charAt(0).toUpperCase() + difficulty!.slice(1)}`;
+
+      while (attempts < maxAttempts && !dbResult) {
+        dbResult = await createQuestionSet(
           {
             code,
-            name: `${questionSetName} - ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`,
+            name: setName,
             subject: subject as Subject,
-            difficulty,
-            mode: 'quiz',
+            difficulty: difficulty || 'normaali',
+            mode,
             grade,
             topic,
             subtopic,
@@ -220,79 +283,29 @@ export async function POST(request: NextRequest) {
           questions
         );
 
-        if (!result) {
-          // Code collision detected
+        if (!dbResult) {
           attempts++;
           code = generateCode();
 
-          // Log collision for monitoring (only log every 10 attempts to avoid spam)
           if (attempts % 10 === 0) {
-            console.warn(`Code collision detected: ${attempts} attempts for difficulty ${difficulty}`);
+            logger.warn({ attempts, mode, difficulty }, 'Code collision detected');
           }
 
-          // If we're getting many collisions, alert in logs
           if (attempts > 30) {
-            console.error(`High collision rate detected: ${attempts} attempts. Consider increasing code length.`);
+            logger.error({ attempts }, 'High collision rate detected');
           }
         }
       }
 
-      if (!result) {
-        console.error(`Failed to generate unique code after ${maxAttempts} attempts for difficulty: ${difficulty}`);
+      if (!dbResult) {
+        logger.error({ maxAttempts, mode, difficulty }, 'Failed to generate unique code');
         return NextResponse.json(
           { error: `Failed to create question set. Please try again.` },
           { status: 500 }
         );
       }
 
-      createdSets.push(result);
-      }
-    }
-
-    // Generate flashcard set if mode is 'flashcard' or 'both'
-    if (generationMode === 'flashcard' || generationMode === 'both') {
-      const flashcardQuestions = await generateQuestions({
-        subject,
-        difficulty: 'normaali', // Flashcards don't use difficulty, but we need to pass something
-        questionCount: examLength,
-        grade,
-        materialText,
-        materialFiles: files.length > 0 ? files : undefined,
-        mode: 'flashcard', // Use flashcard mode
-      });
-
-      if (flashcardQuestions.length > 0) {
-        let code = generateCode();
-        let attempts = 0;
-        const maxAttempts = 50;
-        let result = null;
-
-        while (attempts < maxAttempts && !result) {
-          result = await createQuestionSet(
-            {
-              code,
-              name: `${questionSetName} - Kortit`,
-              subject: subject as Subject,
-              difficulty: 'normaali', // Flashcards use normaali as placeholder
-              mode: 'flashcard', // Explicitly mark as flashcard mode
-              grade,
-              topic,
-              subtopic,
-              question_count: flashcardQuestions.length,
-            },
-            flashcardQuestions
-          );
-
-          if (!result) {
-            attempts++;
-            code = generateCode();
-          }
-        }
-
-        if (result) {
-          createdSets.push(result);
-        }
-      }
+      createdSets.push(dbResult);
     }
 
     const response = {
