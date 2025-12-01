@@ -245,10 +245,11 @@ export async function POST(request: NextRequest) {
       }
 
       createdSets.push(result);
+      }
     }
 
-    // Generate flashcard set if requested
-    if (generateFlashcards) {
+    // Generate flashcard set if mode is 'flashcard' or 'both'
+    if (generationMode === 'flashcard' || generationMode === 'both') {
       const flashcardQuestions = await generateQuestions({
         subject,
         difficulty: 'normaali', // Flashcards don't use difficulty, but we need to pass something
