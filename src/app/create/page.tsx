@@ -234,7 +234,9 @@ export default function CreatePage() {
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-gray-100">
-                          {difficultyLabels[set.difficulty] || set.difficulty}
+                          {set.mode === 'flashcard'
+                            ? `${set.name} - ${modeLabels[set.mode]}`
+                            : difficultyLabels[set.difficulty] || set.difficulty}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           {set.questionCount} kysymystä
