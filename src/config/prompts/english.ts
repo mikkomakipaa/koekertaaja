@@ -149,14 +149,28 @@ ${material ? `MATERIAALI:\n${material}\n\n` : ''}══════════�
 ════════════════════════════════════════════════════════════════
 
 TOPIC BALANCING (PAKOLLINEN):
-1. ANALYSOI materiaali ja TUNNISTA 3-5 korkeantason aihealuetta
-   Esimerkkejä: "Grammar", "Vocabulary", "Reading Comprehension"
-2. JOKA IKINEN kysymys TÄYTYY sisältää "topic"-kenttä
-3. JAKA kysymykset TASAISESTI kaikkien aihealueiden kesken
-   Jos 3 aihetta + 15 kysymystä = 5 kysymystä per aihealue
-4. VARMISTA että JOKAINEN kysymys on merkitty aihealueella
 
-⚠️ KYSYMYKSET ILMAN TOPIC-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI
+1. KÄYTÄ NÄITÄ TUNNISTETTUJA AIHEALUEITA (${topicCount} kpl):
+${topicsText}
+
+   ⚠️ ÄLÄ KEKSI UUSIA AIHEALUEITA
+   ⚠️ KÄYTÄ TÄSMÄLLEEN SAMAA KIRJOITUSASUA KUIN YLLÄ
+
+2. JOKA IKINEN kysymys TÄYTYY sisältää "topic"-kenttä
+   • Valitse yksi yllä olevista aihealueista jokaiselle kysymykselle
+   • Kopioi aihealueen nimi TÄSMÄLLEEN sellaisenaan
+
+3. TASAINEN JAKAUTUMINEN kaikille aihealueille:
+   • TAVOITE: ~${questionsPerTopic} kysymystä per aihealue
+   • Jaa ${questionCount} kysymystä TASAISESTI ${topicCount} aihealueen kesken
+   • Älä suosi yhtä aihealuetta toisten kustannuksella
+   • Sallittu vaihtelu: ±1 kysymys per aihealue
+
+4. VARMISTA että JOKAINEN kysymys on merkitty aihealueella
+   • Tarkista että jokainen kysymys sisältää "topic"-kentän
+   • Tarkista että topic-kenttä vastaa yhtä yllä olevista aihealueista
+
+⚠️ KYSYMYKSET ILMAN TOPIC-KENTTÄÄ TAI VÄÄRÄLLÄ TOPIC-ARVOLLA HYLÄTÄÄN AUTOMAATTISESTI
 
 ════════════════════════════════════════════════════════════════
 
