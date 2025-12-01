@@ -91,12 +91,22 @@ ${material ? `MATERIAALI:\n${material}\n\n` : ''}══════════�
 ════════════════════════════════════════════════════════════════
 
 1. AIHEIDEN TASAPAINO (TOPIC BALANCING):
-   • ANALYSOI materiaali ja TUNNISTA 3-5 korkeantason aihealuetta
-   • Esimerkkejä: "Laskutoimitukset", "Geometria", "Luvut", "Murtoluvut"
+
+   KÄYTÄ NÄITÄ TUNNISTETTUJA AIHEALUEITA (${topicCount} kpl):
+${topicsText}
+
+   ⚠️ ÄLÄ KEKSI UUSIA AIHEALUEITA
+   ⚠️ KÄYTÄ TÄSMÄLLEEN SAMAA KIRJOITUSASUA KUIN YLLÄ
+
    • JOKA IKINEN kysymys TÄYTYY sisältää "topic"-kenttä
-   • JAKA kysymykset TASAISESTI kaikkien aihealueiden kesken
-   • Jos 3 aihetta + 15 kysymystä = 5 kysymystä per aihealue
-   • VARMISTA että JOKAINEN kysymys on merkitty aihealueella
+   • Valitse yksi yllä olevista aihealueista jokaiselle kysymykselle
+   • Kopioi aihealueen nimi TÄSMÄLLEEN sellaisenaan
+
+   TASAINEN JAKAUTUMINEN kaikille aihealueille:
+   • TAVOITE: ~${questionsPerTopic} kysymystä per aihealue
+   • Jaa ${questionCount} kysymystä TASAISESTI ${topicCount} aihealueen kesken
+   • Älä suosi yhtä aihealuetta toisten kustannuksella
+   • Sallittu vaihtelu: ±1 kysymys per aihealue
 
 2. KYSYMYSTYYPPIEN RAJOITUKSET (FLASHCARD MODE):
    • SALLITUT tyypit: fill_blank, matching, short_answer
