@@ -50,7 +50,15 @@ export async function POST(request: NextRequest) {
       materialText: (formData.get('materialText') as string | null) || undefined,
     };
 
-    const generateFlashcards = formData.get('generateFlashcards') === 'true';
+    const generationMode = (formData.get('generationMode') as string) || 'quiz';
+
+    // Validate generation mode
+    if (!['quiz', 'flashcard', 'both'].includes(generationMode)) {
+      return NextResponse.json(
+        { error: 'Invalid generation mode. Must be "quiz", "flashcard", or "both"' },
+        { status: 400 }
+      );
+    }
 
     // Validate input with Zod schema
     const validationResult = createQuestionSetSchema.safeParse(rawData);
