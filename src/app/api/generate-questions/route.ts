@@ -296,10 +296,12 @@ export async function POST(request: NextRequest) {
 
     const response = {
       success: true,
-      message: `Created ${createdSets.length} question sets across all difficulty levels`,
+      message: `Created ${createdSets.length} question sets`,
       questionSets: createdSets.map(set => ({
         code: set.code,
+        name: set.questionSet.name,
         difficulty: set.questionSet.difficulty,
+        mode: set.questionSet.mode,
         questionCount: set.questionSet.question_count,
       })),
       totalQuestions: createdSets.reduce((sum, set) => sum + set.questionSet.question_count, 0),
