@@ -293,11 +293,25 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
   }
 ]
 
+════════════════════════════════════════════════════════════════
+✅ TARKISTUSLISTA ENNEN VASTAAMISTA
+════════════════════════════════════════════════════════════════
+
 Varmista että:
-- Jokainen kysymys on uniikki
-- Väärät vastaukset ovat uskottavia
-- Selitykset ovat informatiivisia ja suomeksi
-- Kysymykset perustuvat annettuun materiaaliin ${gradeContext ? `ja ${grade}. luokan opetussuunnitelmaan` : ''}
-- Sanaston vaikeustaso vastaa ${grade ? `${grade}. luokkaa` : 'asetettua tasoa'}
-- KYSYMYSTYYPPIEN JAKAUMA vastaa vaikeustason ohjeita`;
+✓ JOKAINEN kysymys sisältää "topic"-kentän (ei yhtään tyhjää!)
+✓ Kysymykset jakautuvat TASAISESTI aihealueiden kesken
+✓ KYSYMYSTYYPPIEN JAKAUMA vastaa vaikeustason ohjeita (${difficulty})
+✓ Multiple_choice kysymyksillä on TASAN 4 vaihtoehtoa
+✓ Matching kysymyksillä on VÄHINTÄÄN 4 paria
+✓ Sequential kysymyksillä on oikeat indeksit (0-based)
+✓ Jokainen kysymys on uniikki
+✓ Väärät vastaukset ovat uskottavia
+✓ Selitykset ovat informatiivisia ja suomeksi
+✓ Kysymykset perustuvat materiaaliin ${gradeContext ? `ja ${grade}. luokan opetussuunnitelmaan` : ''}
+✓ Sanaston vaikeustaso vastaa ${grade ? `${grade}. luokkaa` : 'asetettua tasoa'}
+✓ Vastaat PELKÄLLÄ JSON-taulukolla, ei muuta tekstiä
+
+⚠️ KYSYMYKSET ILMAN TOPIC-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI
+
+════════════════════════════════════════════════════════════════`;
 }
