@@ -169,6 +169,18 @@ export async function generateQuestions(
     }
   });
 
+  // Log excluded flashcard types
+  if (excludedFlashcardTypes.length > 0) {
+    logger.warn(
+      {
+        excludedCount: excludedFlashcardTypes.length,
+        mode,
+        excludedTypes: excludedFlashcardTypes.map(({ type }) => type),
+      },
+      'Excluded invalid question types for flashcard mode (multiple_choice, true_false, sequential not allowed)'
+    );
+  }
+
   // Log invalid questions as warnings (not errors) since we can continue without them
   if (invalidQuestions.length > 0) {
     logger.warn(
@@ -189,6 +201,31 @@ export async function generateQuestions(
     );
   }
 
+  // Check topic coverage - warn if most questions are missing topics
+  const questionsWithTopics = validQuestions.filter(q => q.topic && q.topic.trim().length > 0).length;
+  const topicCoverage = validQuestions.length > 0 ? (questionsWithTopics / validQuestions.length) * 100 : 0;
+
+  if (topicCoverage < 70) {
+    logger.warn(
+      {
+        questionsWithTopics,
+        totalValidQuestions: validQuestions.length,
+        topicCoverage: `${topicCoverage.toFixed(1)}%`,
+        mode,
+      },
+      'Low topic coverage - most questions missing topic tags. Topic-balanced sampling will fall back to random selection.'
+    );
+  } else {
+    logger.info(
+      {
+        questionsWithTopics,
+        totalValidQuestions: validQuestions.length,
+        topicCoverage: `${topicCoverage.toFixed(1)}%`,
+      },
+      'Good topic coverage - stratified sampling will work correctly'
+    );
+  }
+
   // Fail only if we don't have enough valid questions (at least 70% of requested)
   const minRequiredQuestions = Math.ceil(questionCount * 0.7);
   if (validQuestions.length < minRequiredQuestions) {
@@ -198,6 +235,7 @@ export async function generateQuestions(
         requestedQuestions: questionCount,
         minRequired: minRequiredQuestions,
         invalidCount: invalidQuestions.length,
+        excludedFlashcardCount: excludedFlashcardTypes.length,
       },
       'Too many invalid questions - insufficient valid questions generated'
     );
