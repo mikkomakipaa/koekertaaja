@@ -35,6 +35,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Claude Code
+.mcp.json
+
 # old files
 english-exam-game.tsx
 
