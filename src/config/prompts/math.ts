@@ -251,13 +251,17 @@ Väärät vastaukset tulee olla uskottavia - käytä yleisiä laskuvirheitä:
 - Laskujärjestysvirhe: 35 (laskettu vasemmalta oikealle ilman järjestystä)
 - Yksikkövirhe tai väärä muunnos
 
+════════════════════════════════════════════════════════════════
+📋 JSON VASTAUSMUOTO - NOUDATA TARKASTI
+════════════════════════════════════════════════════════════════
+
 Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEKSTIÄ:
 
 [
   {
     "question": "kysymysteksti suomeksi (voi sisältää LaTeX-merkintää)",
     "type": "multiple_choice" | "fill_blank" | "true_false" | "matching" | "sequential",
-    "topic": "Laskutoimitukset" | "Geometria" | "Luvut", // PAKOLLINEN - korkeantason aihealue (3-5 aihealuetta)
+    "topic": "Laskutoimitukset" | "Geometria" | "Luvut", // ⚠️ PAKOLLINEN - JOKA kysymyksessä
     "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"], // vain multiple_choice
     "items": ["vaihe1", "vaihe2", "vaihe3", "vaihe4"], // PAKOLLINEN sequential kysymyksille
     "correct_order": [2, 0, 1, 3], // PAKOLLINEN sequential kysymyksille - indeksit oikeassa järjestyksessä
