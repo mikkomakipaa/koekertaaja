@@ -124,9 +124,33 @@ export async function generateQuestions(
   // Validate AI response structure with Zod - filter out invalid questions gracefully
   const validQuestions: any[] = [];
   const invalidQuestions: Array<{ index: number; errors: any[]; question: any }> = [];
+  const excludedFlashcardTypes: Array<{ index: number; type: string; question: any }> = [];
 
   // Validate each question individually
   parsedQuestions.forEach((question, index) => {
+    // CRITICAL: Flashcard mode must exclude passive recognition question types
+    if (mode === 'flashcard') {
+      const invalidFlashcardTypes = ['multiple_choice', 'true_false', 'sequential'];
+      if (invalidFlashcardTypes.includes(question.type)) {
+        excludedFlashcardTypes.push({
+          index,
+          type: question.type,
+          question: {
+            questionPreview: question.question?.substring(0, 50),
+          },
+        });
+        logger.warn(
+          {
+            questionIndex: index,
+            questionType: question.type,
+            mode,
+          },
+          'Excluded invalid question type for flashcard mode - AI generated passive recognition type'
+        );
+        return; // Skip this question
+      }
+    }
+
     const result = aiQuestionSchema.safeParse(question);
     if (result.success) {
       validQuestions.push(result.data);
