@@ -32,7 +32,19 @@ export interface GenerateQuestionsParams {
 export async function generateQuestions(
   params: GenerateQuestionsParams
 ): Promise<Question[]> {
-  const { subject, difficulty, questionCount, grade, materialText, materialFiles, mode = 'quiz' } = params;
+  const { subject, difficulty, questionCount, grade, materialText, materialFiles, mode = 'quiz', identifiedTopics } = params;
+
+  logger.info(
+    {
+      subject,
+      difficulty,
+      questionCount,
+      mode,
+      hasIdentifiedTopics: !!identifiedTopics,
+      topicCount: identifiedTopics?.length,
+    },
+    'Starting question generation'
+  );
 
   // Build message content
   const messageContent: MessageContent[] = [];
