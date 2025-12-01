@@ -114,6 +114,6 @@ export async function getQuestionSetTopics(questionSetId: string): Promise<strin
   }
 
   // Extract unique topics
-  const topics = [...new Set((data || []).map(q => q.topic).filter(Boolean))];
+  const topics = [...new Set((data || []).map((q: any) => q.topic).filter(Boolean))];
   return topics as string[];
 }
