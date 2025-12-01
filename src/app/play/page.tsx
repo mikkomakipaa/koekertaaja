@@ -150,8 +150,12 @@ export default function PlayBrowsePage() {
 
   const getAvailableDifficulties = (sets: QuestionSet[]) => {
     return ['helppo', 'normaali', 'vaikea'].filter(difficulty =>
-      sets.some(set => set.difficulty === difficulty)
+      sets.some(set => set.difficulty === difficulty && set.mode === 'quiz')
     );
+  };
+
+  const hasFlashcards = (sets: QuestionSet[]) => {
+    return sets.some(set => set.mode === 'flashcard');
   };
 
   // Get unique grades from all question sets, sorted
