@@ -70,7 +70,7 @@ export default function PlayBrowsePage() {
 
         // Helper function to remove difficulty suffix from name
         const stripDifficultySuffix = (name: string): string => {
-          const suffixes = [' - Helppo', ' - Normaali', ' - Vaikea'];
+          const suffixes = [' - Helppo', ' - Normaali', ' - Vaikea', ' - Kortit'];
           for (const suffix of suffixes) {
             if (name.endsWith(suffix)) {
               return name.slice(0, -suffix.length);
