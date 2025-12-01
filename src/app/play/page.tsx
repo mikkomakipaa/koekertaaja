@@ -290,6 +290,7 @@ export default function PlayBrowsePage() {
           <div className="space-y-4">
             {filteredSets.map((group) => {
               const availableDifficulties = getAvailableDifficulties(group.sets);
+              const groupHasFlashcards = hasFlashcards(group.sets);
 
               return (
                 <div
