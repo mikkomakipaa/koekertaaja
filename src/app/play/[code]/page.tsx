@@ -350,10 +350,18 @@ export default function PlayPage() {
 
     const displayName = questionSet?.name ? stripDifficultySuffix(questionSet.name) : 'Kysymyssarja';
 
+    // Filter flashcards by selected topic
+    const filteredFlashcards = selectedTopic && selectedTopic !== 'ALL'
+      ? flashcards.filter(f => {
+          const question = questionSet?.questions.find(q => q.id === f.questionId);
+          return question?.topic === selectedTopic;
+        })
+      : flashcards;
+
     return (
       <FlashcardSession
-        flashcards={flashcards}
-        questionSetName={displayName}
+        flashcards={filteredFlashcards}
+        questionSetName={selectedTopic && selectedTopic !== 'ALL' ? `${displayName} - ${selectedTopic}` : displayName}
         onExit={handleBackToMenu}
       />
     );
