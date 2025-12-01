@@ -94,6 +94,10 @@ export default function PlayPage() {
               .filter((t): t is string => t !== null && t !== undefined && t.trim().length > 0)
           )];
           setAvailableTopics(topics);
+          // Auto-select if only one topic or no topics
+          if (topics.length <= 1) {
+            setSelectedTopic('ALL');
+          }
           setState('playing');
         } else {
           // Normal single question set loading
