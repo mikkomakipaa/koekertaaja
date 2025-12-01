@@ -109,6 +109,13 @@ export default function PlayPage() {
           // Convert questions to flashcards (excludes sequential questions)
           const cards = convertQuestionsToFlashcards(data.questions);
           setFlashcards(cards);
+          // Extract unique topics from questions
+          const topics = [...new Set(
+            data.questions
+              .map(q => q.topic)
+              .filter((t): t is string => t !== null && t !== undefined && t.trim().length > 0)
+          )];
+          setAvailableTopics(topics);
           setState('playing');
         }
       } catch (err) {
