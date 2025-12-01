@@ -164,13 +164,17 @@ SELITYSTEN KIRJOITTAMINEN:
 - Lisää TARKISTUS lopuksi
 - Vähintään 30 merkkiä, enintään 400 merkkiä
 
+════════════════════════════════════════════════════════════════
+📋 JSON VASTAUSMUOTO - NOUDATA TARKASTI
+════════════════════════════════════════════════════════════════
+
 Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEKSTIÄ:
 
 [
   {
     "question": "kysymysteksti (voi sisältää LaTeX-merkintää $$...$$)",
-    "type": "fill_blank" | "matching" | "short_answer",
-    "topic": "Laskutoimitukset" | "Geometria" | "Luvut", // PAKOLLINEN - korkeantason aihealue (3-5 aihealuetta)
+    "type": "fill_blank" | "matching" | "short_answer",  // VAIN NÄMÄ KOLME TYYPPIÄ
+    "topic": "Laskutoimitukset" | "Geometria" | "Luvut", // ⚠️ PAKOLLINEN - JOKA kysymyksessä
     "correct_answer": "oikea vastaus (numero tai matemaattinen ilmaisu)",
     "acceptable_answers": ["vaihtoehtoinen muoto 1", "vaihtoehtoinen muoto 2"], // vapaaehtoinen
     "pairs": [{"left": "käsite", "right": "määritelmä"}], // vain matching-tyypille, 3-6 paria
