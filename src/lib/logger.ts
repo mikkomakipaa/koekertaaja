@@ -3,19 +3,14 @@ import pino from 'pino';
 /**
  * Structured logger using Pino
  * Provides consistent logging across the application
+ *
+ * Note: In development, pino-pretty transport can cause worker thread issues.
+ * Using synchronous logging in development to avoid crashes.
  */
 export const logger = pino({
   level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
-  ...(process.env.NODE_ENV !== 'production' && {
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'SYS:standard',
-        ignore: 'pid,hostname',
-      },
-    },
-  }),
+  // Disable pino-pretty transport in development due to worker thread issues
+  // Use basic console output instead
   base: {
     env: process.env.NODE_ENV,
   },
