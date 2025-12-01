@@ -87,6 +87,13 @@ export default function PlayPage() {
           // Convert all questions to flashcards (excludes sequential questions)
           const cards = convertQuestionsToFlashcards(combinedSet.questions);
           setFlashcards(cards);
+          // Extract unique topics from questions
+          const topics = [...new Set(
+            combinedSet.questions
+              .map(q => q.topic)
+              .filter((t): t is string => t !== null && t !== undefined && t.trim().length > 0)
+          )];
+          setAvailableTopics(topics);
           setState('playing');
         } else {
           // Normal single question set loading
