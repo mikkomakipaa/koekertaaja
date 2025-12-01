@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fileTypeFromBuffer } from 'file-type';
 import crypto from 'crypto';
 import { generateQuestions } from '@/lib/ai/questionGenerator';
+import { identifyTopics } from '@/lib/ai/topicIdentifier';
 import { createQuestionSet } from '@/lib/supabase/write-queries';
 import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty } from '@/types';
