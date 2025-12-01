@@ -103,10 +103,11 @@ ${topicsText}
    • Kopioi aihealueen nimi TÄSMÄLLEEN sellaisenaan
 
    TASAINEN JAKAUTUMINEN kaikille aihealueille:
-   • TAVOITE: ~${questionsPerTopic} kysymystä per aihealue
-   • Jaa ${questionCount} kysymystä TASAISESTI ${topicCount} aihealueen kesken
+   • TAVOITE: TÄSMÄLLEEN 10 kysymystä per aihealue
+   • Luo ${questionCount} kysymystä yhteensä (${topicCount} aihetta × 10 kysymystä)
+   • JOKAISELLE aihealueelle täytyy tehdä 10 kysymystä
    • Älä suosi yhtä aihealuetta toisten kustannuksella
-   • Sallittu vaihtelu: ±1 kysymys per aihealue
+   • Sallittu vaihtelu: ±1 kysymys per aihealue (9-11 kysymystä)
 
 2. KYSYMYSTYYPPIEN RAJOITUKSET (FLASHCARD MODE):
    • SALLITUT tyypit: fill_blank, matching, short_answer
