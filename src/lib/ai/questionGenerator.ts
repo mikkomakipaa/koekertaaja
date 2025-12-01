@@ -22,7 +22,8 @@ export interface GenerateQuestionsParams {
     name: string;
     data: string; // base64
   }>;
-  mode?: 'quiz' | 'flashcard'; // NEW: mode for quiz or flashcard generation
+  mode?: 'quiz' | 'flashcard'; // Mode for quiz or flashcard generation
+  identifiedTopics?: string[]; // Pre-identified topics from Step 1 (optional)
 }
 
 /**
