@@ -11,7 +11,8 @@ const FLASHCARD_DISTRIBUTION = {
 export function getEnglishFlashcardsPrompt(
   questionCount: number,
   grade?: number,
-  material?: string
+  material?: string,
+  identifiedTopics?: string[]
 ): string {
   // Finnish curriculum-based content for A1-English
   const gradeContent = {
