@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
         generateQuestions({
           subject,
           difficulty: 'normaali', // Flashcards use normaali as placeholder
-          questionCount: examLength,
+          questionCount: flashcardQuestionCount, // Generate ~10 cards per topic
           grade,
           materialText,
           materialFiles: files.length > 0 ? files : undefined,
