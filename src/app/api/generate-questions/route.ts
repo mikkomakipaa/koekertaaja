@@ -174,8 +174,10 @@ export async function POST(request: NextRequest) {
     // Array to store created question sets
     const createdSets: any[] = [];
 
-    // Generate questions for each difficulty level
-    for (const difficulty of difficulties) {
+    // Generate quiz questions if mode is 'quiz' or 'both'
+    if (generationMode === 'quiz' || generationMode === 'both') {
+      // Generate questions for each difficulty level
+      for (const difficulty of difficulties) {
       // Generate questions using AI
       // Uses examLength for questions per exam, questionCount for total pool size hint
       const questions = await generateQuestions({
