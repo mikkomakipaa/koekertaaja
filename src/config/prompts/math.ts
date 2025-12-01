@@ -133,6 +133,14 @@ ${getDistribution()}
     ? `\nKysymysten tulee olla sopivan haastavuustason ${grade}. luokkalaiselle ja perustua ${grade}. luokan opetussuunnitelman sisältöön.`
     : '';
 
+  // Format identified topics for the prompt
+  const topicsText = identifiedTopics && identifiedTopics.length > 0
+    ? identifiedTopics.map((topic, i) => `   ${i + 1}. "${topic}"`).join('\n')
+    : '   (Ei aihealueita tunnistettu - käytä materiaalin perusteella tunnistettuja aihealueita)';
+
+  const topicCount = identifiedTopics?.length || 3;
+  const questionsPerTopic = Math.ceil(questionCount / topicCount);
+
   return `Analysoi ${material ? 'seuraava materiaali' : 'nämä dokumentit'} ja luo ${questionCount} monipuolista matematiikan kysymystä koevalmistautumiseen.
 
 ${gradeContext}
