@@ -203,6 +203,11 @@ export default function CreatePage() {
       normaali: 'Normaali',
     };
 
+    const modeLabels: Record<string, string> = {
+      quiz: 'Koe',
+      flashcard: 'Kortit',
+    };
+
     return (
       <AuthGuard>
         <UserMenu />
