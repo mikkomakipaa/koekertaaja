@@ -135,12 +135,21 @@ ${gradeContext}
 ${difficultyInstructions[difficulty]}
 ${gradeNote}
 
-${material ? `MATERIAALI:\n${material}\n\n` : ''}KRIITTINEN VAATIMUS - AIHEIDEN TASAPAINO:
-1. ANALYSOI materiaali ja TUNNISTA 3-5 korkeantason aihealuetta (esim. "Grammar", "Vocabulary", "Reading Comprehension")
-2. JAKA kysymykset TASAISESTI kaikkien tunnistettujen aihealueiden kesken
-3. Jos tunnistit 3 aihealuetta ja teet 15 kysymystä, luo noin 5 kysymystä per aihealue
-4. MERKITSE jokainen kysymys sen pääaihealueella "topic"-kenttään
-5. VARMISTA että kaikki aihealueet saavat tasapuolisen määrän kysymyksiä
+${material ? `MATERIAALI:\n${material}\n\n` : ''}════════════════════════════════════════════════════════════════
+⚠️  KRIITTINEN VAATIMUS - AIHEIDEN TASAPAINO ⚠️
+════════════════════════════════════════════════════════════════
+
+TOPIC BALANCING (PAKOLLINEN):
+1. ANALYSOI materiaali ja TUNNISTA 3-5 korkeantason aihealuetta
+   Esimerkkejä: "Grammar", "Vocabulary", "Reading Comprehension"
+2. JOKA IKINEN kysymys TÄYTYY sisältää "topic"-kenttä
+3. JAKA kysymykset TASAISESTI kaikkien aihealueiden kesken
+   Jos 3 aihetta + 15 kysymystä = 5 kysymystä per aihealue
+4. VARMISTA että JOKAINEN kysymys on merkitty aihealueella
+
+⚠️ KYSYMYKSET ILMAN TOPIC-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI
+
+════════════════════════════════════════════════════════════════
 
 TÄRKEÄÄ - KYSYMYSTEN MUOTO:
 - Kysymykset esitetään SUOMEKSI
