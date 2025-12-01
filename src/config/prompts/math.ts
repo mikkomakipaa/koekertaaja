@@ -51,7 +51,8 @@ export function getMathPrompt(
   difficulty: Difficulty,
   questionCount: number,
   grade?: number,
-  material?: string
+  material?: string,
+  identifiedTopics?: string[]
 ): string {
   // Finnish curriculum-based content for each grade
   const gradeContent = {
