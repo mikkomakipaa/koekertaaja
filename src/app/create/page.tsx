@@ -335,25 +335,69 @@ export default function CreatePage() {
 
             <GradeSelector selectedGrade={grade} onGradeChange={setGrade} />
 
-            {/* Flashcard Generation Checkbox */}
-            <div className="border-2 border-purple-200 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-5">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={generateFlashcards}
-                  onChange={(e) => setGenerateFlashcards(e.target.checked)}
-                  className="mt-1 w-5 h-5 rounded border-purple-300 text-purple-600 focus:ring-purple-500 dark:border-purple-600 dark:bg-gray-800"
-                />
-                <div className="flex-1">
-                  <div className="text-lg font-bold text-purple-900 dark:text-purple-100 mb-1">
-                    🎴 Luo myös korttisarja oppimista varten
-                  </div>
-                  <p className="text-sm text-purple-700 dark:text-purple-300">
-                    Generoi erillinen kysymyssarja, joka on optimoitu korttitilassa opetteluun.
-                    Sisältää enemmän avoimia kysymyksiä ja selkeämpiä selityksiä muistamisen tueksi.
-                  </p>
-                </div>
+            {/* Generation Mode Selector */}
+            <div className="border-2 border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-5">
+              <label className="block text-lg font-bold mb-3 text-indigo-900 dark:text-indigo-100">
+                📝 Mitä haluat luoda?
               </label>
+              <div className="space-y-3">
+                <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-800/30 transition-colors">
+                  <input
+                    type="radio"
+                    name="generationMode"
+                    value="quiz"
+                    checked={generationMode === 'quiz'}
+                    onChange={(e) => setGenerationMode(e.target.value as 'quiz')}
+                    className="mt-1 w-5 h-5 border-indigo-300 text-indigo-600 focus:ring-indigo-500 dark:border-indigo-600 dark:bg-gray-800"
+                  />
+                  <div className="flex-1">
+                    <div className="font-semibold text-indigo-900 dark:text-indigo-100">
+                      📚 Koe (2 vaikeustasoa)
+                    </div>
+                    <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                      Luo kaksi kysymyssarjaa: Helppo ja Normaali. Sopii kokeiden harjoitteluun.
+                    </p>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-800/30 transition-colors">
+                  <input
+                    type="radio"
+                    name="generationMode"
+                    value="flashcard"
+                    checked={generationMode === 'flashcard'}
+                    onChange={(e) => setGenerationMode(e.target.value as 'flashcard')}
+                    className="mt-1 w-5 h-5 border-purple-300 text-purple-600 focus:ring-purple-500 dark:border-purple-600 dark:bg-gray-800"
+                  />
+                  <div className="flex-1">
+                    <div className="font-semibold text-purple-900 dark:text-purple-100">
+                      🎴 Kortit (vain 1 sarja)
+                    </div>
+                    <p className="text-sm text-purple-700 dark:text-purple-300">
+                      Luo yksi korttisarja oppimiseen. Sisältää avoimia kysymyksiä ja yksityiskohtaisia selityksiä.
+                    </p>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-green-100 dark:hover:bg-green-800/30 transition-colors">
+                  <input
+                    type="radio"
+                    name="generationMode"
+                    value="both"
+                    checked={generationMode === 'both'}
+                    onChange={(e) => setGenerationMode(e.target.value as 'both')}
+                    className="mt-1 w-5 h-5 border-green-300 text-green-600 focus:ring-green-500 dark:border-green-600 dark:bg-gray-800"
+                  />
+                  <div className="flex-1">
+                    <div className="font-semibold text-green-900 dark:text-green-100">
+                      📚 + 🎴 Molemmat (2 koetta + 1 korttisarja)
+                    </div>
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      Luo sekä koesarjat että korttisarja. Kattavin vaihtoehto monipuoliseen harjoitteluun.
+                    </p>
+                  </div>
+                </label>
+              </div>
             </div>
 
             <div>
