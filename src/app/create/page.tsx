@@ -171,6 +171,12 @@ export default function CreatePage() {
 
   // Loading screen
   if (state === 'loading') {
+    const loadingMessage = generationMode === 'flashcard'
+      ? `1 korttisarja × ${examLength} kysymystä`
+      : generationMode === 'both'
+      ? `2 vaikeustasoa + 1 korttisarja × ${examLength} kysymystä`
+      : `2 vaikeustasoa × ${examLength} kysymystä`;
+
     return (
       <AuthGuard>
         <UserMenu />
@@ -181,7 +187,7 @@ export default function CreatePage() {
               <p className="text-xl font-bold text-indigo-700">
                 Luodaan kysymyssarjoja...
               </p>
-              <p className="text-gray-600 mt-2 font-medium">2 vaikeustasoa × {examLength} kysymystä</p>
+              <p className="text-gray-600 mt-2 font-medium">{loadingMessage}</p>
               <p className="text-gray-500 text-sm mt-1">Tämä kestää muutaman minuutin</p>
             </CardContent>
           </Card>
