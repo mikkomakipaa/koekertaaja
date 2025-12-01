@@ -328,41 +328,47 @@ export default function PlayBrowsePage() {
                   {/* Difficulty Buttons (Play mode) or Single Study Button (Study mode) */}
                   <div className="flex flex-wrap gap-2">
                     {studyMode === 'pelaa' ? (
-                      // Play mode: Show difficulty buttons
-                      availableDifficulties.map((difficulty) => {
-                        const set = group.sets.find(s => s.difficulty === difficulty);
-                        const colors = difficultyColors[difficulty];
-                        const icon = difficultyIcons[difficulty];
+                      // Play mode: Show difficulty buttons for quiz sets only
+                      availableDifficulties.length > 0 ? (
+                        availableDifficulties.map((difficulty) => {
+                          const set = group.sets.find(s => s.difficulty === difficulty && s.mode === 'quiz');
+                          const colors = difficultyColors[difficulty];
+                          const icon = difficultyIcons[difficulty];
 
-                        return (
-                          <button
-                            key={difficulty}
-                            onClick={() => set && router.push(`/play/${set.code}?mode=${studyMode}`)}
-                            className={`${colors.bg} ${colors.hover} text-white px-4 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-1.5`}
-                            aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
-                          >
-                            {icon}
-                            {difficultyLabels[difficulty]}
-                          </button>
-                        );
-                      })
+                          return (
+                            <button
+                              key={difficulty}
+                              onClick={() => set && router.push(`/play/${set.code}?mode=${studyMode}`)}
+                              className={`${colors.bg} ${colors.hover} text-white px-4 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-1.5`}
+                              aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
+                            >
+                              {icon}
+                              {difficultyLabels[difficulty]}
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Ei pelimuotoa saatavilla</p>
+                      )
                     ) : (
-                      // Study mode: Single button for all flashcards
-                      <button
-                        onClick={() => {
-                          const firstSet = group.sets[0];
-                          if (firstSet) {
-                            // Pass all set codes as comma-separated list
-                            const codes = group.sets.map(s => s.code).join(',');
-                            router.push(`/play/${firstSet.code}?mode=opettele&all=${codes}`);
-                          }
-                        }}
-                        className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2"
-                        aria-label="Opettele korttien avulla"
-                      >
-                        <Book size={20} weight="duotone" />
-                        Opettele
-                      </button>
+                      // Study mode: Single button for flashcards only
+                      groupHasFlashcards ? (
+                        <button
+                          onClick={() => {
+                            const flashcardSet = group.sets.find(s => s.mode === 'flashcard');
+                            if (flashcardSet) {
+                              router.push(`/play/${flashcardSet.code}?mode=opettele`);
+                            }
+                          }}
+                          className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2"
+                          aria-label="Opettele korttien avulla"
+                        >
+                          <Book size={20} weight="duotone" />
+                          Opettele
+                        </button>
+                      ) : (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Ei kortteja saatavilla</p>
+                      )
                     )}
                   </div>
                 </div>
