@@ -70,11 +70,27 @@ ${gradeNote}
 - true_false (arvaaminen, ei todellista palautusta)
 - sequential (ei toimi korttina)
 
-${material ? `MATERIAALI:\n${material}\n\n` : ''}KRIITTINEN VAATIMUS - AIHEIDEN TASAPAINO:
-1. ANALYSOI materiaali ja TUNNISTA 3-5 korkeantason aihealuetta (esim. "Grammar", "Vocabulary", "Pronunciation")
-2. JAKA kysymykset TASAISESTI kaikkien tunnistettujen aihealueiden kesken
-3. MERKITSE jokainen kysymys sen pääaihealueella "topic"-kenttään
-4. VARMISTA että kaikki aihealueet saavat tasapuolisen määrän kysymyksiä
+${material ? `MATERIAALI:\n${material}\n\n` : ''}════════════════════════════════════════════════════════════════
+⚠️  KRIITTISET VAATIMUKSET - PAKOLLISIA, EI NEUVOTELTAVISSA ⚠️
+════════════════════════════════════════════════════════════════
+
+1. AIHEIDEN TASAPAINO (TOPIC BALANCING):
+   • ANALYSOI materiaali ja TUNNISTA 3-5 korkeantason aihealuetta
+   • Esimerkkejä: "Grammar", "Vocabulary", "Pronunciation", "Reading"
+   • JOKA IKINEN kysymys TÄYTYY sisältää "topic"-kenttä
+   • JAKA kysymykset TASAISESTI kaikkien aihealueiden kesken
+   • Jos 3 aihetta + 15 kysymystä = 5 kysymystä per aihealue
+   • VARMISTA että JOKAINEN kysymys on merkitty aihealueella
+
+2. KYSYMYSTYYPPIEN RAJOITUKSET (FLASHCARD MODE):
+   • SALLITUT tyypit: fill_blank, short_answer, matching
+   • KIELLETYT tyypit: multiple_choice, true_false, sequential
+   • ⛔ ÄLÄ KOSKAAN luo multiple_choice kysymyksiä
+   • ⛔ ÄLÄ KOSKAAN luo true_false kysymyksiä
+   • ⛔ ÄLÄ KOSKAAN luo sequential kysymyksiä
+   • Nämä tyypit HYLÄTÄÄN automaattisesti validoinnissa
+
+════════════════════════════════════════════════════════════════
 
 TÄRKEÄÄ - KORTTIEN MUOTO:
 
