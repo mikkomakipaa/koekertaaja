@@ -160,11 +160,23 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
   }
 ]
 
-MUISTA:
-- NOUDATA TARKASTI kysymystyyppien jakaumaa (60/30/10)
-- Luo TÄSMÄLLEEN ${questionCount} kysymystä
-- Jokainen kysymys keskittyy YHTEEN ASIAAN
-- Selitykset ovat OPETTAVAISIA ja MUISTAMISEN TUKENA
-- ÄLÄ käytä multiple_choice, true_false tai sequential
+════════════════════════════════════════════════════════════════
+✅ TARKISTUSLISTA ENNEN VASTAAMISTA
+════════════════════════════════════════════════════════════════
+
+Varmista että:
+✓ JOKAINEN kysymys sisältää "topic"-kentän (ei yhtään tyhjää!)
+✓ Kysymykset jakautuvat TASAISESTI aihealueiden kesken
+✓ Käytät VAIN: fill_blank (60%), short_answer (30%), matching (10%)
+✓ Et käytä KOSKAAN: multiple_choice, true_false, sequential
+✓ Loit TÄSMÄLLEEN ${questionCount} kysymystä
+✓ Jokainen kysymys keskittyy YHTEEN ASIAAN
+✓ Selitykset ovat OPETTAVAISIA (vähintään 20 merkkiä)
+✓ Vastaat PELKÄLLÄ JSON-taulukolla, ei muuta tekstiä
+
+⚠️ KYSYMYKSET ILMAN TOPIC-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI
+⚠️ MULTIPLE_CHOICE JA TRUE_FALSE KYSYMYKSET HYLÄTÄÄN AUTOMAATTISESTI
+
+════════════════════════════════════════════════════════════════
 `;
 }
