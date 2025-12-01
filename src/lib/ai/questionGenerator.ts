@@ -226,20 +226,25 @@ export async function generateQuestions(
     );
   }
 
-  // Fail only if we don't have enough valid questions (at least 70% of requested)
-  const minRequiredQuestions = Math.ceil(questionCount * 0.7);
+  // Fail only if we don't have enough valid questions
+  // For flashcard mode, be more lenient since we actively filter out question types
+  const requiredPercentage = mode === 'flashcard' ? 0.4 : 0.7; // 40% for flashcard, 70% for quiz
+  const minRequiredQuestions = Math.ceil(questionCount * requiredPercentage);
+
   if (validQuestions.length < minRequiredQuestions) {
     logger.error(
       {
         validQuestions: validQuestions.length,
         requestedQuestions: questionCount,
         minRequired: minRequiredQuestions,
+        requiredPercentage: `${requiredPercentage * 100}%`,
+        mode,
         invalidCount: invalidQuestions.length,
         excludedFlashcardCount: excludedFlashcardTypes.length,
       },
       'Too many invalid questions - insufficient valid questions generated'
     );
-    throw new Error(`AI generated too few valid questions (${validQuestions.length}/${questionCount}). Please try again.`);
+    throw new Error(`AI generated too few valid questions (${validQuestions.length}/${questionCount}). Please try again. (Required: ${minRequiredQuestions}+)`);
   }
 
   parsedQuestions = validQuestions;
