@@ -182,12 +182,23 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
   }
 ]
 
-MUISTA:
-- NOUDATA TARKASTI kysymystyyppien jakaumaa (70/20/10)
-- Luo TÄSMÄLLEEN ${questionCount} kysymystä
-- Käytä LaTeX-merkintää matematiikalle: $$2x + 3$$
-- Jokainen kysymys keskittyy YHTEEN ASIAAN
-- Näytä LASKUVAIHEET selityksissä
-- ÄLÄ käytä multiple_choice, true_false tai sequential
+════════════════════════════════════════════════════════════════
+✅ TARKISTUSLISTA ENNEN VASTAAMISTA
+════════════════════════════════════════════════════════════════
+
+Varmista että:
+✓ JOKAINEN kysymys sisältää "topic"-kentän (ei yhtään tyhjää!)
+✓ Kysymykset jakautuvat TASAISESTI aihealueiden kesken
+✓ Käytät VAIN: fill_blank (70%), matching (20%), short_answer (10%)
+✓ Et käytä KOSKAAN: multiple_choice, true_false, sequential
+✓ Loit TÄSMÄLLEEN ${questionCount} kysymystä
+✓ Käytät LaTeX-merkintää: $$2x + 3$$
+✓ Näytät LASKUVAIHEET selityksissä (vähintään 30 merkkiä)
+✓ Vastaat PELKÄLLÄ JSON-taulukolla, ei muuta tekstiä
+
+⚠️ KYSYMYKSET ILMAN TOPIC-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI
+⚠️ MULTIPLE_CHOICE JA TRUE_FALSE KYSYMYKSET HYLÄTÄÄN AUTOMAATTISESTI
+
+════════════════════════════════════════════════════════════════
 `;
 }
