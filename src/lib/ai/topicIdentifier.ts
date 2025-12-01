@@ -116,7 +116,7 @@ TÄRKEÄÄ:
   );
 
   // Call AI with smaller token limit (topic identification is simpler)
-  const response = await generateWithClaude(messageContent, { maxTokens: 1000 });
+  const response = await generateWithClaude(messageContent, 1000);
 
   // Parse JSON response
   const cleanContent = response.content.replace(/```json|```/g, '').trim();
