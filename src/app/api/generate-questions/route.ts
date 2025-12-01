@@ -186,6 +186,19 @@ export async function POST(request: NextRequest) {
       'Topics identified successfully'
     );
 
+    // Calculate flashcard question count: ~10 cards per topic
+    const CARDS_PER_TOPIC = 10;
+    const flashcardQuestionCount = topicAnalysis.topics.length * CARDS_PER_TOPIC;
+
+    logger.info(
+      {
+        topicCount: topicAnalysis.topics.length,
+        cardsPerTopic: CARDS_PER_TOPIC,
+        totalFlashcards: flashcardQuestionCount,
+      },
+      'Calculated flashcard generation count'
+    );
+
     // Define all difficulty levels
     const difficulties: Difficulty[] = ['helppo', 'normaali'];
 
