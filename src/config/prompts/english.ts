@@ -272,13 +272,17 @@ Väärät vastaukset tulee olla uskottavia:
 - Sekoitettavia muotoja (esim. "their/there/they're")
 - Samanlaisia sanoja (esim. "weather/whether")
 
+════════════════════════════════════════════════════════════════
+📋 JSON VASTAUSMUOTO - NOUDATA TARKASTI
+════════════════════════════════════════════════════════════════
+
 Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEKSTIÄ:
 
 [
   {
     "question": "kysymysteksti suomeksi",
     "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching" | "sequential",
-    "topic": "Grammar" | "Vocabulary" | "Reading Comprehension", // PAKOLLINEN - korkeantason aihealue (3-5 aihealuetta)
+    "topic": "Grammar" | "Vocabulary" | "Reading Comprehension", // ⚠️ PAKOLLINEN - JOKA kysymyksessä
     "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"], // PAKOLLINEN multiple_choice kysymyksille, TÄYTYY olla 4 vaihtoehtoa
     "pairs": [{"left": "vasen", "right": "oikea"}], // PAKOLLINEN matching kysymyksille, TÄYTYY olla vähintään 4 paria
     "items": ["kohta1", "kohta2", "kohta3", "kohta4"], // PAKOLLINEN sequential kysymyksille
