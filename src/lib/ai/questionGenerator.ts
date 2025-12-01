@@ -201,11 +201,12 @@ export async function generateQuestions(
     );
   }
 
-  // Check topic coverage - warn if most questions are missing topics
-  const questionsWithTopics = validQuestions.filter(q => q.topic && q.topic.trim().length > 0).length;
+  // Check topic coverage - assign default topic if missing
+  let questionsWithTopics = validQuestions.filter(q => q.topic && q.topic.trim().length > 0).length;
   const topicCoverage = validQuestions.length > 0 ? (questionsWithTopics / validQuestions.length) * 100 : 0;
 
-  if (topicCoverage < 70) {
+  // If most questions are missing topics, assign a default topic based on subject
+  if (topicCoverage < 70 && validQuestions.length > 0) {
     logger.warn(
       {
         questionsWithTopics,
@@ -213,7 +214,24 @@ export async function generateQuestions(
         topicCoverage: `${topicCoverage.toFixed(1)}%`,
         mode,
       },
-      'Low topic coverage - most questions missing topic tags. Topic-balanced sampling will fall back to random selection.'
+      'Low topic coverage detected - assigning default topic to questions missing topics'
+    );
+
+    // Assign a default topic based on subject
+    const defaultTopic = subject || 'General';
+    validQuestions.forEach(q => {
+      if (!q.topic || q.topic.trim().length === 0) {
+        q.topic = defaultTopic;
+      }
+    });
+
+    questionsWithTopics = validQuestions.length;
+    logger.info(
+      {
+        assignedTopic: defaultTopic,
+        questionsUpdated: validQuestions.length,
+      },
+      'Assigned default topic to all questions'
     );
   } else {
     logger.info(
