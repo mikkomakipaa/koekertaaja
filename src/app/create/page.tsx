@@ -402,7 +402,7 @@ export default function CreatePage() {
 
             <div>
               <label className="block text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">
-                📊 Kokeen pituus (kysymystä per vaikeustaso)
+                📊 Sarjan pituus (kysymystä per sarja)
               </label>
               <div className="space-y-4">
                 <Slider
@@ -420,7 +420,7 @@ export default function CreatePage() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                Jokainen vaikeustaso sisältää tämän määrän kysymyksiä
+                Kukin luotava kysymyssarja sisältää tämän määrän kysymyksiä
               </p>
             </div>
 
