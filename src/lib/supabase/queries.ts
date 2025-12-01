@@ -97,3 +97,23 @@ export async function getAllQuestionSets(): Promise<QuestionSet[]> {
 
   return (data || []) as QuestionSet[];
 }
+
+/**
+ * Get unique topics for a question set (for flashcard topic selection)
+ */
+export async function getQuestionSetTopics(questionSetId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('questions')
+    .select('topic')
+    .eq('question_set_id', questionSetId)
+    .not('topic', 'is', null);
+
+  if (error) {
+    console.error('Error fetching topics:', error);
+    return [];
+  }
+
+  // Extract unique topics
+  const topics = [...new Set((data || []).map(q => q.topic).filter(Boolean))];
+  return topics as string[];
+}
