@@ -257,6 +257,86 @@ export default function PlayPage() {
       );
     }
 
+    // Show topic selection if topics are available and none is selected
+    if (availableTopics.length > 1 && !selectedTopic) {
+      return (
+        <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+          <div className="max-w-2xl mx-auto p-6 md:p-12">
+            <div className="mb-8">
+              <Book size={32} weight="duotone" className="text-purple-600 dark:text-purple-400 mb-3" />
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                Valitse harjoiteltava aihe
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Tämä korttisarja sisältää {availableTopics.length} aihetta. Valitse mitä haluat harjoitella.
+              </p>
+            </div>
+
+            <div className="grid gap-3">
+              {/* All Topics Option */}
+              <button
+                onClick={() => setSelectedTopic('ALL')}
+                className="bg-white dark:bg-gray-800 border-2 border-purple-500 dark:border-purple-400 rounded-xl p-6 text-left hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+                      Kaikki aiheet
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Harjoittele kaikkia aiheita ({flashcards.length} korttia)
+                    </p>
+                  </div>
+                  <div className="text-purple-600 dark:text-purple-400 group-hover:translate-x-1 transition-transform">
+                    →
+                  </div>
+                </div>
+              </button>
+
+              {/* Individual Topic Options */}
+              {availableTopics.map((topic) => {
+                const topicCardCount = flashcards.filter(f =>
+                  questionSet?.questions.find(q => q.id === f.questionId)?.topic === topic
+                ).length;
+
+                return (
+                  <button
+                    key={topic}
+                    onClick={() => setSelectedTopic(topic)}
+                    className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 text-left hover:border-purple-500 dark:hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+                          {topic}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {topicCardCount} korttia
+                        </p>
+                      </div>
+                      <div className="text-gray-400 dark:text-gray-500 group-hover:text-purple-600 dark:group-hover:text-purple-400 group-hover:translate-x-1 transition-all">
+                        →
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-8 text-center">
+              <Button
+                onClick={() => router.push('/play')}
+                variant="ghost"
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+              >
+                ← Takaisin
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // Strip difficulty suffix from name for flashcard mode
     const stripDifficultySuffix = (name: string): string => {
       const suffixes = [' - Helppo', ' - Normaali', ' - Vaikea'];
