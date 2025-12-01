@@ -53,7 +53,8 @@ export function getEnglishPrompt(
   difficulty: Difficulty,
   questionCount: number,
   grade?: number,
-  material?: string
+  material?: string,
+  identifiedTopics?: string[]
 ): string {
   // Finnish curriculum-based content for A1-English
   const gradeContent = {
