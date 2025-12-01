@@ -83,9 +83,9 @@ export async function generateQuestions(
   if (mode === 'flashcard') {
     // Use flashcard-optimized prompts (no difficulty, optimized for memorization)
     if (subjectLower === 'english' || subjectLower === 'englanti') {
-      prompt = getEnglishFlashcardsPrompt(questionCount, grade, materialText);
+      prompt = getEnglishFlashcardsPrompt(questionCount, grade, materialText, identifiedTopics);
     } else if (subjectLower === 'math' || subjectLower === 'matematiikka') {
-      prompt = getMathFlashcardsPrompt(questionCount, grade, materialText);
+      prompt = getMathFlashcardsPrompt(questionCount, grade, materialText, identifiedTopics);
     } else {
       // For other subjects, use generic quiz prompt for now
       prompt = getGenericPrompt(subject, difficulty, questionCount, grade, materialText);
@@ -93,9 +93,9 @@ export async function generateQuestions(
   } else {
     // Use quiz prompts (original behavior)
     if (subjectLower === 'english' || subjectLower === 'englanti') {
-      prompt = getEnglishPrompt(difficulty, questionCount, grade, materialText);
+      prompt = getEnglishPrompt(difficulty, questionCount, grade, materialText, identifiedTopics);
     } else if (subjectLower === 'math' || subjectLower === 'matematiikka') {
-      prompt = getMathPrompt(difficulty, questionCount, grade, materialText);
+      prompt = getMathPrompt(difficulty, questionCount, grade, materialText, identifiedTopics);
     } else {
       prompt = getGenericPrompt(subject, difficulty, questionCount, grade, materialText);
     }
