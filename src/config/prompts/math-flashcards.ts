@@ -11,7 +11,8 @@ const FLASHCARD_DISTRIBUTION = {
 export function getMathFlashcardsPrompt(
   questionCount: number,
   grade?: number,
-  material?: string
+  material?: string,
+  identifiedTopics?: string[]
 ): string {
   // Finnish curriculum-based content for each grade
   const gradeContent = {
