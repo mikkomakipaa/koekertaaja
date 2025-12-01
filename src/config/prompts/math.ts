@@ -271,13 +271,25 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
   }
 ]
 
+════════════════════════════════════════════════════════════════
+✅ TARKISTUSLISTA ENNEN VASTAAMISTA
+════════════════════════════════════════════════════════════════
+
 Varmista että:
-- Jokainen kysymys on uniikki
-- Kaikki laskut on tarkistettu ja ovat oikein
-- Väärät vastaukset ovat uskottavia (yleisiä laskuvirheitä)
-- Selitykset näyttävät laskuaskeleet selkeästi
-- Kysymykset perustuvat annettuun materiaaliin ${gradeContext ? `ja ${grade}. luokan opetussuunnitelmaan` : ''}
-- LaTeX-merkintä on oikein muotoiltu
-- Numeeristen vastausten kaikki hyväksyttävät muodot on listattu
-- KYSYMYSTYYPPIEN JAKAUMA vastaa vaikeustason ohjeita`;
+✓ JOKAINEN kysymys sisältää "topic"-kentän (ei yhtään tyhjää!)
+✓ Kysymykset jakautuvat TASAISESTI aihealueiden kesken
+✓ KYSYMYSTYYPPIEN JAKAUMA vastaa vaikeustason ohjeita (${difficulty})
+✓ Kaikki laskut on tarkistettu ja ovat OIKEIN
+✓ Väärät vastaukset ovat uskottavia (yleisiä laskuvirheitä)
+✓ Selitykset näyttävät laskuaskeleet selkeästi
+✓ Kysymykset perustuvat materiaaliin ${gradeContext ? `ja ${grade}. luokan opetussuunnitelmaan` : ''}
+✓ LaTeX-merkintä on oikein muotoiltu ($$...$$)
+✓ Numeeristen vastausten kaikki hyväksyttävät muodot listattu
+✓ Sequential kysymyksillä oikeat indeksit (0-based)
+✓ Jokainen kysymys on uniikki
+✓ Vastaat PELKÄLLÄ JSON-taulukolla, ei muuta tekstiä
+
+⚠️ KYSYMYKSET ILMAN TOPIC-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI
+
+════════════════════════════════════════════════════════════════`;
 }
