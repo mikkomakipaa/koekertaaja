@@ -97,55 +97,78 @@ Each card must be one of these three types. See examples below.
 
 ---
 
-TÄRKEÄÄ - KORTTIEN MUOTO:
+## Card Type Examples
 
-1. FILL_BLANK (täydennä):
-   - Yksi selkeä puuttuva kohta
-   - Konteksti auttaa muistamaan
-   - Vastaus on YKSI SANA tai LYHYT ILMAISU
+### 1. FILL_BLANK (Fill in the Blank)
+Perfect for vocabulary and grammar practice.
 
-   Esimerkki:
-   Kysymys: "I ___ (mennä) to school every day."
-   Vastaus: "go"
-   Hyväksytyt: ["go", "walk", "drive"] (jos sopii kontekstiin)
-   Selitys: "Preesensmuoto. 'I' -pronominin kanssa käytetään verbin perusmuotoa."
+**Structure:**
+- One clear blank to fill
+- Context helps student remember
+- Answer is ONE WORD or SHORT PHRASE
 
-2. SHORT_ANSWER (lyhyt vastaus):
-   - Avoin kysymys joka vaatii tuottamista
-   - Vastaus on 1-3 sanaa tai lyhyt lause
-   - Testaa ymmärrystä ja kykyä muodostaa vastaus
+**Example:**
+```
+Question: "I ___ (mennä) to school every day."
+Answer: "go"
+Also accept: ["go", "walk", "drive"] (if contextually correct)
+Explanation: "Present tense form. With 'I' we use the base verb form."
+```
 
-   Esimerkki:
-   Kysymys: "Miten muodostetaan kysymyslause verbillä 'do'?"
-   Vastaus: "Do/Does + subject + verb"
-   Selitys: "Kysymyslauseessa aputermi 'do/does' tulee ensimmäiseksi, sitten subjekti ja lopuksi pääverbi perusmuodossa."
+---
 
-3. MATCHING (parit):
-   - Sanat ja niiden määritelmät/käännökset
-   - Verbit ja niiden muodot
-   - Lauseet ja niiden käännökset
-   - VÄHINTÄÄN 3 paria, ENINTÄÄN 6 paria
+### 2. SHORT_ANSWER
+Tests deeper understanding and active production.
 
-   Esimerkki:
-   Kysymys: "Yhdistä englanninkieliset sanat suomenkielisiin käännöksiin:"
-   Parit: [
-     {"left": "happy", "right": "iloinen"},
-     {"left": "sad", "right": "surullinen"},
-     {"left": "angry", "right": "vihainen"}
-   ]
-   Selitys: "Perustunteiden sanasto. Nämä ovat yleisimpiä adjektiiveja tunteiden ilmaisuun."
+**Structure:**
+- Open question requiring thought
+- Answer is 1-3 words or short sentence
+- Student must construct the answer
 
-SELITYSTEN KIRJOITTAMINEN:
-- Selitä MIKSI vastaus on oikea
-- Anna KONTEKSTI ja ESIMERKKEJÄ
-- Käytä MUISTISÄÄNTÖJÄ kun mahdollista
-- Liitä OPETUSSUUNNITELMAN AIHEESEEN
-- Vähintään 20 merkkiä, enintään 300 merkkiä
+**Example:**
+```
+Question: "Miten muodostetaan kysymyslause verbillä 'do'?"
+Answer: "Do/Does + subject + verb"
+Explanation: "In questions, the auxiliary 'do/does' comes first, then subject, then main verb in base form."
+```
 
-VASTAUSVAIHTOEHTOJEN KIELI:
-- Sanaston käännökset: vastaukset ENGLANNIKSI tai SUOMEKSI (riippuen käännössuunnasta)
-- Verbimuodot/sanojen valinta lauseeseen: vastaukset ENGLANNIKSI
-- Kielioppisäännöt ja teoria: vastaukset SUOMEKSI
+---
+
+### 3. MATCHING (Matching Pairs)
+Connects related concepts.
+
+**Structure:**
+- Words and definitions/translations
+- Verb forms
+- Sentences and translations
+- Use 3-6 pairs (not too many!)
+
+**Example:**
+```
+Question: "Yhdistä englanninkieliset sanat suomenkielisiin käännöksiin:"
+Pairs: [
+  {"left": "happy", "right": "iloinen"},
+  {"left": "sad", "right": "surullinen"},
+  {"left": "angry", "right": "vihainen"}
+]
+Explanation: "Basic emotions vocabulary. These are the most common adjectives for expressing feelings."
+```
+
+---
+
+## Writing Great Explanations
+
+Help students understand WHY, not just WHAT:
+- Explain why the answer is correct
+- Give context and examples
+- Add memory tricks when possible
+- Connect to curriculum topics
+- Keep it friendly: 20-300 characters
+
+**Answer Language:**
+- Vocabulary translations: English OR Finnish (depending on direction)
+- Verb forms/sentence completion: English
+- Grammar rules/theory: Finnish
 
 ════════════════════════════════════════════════════════════════
 📋 JSON VASTAUSMUOTO - NOUDATA TARKASTI
