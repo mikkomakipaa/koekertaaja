@@ -5,6 +5,7 @@ import { getMathPrompt } from '@/config/prompts/math';
 import { getGenericPrompt } from '@/config/prompts/generic';
 import { getEnglishFlashcardsPrompt } from '@/config/prompts/english-flashcards';
 import { getMathFlashcardsPrompt } from '@/config/prompts/math-flashcards';
+import { getGenericFlashcardsPrompt } from '@/config/prompts/generic-flashcards';
 import { shuffleArray } from '@/lib/utils';
 import { aiQuestionSchema, aiQuestionArraySchema } from '@/lib/validation/schemas';
 import { createLogger } from '@/lib/logger';
