@@ -153,7 +153,7 @@ Connect concepts and definitions.
 - Use 3-6 pairs (not too many!)
 
 **Example:**
-```
+\`\`\`
 Question: "Yhdistä geometriset käsitteet niiden määritelmiin:"
 Pairs: [
   {"left": "Suorakulmio", "right": "Neljä kulmaa, kaikki 90 astetta"},
@@ -161,7 +161,7 @@ Pairs: [
   {"left": "Kolmio", "right": "Kolme kulmaa, kulmien summa 180 astetta"}
 ]
 Explanation: "Basic geometric shapes. A square is a special rectangle where all sides are equal."
-```
+\`\`\`
 
 ---
 
