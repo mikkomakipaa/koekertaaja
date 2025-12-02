@@ -170,39 +170,41 @@ Help students understand WHY, not just WHAT:
 - Verb forms/sentence completion: English
 - Grammar rules/theory: Finnish
 
-════════════════════════════════════════════════════════════════
-📋 JSON VASTAUSMUOTO - NOUDATA TARKASTI
-════════════════════════════════════════════════════════════════
+---
 
-Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEKSTIÄ:
+## JSON Output Format
 
+**Return ONLY a JSON array** (no other text):
+
+\`\`\`json
 [
   {
-    "question": "kysymysteksti suomeksi (voi sisältää LaTeX-merkintää)",
-    "type": "fill_blank" | "short_answer" | "matching",  // VAIN NÄMÄ KOLME TYYPPIÄ
-    "topic": "Grammar" | "Vocabulary" | "Pronunciation", // ⚠️ PAKOLLINEN - JOKA kysymyksessä
-    "correct_answer": "oikea vastaus",
-    "acceptable_answers": ["vaihtoehtoinen muoto 1", "vaihtoehtoinen muoto 2"], // vapaaehtoinen
-    "pairs": [{"left": "kohta1", "right": "kohta2"}], // vain matching-tyypille, 3-6 paria
-    "explanation": "Selkeä ja opettavainen selitys (vähintään 20 merkkiä). Sisällytä esimerkkejä ja kontekstia."
+    "question": "Question text in Finnish (can include LaTeX like $$x^2$$)",
+    "type": "fill_blank" | "short_answer" | "matching",
+    "topic": "Grammar",  // Required! Use exact topic name from list above
+    "correct_answer": "the right answer",
+    "acceptable_answers": ["alternative 1", "alternative 2"],  // optional
+    "pairs": [{"left": "item1", "right": "item2"}],  // only for matching, 3-6 pairs
+    "explanation": "Clear, helpful explanation (20-300 chars). Include examples and context."
   }
 ]
+\`\`\`
 
-════════════════════════════════════════════════════════════════
-✅ TARKISTUSLISTA ENNEN VASTAAMISTA
-════════════════════════════════════════════════════════════════
+---
 
-Varmista että:
-✓ JOKAINEN kysymys sisältää "topic"-kentän (ei yhtään tyhjää!)
-✓ Kysymykset jakautuvat TASAISESTI aihealueiden kesken
-✓ JOKA kysymys on tyypiltään: fill_blank (60%), short_answer (30%), TAI matching (10%)
-✓ Loit TÄSMÄLLEEN ${questionCount} kysymystä
-✓ Jokainen kysymys keskittyy YHTEEN ASIAAN
-✓ Selitykset ovat OPETTAVAISIA (vähintään 20 merkkiä)
-✓ Vastaat PELKÄLLÄ JSON-taulukolla, ei muuta tekstiä
+## Quick Checklist
 
-⚠️ KYSYMYKSET ILMAN TOPIC-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI
+Before you respond, verify:
+- ✓ Every card has a topic tag (exact spelling from list)
+- ✓ Cards are balanced across topics (~10 per topic)
+- ✓ Card types follow ratio: 60% fill_blank, 30% short_answer, 10% matching
+- ✓ Created exactly ${questionCount} cards total
+- ✓ Each question focuses on ONE concept
+- ✓ Explanations are helpful and friendly (20+ chars)
+- ✓ Output is pure JSON (no extra text)
 
-════════════════════════════════════════════════════════════════
+**Remember:** Cards without topic tags will be rejected automatically.
+
+---
 `;
 }
