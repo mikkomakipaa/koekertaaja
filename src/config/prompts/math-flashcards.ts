@@ -74,17 +74,13 @@ Kysymykset on optimoitu OPPIMISEEN JA MUISTAMISEEN, ei testaamiseen. Keskity:
 
 ${gradeContext}
 
-KYSYMYSTYYPPIEN JAKAUMA (Korttitila):
+KÄYTÄ VAIN NÄITÄ KOLMEA KYSYMYSTYYPPIÄ:
 - ${FLASHCARD_DISTRIBUTION.fill_blank}% fill_blank (täydennä - kaavat, laskut, säännöt)
 - ${FLASHCARD_DISTRIBUTION.matching}% matching (parit - käsitteet ja määritelmät)
-- ${FLASHCARD_DISTRIBUTION.short_answer}% short_answer (selitykset ja perusteel
-ut)
-${gradeNote}
+- ${FLASHCARD_DISTRIBUTION.short_answer}% short_answer (selitykset ja perustelut)
 
-ÄLÄ KÄYTÄ:
-- multiple_choice (passiivinen tunnistaminen)
-- true_false (arvaaminen)
-- sequential (ei toimi korttina)
+TÄRKEÄÄ: Korttiopettelussa käytetään VAIN näitä kolmea tyyppiä.
+${gradeNote}
 
 ${material ? `MATERIAALI:\n${material}\n\n` : ''}════════════════════════════════════════════════════════════════
 ⚠️  KRIITTISET VAATIMUKSET - PAKOLLISIA, EI NEUVOTELTAVISSA ⚠️
