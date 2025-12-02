@@ -99,13 +99,15 @@ ${topicsText}
    • Älä suosi yhtä aihealuetta toisten kustannuksella
    • Sallittu vaihtelu: ±1 kysymys per aihealue (9-11 kysymystä)
 
-2. KYSYMYSTYYPPIEN RAJOITUKSET (FLASHCARD MODE):
-   • SALLITUT tyypit: fill_blank, short_answer, matching
-   • KIELLETYT tyypit: multiple_choice, true_false, sequential
-   • ⛔ ÄLÄ KOSKAAN luo multiple_choice kysymyksiä
-   • ⛔ ÄLÄ KOSKAAN luo true_false kysymyksiä
-   • ⛔ ÄLÄ KOSKAAN luo sequential kysymyksiä
-   • Nämä tyypit HYLÄTÄÄN automaattisesti validoinnissa
+2. KYSYMYSTYYPIT (FLASHCARD MODE):
+
+   KÄYTÄ VAIN NÄITÄ KOLMEA TYYPPIÄ:
+   • fill_blank (60% kysymyksistä)
+   • short_answer (30% kysymyksistä)
+   • matching (10% kysymyksistä)
+
+   JOKA IKINEN kysymys TÄYTYY olla yksi näistä kolmesta tyypistä.
+   Näet esimerkit näistä tyypeistä alla.
 
 ════════════════════════════════════════════════════════════════
 
