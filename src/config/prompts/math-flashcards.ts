@@ -174,11 +174,11 @@ Explain the "why" and "how."
 - Answer is 3-10 words
 
 **Example:**
-```
+\`\`\`
 Question: "Miksi kertolaskussa lukujen järjestyksellä ei ole väliä? (esim. 3 × 4 = 4 × 3)"
 Answer: "Kertolaskun vaihdantalaki"
 Explanation: "The commutative law of multiplication: a × b = b × a. This means 3 × 4 = 12 and 4 × 3 = 12. Think: 3 boxes with 4 apples = 4 boxes with 3 apples."
-```
+\`\`\`
 
 ---
 
