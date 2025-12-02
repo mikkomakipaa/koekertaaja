@@ -120,26 +120,26 @@ Perfect for formulas, calculations, and rules.
 **Examples:**
 
 **Calculation:**
-```
+\`\`\`
 Question: "$$8 \\times 7 = ____$$"
 Answer: "56"
 Explanation: "Times table 7: 8 × 7 = 56. Memory trick: 7 × 8 is same as 7 × 10 - 7 × 2 = 70 - 14 = 56."
-```
+\`\`\`
 
 **Formula:**
-```
+\`\`\`
 Question: "Suorakulmion pinta-ala lasketaan kaavalla: Pinta-ala = ____ × ____"
 Answer: "leveys × korkeus"
 Also accept: ["leveys × korkeus", "l × k", "pituus × leveys", "$$l \\times k$$"]
 Explanation: "Rectangle area = width × height. Example: if width is 5 cm and height is 3 cm, then area = 5 × 3 = 15 cm²."
-```
+\`\`\`
 
 **Simple Equation:**
-```
+\`\`\`
 Question: "Ratkaise: $$x + 5 = 12$$, niin $$x = ____$$"
 Answer: "7"
 Explanation: "Subtract 5 from both sides: x + 5 - 5 = 12 - 5, so x = 7. Check: 7 + 5 = 12 ✓"
-```
+\`\`\`
 
 ---
 
