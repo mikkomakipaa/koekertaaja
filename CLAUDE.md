@@ -194,11 +194,15 @@ src/
   - Grade 5: Balanced mix (50% multiple_choice in helppo, 35% in normaali)
   - Grade 6: More open-ended (45% multiple_choice in helppo, 25% + 40% fill_blank in normaali)
 - **Flashcard optimization**:
-  - English: 60% fill_blank, 30% short_answer, 10% matching
-  - Math: 70% fill_blank, 20% matching, 10% short_answer
-  - Excludes: multiple_choice, true_false, sequential (passive recognition)
-  - Focus: Active recall, memorization techniques, clear explanations
-  - Also uses topic-balanced generation
+  - **English**: 60% fill_blank, 30% short_answer, 10% matching
+  - **Math**: 70% fill_blank, 20% matching, 10% short_answer
+  - **Generic (content subjects)**: 50% fill_blank, 30% short_answer, 20% matching
+  - **Kid-friendly prompts**: Clean markdown format with positive-only instructions
+  - **Excludes**: multiple_choice, true_false, sequential (passive recognition)
+  - **Focus**: Active recall, memorization techniques, clear explanations
+  - **Topic selection**: Users can choose specific topics to practice
+  - **Simplified UI**: Result view shows only explanation (no redundant answer display)
+  - Also uses topic-balanced generation (~10 cards per topic)
 - Subject-specific prompts: `src/config/prompts/{subject}.ts`
 - Multimodal: Supports PDF (document type) and images
 - Response validated with Zod schemas (graceful failure: accepts 70%+ valid questions)
