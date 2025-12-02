@@ -203,39 +203,41 @@ Help students understand the process:
 - Include a CHECK at the end
 - Keep it clear: 30-400 characters
 
-════════════════════════════════════════════════════════════════
-📋 JSON VASTAUSMUOTO - NOUDATA TARKASTI
-════════════════════════════════════════════════════════════════
+---
 
-Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEKSTIÄ:
+## JSON Output Format
 
+**Return ONLY a JSON array** (no other text):
+
+\`\`\`json
 [
   {
-    "question": "kysymysteksti (voi sisältää LaTeX-merkintää $$...$$)",
-    "type": "fill_blank" | "matching" | "short_answer",  // VAIN NÄMÄ KOLME TYYPPIÄ
-    "topic": "Laskutoimitukset" | "Geometria" | "Luvut", // ⚠️ PAKOLLINEN - JOKA kysymyksessä
-    "correct_answer": "oikea vastaus (numero tai matemaattinen ilmaisu)",
-    "acceptable_answers": ["vaihtoehtoinen muoto 1", "vaihtoehtoinen muoto 2"], // vapaaehtoinen
-    "pairs": [{"left": "käsite", "right": "määritelmä"}], // vain matching-tyypille, 3-6 paria
-    "explanation": "Selkeä selitys laskuvaiheilla ja muistisäännöillä (vähintään 30 merkkiä)"
+    "question": "Question text (can include LaTeX like $$2x + 3$$)",
+    "type": "fill_blank" | "matching" | "short_answer",
+    "topic": "Laskutoimitukset",  // Required! Use exact topic name from list above
+    "correct_answer": "the right answer (number or math expression)",
+    "acceptable_answers": ["alternative 1", "alternative 2"],  // optional
+    "pairs": [{"left": "concept", "right": "definition"}],  // only for matching, 3-6 pairs
+    "explanation": "Clear explanation with steps and memory tricks (30+ chars)"
   }
 ]
+\`\`\`
 
-════════════════════════════════════════════════════════════════
-✅ TARKISTUSLISTA ENNEN VASTAAMISTA
-════════════════════════════════════════════════════════════════
+---
 
-Varmista että:
-✓ JOKAINEN kysymys sisältää "topic"-kentän (ei yhtään tyhjää!)
-✓ Kysymykset jakautuvat TASAISESTI aihealueiden kesken
-✓ JOKA kysymys on tyypiltään: fill_blank (70%), matching (20%), TAI short_answer (10%)
-✓ Loit TÄSMÄLLEEN ${questionCount} kysymystä
-✓ Käytät LaTeX-merkintää: $$2x + 3$$
-✓ Näytät LASKUVAIHEET selityksissä (vähintään 30 merkkiä)
-✓ Vastaat PELKÄLLÄ JSON-taulukolla, ei muuta tekstiä
+## Quick Checklist
 
-⚠️ KYSYMYKSET ILMAN TOPIC-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI
+Before you respond, verify:
+- ✓ Every card has a topic tag (exact spelling from list)
+- ✓ Cards are balanced across topics (~10 per topic)
+- ✓ Card types follow ratio: 70% fill_blank, 20% matching, 10% short_answer
+- ✓ Created exactly ${questionCount} cards total
+- ✓ Using LaTeX notation for math: `$$2x + 3$$`
+- ✓ Showing CALCULATION STEPS in explanations (30+ chars)
+- ✓ Output is pure JSON (no extra text)
 
-════════════════════════════════════════════════════════════════
+**Remember:** Cards without topic tags will be rejected automatically.
+
+---
 `;
 }
