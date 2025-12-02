@@ -88,8 +88,8 @@ export async function generateQuestions(
     } else if (subjectLower === 'math' || subjectLower === 'matematiikka') {
       prompt = getMathFlashcardsPrompt(questionCount, grade, materialText, identifiedTopics);
     } else {
-      // For other subjects, use generic quiz prompt for now
-      prompt = getGenericPrompt(subject, difficulty, questionCount, grade, materialText);
+      // Use generic flashcard prompt for all other content subjects
+      prompt = getGenericFlashcardsPrompt(questionCount, grade, materialText, identifiedTopics);
     }
   } else {
     // Use quiz prompts (original behavior)
