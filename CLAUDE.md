@@ -281,6 +281,26 @@ Run `supabase/migrations/20250103_initial_schema.sql` in Supabase SQL Editor.
 
 ## Recent Features & Improvements
 
+### Flashcard System Overhaul (2025-12-02)
+- **Kid-friendly prompts**: Complete rewrite with clean markdown format
+- **Positive-only instructions**: Removed all negative warnings, focus on what to do
+- **Generic flashcard support**: New prompt for content subjects (history, biology, environmental studies, society)
+  - Balanced distribution: 50% fill_blank, 30% short_answer, 20% matching
+  - Works for any subject beyond Math and English
+- **Topic selection UI**: Users can choose which topic to practice from flashcard sets
+  - "Kaikki aiheet" option to practice all topics
+  - Individual topic buttons showing card counts
+  - Auto-selects if only 1 or 0 topics available
+- **Simplified result view**: Shows only explanation (removed redundant answer box)
+  - Larger, cleaner text display
+  - Better focus on learning content
+- **Improved success rate**: Expected 90%+ valid questions (up from 25%)
+  - Removed confusing negative instructions that AI was ignoring
+  - Clear examples for each card type
+  - Educational guidance for writing great explanations
+
+## Previous Features & Improvements
+
 ### Topic-Balanced Question Generation & Selection (2025-11-30)
 - **Problem**: Random question selection could result in unbalanced coverage (e.g., 12 grammar + 3 vocabulary)
 - **Solution**: AI identifies topics during generation, stratified sampling ensures balanced selection
