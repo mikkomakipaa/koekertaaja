@@ -124,51 +124,6 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 📖 User Guide
-
-### Creating Exam Areas
-
-1. Click **"Create New Exam Area"** on the home page
-2. Enter a **question set name** (e.g., "English Grade 7 - Chapter 3")
-3. Enter the **subject** (e.g., English, Math, History)
-4. Select **grade level** (optional, 1-12)
-5. Set **exam length**: Number of questions per difficulty level (5-20, default 15)
-6. Set **question pool size**: Total questions AI generates from material (10-100, default 50)
-7. Add **study materials**:
-   - Write text in the text field
-   - OR upload PDF files
-   - OR upload images
-8. Click **"Create Question Sets"**
-9. Wait for AI to generate questions (may take a few minutes)
-10. You'll receive **3 shareable codes** - one for each difficulty level:
-    - Helppo (Easy)
-    - Normaali (Normal)
-    - Vaikea (Hard)
-
-### Practicing
-
-1. Click **"Start Practice"** on the home page
-2. Browse **exam areas** and click on the one you want
-3. Answer the questions:
-   - Select your answer
-   - Click **"Check Answer"**
-   - Read the explanation and earn points
-   - Click **"Next Question"**
-4. View your **results**:
-   - Total points
-   - Best streak
-   - Unlocked achievements
-   - All answers with explanations
-5. Play again or return to menu
-
-### Earning Points
-
-- **10 points** for each correct answer
-- **+5 bonus points** when you answer 3 or more correct in a row
-- **Achievements**:
-  - 🏆 **Perfection** - 100% correct
-  - 🔥 **Fire Streak** - 5+ correct in a row
-
 ## 🛠️ Technical Details
 
 ### Technologies
