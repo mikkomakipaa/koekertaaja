@@ -56,7 +56,7 @@ export function FlashcardCard({ flashcard, isFlipped, onFlip }: FlashcardCardPro
           </div>
         </div>
 
-        {/* Back Side - Answer + Explanation */}
+        {/* Back Side - Explanation Only */}
         <div
           className={`
             absolute inset-0 backface-hidden rotate-y-180
@@ -73,23 +73,11 @@ export function FlashcardCard({ flashcard, isFlipped, onFlip }: FlashcardCardPro
             <span className="font-semibold">Oikea vastaus:</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-6">
-            {/* Answer */}
-            <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
-              <div className="text-lg font-medium text-gray-900 dark:text-gray-100 whitespace-pre-line">
-                <MathText>{flashcard.back.answer}</MathText>
-              </div>
-            </div>
-
+          <div className="flex-1 overflow-y-auto">
             {/* Explanation */}
             {flashcard.back.explanation && (
-              <div>
-                <h4 className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-2">
-                  Selitys:
-                </h4>
-                <div className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                  <MathText>{flashcard.back.explanation}</MathText>
-                </div>
+              <div className="text-lg text-gray-900 dark:text-gray-100 whitespace-pre-line leading-relaxed">
+                <MathText>{flashcard.back.explanation}</MathText>
               </div>
             )}
           </div>
