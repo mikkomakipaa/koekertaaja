@@ -48,6 +48,10 @@ Koekertaaja is an interactive exam preparation application that helps students p
 - **Immediate Feedback**: Get explanations after each question
 - **Results Summary**: View your overall performance and correct answers
 - **Flashcard Mode**: Practice with memorization-optimized questions
+  - **Topic selection**: Choose "All Topics" or focus on specific areas
+  - **Simplified results**: Clean explanation view without redundant information
+  - **3D flip animation**: Engaging card flip interaction
+  - **Progress tracking**: See how many cards you've reviewed
 - **Mobile-Friendly**: Works seamlessly on all devices
 
 ### 🎨 Modern UI
