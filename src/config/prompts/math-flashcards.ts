@@ -207,15 +207,13 @@ Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEK
 Varmista että:
 ✓ JOKAINEN kysymys sisältää "topic"-kentän (ei yhtään tyhjää!)
 ✓ Kysymykset jakautuvat TASAISESTI aihealueiden kesken
-✓ Käytät VAIN: fill_blank (70%), matching (20%), short_answer (10%)
-✓ Et käytä KOSKAAN: multiple_choice, true_false, sequential
+✓ JOKA kysymys on tyypiltään: fill_blank (70%), matching (20%), TAI short_answer (10%)
 ✓ Loit TÄSMÄLLEEN ${questionCount} kysymystä
 ✓ Käytät LaTeX-merkintää: $$2x + 3$$
 ✓ Näytät LASKUVAIHEET selityksissä (vähintään 30 merkkiä)
 ✓ Vastaat PELKÄLLÄ JSON-taulukolla, ei muuta tekstiä
 
 ⚠️ KYSYMYKSET ILMAN TOPIC-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI
-⚠️ MULTIPLE_CHOICE JA TRUE_FALSE KYSYMYKSET HYLÄTÄÄN AUTOMAATTISESTI
 
 ════════════════════════════════════════════════════════════════
 `;
