@@ -63,59 +63,49 @@ VUOSILUOKKA 6 - OPETUSSUUNNITELMAN SISÄLTÖ:
   const topicCount = identifiedTopics?.length || 3;
   const questionsPerTopic = Math.ceil(questionCount / topicCount);
 
-  return `Analysoi ${material ? 'seuraava materiaali' : 'nämä dokumentit'} ja luo ${questionCount} matematiikan kysymystä KORTTIOPETTELUA VARTEN (flashcard-muoto).
+  return `# Math Flash Card Creator
 
-KORTTITILAN TAVOITE:
-Kysymykset on optimoitu OPPIMISEEN JA MUISTAMISEEN, ei testaamiseen. Keskity:
-- MATEMAATTISTEN FAKTOJEN MUISTAMISEEN (kaavat, säännöt)
-- KÄSITTEIDEN YMMÄRTÄMISEEN
-- LASKUTAITOJEN HARJOITTAMISEEN
-- SELKEISIIN ESIMERKKEIHIN JA VAIHEISIIN
+**Your Mission:** Create ${questionCount} math flash cards to help a ${grade ? `grade ${grade}` : 'middle-school'} student learn mathematics.
 
-${gradeContext}
+${material ? `**Material to Study:**\n${material}\n\n` : ''}---
 
-KÄYTÄ VAIN NÄITÄ KOLMEA KYSYMYSTYYPPIÄ:
-- ${FLASHCARD_DISTRIBUTION.fill_blank}% fill_blank (täydennä - kaavat, laskut, säännöt)
-- ${FLASHCARD_DISTRIBUTION.matching}% matching (parit - käsitteet ja määritelmät)
-- ${FLASHCARD_DISTRIBUTION.short_answer}% short_answer (selitykset ja perustelut)
+## How Flash Cards Work
 
-TÄRKEÄÄ: Korttiopettelussa käytetään VAIN näitä kolmea tyyppiä.
+Flash cards help students **master math facts and formulas** through active recall.
+Focus on:
+- Remembering formulas and rules
+- Understanding concepts
+- Practicing calculations
+- Clear step-by-step solutions
+
+${gradeContent}
 ${gradeNote}
 
-${material ? `MATERIAALI:\n${material}\n\n` : ''}════════════════════════════════════════════════════════════════
-⚠️  KRIITTISET VAATIMUKSET - PAKOLLISIA, EI NEUVOTELTAVISSA ⚠️
-════════════════════════════════════════════════════════════════
+---
 
-1. AIHEIDEN TASAPAINO (TOPIC BALANCING):
+## Topics You'll Cover
 
-   KÄYTÄ NÄITÄ TUNNISTETTUJA AIHEALUEITA (${topicCount} kpl):
+Create **exactly 10 cards per topic** to ensure balanced practice:
+
 ${topicsText}
 
-   ⚠️ ÄLÄ KEKSI UUSIA AIHEALUEITA
-   ⚠️ KÄYTÄ TÄSMÄLLEEN SAMAA KIRJOITUSASUA KUIN YLLÄ
+**Important:**
+- Tag every card with its topic (copy the exact spelling from above)
+- Distribute cards evenly: ~10 per topic (you can vary by ±1 if needed)
+- Don't invent new topics—stick to the list above
 
-   • JOKA IKINEN kysymys TÄYTYY sisältää "topic"-kenttä
-   • Valitse yksi yllä olevista aihealueista jokaiselle kysymykselle
-   • Kopioi aihealueen nimi TÄSMÄLLEEN sellaisenaan
+---
 
-   TASAINEN JAKAUTUMINEN kaikille aihealueille:
-   • TAVOITE: TÄSMÄLLEEN 10 kysymystä per aihealue
-   • Luo ${questionCount} kysymystä yhteensä (${topicCount} aihetta × 10 kysymystä)
-   • JOKAISELLE aihealueelle täytyy tehdä 10 kysymystä
-   • Älä suosi yhtä aihealuetta toisten kustannuksella
-   • Sallittu vaihtelu: ±1 kysymys per aihealue (9-11 kysymystä)
+## Card Types (Use Only These 3)
 
-2. KYSYMYSTYYPIT (FLASHCARD MODE):
+**You'll create 3 types of cards in this ratio:**
+- **70% fill_blank** – Best for formulas, calculations, and rules
+- **20% matching** – Connect concepts and definitions
+- **10% short_answer** – Explain why and how
 
-   KÄYTÄ VAIN NÄITÄ KOLMEA TYYPPIÄ:
-   • fill_blank (70% kysymyksistä)
-   • matching (20% kysymyksistä)
-   • short_answer (10% kysymyksistä)
+Each card must be one of these three types. See examples below.
 
-   JOKA IKINEN kysymys TÄYTYY olla yksi näistä kolmesta tyypistä.
-   Näet esimerkit näistä tyypeistä alla.
-
-════════════════════════════════════════════════════════════════
+---
 
 TÄRKEÄÄ - KORTTIEN MUOTO:
 
