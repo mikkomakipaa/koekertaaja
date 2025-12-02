@@ -185,12 +185,12 @@ Explanation: "The commutative law of multiplication: a × b = b × a. This means
 ## Handling Numeric Answers
 
 **For flexible grading, include alternative formats:**
-- Give main answer in `correct_answer`
-- Add variants in `acceptable_answers`:
-  * Decimals and fractions: `"0.5"` and `"$$\\frac{1}{2}$$"` and `"1/2"` and `"0,5"`
-  * Percentages: `"50%"` and `"0.5"` and `"0,5"`
-  * Different notations: `"3,14"` and `"3.14"`
-  * Formula forms: `"a × b"` and `"ab"` and `"a * b"`
+- Give main answer in \`correct_answer\`
+- Add variants in \`acceptable_answers\`:
+  * Decimals and fractions: \`"0.5"\` and \`"$$\\frac{1}{2}$$"\` and \`"1/2"\` and \`"0,5"\`
+  * Percentages: \`"50%"\` and \`"0.5"\` and \`"0,5"\`
+  * Different notations: \`"3,14"\` and \`"3.14"\`
+  * Formula forms: \`"a × b"\` and \`"ab"\` and \`"a * b"\`
 
 ---
 
