@@ -156,9 +156,10 @@ src/
 │   └── prompts/                    # AI prompts per subject
 │       ├── english.ts              # Quiz prompts with grade-specific distributions
 │       ├── math.ts                 # Math quiz prompts with grade-specific distributions
+│       ├── generic.ts              # Generic quiz prompts for all other subjects
 │       ├── english-flashcards.ts   # Flashcard-optimized prompts (60/30/10)
 │       ├── math-flashcards.ts      # Math flashcard prompts (70/20/10)
-│       └── generic.ts              # Fallback for any subject
+│       └── generic-flashcards.ts   # Generic flashcard prompts for content subjects (50/30/20)
 ├── hooks/
 │   ├── useGameSession.ts           # Game state: points, streaks, answers
 │   └── useBadges.ts                # Badge tracking with localStorage
