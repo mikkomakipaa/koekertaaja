@@ -126,11 +126,11 @@ Tests deeper understanding and active production.
 - Student must construct the answer
 
 **Example:**
-```
+\`\`\`
 Question: "Miten muodostetaan kysymyslause verbillä 'do'?"
 Answer: "Do/Does + subject + verb"
 Explanation: "In questions, the auxiliary 'do/does' comes first, then subject, then main verb in base form."
-```
+\`\`\`
 
 ---
 
