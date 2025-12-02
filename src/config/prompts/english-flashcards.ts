@@ -144,7 +144,7 @@ Connects related concepts.
 - Use 3-6 pairs (not too many!)
 
 **Example:**
-```
+\`\`\`
 Question: "Yhdistä englanninkieliset sanat suomenkielisiin käännöksiin:"
 Pairs: [
   {"left": "happy", "right": "iloinen"},
@@ -152,7 +152,7 @@ Pairs: [
   {"left": "angry", "right": "vihainen"}
 ]
 Explanation: "Basic emotions vocabulary. These are the most common adjectives for expressing feelings."
-```
+\`\`\`
 
 ---
 
