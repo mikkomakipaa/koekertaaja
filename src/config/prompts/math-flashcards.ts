@@ -232,7 +232,7 @@ Before you respond, verify:
 - ✓ Cards are balanced across topics (~10 per topic)
 - ✓ Card types follow ratio: 70% fill_blank, 20% matching, 10% short_answer
 - ✓ Created exactly ${questionCount} cards total
-- ✓ Using LaTeX notation for math: `$$2x + 3$$`
+- ✓ Using LaTeX notation for math: \`$$2x + 3$$\`
 - ✓ Showing CALCULATION STEPS in explanations (30+ chars)
 - ✓ Output is pure JSON (no extra text)
 
