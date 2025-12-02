@@ -107,70 +107,101 @@ Each card must be one of these three types. See examples below.
 
 ---
 
-TÄRKEÄÄ - KORTTIEN MUOTO:
+## Card Type Examples
 
-1. FILL_BLANK (täydennä - SUOSITUIN matematiikassa):
-   - Puuttuva luku, laskutoimitus tai kaava
-   - Konteksti auttaa ratkaisemaan
-   - Vastaus on NUMERO tai LYHYT MATEMAATTINEN ILMAISU
+### 1. FILL_BLANK (Fill in the Blank) — Most Popular for Math!
+Perfect for formulas, calculations, and rules.
 
-   Esimerkkejä:
+**Structure:**
+- Missing number, operation, or formula
+- Context helps student solve it
+- Answer is a NUMBER or SHORT MATH EXPRESSION
 
-   Lasku:
-   Kysymys: "$$8 \\times 7 = \_\_\_\_$$"
-   Vastaus: "56"
-   Selitys: "Kertotaulu 7: 8 × 7 = 56. Muistisääntö: 7 × 8 on sama kuin 7 × 10 - 7 × 2 = 70 - 14 = 56."
+**Examples:**
 
-   Kaava:
-   Kysymys: "Suorakulmion pinta-ala lasketaan kaavalla: Pinta-ala = \_\_\_\_ × \_\_\_\_"
-   Vastaus: "leveys × korkeus" tai "$$l \\times k$$"
-   Hyväksytyt: ["leveys × korkeus", "l × k", "pituus × leveys"]
-   Selitys: "Suorakulmion pinta-ala = leveys × korkeus. Esimerkiksi jos leveys on 5 cm ja korkeus 3 cm, niin pinta-ala = 5 × 3 = 15 cm²."
+**Calculation:**
+```
+Question: "$$8 \\times 7 = ____$$"
+Answer: "56"
+Explanation: "Times table 7: 8 × 7 = 56. Memory trick: 7 × 8 is same as 7 × 10 - 7 × 2 = 70 - 14 = 56."
+```
 
-   Yksinkertainen yhtälö:
-   Kysymys: "Ratkaise: $$x + 5 = 12$$, niin $$x = \_\_\_\_$$"
-   Vastaus: "7"
-   Selitys: "Vähennetään molemmilta puolilta 5: x + 5 - 5 = 12 - 5, joten x = 7. Tarkistus: 7 + 5 = 12 ✓"
+**Formula:**
+```
+Question: "Suorakulmion pinta-ala lasketaan kaavalla: Pinta-ala = ____ × ____"
+Answer: "leveys × korkeus"
+Also accept: ["leveys × korkeus", "l × k", "pituus × leveys", "$$l \\times k$$"]
+Explanation: "Rectangle area = width × height. Example: if width is 5 cm and height is 3 cm, then area = 5 × 3 = 15 cm²."
+```
 
-2. MATCHING (parit):
-   - Käsitteet ja määritelmät
-   - Luvut ja niiden ominaisuudet
-   - Kaavat ja niiden nimet
-   - VÄHINTÄÄN 3 paria, ENINTÄÄN 6 paria
+**Simple Equation:**
+```
+Question: "Ratkaise: $$x + 5 = 12$$, niin $$x = ____$$"
+Answer: "7"
+Explanation: "Subtract 5 from both sides: x + 5 - 5 = 12 - 5, so x = 7. Check: 7 + 5 = 12 ✓"
+```
 
-   Esimerkki:
-   Kysymys: "Yhdistä geometriset käsitteet niiden määritelmiin:"
-   Parit: [
-     {"left": "Suorakulmio", "right": "Neljä kulmaa, kaikki 90 astetta"},
-     {"left": "Neliö", "right": "Neljä yhtä pitkää sivua, kaikki kulmat 90 astetta"},
-     {"left": "Kolmio", "right": "Kolme kulmaa, kulmien summa 180 astetta"}
-   ]
-   Selitys: "Perusgeometriset muodot. Neliö on erikoistapaus suorakulmiosta, jossa kaikki sivut ovat yhtä pitkiä."
+---
 
-3. SHORT_ANSWER (lyhyt vastaus - harvinaisempi):
-   - Selitykset ja perustelut
-   - "Miksi?" ja "Miten?" kysymykset
-   - Vastaus 3-10 sanaa
+### 2. MATCHING (Matching Pairs)
+Connect concepts and definitions.
 
-   Esimerkki:
-   Kysymys: "Miksi kertolaskussa lukujen järjestyksellä ei ole väliä? (esim. 3 × 4 = 4 × 3)"
-   Vastaus: "Kertolaskun vaihdantalaki"
-   Selitys: "Kertolaskussa on voimassa vaihdantalaki: a × b = b × a. Tämä tarkoittaa, että 3 × 4 = 12 ja 4 × 3 = 12. Voit ajatella: 3 laatikkoa joissa 4 omenaa = 4 laatikkoa joissa 3 omenaa."
+**Structure:**
+- Concepts and definitions
+- Numbers and their properties
+- Formulas and their names
+- Use 3-6 pairs (not too many!)
 
-NUMEERISTEN VASTAUSTEN KÄSITTELY:
-- Anna pääasiallinen oikea vastaus "correct_answer" -kentässä
-- Lisää "acceptable_answers" -taulukkoon vaihtoehtoiset hyväksyttävät muodot:
-  * Desimaaliluvut ja murtoluvut: "0.5" ja "$$\\frac{1}{2}$$" ja "1/2" ja "0,5"
-  * Prosentit: "50%" ja "0.5" ja "0,5"
-  * Eri merkitsemistavat: "3,14" ja "3.14"
-  * Kaavat eri muodoissa: "a × b" ja "ab" ja "a * b"
+**Example:**
+```
+Question: "Yhdistä geometriset käsitteet niiden määritelmiin:"
+Pairs: [
+  {"left": "Suorakulmio", "right": "Neljä kulmaa, kaikki 90 astetta"},
+  {"left": "Neliö", "right": "Neljä yhtä pitkää sivua, kaikki kulmat 90 astetta"},
+  {"left": "Kolmio", "right": "Kolme kulmaa, kulmien summa 180 astetta"}
+]
+Explanation: "Basic geometric shapes. A square is a special rectangle where all sides are equal."
+```
 
-SELITYSTEN KIRJOITTAMINEN:
-- Näytä LASKUVAIHEET
-- Selitä MIKSI näin lasketaan
-- Anna MUISTISÄÄNTÖ jos mahdollista
-- Lisää TARKISTUS lopuksi
-- Vähintään 30 merkkiä, enintään 400 merkkiä
+---
+
+### 3. SHORT_ANSWER
+Explain the "why" and "how."
+
+**Structure:**
+- Explanations and reasoning
+- "Why?" and "How?" questions
+- Answer is 3-10 words
+
+**Example:**
+```
+Question: "Miksi kertolaskussa lukujen järjestyksellä ei ole väliä? (esim. 3 × 4 = 4 × 3)"
+Answer: "Kertolaskun vaihdantalaki"
+Explanation: "The commutative law of multiplication: a × b = b × a. This means 3 × 4 = 12 and 4 × 3 = 12. Think: 3 boxes with 4 apples = 4 boxes with 3 apples."
+```
+
+---
+
+## Handling Numeric Answers
+
+**For flexible grading, include alternative formats:**
+- Give main answer in `correct_answer`
+- Add variants in `acceptable_answers`:
+  * Decimals and fractions: `"0.5"` and `"$$\\frac{1}{2}$$"` and `"1/2"` and `"0,5"`
+  * Percentages: `"50%"` and `"0.5"` and `"0,5"`
+  * Different notations: `"3,14"` and `"3.14"`
+  * Formula forms: `"a × b"` and `"ab"` and `"a * b"`
+
+---
+
+## Writing Great Explanations
+
+Help students understand the process:
+- Show CALCULATION STEPS
+- Explain WHY we calculate this way
+- Add MEMORY TRICKS when possible
+- Include a CHECK at the end
+- Keep it clear: 30-400 characters
 
 ════════════════════════════════════════════════════════════════
 📋 JSON VASTAUSMUOTO - NOUDATA TARKASTI
