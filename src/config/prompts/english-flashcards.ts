@@ -108,12 +108,12 @@ Perfect for vocabulary and grammar practice.
 - Answer is ONE WORD or SHORT PHRASE
 
 **Example:**
-```
+\`\`\`
 Question: "I ___ (mennä) to school every day."
 Answer: "go"
 Also accept: ["go", "walk", "drive"] (if contextually correct)
 Explanation: "Present tense form. With 'I' we use the base verb form."
-```
+\`\`\`
 
 ---
 
