@@ -204,7 +204,7 @@ koekertaaja/
 │   │   └── useGameSession.ts    # Game state and points
 │   ├── config/                  # Configuration
 │   │   ├── subjects.ts          # Subject definitions
-│   │   └── prompts/             # AI prompts
+│   │   └── prompts/             # AI prompts (quiz + flashcard for each subject)
 │   └── types/                   # TypeScript types
 └── supabase/
     └── migrations/              # Database schema
