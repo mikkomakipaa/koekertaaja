@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
 import { useBadges } from '@/hooks/useBadges';
-import { CheckCircle2, XCircle, Award } from 'lucide-react';
+import { CheckCircle, XCircle, Medal } from '@phosphor-icons/react';
 import {
   DiamondsFour,
   Fire,
