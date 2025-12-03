@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { LogOut, User } from 'lucide-react';
+import { SignOut, UserCircle } from '@phosphor-icons/react';
 
 export function UserMenu() {
   const router = useRouter();
