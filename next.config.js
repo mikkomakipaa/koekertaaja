@@ -5,6 +5,7 @@ const nextConfig = {
       bodySizeLimit: '30mb',
     },
   },
+  serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
   images: {
     domains: [],
   },
