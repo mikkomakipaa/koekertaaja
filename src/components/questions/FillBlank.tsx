@@ -1,7 +1,7 @@
 import { FillBlankQuestion } from '@/types';
 import { Input } from '@/components/ui/input';
 import { MathText } from '@/components/ui/math-text';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 
 interface FillBlankProps {
