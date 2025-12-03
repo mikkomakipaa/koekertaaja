@@ -2,7 +2,7 @@ import { MatchingQuestion, MatchingPair } from '@/types';
 import { useState, useEffect } from 'react';
 import { shuffleArray } from '@/lib/utils';
 import { MathText } from '@/components/ui/math-text';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 
 interface MatchingProps {
