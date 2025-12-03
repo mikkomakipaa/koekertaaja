@@ -33,7 +33,7 @@ export function ShareCodeDisplay({
         <Card className="shadow-lg">
           <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg text-center">
             <div className="flex justify-center mb-4">
-              <Share2 className="w-20 h-20 text-white" />
+              <ShareNetwork weight="duotone" className="w-20 h-20 text-white" />
             </div>
             <CardTitle className="text-4xl text-white">Kysymyssarja tallennettu!</CardTitle>
             <CardDescription className="text-white text-xl mt-2 font-medium">
