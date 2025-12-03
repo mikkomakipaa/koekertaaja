@@ -1,7 +1,7 @@
 import { MultipleChoiceQuestion } from '@/types';
 import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 
 interface MultipleChoiceProps {
