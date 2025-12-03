@@ -1,4 +1,4 @@
-import { Github } from 'lucide-react';
+import { GithubLogo } from '@phosphor-icons/react';
 
 export function Footer() {
   return (
