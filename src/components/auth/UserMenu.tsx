@@ -35,7 +35,7 @@ export function UserMenu() {
         onClick={handleSignOut}
         className="flex items-center gap-2"
       >
-        <LogOut className="w-4 h-4" />
+        <SignOut weight="duotone" className="w-4 h-4" />
         Kirjaudu ulos
       </Button>
     </div>
