@@ -25,7 +25,7 @@ export function LoadByCode({ code, loading, onCodeChange, onLoad }: LoadByCodePr
           maxLength={6}
         />
         <Button onClick={onLoad} disabled={code.length !== 6 || loading}>
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Lataa'}
+          {loading ? <CircleNotch weight="bold" className="w-5 h-5 animate-spin" /> : 'Lataa'}
         </Button>
       </div>
     </div>
