@@ -225,7 +225,7 @@ export function ResultsScreen({
           <div className="mb-10">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                <Award className="w-5 h-5" />
+                <Medal weight="duotone" className="w-5 h-5" />
                 Saavutetut merkit ({badges.filter(b => b.unlocked).length}/{badges.length})
               </h3>
               <button
