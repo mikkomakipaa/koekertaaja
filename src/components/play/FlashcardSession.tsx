@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { Flashcard } from '@/types';
 import { FlashcardCard } from './FlashcardCard';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, BookOpen, Check, X } from 'lucide-react';
-import { Book, CheckCircle } from '@phosphor-icons/react';
+import { ArrowRight, BookOpen, Check, X, Book, CheckCircle } from '@phosphor-icons/react';
 
 interface FlashcardSessionProps {
   flashcards: Flashcard[];
