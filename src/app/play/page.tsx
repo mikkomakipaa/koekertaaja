@@ -8,8 +8,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ModeToggle } from '@/components/play/ModeToggle';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { QuestionSet, Difficulty, StudyMode } from '@/types';
-import { Loader2 } from 'lucide-react';
 import {
+  CircleNotch,
   GlobeHemisphereWest,
   MathOperations,
   Scroll,
