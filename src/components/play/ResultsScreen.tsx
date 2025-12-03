@@ -304,9 +304,9 @@ export function ResultsScreen({
               >
                 <div className="flex items-start gap-2">
                   {answer.isCorrect ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <CheckCircle weight="duotone" className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   ) : (
-                    <XCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <XCircle weight="duotone" className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
                   )}
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">
