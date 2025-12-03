@@ -14,8 +14,7 @@ import { useGameSession } from '@/hooks/useGameSession';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
 import { QuestionSetWithQuestions, StudyMode, Flashcard } from '@/types';
-import { Loader2, List } from 'lucide-react';
-import { DiamondsFour, Fire, Book } from '@phosphor-icons/react';
+import { CircleNotch, ListBullets, DiamondsFour, Fire, Book } from '@phosphor-icons/react';
 
 type PlayState = 'loading' | 'error' | 'playing' | 'results';
 
