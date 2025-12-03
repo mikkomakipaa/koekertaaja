@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { X, AlertCircle } from 'lucide-react';
+import { X, WarningCircle } from '@phosphor-icons/react';
 
 interface MaterialUploadProps {
   materialText: string;
