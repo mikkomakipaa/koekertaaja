@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Share2, Copy } from 'lucide-react';
+import { ShareNetwork, Copy } from '@phosphor-icons/react';
 import { useState } from 'react';
 
 interface ShareCodeDisplayProps {
