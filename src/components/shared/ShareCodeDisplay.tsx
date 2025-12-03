@@ -51,7 +51,7 @@ export function ShareCodeDisplay({
                   </p>
                 </div>
                 <Button onClick={copyToClipboard} className="bg-indigo-600 hover:bg-indigo-700">
-                  <Copy className="w-5 h-5" />
+                  <Copy weight="duotone" className="w-5 h-5" />
                 </Button>
               </div>
               {copied && (
