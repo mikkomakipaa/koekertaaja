@@ -90,9 +90,9 @@ export function Matching({
                     </span>
                     {showExplanation && matchStatus !== null && (
                       matchStatus ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                        <CheckCircle weight="duotone" className="w-5 h-5 text-green-600 flex-shrink-0" />
                       ) : (
-                        <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                        <XCircle weight="duotone" className="w-5 h-5 text-red-600 flex-shrink-0" />
                       )
                     )}
                   </div>
