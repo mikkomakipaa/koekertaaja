@@ -92,7 +92,7 @@ export function MaterialUpload({
         />
         {uploadError && (
           <Alert variant="destructive" className="mt-3">
-            <AlertCircle className="h-4 w-4" />
+            <WarningCircle weight="duotone" className="h-4 w-4" />
             <AlertDescription>{uploadError}</AlertDescription>
           </Alert>
         )}
