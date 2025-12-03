@@ -10,7 +10,7 @@ export function Footer() {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
         >
-          <Github className="w-4 h-4" />
+          <GithubLogo weight="duotone" className="w-4 h-4" />
           <span className="text-xs font-medium">GitHub</span>
         </a>
       </div>
