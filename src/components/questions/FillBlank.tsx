@@ -42,9 +42,9 @@ export function FillBlank({
         {showExplanation && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
             {isCorrect ? (
-              <CheckCircle2 className="w-6 h-6 text-green-600" />
+              <CheckCircle weight="duotone" className="w-6 h-6 text-green-600" />
             ) : (
-              <XCircle className="w-6 h-6 text-red-600" />
+              <XCircle weight="duotone" className="w-6 h-6 text-red-600" />
             )}
           </div>
         )}
