@@ -1,0 +1,157 @@
+# English Flash Card Creator
+
+**Your Mission:** Create {{question_count}} flash cards to help a {{grade_context}} student learn English vocabulary and grammar.
+
+{{material_section}}---
+
+## How Flash Cards Work
+
+Flash cards help students **actively recall** what they've learned (not just recognize answers).
+Focus on:
+- Key vocabulary and grammar rules students truly need to remember
+- Clear, simple questions with helpful explanations
+- Connections between language concepts
+- Real-world usage examples
+
+{{grade_instructions}}{{grade_note}}
+
+---
+
+## Topics You'll Cover
+
+Create **exactly 10 cards per topic** to ensure balanced practice:
+
+{{topics_list}}
+
+**Important:**
+- Tag every card with its topic (copy the exact spelling from above)
+- Distribute cards evenly: ~{{questions_per_topic}} per topic (you can vary by ±1 if needed)
+- Don't invent new topics—stick to the list above
+
+---
+
+## Card Types (Use Only These 3)
+
+**You'll create 3 types of cards in this ratio:**
+- **60% fill_blank** – Best for vocabulary, verb forms, and sentence completion
+- **30% short_answer** – For grammar explanations and translations
+- **10% matching** – Connect words with meanings or examples
+
+Each card must be one of these three types. See examples below.
+
+---
+
+## Card Type Examples
+
+### 1. FILL_BLANK (Fill in the Blank)
+Perfect for vocabulary and verb forms.
+
+**Structure:**
+- One clear blank to fill
+- Context helps student remember
+- Answer is ONE WORD or SHORT PHRASE
+
+**Example:**
+```
+Question: "I ___ to school every day. (verb: go, present simple)"
+Answer: "go"
+Also accept: ["walk", "cycle"]
+Explanation: "We use 'go' in present simple for regular actions. Remember: I/you/we/they + verb base form. The sentence describes a daily routine."
+```
+
+---
+
+### 2. SHORT_ANSWER
+Tests understanding and translation.
+
+**Structure:**
+- Open question requiring thought
+- Answer is a word, phrase, or short sentence
+- Student must construct the answer
+
+**Example:**
+```
+Question: "Käännä suomeksi: 'The cat is sleeping on the sofa.'"
+Answer: "Kissa nukkuu sohvalla"
+Also accept: ["Kissa nukkuu sohvalla.", "Kissa nukkuu sohvan päällä"]
+Explanation: "'Is sleeping' is present continuous (am/is/are + verb-ing) used for actions happening now. 'On the sofa' = 'sohvalla' (location)."
+```
+
+---
+
+### 3. MATCHING (Matching Pairs)
+Connect words with their meanings or examples.
+
+**Structure:**
+- English words and Finnish translations
+- Verbs and their forms
+- Words and example sentences
+- Use 3-6 pairs (not too many!)
+
+**Example:**
+```
+Question: "Yhdistä englannin sana oikeaan suomennokseen:"
+Pairs: [
+  {"left": "happy", "right": "iloinen"},
+  {"left": "sad", "right": "surullinen"},
+  {"left": "angry", "right": "vihainen"},
+  {"left": "tired", "right": "väsynyt"}
+]
+Explanation: "These are common feeling words (adjectives). Use them to describe how someone feels: I am happy. She is tired."
+```
+
+---
+
+## Writing Great Explanations
+
+Help students understand WHY, not just WHAT:
+- Explain grammar rules in simple terms
+- Give context and real-world usage examples
+- Show word patterns or connections
+- Include pronunciation tips when helpful
+- Keep it friendly and clear: 20-300 characters
+
+**Tone:**
+- Friendly and encouraging
+- No complex grammar jargon unless explained
+- Stick strictly to provided material
+- Use both English and Finnish for clarity
+
+---
+
+## JSON Output Format
+
+**Return ONLY a JSON array** (no other text):
+
+```json
+[
+  {
+    "question": "Question text (can include Finnish instructions)",
+    "type": "fill_blank" | "short_answer" | "matching",
+    "topic": "Topic name",  // Required! Use exact topic name from list above
+    "correct_answer": "the right answer",
+    "acceptable_answers": ["alternative 1", "alternative 2"],  // optional
+    "pairs": [{"left": "item1", "right": "item2"}],  // only for matching, 3-6 pairs
+    "explanation": "Clear, helpful explanation in Finnish or English (20-300 chars). Include grammar rules and examples."
+  }
+]
+```
+
+---
+
+## Quick Checklist
+
+Before you respond, verify:
+- ✓ Every card has a topic tag (exact spelling from list)
+- ✓ Cards are balanced across topics (~{{questions_per_topic}} per topic)
+- ✓ Card types follow ratio: 60% fill_blank, 30% short_answer, 10% matching
+- ✓ Created exactly {{question_count}} cards total
+- ✓ Each question focuses on ONE vocabulary word or grammar point
+- ✓ Explanations are helpful and age-appropriate (20+ chars)
+- ✓ Output is pure JSON (no extra text)
+- ✓ Stuck to provided material (no new vocabulary added)
+- ✓ Grammar explanations are simple and clear
+
+**Remember:** Cards without topic tags will be rejected automatically.
+
+---
