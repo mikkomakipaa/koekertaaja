@@ -190,7 +190,7 @@ export default function PlayBrowsePage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-purple-600" />
+          <CircleNotch weight="bold" className="w-12 h-12 mx-auto mb-4 animate-spin text-purple-600" />
           <p className="text-lg text-gray-600">Ladataan aihealueita...</p>
         </div>
       </div>

@@ -183,7 +183,7 @@ export default function CreatePage() {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
           <Card className="w-96 shadow-lg">
             <CardContent className="p-12 text-center">
-              <Loader2 className="w-16 h-16 mx-auto mb-4 animate-spin text-blue-500" />
+              <CircleNotch weight="bold" className="w-16 h-16 mx-auto mb-4 animate-spin text-blue-500" />
               <p className="text-xl font-bold text-indigo-700">
                 Luodaan kysymyssarjoja...
               </p>
@@ -301,7 +301,7 @@ export default function CreatePage() {
                   Luo uusi
                 </TabsTrigger>
                 <TabsTrigger value="manage" className="text-base">
-                  <List className="w-4 h-4 mr-2" />
+                  <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
                   Hallitse sarjoja
                 </TabsTrigger>
               </TabsList>
@@ -478,7 +478,7 @@ export default function CreatePage() {
               <TabsContent value="manage" className="space-y-4">
                 {loadingQuestionSets ? (
                   <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
+                    <CircleNotch weight="bold" className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
                   </div>
                 ) : allQuestionSets.length === 0 ? (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -540,9 +540,9 @@ export default function CreatePage() {
                               aria-label="Poista kysymyssarja"
                             >
                               {deletingId === set.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
                               ) : (
-                                <Trash2 className="w-4 h-4" />
+                                <Trash weight="duotone" className="w-4 h-4" />
                               )}
                             </Button>
                           </div>
