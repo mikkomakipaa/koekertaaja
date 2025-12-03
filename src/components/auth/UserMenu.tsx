@@ -21,7 +21,7 @@ export function UserMenu() {
   return (
     <div className="flex items-center gap-4 p-4 bg-white border-b">
       <div className="flex items-center gap-2 flex-1">
-        <User className="w-5 h-5 text-gray-600" />
+        <UserCircle weight="duotone" className="w-5 h-5 text-gray-600" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900 truncate">
             {user.email}
