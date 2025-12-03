@@ -44,7 +44,7 @@ export function ShortAnswer({
         {showExplanation && (
           <div className="absolute right-3 top-3">
             {isCorrect ? (
-              <CheckCircle2 className="w-6 h-6 text-green-600" />
+              <CheckCircle weight="duotone" className="w-6 h-6 text-green-600" />
             ) : (
               <div className="bg-yellow-100 p-2 rounded-lg">
                 <span className="text-xs text-yellow-800 font-medium">Tarkista</span>
