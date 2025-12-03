@@ -44,8 +44,8 @@ export function TrueFalse({
           >
             <div className="flex items-center justify-between">
               <span className="text-lg font-medium">{option.label}</span>
-              {showCorrect && <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />}
-              {showWrong && <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />}
+              {showCorrect && <CheckCircle weight="duotone" className="w-6 h-6 text-green-600 flex-shrink-0" />}
+              {showWrong && <XCircle weight="duotone" className="w-6 h-6 text-red-600 flex-shrink-0" />}
             </div>
           </button>
         );
