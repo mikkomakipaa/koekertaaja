@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
           generateQuestions({
             subject,
             difficulty,
-            questionCount: examLength,
+            questionCount: questionCount, // Use pool size (40-400), not session length
             grade,
             materialText,
             materialFiles: files.length > 0 ? files : undefined,
