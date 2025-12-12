@@ -201,9 +201,9 @@ export async function POST(request: NextRequest) {
       question_set_id: questionSetId,
       question_text: q.question_text,
       question_type: q.question_type,
-      topic: q.topic,
-      correct_answer: q.correct_answer,
-      options: q.options,
+      topic: (q as any).topic || null,
+      correct_answer: (q as any).correct_answer,
+      options: (q as any).options || null,
       explanation: q.explanation,
       order_index: maxOrderIndex + 1 + index,
     }));
