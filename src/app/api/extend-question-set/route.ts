@@ -6,7 +6,7 @@ import { identifyTopics } from '@/lib/ai/topicIdentifier';
 import { getQuestionSetById } from '@/lib/supabase/queries';
 import { createLogger } from '@/lib/logger';
 import { requireAuth } from '@/lib/supabase/server-auth';
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 300; // 5 minutes timeout for AI generation
