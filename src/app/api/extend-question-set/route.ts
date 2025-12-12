@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
 
     const { error: insertError } = await supabaseAdmin
       .from('questions')
-      .insert(questionsToInsert);
+      .insert(questionsToInsert as any);
 
     if (insertError) {
       logger.error({ error: insertError }, 'Failed to insert questions');
