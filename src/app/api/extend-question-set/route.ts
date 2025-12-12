@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
     // STEP 5: Update question_count in question_sets
     const newQuestionCount = existingSet.question_count + newQuestions.length;
 
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await (supabaseAdmin as any)
       .from('question_sets')
       .update({ question_count: newQuestionCount })
       .eq('id', questionSetId);
