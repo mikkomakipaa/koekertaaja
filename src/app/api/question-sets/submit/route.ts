@@ -149,6 +149,23 @@ export async function POST(request: NextRequest) {
       'Validated question set submission'
     );
 
+    // Transform questions from API format to database format
+    const transformedQuestions = questions.map((q, index) => ({
+      question_text: q.question,
+      question_type: q.type,
+      topic: q.topic,
+      correct_answer: q.correct_answer,
+      options: q.options,
+      pairs: q.pairs,
+      items: q.items,
+      correct_order: q.correct_order,
+      acceptable_answers: q.acceptable_answers,
+      explanation: q.explanation,
+      order_index: index,
+      id: '', // Will be set by database
+      question_set_id: '', // Will be set by database
+    }));
+
     // Generate unique code with collision handling
     let code = generateCode();
     let attempts = 0;
@@ -168,7 +185,7 @@ export async function POST(request: NextRequest) {
           subtopic,
           question_count: questions.length,
         },
-        questions
+        transformedQuestions as any
       );
 
       if (!dbResult) {
