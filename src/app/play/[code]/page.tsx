@@ -13,6 +13,7 @@ import { FlashcardSession } from '@/components/play/FlashcardSession';
 import { useGameSession } from '@/hooks/useGameSession';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
+import { shuffleArray } from '@/lib/utils';
 import { QuestionSetWithQuestions, StudyMode, Flashcard } from '@/types';
 import { CircleNotch, ListBullets, DiamondsFour, Fire, Book } from '@phosphor-icons/react';
 
@@ -85,7 +86,8 @@ export default function PlayPage() {
           setQuestionSet(combinedSet);
           // Convert all questions to flashcards (excludes sequential questions)
           const cards = convertQuestionsToFlashcards(combinedSet.questions);
-          setFlashcards(cards);
+          // Shuffle flashcards for varied practice
+          setFlashcards(shuffleArray(cards));
           // Extract unique topics from questions
           const topics = [...new Set(
             combinedSet.questions
@@ -111,7 +113,8 @@ export default function PlayPage() {
           setQuestionSet(data);
           // Convert questions to flashcards (excludes sequential questions)
           const cards = convertQuestionsToFlashcards(data.questions);
-          setFlashcards(cards);
+          // Shuffle flashcards for varied practice
+          setFlashcards(shuffleArray(cards));
           // Extract unique topics from questions
           const topics = [...new Set(
             data.questions

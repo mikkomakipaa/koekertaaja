@@ -1,0 +1,164 @@
+Analysoi {{material_type}} ja luo {{question_count}} monipuolista kysymystä aiheesta "{{subject}}".
+
+{{difficulty_instructions}}
+
+{{grade_note}}
+
+{{material_section}}
+════════════════════════════════════════════════════════════════
+⚠️  KRIITTINEN VAATIMUS - AIHEIDEN TASAPAINO ⚠️
+════════════════════════════════════════════════════════════════
+
+TOPIC BALANCING (PAKOLLINEN):
+
+1. KÄYTÄ NÄITÄ TUNNISTETTUJA AIHEALUEITA ({{topic_count}} kpl):
+{{topics_list}}
+
+   ⚠️ ÄLÄ KEKSI UUSIA AIHEALUEITA
+   ⚠️ KÄYTÄ TÄSMÄLLEEN SAMAA KIRJOITUSASUA KUIN YLLÄ
+
+2. JOKA IKINEN kysymys TÄYTYY sisältää "topic"-kenttä
+   • Valitse yksi yllä olevista aihealueista jokaiselle kysymykselle
+   • Kopioi aihealueen nimi TÄSMÄLLEEN sellaisenaan
+
+3. TASAINEN JAKAUTUMINEN kaikille aihealueille:
+   • TAVOITE: ~{{questions_per_topic}} kysymystä per aihealue
+   • Jaa {{question_count}} kysymystä TASAISESTI {{topic_count}} aihealueen kesken
+   • Älä suosi yhtä aihealuetta toisten kustannuksella
+   • Sallittu vaihtelu: ±1 kysymys per aihealue
+
+4. VARMISTA että JOKAINEN kysymys on merkitty aihealueella
+   • Tarkista että jokainen kysymys sisältää "topic"-kentän
+   • Tarkista että topic-kenttä vastaa yhtä yllä olevista aihealueista
+
+⚠️ KYSYMYKSET ILMAN TOPIC-KENTTÄÄ TAI VÄÄRÄLLÄ TOPIC-ARVOLLA HYLÄTÄÄN AUTOMAATTISESTI
+
+════════════════════════════════════════════════════════════════
+
+TÄRKEÄÄ - KYSYMYSTEN MUOTO:
+- Kysymykset esitetään SUOMEKSI
+- Luo kysymyksiä jotka testaavat ymmärrystä aiheesta "{{subject}}"
+- Vaihtele kysymystyyppejä
+- Luo TÄSMÄLLEEN {{question_count}} kysymystä
+- Perusta kysymykset annettuun materiaaliin {{grade_context_note}}
+- NOUDATA TARKASTI vaikeustason kysymystyyppien jakaumaa
+
+KYSYMYSTYYPPIEN KÄYTTÖOHJEET:
+
+1. MULTIPLE_CHOICE (monivalinta):
+   - Sopii: käsitteiden tunnistaminen, faktat, prosessit
+   *** PAKOLLINEN: Jokaisessa multiple_choice kysymyksessä TÄYTYY olla TASAN 4 vaihtoehtoa ***
+   Esim: "Mikä seuraavista on oikein?"
+   Vaihtoehdot: ["vaihtoehto 1", "vaihtoehto 2", "vaihtoehto 3", "vaihtoehto 4"]
+   - TÄYTYY olla 4 vaihtoehtoa, yksi oikea
+   - Väärät vastaukset uskottavia ja lähellä oikeaa vastausta
+
+2. TRUE_FALSE (totta/tarua):
+   - Sopii: väittämät, tosiasiat, käsitteiden ymmärtäminen
+   Esim: "Totta vai tarua: [väite aiheesta]"
+   correct_answer: true tai false (boolean, EI "totta"/"tarua")
+
+3. FILL_BLANK (täydennä):
+   - Helppo: yksi puuttuva sana tai luku
+   - Normaali/Vaikea: useampi sana tai käsite
+   Esim: "Täydennä: Suomen pääkaupunki on ___."
+   Vastaus: "Helsinki"
+   - Anna acceptable_answers listaan vaihtoehtoiset hyväksyttävät vastaukset
+
+4. SHORT_ANSWER (lyhyt avoin vastaus):
+   - VAIN normaali ja vaikea vaikeustasoilla
+   - Vaatii selitystä, perustelua tai kuvausta
+
+   Normaali taso:
+   Esim: "Selitä lyhyesti mikä on [käsite]."
+   Vastaus: "1-2 lauseen selitys"
+
+   Vaikea taso:
+   Esim: "Analysoi ja perustele miksi [ilmiö] tapahtuu."
+   Vastaus: "Perusteellinen selitys useammalla lauseella"
+
+   - Anna acceptable_answers listaan erilaisia hyväksyttäviä vastauksia
+
+5. MATCHING (parit):
+   - Sopii: käsitteet ja määritelmät, termit ja kuvaukset
+   - Käytä normaali ja vaikea tasoilla jos aihe sopii
+   *** PAKOLLINEN: Jokaisessa matching kysymyksessä TÄYTYY olla VÄHINTÄÄN 4 paria ***
+   Esim: Yhdistä käsite ja määritelmä
+   Parit: [{"left": "käsite1", "right": "määritelmä1"}, {"left": "käsite2", "right": "määritelmä2"}, {"left": "käsite3", "right": "määritelmä3"}, {"left": "käsite4", "right": "määritelmä4"}]
+
+6. SEQUENTIAL (järjestys):
+   - Sopii: prosessien vaiheet, kronologinen järjestys, tapahtumat
+   - Käytä helppo ja normaali tasoilla
+   - Helppo taso: 4 vaihetta, Normaali taso: 5-6 vaihetta
+
+   Helppo taso - Prosessin vaiheet:
+   Kysymys: "Järjestä nämä vaiheet oikeaan järjestykseen (prosessi aiheesta {{subject}}):"
+   items: [
+     "Vaihe 1 kuvaus",
+     "Vaihe 2 kuvaus",
+     "Vaihe 3 kuvaus",
+     "Vaihe 4 kuvaus"
+   ]
+   correct_order: [0, 1, 2, 3]  // Oikea järjestys indekseinä
+
+   Normaali taso - Monivaiheinen prosessi:
+   Kysymys: "Järjestä nämä vaiheet oikeaan järjestykseen (aihe liittyen {{subject}}):"
+   items: [
+     "Ensimmäinen vaihe",
+     "Toinen vaihe",
+     "Kolmas vaihe",
+     "Neljäs vaihe",
+     "Viides vaihe",
+     "Kuudes vaihe"
+   ]
+   correct_order: [0, 1, 2, 3, 4, 5]  // Oikea järjestys indekseinä
+
+VÄÄRÄT VASTAUKSET (multiple_choice):
+Väärät vastaukset tulee olla uskottavia:
+- Liity samaan aihepiiriin
+- Sisällä yleisiä väärinkäsityksiä
+- Ole lähellä oikeaa vastausta mutta selvästi väärin
+- Testaa ymmärrystä, älä vain muistia
+
+════════════════════════════════════════════════════════════════
+📋 JSON VASTAUSMUOTO - NOUDATA TARKASTI
+════════════════════════════════════════════════════════════════
+
+Luo kysymykset JSON-muodossa. VASTAA VAIN JSON-MUODOSSA ILMAN MITÄÄN MUUTA TEKSTIÄ:
+
+[
+  {
+    "question": "kysymysteksti suomeksi",
+    "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching" | "sequential",
+    "topic": "Aihealue", // ⚠️ PAKOLLINEN - JOKA kysymyksessä
+    "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"], // PAKOLLINEN multiple_choice, TÄYTYY olla 4 vaihtoehtoa
+    "pairs": [{"left": "vasen", "right": "oikea"}], // PAKOLLINEN matching, TÄYTYY olla vähintään 4 paria
+    "items": ["vaihe1", "vaihe2", "vaihe3", "vaihe4"], // PAKOLLINEN sequential kysymyksille
+    "correct_order": [0, 1, 2, 3], // PAKOLLINEN sequential kysymyksille - indeksit oikeassa järjestyksessä
+    "correct_answer": "oikea vastaus",  // EI käytetä sequential kysymyksissä
+    "acceptable_answers": ["vaihtoehtoinen vastaus"], // vapaaehtoinen, fill_blank ja short_answer
+    "explanation": "selitys suomeksi miksi tämä on oikea vastaus"
+  }
+]
+
+════════════════════════════════════════════════════════════════
+✅ TARKISTUSLISTA ENNEN VASTAAMISTA
+════════════════════════════════════════════════════════════════
+
+Varmista että:
+✓ JOKAINEN kysymys sisältää "topic"-kentän (ei yhtään tyhjää!)
+✓ Kysymykset jakautuvat TASAISESTI aihealueiden kesken
+✓ KYSYMYSTYYPPIEN JAKAUMA vastaa vaikeustason ohjeita ({{difficulty}})
+✓ Kaikki vastaukset on tarkistettu ja ovat OIKEIN
+✓ Väärät vastaukset ovat uskottavia (yleisiä väärinkäsityksiä)
+✓ Selitykset ovat informatiivisia ja selkeitä
+✓ Kysymykset kattavat materiaalin laajasti
+✓ Kysymykset liittyvät aiheeseen "{{subject}}"
+✓ Kysymykset perustuvat materiaaliin {{grade_context_note}}
+✓ Sequential kysymyksillä oikeat indeksit (0-based)
+✓ Jokainen kysymys on uniikki
+✓ Vastaat PELKÄLLÄ JSON-taulukolla, ei muuta tekstiä
+
+⚠️ KYSYMYKSET ILMAN TOPIC-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI
+
+════════════════════════════════════════════════════════════════
