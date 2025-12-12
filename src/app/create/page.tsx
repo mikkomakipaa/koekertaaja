@@ -12,7 +12,7 @@ import { GradeSelector } from '@/components/create/GradeSelector';
 import { MaterialUpload } from '@/components/create/MaterialUpload';
 import { getAllQuestionSets } from '@/lib/supabase/queries';
 import { QuestionSet } from '@/types';
-import { CircleNotch, Star, Trash, ListBullets } from '@phosphor-icons/react';
+import { CircleNotch, Star, Trash, ListBullets, Plus } from '@phosphor-icons/react';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { UserMenu } from '@/components/auth/UserMenu';
 
@@ -41,6 +41,10 @@ export default function CreatePage() {
   const [allQuestionSets, setAllQuestionSets] = useState<QuestionSet[]>([]);
   const [loadingQuestionSets, setLoadingQuestionSets] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Extend existing set state
+  const [selectedSetToExtend, setSelectedSetToExtend] = useState<string>('');
+  const [questionsToAdd, setQuestionsToAdd] = useState(20);
 
   const handleSubmit = async () => {
     // Validation
@@ -161,6 +165,61 @@ export default function CreatePage() {
       alert(`Virhe: ${errorMessage}`);
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleExtendSet = async () => {
+    // Validation
+    if (!selectedSetToExtend) {
+      setError('Valitse laajennettava kysymyssarja!');
+      return;
+    }
+
+    if (!materialText.trim() && uploadedFiles.length === 0) {
+      setError('Syötä materiaali tai lataa tiedosto!');
+      return;
+    }
+
+    setError('');
+    setState('loading');
+
+    try {
+      // Prepare form data
+      const formData = new FormData();
+      formData.append('questionSetId', selectedSetToExtend);
+      formData.append('questionsToAdd', questionsToAdd.toString());
+
+      if (materialText.trim()) {
+        formData.append('materialText', materialText);
+      }
+
+      uploadedFiles.forEach((file, index) => {
+        formData.append(`file_${index}`, file);
+      });
+
+      // Call API
+      const response = await fetch('/api/extend-question-set', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = data.error || 'Kysymysten lisääminen epäonnistui';
+        const errorDetails = data.details ? `\n\n${data.details}` : '';
+        throw new Error(errorMessage + errorDetails);
+      }
+
+      // Success
+      setQuestionSetsCreated([data.questionSet]);
+      setTotalQuestionsCreated(data.questionsAdded || 0);
+      setState('success');
+    } catch (err) {
+      console.error('Error extending question set:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Kysymysten lisääminen epäonnistui';
+      setError(errorMessage);
+      setState('form');
     }
   };
 
@@ -295,14 +354,18 @@ export default function CreatePage() {
 
           <CardContent className="p-6">
             <Tabs defaultValue="create" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="create" className="text-base">
                   <Star className="w-4 h-4 mr-2" />
                   Luo uusi
                 </TabsTrigger>
+                <TabsTrigger value="extend" className="text-base">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Laajenna
+                </TabsTrigger>
                 <TabsTrigger value="manage" className="text-base">
                   <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
-                  Hallitse sarjoja
+                  Hallitse
                 </TabsTrigger>
               </TabsList>
 
@@ -473,6 +536,97 @@ export default function CreatePage() {
                 Luo kysymyssarjat
               </Button>
             </div>
+              </TabsContent>
+
+              <TabsContent value="extend" className="space-y-6">
+                <div>
+                  <label className="block text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">
+                    📦 Valitse laajennettava kysymyssarja
+                  </label>
+                  <select
+                    value={selectedSetToExtend}
+                    onChange={(e) => setSelectedSetToExtend(e.target.value)}
+                    className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600"
+                  >
+                    <option value="">-- Valitse kysymyssarja --</option>
+                    {allQuestionSets.map((set) => (
+                      <option key={set.id} value={set.id}>
+                        {set.name} ({set.question_count} kysymystä) - {set.mode === 'flashcard' ? 'Kortit' : set.difficulty}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedSetToExtend && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                    <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                      Valittu sarja:
+                    </h3>
+                    {(() => {
+                      const selectedSet = allQuestionSets.find(s => s.id === selectedSetToExtend);
+                      if (!selectedSet) return null;
+                      return (
+                        <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                          <p><strong>Nimi:</strong> {selectedSet.name}</p>
+                          <p><strong>Aine:</strong> {selectedSet.subject}</p>
+                          <p><strong>Nykyinen määrä:</strong> {selectedSet.question_count} kysymystä</p>
+                          <p><strong>Tyyppi:</strong> {selectedSet.mode === 'flashcard' ? 'Kortit' : `Koe (${selectedSet.difficulty})`}</p>
+                          {selectedSet.grade && <p><strong>Luokka:</strong> {selectedSet.grade}</p>}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">
+                    ➕ Lisättävien kysymysten määrä
+                  </label>
+                  <div className="space-y-4">
+                    <Slider
+                      min={5}
+                      max={50}
+                      step={5}
+                      value={[questionsToAdd]}
+                      onValueChange={(value) => setQuestionsToAdd(value[0])}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">5 kysymystä</span>
+                      <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{questionsToAdd}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">50 kysymystä</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    Näin monta kysymystä lisätään sarjaan
+                  </p>
+                </div>
+
+                <MaterialUpload
+                  materialText={materialText}
+                  uploadedFiles={uploadedFiles}
+                  onMaterialTextChange={setMaterialText}
+                  onFilesChange={setUploadedFiles}
+                />
+
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex gap-3 pt-4">
+                  <Button onClick={() => router.push('/')} variant="outline" className="flex-1">
+                    Peruuta
+                  </Button>
+                  <Button
+                    onClick={handleExtendSet}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                    disabled={!selectedSetToExtend || (!materialText.trim() && uploadedFiles.length === 0)}
+                  >
+                    Lisää kysymyksiä
+                  </Button>
+                </div>
               </TabsContent>
 
               <TabsContent value="manage" className="space-y-4">
