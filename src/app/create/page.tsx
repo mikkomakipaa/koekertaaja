@@ -42,6 +42,10 @@ export default function CreatePage() {
   const [loadingQuestionSets, setLoadingQuestionSets] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Extend existing set state
+  const [selectedSetToExtend, setSelectedSetToExtend] = useState<string>('');
+  const [questionsToAdd, setQuestionsToAdd] = useState(20);
+
   const handleSubmit = async () => {
     // Validation
     if (!questionSetName.trim()) {
