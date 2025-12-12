@@ -13,6 +13,7 @@ import { FlashcardSession } from '@/components/play/FlashcardSession';
 import { useGameSession } from '@/hooks/useGameSession';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
+import { shuffleArray } from '@/lib/utils';
 import { QuestionSetWithQuestions, StudyMode, Flashcard } from '@/types';
 import { CircleNotch, ListBullets, DiamondsFour, Fire, Book } from '@phosphor-icons/react';
 
