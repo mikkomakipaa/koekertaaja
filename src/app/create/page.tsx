@@ -299,14 +299,18 @@ export default function CreatePage() {
 
           <CardContent className="p-6">
             <Tabs defaultValue="create" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="create" className="text-base">
                   <Star className="w-4 h-4 mr-2" />
                   Luo uusi
                 </TabsTrigger>
+                <TabsTrigger value="extend" className="text-base">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Laajenna
+                </TabsTrigger>
                 <TabsTrigger value="manage" className="text-base">
                   <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
-                  Hallitse sarjoja
+                  Hallitse
                 </TabsTrigger>
               </TabsList>
 
