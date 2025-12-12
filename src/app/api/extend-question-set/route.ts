@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     }
 
     const maxOrderIndex = maxOrderData && maxOrderData.length > 0
-      ? maxOrderData[0].order_index
+      ? (maxOrderData[0] as any).order_index
       : -1;
 
     logger.info({ maxOrderIndex }, 'Found max order_index');
