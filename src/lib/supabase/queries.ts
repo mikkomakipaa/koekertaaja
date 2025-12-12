@@ -117,3 +117,21 @@ export async function getQuestionSetTopics(questionSetId: string): Promise<strin
   const topics = [...new Set((data || []).map((q: any) => q.topic).filter(Boolean))];
   return topics as string[];
 }
+
+/**
+ * Get a question set by ID (server-side only)
+ * For extending existing question sets
+ */
+export async function getQuestionSetById(id: string): Promise<QuestionSet | null> {
+  const { data, error } = await supabase
+    .from('question_sets')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data as QuestionSet;
+}
