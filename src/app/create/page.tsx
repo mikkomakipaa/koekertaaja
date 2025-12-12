@@ -168,6 +168,61 @@ export default function CreatePage() {
     }
   };
 
+  const handleExtendSet = async () => {
+    // Validation
+    if (!selectedSetToExtend) {
+      setError('Valitse laajennettava kysymyssarja!');
+      return;
+    }
+
+    if (!materialText.trim() && uploadedFiles.length === 0) {
+      setError('Syötä materiaali tai lataa tiedosto!');
+      return;
+    }
+
+    setError('');
+    setState('loading');
+
+    try {
+      // Prepare form data
+      const formData = new FormData();
+      formData.append('questionSetId', selectedSetToExtend);
+      formData.append('questionsToAdd', questionsToAdd.toString());
+
+      if (materialText.trim()) {
+        formData.append('materialText', materialText);
+      }
+
+      uploadedFiles.forEach((file, index) => {
+        formData.append(`file_${index}`, file);
+      });
+
+      // Call API
+      const response = await fetch('/api/extend-question-set', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = data.error || 'Kysymysten lisääminen epäonnistui';
+        const errorDetails = data.details ? `\n\n${data.details}` : '';
+        throw new Error(errorMessage + errorDetails);
+      }
+
+      // Success
+      setQuestionSetsCreated([data.questionSet]);
+      setTotalQuestionsCreated(data.questionsAdded || 0);
+      setState('success');
+    } catch (err) {
+      console.error('Error extending question set:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Kysymysten lisääminen epäonnistui';
+      setError(errorMessage);
+      setState('form');
+    }
+  };
+
   // Load question sets when component mounts
   useEffect(() => {
     loadQuestionSets();
