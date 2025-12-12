@@ -113,7 +113,8 @@ export default function PlayPage() {
           setQuestionSet(data);
           // Convert questions to flashcards (excludes sequential questions)
           const cards = convertQuestionsToFlashcards(data.questions);
-          setFlashcards(cards);
+          // Shuffle flashcards for varied practice
+          setFlashcards(shuffleArray(cards));
           // Extract unique topics from questions
           const topics = [...new Set(
             data.questions
