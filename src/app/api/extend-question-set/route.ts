@@ -177,6 +177,7 @@ export async function POST(request: NextRequest) {
     );
 
     // STEP 3: Find max order_index from existing questions
+    const supabaseAdmin = getSupabaseAdmin();
     const { data: maxOrderData, error: maxOrderError } = await supabaseAdmin
       .from('questions')
       .select('order_index')
