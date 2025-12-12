@@ -12,7 +12,7 @@ import { GradeSelector } from '@/components/create/GradeSelector';
 import { MaterialUpload } from '@/components/create/MaterialUpload';
 import { getAllQuestionSets } from '@/lib/supabase/queries';
 import { QuestionSet } from '@/types';
-import { CircleNotch, Star, Trash, ListBullets } from '@phosphor-icons/react';
+import { CircleNotch, Star, Trash, ListBullets, Plus } from '@phosphor-icons/react';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { UserMenu } from '@/components/auth/UserMenu';
 
