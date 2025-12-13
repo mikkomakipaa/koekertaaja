@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       logger.warn('Authentication failed');
       return NextResponse.json(
         { error: 'Unauthorized. Please log in to extend question sets.' },
-        { status: 401 }
+        { status: 401, headers: corsHeaders }
       );
     }
 
