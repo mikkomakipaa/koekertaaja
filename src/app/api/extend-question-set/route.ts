@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       logger.warn('Authentication failed');
       return NextResponse.json(
         { error: 'Unauthorized. Please log in to extend question sets.' },
-        { status: 401, headers: getCorsHeaders(request) }
+        { status: 401, status }
       );
     }
 
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     if (!questionSetId) {
       return NextResponse.json(
         { error: 'Question set ID is required' },
-        { status: 400, headers: getCorsHeaders(request) }
+        { status: 400, status }
       );
     }
 
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     if (!existingSet) {
       return NextResponse.json(
         { error: 'Question set not found' },
-        { status: 404, headers: getCorsHeaders(request) }
+        { status: 404, status }
       );
     }
 
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         {
           error: `Maximum ${MAX_FILES} files allowed.`,
         },
-        { status: 400, headers: getCorsHeaders(request) }
+        { status: 400, status }
       );
     }
 
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         if (value.size > MAX_FILE_SIZE) {
           return NextResponse.json(
             { error: `File "${value.name}" exceeds 2MB limit.` },
-            { status: 400, headers: getCorsHeaders(request) }
+            { status: 400, status }
           );
         }
 
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
             {
               error: `File "${value.name}" has invalid type.`,
             },
-            { status: 400, headers: getCorsHeaders(request) }
+            { status: 400, status }
           );
         }
 
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     if (!materialText && files.length === 0) {
       return NextResponse.json(
         { error: 'Please provide material (text or files)' },
-        { status: 400, headers: getCorsHeaders(request) }
+        { status: 400, status }
       );
     }
 
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
     if (newQuestions.length === 0) {
       return NextResponse.json(
         { error: 'No questions were generated. Please try again.' },
-        { status: 500, headers: getCorsHeaders(request) }
+        { status: 500, status }
       );
     }
 
@@ -266,7 +266,7 @@ export async function POST(request: NextRequest) {
     );
 
     return NextResponse.json(response, {
-      headers: getCorsHeaders(request),
+      status,
     });
   } catch (error) {
     const isProduction = process.env.NODE_ENV === 'production';
@@ -291,7 +291,7 @@ export async function POST(request: NextRequest) {
       },
       {
         status: 500,
-        headers: getCorsHeaders(request),
+        status,
       }
     );
   }
