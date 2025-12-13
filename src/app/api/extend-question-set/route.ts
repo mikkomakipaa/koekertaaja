@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         if (value.size > MAX_FILE_SIZE) {
           return NextResponse.json(
             { error: `File "${value.name}" exceeds 2MB limit.` },
-            { status: 400 }
+            { status: 400, headers: corsHeaders }
           );
         }
 
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
             {
               error: `File "${value.name}" has invalid type.`,
             },
-            { status: 400 }
+            { status: 400, headers: corsHeaders }
           );
         }
 
