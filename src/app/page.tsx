@@ -9,7 +9,9 @@ import {
   Fire,
   Trophy,
   BookOpenText,
-  Star
+  Star,
+  GameController,
+  Cards
 } from '@phosphor-icons/react';
 
 export default function HomePage() {
