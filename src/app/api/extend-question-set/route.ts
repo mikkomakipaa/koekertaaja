@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     if (!questionSetId) {
       return NextResponse.json(
         { error: 'Question set ID is required' },
-        { status: 400, headers: corsHeaders }
+        { status: 400, headers: getCorsHeaders(request) }
       );
     }
 
