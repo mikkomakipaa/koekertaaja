@@ -54,11 +54,13 @@ export function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const origin = request.headers.get('origin');
     const allowedOrigins = [
-      process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-      'http://localhost:3000',
-    ];
+      'https://koekertaaja.vercel.app', // Production URL
+      'http://localhost:3000',          // Local development
+      process.env.NEXT_PUBLIC_APP_URL,  // Custom URL if set
+    ].filter(Boolean); // Remove undefined values
 
-    // Block requests from disallowed origins
+    // For same-origin requests, origin will be null - allow these
+    // Only block if origin exists and is not in allowed list
     if (origin && !allowedOrigins.includes(origin)) {
       return NextResponse.json(
         { error: 'CORS: Origin not allowed' },
