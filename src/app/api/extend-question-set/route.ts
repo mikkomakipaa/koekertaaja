@@ -11,18 +11,23 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 // Configure route segment for Vercel deployment
 export const maxDuration = 300; // 5 minutes timeout for AI generation
 
-// CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+// Get CORS headers with proper origin for authenticated requests
+function getCorsHeaders(request: NextRequest) {
+  const origin = request.headers.get('origin') || '*';
+
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
+  };
+}
 
 // Handle CORS preflight requests
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
-    headers: corsHeaders,
+    headers: getCorsHeaders(request),
   });
 }
 
