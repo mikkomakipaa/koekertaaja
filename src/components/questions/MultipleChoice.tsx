@@ -1,8 +1,9 @@
+import { useMemo } from 'react';
 import { MultipleChoiceQuestion } from '@/types';
 import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
 import { CheckCircle, XCircle } from '@phosphor-icons/react';
-import { cn } from '@/lib/utils';
+import { cn, shuffleArray } from '@/lib/utils';
 
 interface MultipleChoiceProps {
   question: MultipleChoiceQuestion;
@@ -26,6 +27,13 @@ export function MultipleChoice({
       </div>
     );
   }
+
+  // Shuffle options each time this question is shown (but keep stable during explanation)
+  // This prevents students from memorizing option positions
+  const shuffledOptions = useMemo(
+    () => shuffleArray([...question.options]),
+    [question.id] // Re-shuffle when question changes
+  );
 
   return (
     <div className="space-y-3">
