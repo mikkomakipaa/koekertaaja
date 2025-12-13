@@ -68,7 +68,7 @@ export default function middleware(request: NextRequest) {
       );
     }
 
-    // Allow preflight requests
+    // Handle OPTIONS preflight requests
     if (request.method === 'OPTIONS') {
       return new NextResponse(null, {
         status: 204,
@@ -76,10 +76,24 @@ export default function middleware(request: NextRequest) {
           'Access-Control-Allow-Origin': origin || '*',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Credentials': 'true',
           'Access-Control-Max-Age': '86400',
         },
       });
     }
+
+    // Add CORS headers to all API responses (not just OPTIONS)
+    const response = NextResponse.next();
+
+    // Set CORS headers for all responses
+    if (origin) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+      response.headers.set('Access-Control-Allow-Credentials', 'true');
+      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    }
+
+    return response;
   }
 
   return NextResponse.next();
