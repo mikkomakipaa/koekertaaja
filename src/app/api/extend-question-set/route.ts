@@ -281,11 +281,7 @@ export async function POST(request: NextRequest) {
     );
 
     return NextResponse.json(response, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
+      headers: corsHeaders,
     });
   } catch (error) {
     const isProduction = process.env.NODE_ENV === 'production';
