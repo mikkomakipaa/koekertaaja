@@ -37,7 +37,7 @@ export function MultipleChoice({
 
   return (
     <div className="space-y-3">
-      {question.options.map((option, index) => {
+      {shuffledOptions.map((option, index) => {
         const isSelected = selectedAnswer === option;
         const isCorrect = option === question.correct_answer;
         const showCorrect = showExplanation && isCorrect;
