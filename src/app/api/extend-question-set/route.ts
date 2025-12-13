@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
     if (!materialText && files.length === 0) {
       return NextResponse.json(
         { error: 'Please provide material (text or files)' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
