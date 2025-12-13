@@ -45,6 +45,24 @@ export default function HomePage() {
           <div className="mt-12 space-y-4">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0">
+                <GameController size={28} weight="duotone" className="text-blue-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Tietovisat</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">Testaa tietosi monivalintatehtävillä ja muilla kysymystyypeillä</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <Cards size={28} weight="duotone" className="text-green-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Kortit</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">Harjoittele aktiivista muistamista täydennystehtävillä</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
                 <DiamondsFour size={28} weight="duotone" className="text-amber-500" />
               </div>
               <div>
