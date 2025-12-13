@@ -232,12 +232,24 @@ src/
 - Age-appropriate: No leaderboards, no public comparison
 - All badges displayed on results screen (unlocked/locked states)
 
-**Security**:
+**Security & Middleware**:
 - CSP headers configured in `next.config.js`
 - API keys server-side only (never exposed to client)
 - RLS enabled on Supabase tables (public read, server writes)
 - Input validation via Zod schemas
-- Rate limiting on expensive endpoints
+- **Middleware** (`src/middleware.ts`):
+  - Rate limiting: 5 requests/hour for `/api/generate-questions`
+  - CORS handling: Centralized for all `/api/*` routes
+  - Allowed origins: `https://koekertaaja.vercel.app`, `localhost:3000`
+  - Handles OPTIONS preflight + adds CORS headers to all responses
+  - Sets `Access-Control-Allow-Credentials: true` for authenticated requests
+  - Blocks requests from unauthorized origins with 403
+
+**Authentication & Authorization**:
+- Session-based auth via Supabase (cookies)
+- All protected API routes use `requireAuth()` from `src/lib/supabase/server-auth.ts`
+- Server-side operations use service role key to bypass RLS
+- Frontend uses `credentials: 'same-origin'` for API calls
 
 **Localization**:
 - All UI text in **Finnish**
