@@ -277,7 +277,13 @@ export async function POST(request: NextRequest) {
       'Request completed successfully'
     );
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    });
   } catch (error) {
     const isProduction = process.env.NODE_ENV === 'production';
 
