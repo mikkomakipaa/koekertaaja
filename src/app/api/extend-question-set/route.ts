@@ -11,6 +11,21 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 // Configure route segment for Vercel deployment
 export const maxDuration = 300; // 5 minutes timeout for AI generation
 
+// CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+// Handle CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: corsHeaders,
+  });
+}
+
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
   const logger = createLogger({ requestId, route: '/api/extend-question-set' });
@@ -26,7 +41,7 @@ export async function POST(request: NextRequest) {
       logger.warn('Authentication failed');
       return NextResponse.json(
         { error: 'Unauthorized. Please log in to extend question sets.' },
-        { status: 401 }
+        { status: 401, headers: corsHeaders }
       );
     }
 
@@ -40,7 +55,7 @@ export async function POST(request: NextRequest) {
     if (!questionSetId) {
       return NextResponse.json(
         { error: 'Question set ID is required' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -50,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (!existingSet) {
       return NextResponse.json(
         { error: 'Question set not found' },
-        { status: 404 }
+        { status: 404, headers: corsHeaders }
       );
     }
 
@@ -87,7 +102,7 @@ export async function POST(request: NextRequest) {
         {
           error: `Maximum ${MAX_FILES} files allowed.`,
         },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -97,7 +112,7 @@ export async function POST(request: NextRequest) {
         if (value.size > MAX_FILE_SIZE) {
           return NextResponse.json(
             { error: `File "${value.name}" exceeds 2MB limit.` },
-            { status: 400 }
+            { status: 400, headers: corsHeaders }
           );
         }
 
@@ -113,7 +128,7 @@ export async function POST(request: NextRequest) {
             {
               error: `File "${value.name}" has invalid type.`,
             },
-            { status: 400 }
+            { status: 400, headers: corsHeaders }
           );
         }
 
@@ -130,7 +145,7 @@ export async function POST(request: NextRequest) {
     if (!materialText && files.length === 0) {
       return NextResponse.json(
         { error: 'Please provide material (text or files)' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -167,7 +182,7 @@ export async function POST(request: NextRequest) {
     if (newQuestions.length === 0) {
       return NextResponse.json(
         { error: 'No questions were generated. Please try again.' },
-        { status: 500 }
+        { status: 500, headers: corsHeaders }
       );
     }
 
@@ -265,7 +280,9 @@ export async function POST(request: NextRequest) {
       'Request completed successfully'
     );
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: corsHeaders,
+    });
   } catch (error) {
     const isProduction = process.env.NODE_ENV === 'production';
 
@@ -287,7 +304,10 @@ export async function POST(request: NextRequest) {
           ? error.message
           : 'Internal server error',
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: corsHeaders,
+      }
     );
   }
 }
