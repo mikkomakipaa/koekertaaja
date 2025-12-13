@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         {
           error: `Maximum ${MAX_FILES} files allowed.`,
         },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
