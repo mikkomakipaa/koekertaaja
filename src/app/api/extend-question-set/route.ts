@@ -265,9 +265,7 @@ export async function POST(request: NextRequest) {
       'Request completed successfully'
     );
 
-    return NextResponse.json(response, {
-      status,
-    });
+    return NextResponse.json(response);
   } catch (error) {
     const isProduction = process.env.NODE_ENV === 'production';
 
