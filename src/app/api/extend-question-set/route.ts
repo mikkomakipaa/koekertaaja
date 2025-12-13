@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     if (!questionSetId) {
       return NextResponse.json(
         { error: 'Question set ID is required' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (!existingSet) {
       return NextResponse.json(
         { error: 'Question set not found' },
-        { status: 404 }
+        { status: 404, headers: corsHeaders }
       );
     }
 
