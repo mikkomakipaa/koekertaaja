@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
     if (newQuestions.length === 0) {
       return NextResponse.json(
         { error: 'No questions were generated. Please try again.' },
-        { status: 500 }
+        { status: 500, headers: corsHeaders }
       );
     }
 
