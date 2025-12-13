@@ -11,6 +11,18 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 // Configure route segment for Vercel deployment
 export const maxDuration = 300; // 5 minutes timeout for AI generation
 
+// Handle CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
+
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
   const logger = createLogger({ requestId, route: '/api/extend-question-set' });
