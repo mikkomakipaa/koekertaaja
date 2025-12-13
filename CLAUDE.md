@@ -293,6 +293,30 @@ Run `supabase/migrations/20250103_initial_schema.sql` in Supabase SQL Editor.
 
 ## Recent Features & Improvements
 
+### CORS & Middleware Fix (2025-12-13)
+- **Fixed 403 errors** on deletion and question set updates
+- **Centralized CORS handling** in middleware for all API routes
+- **Root cause**: Middleware was only adding CORS headers to OPTIONS requests, not actual POST/DELETE responses
+- **Solution**: Middleware now adds CORS headers to ALL API responses
+  - `Access-Control-Allow-Origin`: Reflects request origin
+  - `Access-Control-Allow-Credentials: true`: Supports cookie-based auth
+  - Handles both preflight (OPTIONS) and actual requests
+- **Cleaned up duplicate CORS code** from individual route handlers
+- **Architecture improvement**: Single source of truth for CORS policy
+- **Affected endpoints**: All now work correctly
+  - `/api/generate-questions` (question generation)
+  - `/api/extend-question-set` (add questions to existing set)
+  - `/api/delete-question-set` (delete question sets)
+  - `/api/question-sets/submit` (direct question submission)
+- **Documentation**: See `Documentation/CORS_INVESTIGATION.md` for full technical analysis
+
+### Multiple Choice Option Randomization (2025-12-13)
+- **Prevents position memorization**: Answer options shuffle each session
+- **Implementation**: `useMemo` hook in `MultipleChoice.tsx`
+- **Behavior**: Options shuffle when question changes, stay stable during explanation
+- **Educational benefit**: Forces students to read all options carefully
+- **Consistent with**: Existing question order randomization
+
 ### Flashcard System Overhaul (2025-12-02)
 - **Kid-friendly prompts**: Complete rewrite with clean markdown format
 - **Positive-only instructions**: Removed all negative warnings, focus on what to do
