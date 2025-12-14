@@ -1,12 +1,17 @@
 import { useState, useCallback } from 'react';
 import { Question, Answer } from '@/types';
 import { shuffleArray } from '@/lib/utils';
+import { isAnswerAcceptable } from '@/lib/utils/answerMatching';
 
 const DEFAULT_QUESTIONS_PER_SESSION = 15;
 const POINTS_PER_CORRECT = 10;
 const STREAK_BONUS = 5;
 
-export function useGameSession(allQuestions: Question[], questionsPerSession = DEFAULT_QUESTIONS_PER_SESSION) {
+export function useGameSession(
+  allQuestions: Question[],
+  questionsPerSession = DEFAULT_QUESTIONS_PER_SESSION,
+  grade?: number
+) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
   const [userAnswer, setUserAnswer] = useState<any>(null);
