@@ -239,7 +239,9 @@ Koekertaaja uses a cohesive, child-friendly design system:
 
 ## 📝 License
 
-MIT License - free to use and modify
+This project is licensed under the
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+See the LICENSE file for details.
 
 ## 🤝 Support and Development
 
