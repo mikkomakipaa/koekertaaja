@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+
+// Force dynamic rendering (no static optimization)
+// Prevents "document is not defined" error during build
+export const dynamic = 'force-dynamic';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
