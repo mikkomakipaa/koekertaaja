@@ -121,7 +121,13 @@ export function useGameSession(
         correctAnswer = currentQuestion.pairs;
         break;
       case 'short_answer':
-        isCorrect = userAnswer.toLowerCase().trim() === currentQuestion.correct_answer.toLowerCase().trim();
+        // Use lenient matching for age-appropriate answer checking
+        isCorrect = isAnswerAcceptable(
+          userAnswer,
+          currentQuestion.correct_answer,
+          currentQuestion.acceptable_answers,
+          grade
+        );
         correctAnswer = currentQuestion.correct_answer;
         break;
       case 'sequential':
