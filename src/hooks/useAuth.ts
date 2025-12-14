@@ -15,9 +15,16 @@ export function useAuth() {
     error: null,
   });
 
-  const supabase = createBrowserClient();
+  // Lazy-initialize Supabase client (only on client-side)
+  const getSupabase = () => {
+    if (typeof window === 'undefined') {
+      throw new Error('useAuth can only be used in client components');
+    }
+    return createBrowserClient();
+  };
 
   useEffect(() => {
+    const supabase = getSupabase();
     // Check active session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
