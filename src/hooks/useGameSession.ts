@@ -97,11 +97,13 @@ export function useGameSession(
         correctAnswer = currentQuestion.correct_answer;
         break;
       case 'fill_blank':
-        isCorrect =
-          userAnswer.toLowerCase().trim() === currentQuestion.correct_answer.toLowerCase().trim() ||
-          (currentQuestion.acceptable_answers?.some(
-            (ans) => ans.toLowerCase().trim() === userAnswer.toLowerCase().trim()
-          ) ?? false);
+        // Use lenient matching for age-appropriate answer checking
+        isCorrect = isAnswerAcceptable(
+          userAnswer,
+          currentQuestion.correct_answer,
+          currentQuestion.acceptable_answers,
+          grade
+        );
         correctAnswer = currentQuestion.correct_answer;
         break;
       case 'true_false':
