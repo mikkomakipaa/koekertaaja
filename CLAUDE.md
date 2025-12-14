@@ -299,6 +299,25 @@ Run `supabase/migrations/20250103_initial_schema.sql` in Supabase SQL Editor.
 
 ## Recent Features & Improvements
 
+### Lenient Answer Matching (2025-12-14)
+- **Age-appropriate answer checking** for short answer and fill-blank questions
+- **Problem**: Grade 4 students struggled with exact-match requirements (spelling, spacing, punctuation)
+- **Solution**: Grade-based similarity thresholds using Levenshtein distance
+  - Grade 4: 75% similarity (most lenient - ~3 mistakes in 12-char word)
+  - Grade 5: 80% similarity (medium - ~2 mistakes in 12-char word)
+  - Grade 6: 85% similarity (stricter - ~2 mistakes in 12-char word)
+- **Three matching strategies**:
+  1. Exact match (normalized: lowercase, trimmed, no punctuation)
+  2. Contains match (correct answer in user response)
+  3. Fuzzy match (similarity-based)
+- **Benefits**: Reduces frustration, encourages attempts, focuses on understanding vs spelling
+- **Examples**:
+  - Grade 4: "fotosynteesi" accepted for "fotosynteesin" (92% similar)
+  - Grade 6: Same answer accepted (still above 85% threshold)
+  - All grades: "ves" rejected for "vesi" (too short, 75% similar)
+- **Implementation**: `src/lib/utils/answerMatching.ts`
+- **Documentation**: See `docs/LENIENT_ANSWER_MATCHING.md` for detailed examples
+
 ### CORS & Middleware Fix (2025-12-13)
 - **Fixed 403 errors** on deletion and question set updates
 - **Centralized CORS handling** in middleware for all API routes
