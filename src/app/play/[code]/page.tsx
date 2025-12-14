@@ -52,7 +52,11 @@ export default function PlayPage() {
     submitAnswer,
     nextQuestion,
     startNewSession,
-  } = useGameSession(questionSet?.questions || []);
+  } = useGameSession(
+    questionSet?.questions || [],
+    15, // default questions per session
+    questionSet?.grade // pass grade for age-appropriate answer checking
+  );
 
   // Load question set(s)
   useEffect(() => {
