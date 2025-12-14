@@ -4,10 +4,16 @@
 
 Koekertaaja is an interactive exam preparation application that helps students prepare for exams through gamified learning. Upload your study materials, let AI create questions, and earn points with correct answers!
 
+<img width="571" height="605" alt="image" src="https://github.com/user-attachments/assets/a5efcc2c-0022-42d6-9f1b-e7d3009d7e31" />
+<img width="570" height="638" alt="image" src="https://github.com/user-attachments/assets/b320995c-19d5-4867-a35b-7d021b0aafee" />
+<img width="566" height="735" alt="image" src="https://github.com/user-attachments/assets/fd8c2b3c-288a-4448-92da-b25926e37c6e" />
+
+
 ![Made with Next.js](https://img.shields.io/badge/Next.js-14-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)
 ![Anthropic Claude](https://img.shields.io/badge/AI-Claude_Sonnet_4-purple)
+
 
 ## ✨ Features
 
