@@ -214,6 +214,12 @@ src/
   - Samples evenly from each topic (e.g., 5 from each of 3 topics for 15-question session)
   - Graceful fallback: Uses random sampling if <70% questions have topics
   - Works for both quiz and flashcard modes
+- **Lenient answer matching** for short answer and fill-blank questions:
+  - Age-appropriate checking with grade-based thresholds (Grade 4: 75%, Grade 5: 80%, Grade 6: 85%)
+  - Three matching strategies: exact (normalized), contains, fuzzy (Levenshtein distance)
+  - Accepts minor spelling mistakes, extra/missing spaces, case differences
+  - Reduces frustration for young learners while maintaining educational value
+  - See `docs/LENIENT_ANSWER_MATCHING.md` for detailed examples
 - Shuffles questions at session start
 - Tracks: points, current streak, best streak, answers
 - Points: 10 per correct + 5 bonus when streak ≥ 3
