@@ -82,6 +82,7 @@ export function useAuth() {
 
   const signOut = async () => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
+    const supabase = getSupabase();
 
     const { error } = await supabase.auth.signOut();
 
