@@ -15,6 +15,7 @@ import { QuestionSet } from '@/types';
 import { CircleNotch, Star, Trash, ListBullets, Plus } from '@phosphor-icons/react';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { UserMenu } from '@/components/auth/UserMenu';
+import posthog from 'posthog-js';
 
 type CreateState = 'form' | 'loading' | 'success';
 
@@ -106,6 +107,16 @@ export default function CreatePage() {
       setQuestionSetsCreated(data.questionSets || []);
       setTotalQuestionsCreated(data.totalQuestions || 0);
       setState('success');
+
+      // PostHog: Track question set created
+      posthog.capture('question_set_created', {
+        question_set_name: questionSetName,
+        subject,
+        grade,
+        generation_mode: generationMode,
+        question_count: data.totalQuestions || 0,
+        sets_created: data.questionSets?.length || 0,
+      });
     } catch (err) {
       console.error('Error generating questions:', err);
       const errorMessage = err instanceof Error ? err.message : 'Kysymysten luonti epäonnistui';
@@ -155,6 +166,17 @@ export default function CreatePage() {
       if (!response.ok) {
         const errorMsg = data.error || 'Failed to delete question set';
         throw new Error(errorMsg);
+      }
+
+      // PostHog: Track question set deleted
+      const deletedSet = allQuestionSets.find(s => s.id === questionSetId);
+      if (deletedSet) {
+        posthog.capture('question_set_deleted', {
+          question_set_id: questionSetId,
+          question_set_name: deletedSet.name,
+          question_set_code: deletedSet.code,
+          subject: deletedSet.subject,
+        });
       }
 
       // Refresh the list
@@ -215,6 +237,15 @@ export default function CreatePage() {
       setQuestionSetsCreated([data.questionSet]);
       setTotalQuestionsCreated(data.questionsAdded || 0);
       setState('success');
+
+      // PostHog: Track question set extended
+      const extendedSet = allQuestionSets.find(s => s.id === selectedSetToExtend);
+      posthog.capture('question_set_extended', {
+        question_set_id: selectedSetToExtend,
+        question_set_name: extendedSet?.name,
+        questions_added: data.questionsAdded || 0,
+        new_total_questions: data.questionSet?.question_count,
+      });
     } catch (err) {
       console.error('Error extending question set:', err);
       const errorMessage = err instanceof Error ? err.message : 'Kysymysten lisääminen epäonnistui';

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Question, Answer } from '@/types';
 import { shuffleArray } from '@/lib/utils';
 import { isAnswerAcceptable } from '@/lib/utils/answerMatching';
+import posthog from 'posthog-js';
 
 const DEFAULT_QUESTIONS_PER_SESSION = 15;
 const POINTS_PER_CORRECT = 10;
@@ -179,6 +180,18 @@ export function useGameSession(
         streakAtAnswer: newStreak,
       },
     ]);
+
+    // PostHog: Track question answered event
+    posthog.capture('question_answered', {
+      question_id: currentQuestion.id,
+      question_type: currentQuestion.question_type,
+      topic: currentQuestion.topic,
+      is_correct: isCorrect,
+      points_earned: pointsEarned,
+      current_streak: newStreak,
+      question_index: currentQuestionIndex + 1,
+      total_questions: selectedQuestions.length,
+    });
 
     setShowExplanation(true);
   }, [userAnswer, selectedQuestions, currentQuestionIndex, currentStreak, bestStreak]);

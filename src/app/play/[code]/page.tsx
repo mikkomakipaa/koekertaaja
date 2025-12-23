@@ -20,6 +20,7 @@ import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
 import { shuffleArray } from '@/lib/utils';
 import { QuestionSetWithQuestions, StudyMode, Flashcard } from '@/types';
 import { CircleNotch, ListBullets, DiamondsFour, Fire, Book } from '@phosphor-icons/react';
+import posthog from 'posthog-js';
 
 type PlayState = 'loading' | 'error' | 'playing' | 'results';
 
@@ -134,6 +135,19 @@ export default function PlayPage() {
           if (topics.length <= 1) {
             setSelectedTopic('ALL');
           }
+
+          // PostHog: Track question set loaded by code
+          posthog.capture('question_set_loaded_by_code', {
+            question_set_code: code,
+            question_set_name: data.name,
+            subject: data.subject,
+            difficulty: data.difficulty,
+            mode: data.mode,
+            question_count: data.question_count,
+            grade: data.grade,
+            study_mode: studyMode,
+          });
+
           setState('playing');
         }
       } catch (err) {
@@ -153,6 +167,20 @@ export default function PlayPage() {
     if (questionSet && state === 'playing' && selectedQuestions.length === 0) {
       startNewSession();
       setSessionStartTime(Date.now());
+
+      // PostHog: Track quiz session started (initial)
+      if (studyMode === 'pelaa') {
+        posthog.capture('quiz_session_started', {
+          question_set_code: code,
+          question_set_name: questionSet.name,
+          subject: questionSet.subject,
+          difficulty: questionSet.difficulty,
+          mode: questionSet.mode,
+          question_count: questionSet.question_count,
+          grade: questionSet.grade,
+          is_replay: false,
+        });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionSet, state]);
@@ -191,6 +219,20 @@ export default function PlayPage() {
     startNewSession();
     setSessionStartTime(Date.now());
     setState('playing');
+
+    // PostHog: Track quiz session started (replay)
+    if (questionSet) {
+      posthog.capture('quiz_session_started', {
+        question_set_code: code,
+        question_set_name: questionSet.name,
+        subject: questionSet.subject,
+        difficulty: questionSet.difficulty,
+        mode: questionSet.mode,
+        question_count: questionSet.question_count,
+        grade: questionSet.grade,
+        is_replay: true,
+      });
+    }
   };
 
   const handleBrowseQuestionSets = () => {

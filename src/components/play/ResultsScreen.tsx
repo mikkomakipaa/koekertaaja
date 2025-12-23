@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Answer, Badge } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
 import { useBadges } from '@/hooks/useBadges';
 import { CheckCircle, XCircle, Medal } from '@phosphor-icons/react';
+import posthog from 'posthog-js';
 import {
   DiamondsFour,
   Fire,
@@ -60,6 +61,9 @@ export function ResultsScreen({
   const [showAllAnswers, setShowAllAnswers] = useState(false);
   const [showAllBadges, setShowAllBadges] = useState(false);
 
+  // Track if events have already been captured to prevent duplicates
+  const eventsTrackedRef = useRef(false);
+
   // Record session and check for new badges/records
   useEffect(() => {
     if (questionSetCode) {
@@ -77,9 +81,56 @@ export function ResultsScreen({
         durationSeconds,
         difficulty,
       });
+
+      // PostHog: Track quiz session completed (only once)
+      if (!eventsTrackedRef.current) {
+        eventsTrackedRef.current = true;
+
+        posthog.capture('quiz_session_completed', {
+          question_set_code: questionSetCode,
+          difficulty,
+          score,
+          total_questions: total,
+          percentage: Math.round((score / total) * 100),
+          total_points: totalPoints,
+          best_streak: bestStreak,
+          duration_seconds: durationSeconds,
+          is_perfect_score: score === total,
+        });
+
+        // PostHog: Track personal best achieved
+        if (newRecord) {
+          posthog.capture('personal_best_achieved', {
+            question_set_code: questionSetCode,
+            new_score: totalPoints,
+            previous_best: currentBest,
+          });
+        }
+
+        // PostHog: Track badge_unlocked for newly unlocked badges
+        // This will be tracked after component re-render when newlyUnlocked is populated
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // PostHog: Track newly unlocked badges (separate effect to capture after state update)
+  const badgesTrackedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (newlyUnlocked.length > 0) {
+      newlyUnlocked.forEach((badgeId) => {
+        if (!badgesTrackedRef.current.has(badgeId)) {
+          badgesTrackedRef.current.add(badgeId);
+          const badge = badges.find(b => b.id === badgeId);
+          posthog.capture('badge_unlocked', {
+            badge_id: badgeId,
+            badge_name: badge?.name,
+            question_set_code: questionSetCode,
+          });
+        }
+      });
+    }
+  }, [newlyUnlocked, badges, questionSetCode]);
 
   // Determine celebration level
   const getCelebration = () => {

@@ -9,6 +9,21 @@ const nextConfig = {
   images: {
     domains: [],
   },
+  // PostHog reverse proxy rewrites
+  async rewrites() {
+    return [
+      {
+        source: '/ingest/static/:path*',
+        destination: 'https://eu-assets.i.posthog.com/static/:path*',
+      },
+      {
+        source: '/ingest/:path*',
+        destination: 'https://eu.i.posthog.com/:path*',
+      },
+    ];
+  },
+  // Required for PostHog trailing slash API requests
+  skipTrailingSlashRedirect: true,
   async headers() {
     return [
       {
@@ -22,7 +37,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co",
+              "connect-src 'self' https://*.supabase.co https://*.posthog.com https://eu.i.posthog.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

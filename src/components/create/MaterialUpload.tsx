@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { X, WarningCircle } from '@phosphor-icons/react';
+import posthog from 'posthog-js';
 
 interface MaterialUploadProps {
   materialText: string;
@@ -62,6 +63,13 @@ export function MaterialUpload({
     onFilesChange([...uploadedFiles, ...files]);
     onMaterialTextChange(''); // Clear text when files are uploaded
     event.target.value = ''; // Reset input for next upload
+
+    // PostHog: Track material uploaded
+    posthog.capture('material_uploaded', {
+      file_count: files.length,
+      file_types: files.map(f => f.type),
+      total_size_mb: parseFloat((totalSize / 1024 / 1024).toFixed(2)),
+    });
   };
 
   const removeFile = (indexToRemove: number) => {
