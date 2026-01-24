@@ -18,7 +18,6 @@ import {
   Books,
   Smiley,
   Target,
-  Barbell,
   Sparkle,
   BookOpenText,
   Book,
@@ -49,19 +48,16 @@ export default function PlayBrowsePage() {
   const difficultyLabels: Record<string, string> = {
     helppo: 'Helppo',
     normaali: 'Normaali',
-    vaikea: 'Vaikea',
   };
 
   const difficultyColors: Record<string, { bg: string; hover: string; text: string }> = {
     helppo: { bg: 'bg-green-500', hover: 'hover:bg-green-600', text: 'text-green-700' },
     normaali: { bg: 'bg-blue-500', hover: 'hover:bg-blue-600', text: 'text-blue-700' },
-    vaikea: { bg: 'bg-orange-500', hover: 'hover:bg-orange-600', text: 'text-orange-700' },
   };
 
   const difficultyIcons: Record<string, React.ReactNode> = {
     helppo: <Smiley size={20} weight="fill" className="inline" />,
     normaali: <Target size={20} weight="duotone" className="inline" />,
-    vaikea: <Barbell size={20} weight="bold" className="inline" />,
   };
 
   useEffect(() => {
@@ -87,7 +83,7 @@ export default function PlayBrowsePage() {
 
         // Helper function to remove difficulty suffix from name
         const stripDifficultySuffix = (name: string): string => {
-          const suffixes = [' - Helppo', ' - Normaali', ' - Vaikea', ' - Kortit'];
+          const suffixes = [' - Helppo', ' - Normaali', ' - Kortit'];
           for (const suffix of suffixes) {
             if (name.endsWith(suffix)) {
               return name.slice(0, -suffix.length);
@@ -166,7 +162,7 @@ export default function PlayBrowsePage() {
   };
 
   const getAvailableDifficulties = (sets: QuestionSet[]) => {
-    return ['helppo', 'normaali', 'vaikea'].filter(difficulty =>
+    return ['helppo', 'normaali'].filter(difficulty =>
       sets.some(set => set.difficulty === difficulty && set.mode === 'quiz')
     );
   };
@@ -308,7 +304,7 @@ export default function PlayBrowsePage() {
             {filteredSets.map((group) => {
               const availableDifficulties = getAvailableDifficulties(group.sets);
               const groupHasFlashcards = hasFlashcards(group.sets);
-              const difficultyOrder: Difficulty[] = ['helppo', 'normaali', 'vaikea'];
+              const difficultyOrder: Difficulty[] = ['helppo', 'normaali'];
               const reviewCandidates = difficultyOrder
                 .map(difficulty => group.sets.find(
                   set => set.difficulty === difficulty && set.mode === 'quiz'
