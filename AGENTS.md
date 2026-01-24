@@ -21,6 +21,7 @@ Koekertaaja (Exam Prepper) is an AI-powered exam preparation app for Finnish pri
 - **Dual-mode learning**: Quiz mode (Helppo/Normaali) + optional flashcards (memorization).
 - **Age-appropriate gamification**: Points, streaks, badges, personal bests (no leaderboards).
 - **Lenient answer matching**: Grade-based thresholds to reduce frustration.
+- **Review mistakes mode**: LocalStorage-based mistake banks per question set with fast correction loops.
 - **Public access via shareable codes** with server-side guarded writes.
 
 ## Project Goals
@@ -72,7 +73,7 @@ Use a three-step workflow: Plan and create tasks, Executes tasks and test, then 
 **Step 2: Task execution (Tool-agnostic)**
 - User will run tasks sequentially using `scripts/run-tasks-codex.sh` or `scripts/run-tasks-claude.sh`
 - Each task is executed in isolation; no combined mega-prompts
-- Outputs are captured in `results/` for traceability
+- Outputs are captured in `results/` for traceability (cleaned to only the RESULT OUTPUT FORMAT); raw logs go to `results/raw/`
 - Script commands must be executed directly without asking for validation; only pause for architectural decision clarifications
 - Use `DWF/` folder documents as reference.
 - Update DWF folder documents based on development.

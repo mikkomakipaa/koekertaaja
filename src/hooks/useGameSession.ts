@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Question, Answer } from '@/types';
 import { shuffleArray } from '@/lib/utils';
 import { evaluateQuestionAnswer } from '@/lib/questions/answer-evaluation';
+import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 
 const DEFAULT_QUESTIONS_PER_SESSION = 15;
 const POINTS_PER_CORRECT = 10;
@@ -10,7 +11,10 @@ const STREAK_BONUS = 5;
 export function useGameSession(
   allQuestions: Question[],
   questionsPerSession = DEFAULT_QUESTIONS_PER_SESSION,
-  grade?: number
+  grade?: number,
+  reviewMode = false,
+  mistakeQuestions?: Question[],
+  questionSetCode?: string
 ) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
@@ -21,8 +25,23 @@ export function useGameSession(
   const [totalPoints, setTotalPoints] = useState(0);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const { addMistake, removeMistake, error: mistakesError } = useReviewMistakes(questionSetCode);
 
   const startNewSession = useCallback(() => {
+    if (reviewMode) {
+      const reviewQuestions = mistakeQuestions ? shuffleArray(mistakeQuestions) : [];
+      setSelectedQuestions(reviewQuestions);
+      setCurrentQuestionIndex(0);
+      setUserAnswer(null);
+      setShowExplanation(false);
+      setScore(0);
+      setAnswers([]);
+      setTotalPoints(0);
+      setCurrentStreak(0);
+      setBestStreak(0);
+      return;
+    }
+
     // STRATIFIED SAMPLING: Ensure balanced topic coverage
     // Group questions by topic
     const byTopic: Record<string, Question[]> = {};
@@ -117,7 +136,7 @@ export function useGameSession(
     setTotalPoints(0);
     setCurrentStreak(0);
     setBestStreak(0);
-  }, [allQuestions, questionsPerSession]);
+  }, [allQuestions, questionsPerSession, reviewMode, mistakeQuestions]);
 
   const submitAnswer = useCallback(() => {
     if (userAnswer === null || userAnswer === '' || (typeof userAnswer === 'object' && Object.keys(userAnswer).length === 0)) {
@@ -157,6 +176,19 @@ export function useGameSession(
       newStreak = 0;
     }
 
+    if (!isCorrect && !reviewMode) {
+      addMistake({
+        questionId: currentQuestion.id,
+        questionText: currentQuestion.question_text,
+        correctAnswer,
+        userAnswer,
+      });
+    }
+
+    if (isCorrect && reviewMode) {
+      removeMistake(currentQuestion.id);
+    }
+
     setAnswers((prev) => [
       ...prev,
       {
@@ -172,7 +204,17 @@ export function useGameSession(
     ]);
 
     setShowExplanation(true);
-  }, [userAnswer, selectedQuestions, currentQuestionIndex, currentStreak, bestStreak]);
+  }, [
+    userAnswer,
+    selectedQuestions,
+    currentQuestionIndex,
+    currentStreak,
+    bestStreak,
+    grade,
+    reviewMode,
+    addMistake,
+    removeMistake,
+  ]);
 
   const nextQuestion = useCallback(() => {
     setCurrentQuestionIndex((prev) => prev + 1);
@@ -195,6 +237,8 @@ export function useGameSession(
     totalPoints,
     currentStreak,
     bestStreak,
+    isReviewMode: reviewMode,
+    mistakesError,
     setUserAnswer,
     submitAnswer,
     nextQuestion,

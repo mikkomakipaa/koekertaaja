@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { GradeSelector } from '@/components/create/GradeSelector';
 import { MaterialUpload } from '@/components/create/MaterialUpload';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
-import { Difficulty, MapInputMode, MapQuestionEntity, MapRegion, QuestionSet, QuestionSetStatus } from '@/types';
+import { Difficulty, MapInputMode, MapRegion, QuestionSet } from '@/types';
 import {
   CircleNotch,
   Star,
@@ -37,15 +37,6 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { UserMenu } from '@/components/auth/UserMenu';
 
 type CreateState = 'form' | 'loading' | 'success';
-
-type MapQuestionWithSet = MapQuestionEntity & {
-  question_set?: {
-    id: string;
-    name: string;
-    status: QuestionSetStatus | null;
-    code: string;
-  } | null;
-};
 
 export default function CreatePage() {
   const router = useRouter();
@@ -122,9 +113,6 @@ export default function CreatePage() {
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Map question management state
-  const [mapQuestions, setMapQuestions] = useState<MapQuestionWithSet[]>([]);
-  const [loadingMapQuestions, setLoadingMapQuestions] = useState(false);
   const [creatingMapQuestion, setCreatingMapQuestion] = useState(false);
   const [mapQuestionError, setMapQuestionError] = useState('');
 
@@ -286,27 +274,6 @@ export default function CreatePage() {
     }
   };
 
-  const loadMapQuestions = async () => {
-    setLoadingMapQuestions(true);
-    try {
-      const response = await fetch('/api/map-questions/created', {
-        method: 'GET',
-        credentials: 'same-origin',
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        const errorMessage = payload.error || 'Failed to load map questions';
-        throw new Error(errorMessage);
-      }
-
-      setMapQuestions(payload.data || []);
-    } catch (error) {
-      console.error('Error loading map questions:', error);
-    } finally {
-      setLoadingMapQuestions(false);
-    }
-  };
 
   const checkAdminStatus = async () => {
     try {
@@ -445,7 +412,6 @@ export default function CreatePage() {
       setMapQuestionCorrectAnswer('');
       setMapQuestionAcceptableAnswers('');
 
-      await loadMapQuestions();
     } catch (error) {
       console.error('Error creating map question:', error);
       const errorMessage = error instanceof Error ? error.message : 'Karttakysymyksen luonti epäonnistui';
@@ -581,7 +547,6 @@ export default function CreatePage() {
   // Load question sets and check admin status when component mounts
   useEffect(() => {
     loadQuestionSets();
-    loadMapQuestions();
     checkAdminStatus();
   }, []);
 
@@ -1335,121 +1300,20 @@ export default function CreatePage() {
               </TabsContent>
 
               <TabsContent value="manage" className="space-y-4">
-
-                <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      Karttakysymykset ({mapQuestions.length})
-                    </h3>
-                    <Button
-                      onClick={loadMapQuestions}
-                      variant="outline"
-                      size="sm"
-                      disabled={loadingMapQuestions}
-                    >
-                      Päivitä
-                    </Button>
-                  </div>
-
-                  {loadingMapQuestions ? (
-                    <div className="flex justify-center py-8">
-                      <CircleNotch weight="bold" className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
-                    </div>
-                  ) : mapQuestions.length === 0 ? (
-                    <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-                      <p>Ei karttakysymyksiä.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {mapQuestions.map((question) => {
-                        const status = question.question_set?.status;
-                        return (
-                          <div
-                            key={question.id}
-                            className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900/40"
-                          >
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                                  {question.question}
-                                </h4>
-                                <div className="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
-                                  <p>
-                                    <span className="font-medium">Kartta:</span> {question.map_asset}
-                                  </p>
-                                  <p>
-                                    <span className="font-medium">Alueita:</span> {question.regions.length}
-                                    {' · '}
-                                    <span className="font-medium">Tapa:</span> {question.input_mode}
-                                  </p>
-                                  {question.question_set ? (
-                                    <p>
-                                      <span className="font-medium">Sarja:</span> {question.question_set.name}
-                                      {' · '}
-                                      <span className="font-medium">Koodi:</span>{' '}
-                                      <code className="font-mono font-semibold text-gray-900 dark:text-gray-100">
-                                        {question.question_set.code}
-                                      </code>
-                                    </p>
-                                  ) : (
-                                    <p><span className="font-medium">Sarja:</span> Ei liitetty</p>
-                                  )}
-                                </div>
-                                {question.created_at && (
-                                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                                    Luotu: {new Date(question.created_at).toLocaleDateString('fi-FI')}
-                                  </p>
-                                )}
-                              </div>
-                              <div>
-                                {status ? (
-                                  <span
-                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                                      status === 'published'
-                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300'
-                                    }`}
-                                  >
-                                    {status === 'published' ? (
-                                      <>
-                                        <Eye weight="fill" className="w-3 h-3" />
-                                        Julkaistu
-                                      </>
-                                    ) : (
-                                      <>
-                                        <EyeSlash weight="fill" className="w-3 h-3" />
-                                        Luonnos
-                                      </>
-                                    )}
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                    Standalone
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
                 {loadingQuestionSets ? (
                   <div className="flex justify-center py-12">
                     <CircleNotch weight="bold" className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
                   </div>
-                ) : allQuestionSets.filter((set) => !set.status || set.status === 'created').length === 0 ? (
+                ) : allQuestionSets.length === 0 ? (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                    <p className="text-lg">Ei luonnoksia.</p>
+                    <p className="text-lg">Ei kysymyssarjoja.</p>
                     <p className="text-sm mt-2">Luo uusi kysymyssarja tai korttisarja "Luo uusi" -välilehdeltä.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        Luonnokset ({allQuestionSets.filter((set) => !set.status || set.status === 'created').length})
+                        Kysymyssarjat ({allQuestionSets.length})
                       </h3>
                       <Button
                         onClick={loadQuestionSets}
@@ -1460,107 +1324,117 @@ export default function CreatePage() {
                         Päivitä
                       </Button>
                     </div>
-                    {allQuestionSets
-                      .filter((set) => !set.status || set.status === 'created')
-                      .map((set) => (
-                      <div
-                        key={set.id}
-                        className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-gray-900 dark:text-gray-100">{set.name}</h4>
-                              <span
-                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  set.status === 'published'
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300'
-                                }`}
-                              >
-                                {set.status === 'published' ? (
-                                  <>
-                                    <Eye weight="fill" className="w-3 h-3" />
-                                    Julkaistu
-                                  </>
-                                ) : (
-                                  <>
-                                    <EyeSlash weight="fill" className="w-3 h-3" />
-                                    Luonnos
-                                  </>
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex gap-3 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                              <span className="inline-flex items-center gap-1">
-                                <BookOpenText weight="duotone" className="w-4 h-4" />
-                                {set.subject}
-                              </span>
-                              {set.grade && (
-                                <span className="inline-flex items-center gap-1">
-                                  <GraduationCap weight="duotone" className="w-4 h-4" />
-                                  Luokka {set.grade}
+                    {allQuestionSets.map((set) => {
+                      const status = set.status ?? 'created';
+                      return (
+                        <div
+                          key={set.id}
+                          className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{set.name}</h4>
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    status === 'published'
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                      : 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300'
+                                  }`}
+                                >
+                                  {status === 'published' ? (
+                                    <>
+                                      <Eye weight="fill" className="w-3 h-3" />
+                                      Julkaistu
+                                    </>
+                                  ) : (
+                                    <>
+                                      <EyeSlash weight="fill" className="w-3 h-3" />
+                                      Luonnos
+                                    </>
+                                  )}
                                 </span>
+                              </div>
+                              <div className="flex gap-3 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                <span className="inline-flex items-center gap-1">
+                                  <BookOpenText weight="duotone" className="w-4 h-4" />
+                                  {set.subject}
+                                </span>
+                                {set.grade && (
+                                  <span className="inline-flex items-center gap-1">
+                                    <GraduationCap weight="duotone" className="w-4 h-4" />
+                                    Luokka {set.grade}
+                                  </span>
+                                )}
+                                <span className="inline-flex items-center gap-1">
+                                  <ChartBar weight="duotone" className="w-4 h-4" />
+                                  {set.difficulty}
+                                </span>
+                              </div>
+                              <div className="flex gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                <span>{set.question_count} kysymystä</span>
+                                <span>•</span>
+                                <span>Koodi: <code className="font-mono font-bold text-gray-900 dark:text-gray-100">{set.code}</code></span>
+                              </div>
+                              {set.created_at && (
+                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                  Luotu: {new Date(set.created_at).toLocaleDateString('fi-FI')}
+                                </p>
                               )}
-                              <span className="inline-flex items-center gap-1">
-                                <ChartBar weight="duotone" className="w-4 h-4" />
-                                {set.difficulty}
-                              </span>
                             </div>
-                            <div className="flex gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                              <span>{set.question_count} kysymystä</span>
-                              <span>•</span>
-                              <span>Koodi: <code className="font-mono font-bold text-gray-900 dark:text-gray-100">{set.code}</code></span>
-                            </div>
-                            {set.created_at && (
-                              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                Luotu: {new Date(set.created_at).toLocaleDateString('fi-FI')}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex gap-2 ml-4">
-                            <Button
-                              onClick={() => router.push(`/play/${set.code}`)}
-                              variant="outline"
-                              size="sm"
-                            >
-                              Avaa
-                            </Button>
-                            {isAdmin && (
+                            <div className="flex gap-2 ml-4">
                               <Button
-                                onClick={() => handlePublishToggle(set.id, set.status)}
-                                variant={set.status === 'published' ? 'outline' : 'default'}
+                                onClick={() => router.push(`/play/${set.code}`)}
+                                variant="outline"
                                 size="sm"
-                                disabled={publishingId === set.id}
-                                aria-label={set.status === 'published' ? 'Piilota kysymyssarja' : 'Julkaise kysymyssarja'}
-                                className={set.status === 'published' ? '' : 'bg-green-600 hover:bg-green-700 text-white'}
                               >
-                                {publishingId === set.id ? (
+                                Avaa
+                              </Button>
+                              {isAdmin && (
+                                <Button
+                                  onClick={() => handlePublishToggle(set.id, status)}
+                                  variant={status === 'published' ? 'outline' : 'default'}
+                                  size="sm"
+                                  disabled={publishingId === set.id}
+                                  aria-label={status === 'published' ? 'Piilota kysymyssarja' : 'Julkaise kysymyssarja'}
+                                  className={`gap-2 ${status === 'published' ? '' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+                                >
+                                  {publishingId === set.id ? (
+                                    <>
+                                      <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
+                                      Päivitetään
+                                    </>
+                                  ) : status === 'published' ? (
+                                    <>
+                                      <EyeSlash weight="duotone" className="w-4 h-4" />
+                                      Piilota
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Eye weight="duotone" className="w-4 h-4" />
+                                      Julkaise
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                              <Button
+                                onClick={() => handleDeleteQuestionSet(set.id)}
+                                variant="destructive"
+                                size="sm"
+                                disabled={deletingId === set.id}
+                                aria-label="Poista kysymyssarja"
+                              >
+                                {deletingId === set.id ? (
                                   <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
-                                ) : set.status === 'published' ? (
-                                  <EyeSlash weight="duotone" className="w-4 h-4" />
                                 ) : (
-                                  <Eye weight="duotone" className="w-4 h-4" />
+                                  <Trash weight="duotone" className="w-4 h-4" />
                                 )}
                               </Button>
-                            )}
-                            <Button
-                              onClick={() => handleDeleteQuestionSet(set.id)}
-                              variant="destructive"
-                              size="sm"
-                              disabled={deletingId === set.id}
-                              aria-label="Poista kysymyssarja"
-                            >
-                              {deletingId === set.id ? (
-                                <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Trash weight="duotone" className="w-4 h-4" />
-                              )}
-                            </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 

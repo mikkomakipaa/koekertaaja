@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ModeToggle } from '@/components/play/ModeToggle';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { QuestionSet, Difficulty, StudyMode } from '@/types';
+import { readMistakesFromStorage } from '@/hooks/useReviewMistakes';
 import {
   CircleNotch,
   GlobeHemisphereWest,
@@ -20,7 +21,8 @@ import {
   Barbell,
   Sparkle,
   BookOpenText,
-  Book
+  Book,
+  ArrowCounterClockwise
 } from '@phosphor-icons/react';
 
 type BrowseState = 'loading' | 'loaded' | 'error';
@@ -306,6 +308,17 @@ export default function PlayBrowsePage() {
             {filteredSets.map((group) => {
               const availableDifficulties = getAvailableDifficulties(group.sets);
               const groupHasFlashcards = hasFlashcards(group.sets);
+              const difficultyOrder: Difficulty[] = ['helppo', 'normaali', 'vaikea'];
+              const reviewCandidates = difficultyOrder
+                .map(difficulty => group.sets.find(
+                  set => set.difficulty === difficulty && set.mode === 'quiz'
+                ))
+                .filter((set): set is QuestionSet => Boolean(set))
+                .map(set => ({
+                  set,
+                  count: readMistakesFromStorage(set.code).length,
+                }));
+              const reviewCandidate = reviewCandidates.find(candidate => candidate.count > 0);
 
               return (
                 <div
@@ -384,6 +397,17 @@ export default function PlayBrowsePage() {
                       ) : (
                         <p className="text-sm text-gray-500 dark:text-gray-400">Ei kortteja saatavilla</p>
                       )
+                    )}
+
+                    {studyMode === 'pelaa' && reviewCandidate && (
+                      <button
+                        onClick={() => router.push(`/play/${reviewCandidate.set.code}?mode=review`)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-1.5"
+                        aria-label="Kertaa virheet"
+                      >
+                        <ArrowCounterClockwise size={20} weight="bold" className="inline" />
+                        Kertaa virheet ({reviewCandidate.count})
+                      </button>
                     )}
                   </div>
                 </div>

@@ -6,8 +6,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 TASK_DIR="$ROOT_DIR/todo"
 RESULT_DIR="$ROOT_DIR/results"
+RAW_RESULT_DIR="$RESULT_DIR/raw"
 
 mkdir -p "$RESULT_DIR"
+mkdir -p "$RAW_RESULT_DIR"
 
 if [ ! -d "$TASK_DIR" ]; then
   echo "Task directory '$TASK_DIR' not found."
@@ -51,6 +53,7 @@ INSTRUCTIONS
 for task in $tasks; do
   filename=$(basename "$task")
   result_path="$RESULT_DIR/$filename"
+  raw_result_path="$RAW_RESULT_DIR/$filename"
   if [ -f "$result_path" ]; then
     echo "Skipping (already processed): $filename"
     continue
@@ -64,43 +67,52 @@ for task in $tasks; do
   # --add-dir: Explicitly allow access to project directory
   # -p: Print mode (non-interactive)
   # Pass content via stdin instead of as argument (more reliable for multi-line)
+  set +e
   {
-    echo "# Auto Metadata"
-    echo "task: $filename"
-    if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-      echo "branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
-      echo "commit: $(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
-      echo "dirty: $(if [ -n \"$(git status --porcelain 2>/dev/null)\" ]; then echo yes; else echo no; fi)"
-    else
-      echo "branch: n/a"
-      echo "commit: n/a"
-      echo "dirty: n/a"
-    fi
-    echo "started_at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-    echo ""
     echo "$PROMPT_PREAMBLE"
     echo ""
     cat "$task"
   } | claude -p \
     --permission-mode bypassPermissions \
-    --add-dir "$ROOT_DIR" > "$result_path" 2>&1
+    --add-dir "$ROOT_DIR" > "$raw_result_path" 2>&1
 
   exit_code=$?
-  {
-    echo ""
-    echo "# Auto Post-Run"
-    echo "exit_code: $exit_code"
-    if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-      echo "changed_files:"
-      git status --porcelain 2>/dev/null | awk '{print "- " $2}' || true
-    else
-      echo "changed_files: n/a"
-    fi
-    echo "finished_at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-  } >> "$result_path" 2>&1
+  set -e
+  awk '
+    /^STATUS:/ { block=""; in=1; after=0 }
+    {
+      if (in) {
+        if (after && $0 !~ /^-/ && $0 !~ /^$/) {
+          in=0
+        } else {
+          block = block $0 "\n"
+          if ($0 ~ /^ASSUMPTIONS\/BLOCKERS:/) {
+            after=1
+          }
+        }
+      }
+    }
+    END { printf "%s", block }
+  ' "$raw_result_path" > "$result_path"
+
+  if [ ! -s "$result_path" ]; then
+    {
+      echo "STATUS: failed"
+      echo "SUMMARY: Task runner did not capture a valid RESULT OUTPUT FORMAT. See raw log."
+      echo "CHANGED FILES:"
+      echo "- none"
+      echo "TESTS:"
+      echo "- NOT RUN"
+      echo "NEW TASKS:"
+      echo "- none"
+      echo "ASSUMPTIONS/BLOCKERS:"
+      echo "- raw log at $raw_result_path"
+    } > "$result_path"
+  fi
+
   if [ $exit_code -ne 0 ]; then
     echo "ERROR: Task failed with exit code $exit_code"
-    echo "Check $result_path for details"
+    echo "Check $raw_result_path for details"
     # Continue processing other tasks instead of exiting
   else
     echo "Completed: $filename"

@@ -10,7 +10,6 @@ export async function GET() {
     const { data, error } = await supabaseAdmin
       .from('question_sets')
       .select('*')
-      .eq('status', 'created')
       .order('created_at', { ascending: false })
       .limit(200);
 

@@ -4,7 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
 import { useBadges } from '@/hooks/useBadges';
-import { CheckCircle, XCircle, Medal } from '@phosphor-icons/react';
+import { useReviewMistakes } from '@/hooks/useReviewMistakes';
+import { CheckCircle, XCircle, Medal, ArrowCounterClockwise } from '@phosphor-icons/react';
 import {
   DiamondsFour,
   Fire,
@@ -31,6 +32,7 @@ interface ResultsScreenProps {
   difficulty?: string;
   durationSeconds?: number;
   onPlayAgain: () => void;
+  onReviewMistakes?: () => void;
   onBackToMenu: () => void;
 }
 
@@ -44,6 +46,7 @@ export function ResultsScreen({
   difficulty,
   durationSeconds,
   onPlayAgain,
+  onReviewMistakes,
   onBackToMenu,
 }: ResultsScreenProps) {
   const percentage = Math.round((score / total) * 100);
@@ -54,11 +57,14 @@ export function ResultsScreen({
     getPersonalBest,
     updatePersonalBest,
   } = useBadges(questionSetCode);
+  const { mistakeCount } = useReviewMistakes(questionSetCode);
 
   const [personalBest, setPersonalBest] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [showAllAnswers, setShowAllAnswers] = useState(false);
   const [showAllBadges, setShowAllBadges] = useState(false);
+  const sessionMistakeCount = answers.filter(answer => !answer.isCorrect).length;
+  const reviewMistakeCount = mistakeCount > 0 ? mistakeCount : sessionMistakeCount;
 
   // Track if events have already been captured to prevent duplicates
 
@@ -335,6 +341,15 @@ export function ResultsScreen({
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3">
+          {sessionMistakeCount > 0 && onReviewMistakes && (
+            <Button
+              onClick={onReviewMistakes}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-6 rounded-xl font-medium flex items-center justify-center gap-2"
+            >
+              <ArrowCounterClockwise size={20} weight="bold" />
+              Kertaa virheet ({reviewMistakeCount})
+            </Button>
+          )}
           <Button
             onClick={onPlayAgain}
             className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-6 rounded-xl font-medium"

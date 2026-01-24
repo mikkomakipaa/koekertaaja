@@ -6,8 +6,22 @@ import { Analytics } from '@vercel/analytics/react';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Koekertaaja',
-  description: 'Harjoittele kokeisiin ja opi uutta! Luo AI-pohjaisia kysymyssarjoja ja kerää pisteitä.',
+  metadataBase: new URL('https://www.koekertaaja.fi'),
+  title: 'Koekertaaja – Kivaa koeharjoittelua 4-6-luokkalaisille',
+  description:
+    'Harjoittele kokeisiin hauskasti! Luo omista materiaaleista AI-tekoälyn tekemät visat ja muistikortit, kerää pisteitä ja pidä putki käynnissä.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'Koekertaaja – Kivaa koeharjoittelua 4-6-luokkalaisille',
+    description:
+      'Harjoittele kokeisiin hauskasti! Luo omista materiaaleista AI-tekoälyn tekemät visat ja muistikortit, kerää pisteitä ja pidä putki käynnissä.',
+    url: '/',
+    siteName: 'Koekertaaja',
+    locale: 'fi_FI',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

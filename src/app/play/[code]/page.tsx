@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 // Force dynamic rendering (no static optimization)
 // Prevents "document is not defined" error during build
@@ -15,11 +15,12 @@ import { ProgressBar } from '@/components/play/ProgressBar';
 import { ResultsScreen } from '@/components/play/ResultsScreen';
 import { FlashcardSession } from '@/components/play/FlashcardSession';
 import { useGameSession } from '@/hooks/useGameSession';
+import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
 import { shuffleArray } from '@/lib/utils';
 import { QuestionSetWithQuestions, StudyMode, Flashcard } from '@/types';
-import { CircleNotch, ListBullets, DiamondsFour, Fire, Book } from '@phosphor-icons/react';
+import { CircleNotch, ListBullets, DiamondsFour, Fire, Book, ArrowCounterClockwise } from '@phosphor-icons/react';
 
 type PlayState = 'loading' | 'error' | 'playing' | 'results';
 
@@ -28,7 +29,9 @@ export default function PlayPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = params.code as string;
-  const studyMode = (searchParams.get('mode') as StudyMode) || 'pelaa';
+  const modeParam = searchParams.get('mode');
+  const isReviewMode = modeParam === 'review';
+  const studyMode: StudyMode = modeParam === 'opettele' ? 'opettele' : 'pelaa';
   const allCodes = searchParams.get('all'); // Comma-separated codes for study mode
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -39,6 +42,14 @@ export default function PlayPage() {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [availableTopics, setAvailableTopics] = useState<string[]>([]);
+  const { getMistakes, removeMistake, mistakeCount, error: mistakesError } = useReviewMistakes(code);
+
+  const mistakeQuestions = useMemo(() => {
+    if (!isReviewMode || !questionSet?.questions) return [];
+    const mistakes = getMistakes();
+    const mistakeIds = new Set(mistakes.map(m => m.questionId));
+    return questionSet.questions.filter(question => mistakeIds.has(question.id));
+  }, [isReviewMode, questionSet?.questions, getMistakes, mistakeCount]);
 
   const {
     currentQuestion,
@@ -52,6 +63,7 @@ export default function PlayPage() {
     totalPoints,
     currentStreak,
     bestStreak,
+    mistakesError: sessionMistakesError,
     setUserAnswer,
     submitAnswer,
     nextQuestion,
@@ -59,7 +71,10 @@ export default function PlayPage() {
   } = useGameSession(
     questionSet?.questions || [],
     questionSet?.exam_length ?? 15,
-    questionSet?.grade // pass grade for age-appropriate answer checking
+    questionSet?.grade, // pass grade for age-appropriate answer checking
+    isReviewMode,
+    mistakeQuestions,
+    questionSet?.code
   );
 
   // Load question set(s)
@@ -184,11 +199,25 @@ export default function PlayPage() {
 
   // Start new session when question set loads
   useEffect(() => {
-    if (questionSet && state === 'playing' && selectedQuestions.length === 0) {
+    if (
+      questionSet &&
+      state === 'playing' &&
+      selectedQuestions.length === 0 &&
+      (!isReviewMode || mistakeQuestions.length > 0)
+    ) {
       startNewSession();
       setSessionStartTime(Date.now());
     }
-  }, [questionSet, state]);
+  }, [questionSet, state, selectedQuestions.length, startNewSession, isReviewMode, mistakeQuestions.length]);
+
+  useEffect(() => {
+    if (!isReviewMode || !questionSet) return;
+    const mistakes = getMistakes();
+    if (mistakes.length === 0) return;
+    const validIds = new Set(questionSet.questions.map(question => question.id));
+    const invalidMistakes = mistakes.filter(mistake => !validIds.has(mistake.questionId));
+    invalidMistakes.forEach(mistake => removeMistake(mistake.questionId));
+  }, [isReviewMode, questionSet, getMistakes, removeMistake]);
 
   const handleSubmitAnswer = () => {
     submitAnswer();
@@ -232,6 +261,10 @@ export default function PlayPage() {
 
   const handleBackToMenu = () => {
     router.push('/play');
+  };
+
+  const handleReviewMistakes = () => {
+    router.push(`/play/${code}?mode=review`);
   };
 
   // Loading screen
@@ -279,6 +312,7 @@ export default function PlayPage() {
         difficulty={questionSet?.difficulty}
         durationSeconds={durationSeconds}
         onPlayAgain={handlePlayAgain}
+        onReviewMistakes={isReviewMode ? undefined : handleReviewMistakes}
         onBackToMenu={handleBackToMenu}
       />
     );
@@ -420,6 +454,30 @@ export default function PlayPage() {
 
   // Playing screen - show loading while session initializes
   if (!currentQuestion || selectedQuestions.length === 0) {
+    if (isReviewMode && questionSet && mistakeQuestions.length === 0) {
+      return (
+        <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-6 transition-colors">
+          <div className="max-w-md text-center">
+            <div className="mb-4 flex justify-center">
+              <ArrowCounterClockwise size={56} weight="bold" className="text-red-500" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              Hienoa! Olet korjannut kaikki virheet. 🎉
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Voit palata valikkoon ja valita uuden harjoituksen.
+            </p>
+            <Button
+              onClick={handleBackToMenu}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Takaisin valikkoon
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -433,6 +491,26 @@ export default function PlayPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 p-4 md:p-8 pb-safe transition-colors">
       <div ref={topRef} className="max-w-2xl mx-auto pt-2">
+        {(mistakesError || sessionMistakesError) && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{mistakesError || sessionMistakesError}</AlertDescription>
+          </Alert>
+        )}
+
+        {isReviewMode && (
+          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg p-4 mb-5">
+            <div className="flex items-center gap-2">
+              <ArrowCounterClockwise size={24} weight="bold" className="text-red-600 dark:text-red-400" />
+              <span className="font-semibold text-red-900 dark:text-red-100">
+                Kertaat virheitä ({mistakeQuestions.length} kysymystä)
+              </span>
+            </div>
+            <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+              Vastaa oikein poistaaksesi kysymyksen virhelistalta
+            </p>
+          </div>
+        )}
+
         {/* Stats Bar */}
         <div className="mb-6 flex items-center justify-between">
           <div className="text-lg font-bold text-gray-900 dark:text-gray-100">

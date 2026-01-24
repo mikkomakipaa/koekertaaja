@@ -1,12 +1,13 @@
-Type check exit: 0
+Type check exit: 2
 Lint exit: 0
-Build exit: 0
+Build exit: 1
 
 ==> Type check
 
 > exam-prepper@0.1.0 typecheck
 > tsc --noEmit
 
+src/app/play/page.tsx(311,76): error TS2322: Type '"vaikea"' is not assignable to type 'Difficulty'.
 
 ==> Lint
 
@@ -32,37 +33,18 @@ Build exit: 0
   · serverActions
 
   Creating an optimized production build ...
-✓ Compiled successfully in 6.5s
+✓ Compiled successfully in 6.4s
   Running TypeScript ...
-  Collecting page data using 7 workers ...
-  Generating static pages using 7 workers (0/16) ...
-  Generating static pages using 7 workers (4/16) 
-  Generating static pages using 7 workers (8/16) 
-  Generating static pages using 7 workers (12/16) 
-✓ Generating static pages using 7 workers (16/16) in 160.7ms
-  Finalizing page optimization ...
+Failed to compile.
 
-Route (app)
-┌ ○ /
-├ ○ /_not-found
-├ ƒ /api/delete-question-set
-├ ƒ /api/extend-question-set
-├ ƒ /api/generate-questions
-├ ƒ /api/map-questions/created
-├ ƒ /api/map-questions/submit
-├ ƒ /api/question-sets/by-code
-├ ƒ /api/question-sets/created
-├ ƒ /api/question-sets/play
-├ ƒ /api/question-sets/publish
-├ ƒ /api/question-sets/submit
-├ ○ /create
-├ ○ /login
-├ ○ /play
-└ ƒ /play/[code]
+./src/app/play/page.tsx:311:76
+Type error: Type '"vaikea"' is not assignable to type 'Difficulty'.
 
-
-ƒ Proxy (Middleware)
-
-○  (Static)   prerendered as static content
-ƒ  (Dynamic)  server-rendered on demand
-
+[0m [90m 309 |[39m               [36mconst[39m availableDifficulties [33m=[39m getAvailableDifficulties(group[33m.[39msets)[33m;[39m
+ [90m 310 |[39m               [36mconst[39m groupHasFlashcards [33m=[39m hasFlashcards(group[33m.[39msets)[33m;[39m
+[31m[1m>[22m[39m[90m 311 |[39m               [36mconst[39m difficultyOrder[33m:[39m [33mDifficulty[39m[] [33m=[39m [[32m'helppo'[39m[33m,[39m [32m'normaali'[39m[33m,[39m [32m'vaikea'[39m][33m;[39m
+ [90m     |[39m                                                                            [31m[1m^[22m[39m
+ [90m 312 |[39m               [36mconst[39m reviewCandidates [33m=[39m difficultyOrder
+ [90m 313 |[39m                 [33m.[39mmap(difficulty [33m=>[39m group[33m.[39msets[33m.[39mfind(
+ [90m 314 |[39m                   [36mset[39m [33m=>[39m [36mset[39m[33m.[39mdifficulty [33m===[39m difficulty [33m&&[39m [36mset[39m[33m.[39mmode [33m===[39m [32m'quiz'[39m[0m
+Next.js build worker exited with code: 1 and signal: null
