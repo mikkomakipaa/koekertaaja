@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Question, Answer } from '@/types';
 import { shuffleArray } from '@/lib/utils';
-import { isAnswerAcceptable } from '@/lib/utils/answerMatching';
-import posthog from 'posthog-js';
+import { evaluateQuestionAnswer } from '@/lib/questions/answer-evaluation';
 
 const DEFAULT_QUESTIONS_PER_SESSION = 15;
 const POINTS_PER_CORRECT = 10;
@@ -44,31 +43,69 @@ export function useGameSession(
 
     const topics = Object.keys(byTopic);
     let selectedQuestions: Question[] = [];
+    const sessionSize = Math.min(questionsPerSession, allQuestions.length);
+    const questionsWithSkills = allQuestions.filter(q => q.skill && q.skill.trim().length > 0).length;
+    const skillCoverage = allQuestions.length > 0
+      ? questionsWithSkills / allQuestions.length
+      : 0;
 
-    if (topics.length > 0 && questionsWithTopics.length >= Math.min(questionsPerSession, allQuestions.length) * 0.7) {
-      // Use stratified sampling if we have topics and most questions are tagged
-      const questionsPerTopic = Math.ceil(Math.min(questionsPerSession, allQuestions.length) / topics.length);
+    if (topics.length > 0 && questionsWithTopics.length >= sessionSize * 0.7) {
+      const questionsPerTopic = Math.ceil(sessionSize / topics.length);
 
-      // Sample evenly from each topic
-      topics.forEach(topic => {
-        const topicQuestions = shuffleArray(byTopic[topic]);
-        const sampled = topicQuestions.slice(0, Math.min(questionsPerTopic, topicQuestions.length));
-        selectedQuestions = selectedQuestions.concat(sampled);
-      });
+      if (skillCoverage >= 0.7) {
+        topics.forEach(topic => {
+          const topicQuestions = byTopic[topic];
+          const bySkill: Record<string, Question[]> = {};
 
-      // If we don't have enough questions, fill with remaining questions
-      if (selectedQuestions.length < Math.min(questionsPerSession, allQuestions.length)) {
+          topicQuestions.forEach(question => {
+            const skillKey = question.skill?.trim() || 'unassigned';
+            if (!bySkill[skillKey]) {
+              bySkill[skillKey] = [];
+            }
+            bySkill[skillKey].push(question);
+          });
+
+          const skills = Object.keys(bySkill);
+          const questionsPerSkill = Math.ceil(questionsPerTopic / skills.length);
+
+          skills.forEach(skill => {
+            const skillQuestions = shuffleArray(bySkill[skill]);
+            const sampled = skillQuestions.slice(0, Math.min(questionsPerSkill, skillQuestions.length));
+            selectedQuestions = selectedQuestions.concat(sampled);
+          });
+        });
+      } else {
+        // Use topic-only stratified sampling if too few skills are tagged
+        topics.forEach(topic => {
+          const topicQuestions = shuffleArray(byTopic[topic]);
+          const sampled = topicQuestions.slice(0, Math.min(questionsPerTopic, topicQuestions.length));
+          selectedQuestions = selectedQuestions.concat(sampled);
+        });
+      }
+
+      if (selectedQuestions.length < sessionSize) {
         const remaining = allQuestions.filter(q => !selectedQuestions.includes(q));
         const shuffledRemaining = shuffleArray(remaining);
-        const needed = Math.min(questionsPerSession, allQuestions.length) - selectedQuestions.length;
+        const needed = sessionSize - selectedQuestions.length;
         selectedQuestions = selectedQuestions.concat(shuffledRemaining.slice(0, needed));
       }
 
-      // Trim to exact count and shuffle final selection
-      selectedQuestions = shuffleArray(selectedQuestions).slice(0, Math.min(questionsPerSession, allQuestions.length));
+      selectedQuestions = shuffleArray(selectedQuestions).slice(0, sessionSize);
     } else {
       // Fallback to random sampling if no topics or too few tagged questions
-      selectedQuestions = shuffleArray(allQuestions).slice(0, Math.min(questionsPerSession, allQuestions.length));
+      selectedQuestions = shuffleArray(allQuestions).slice(0, sessionSize);
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      const skillDistribution = selectedQuestions.reduce<Record<string, number>>((acc, question) => {
+        const key = question.skill?.trim() || 'unassigned';
+        acc[key] = (acc[key] ?? 0) + 1;
+        return acc;
+      }, {});
+      console.info('Session skill distribution', {
+        skillCoverage: Number((skillCoverage * 100).toFixed(1)),
+        skillDistribution,
+      });
     }
 
     setSelectedQuestions(selectedQuestions);
@@ -88,58 +125,11 @@ export function useGameSession(
     }
 
     const currentQuestion = selectedQuestions[currentQuestionIndex];
-    let isCorrect = false;
-    let correctAnswer: any;
-
-    // Check correctness based on question type
-    switch (currentQuestion.question_type) {
-      case 'multiple_choice':
-        isCorrect = userAnswer === currentQuestion.correct_answer;
-        correctAnswer = currentQuestion.correct_answer;
-        break;
-      case 'fill_blank':
-        // Use lenient matching for age-appropriate answer checking
-        isCorrect = isAnswerAcceptable(
-          userAnswer,
-          currentQuestion.correct_answer,
-          currentQuestion.acceptable_answers,
-          grade
-        );
-        correctAnswer = currentQuestion.correct_answer;
-        break;
-      case 'true_false':
-        // Ensure boolean comparison (strict equality)
-        // Both userAnswer and correct_answer should already be boolean type
-        isCorrect = userAnswer === currentQuestion.correct_answer;
-        correctAnswer = currentQuestion.correct_answer;
-        break;
-      case 'matching':
-        // Check if all matches are correct
-        const userMatches = userAnswer as Record<string, string>;
-        isCorrect = currentQuestion.pairs.every(
-          (pair) => userMatches[pair.left] === pair.right
-        );
-        correctAnswer = currentQuestion.pairs;
-        break;
-      case 'short_answer':
-        // Use lenient matching for age-appropriate answer checking
-        isCorrect = isAnswerAcceptable(
-          userAnswer,
-          currentQuestion.correct_answer,
-          currentQuestion.acceptable_answers,
-          grade
-        );
-        correctAnswer = currentQuestion.correct_answer;
-        break;
-      case 'sequential':
-        // Check if the order matches exactly
-        isCorrect = JSON.stringify(userAnswer) === JSON.stringify(currentQuestion.correct_order);
-        correctAnswer = currentQuestion.correct_order;
-        break;
-      default:
-        isCorrect = false;
-        correctAnswer = null;
-    }
+    const { isCorrect, correctAnswer } = evaluateQuestionAnswer(
+      currentQuestion,
+      userAnswer,
+      grade
+    );
 
     let pointsEarned = 0;
     let newStreak = currentStreak;
@@ -180,18 +170,6 @@ export function useGameSession(
         streakAtAnswer: newStreak,
       },
     ]);
-
-    // PostHog: Track question answered event
-    posthog.capture('question_answered', {
-      question_id: currentQuestion.id,
-      question_type: currentQuestion.question_type,
-      topic: currentQuestion.topic,
-      is_correct: isCorrect,
-      points_earned: pointsEarned,
-      current_streak: newStreak,
-      question_index: currentQuestionIndex + 1,
-      total_questions: selectedQuestions.length,
-    });
 
     setShowExplanation(true);
   }, [userAnswer, selectedQuestions, currentQuestionIndex, currentStreak, bestStreak]);

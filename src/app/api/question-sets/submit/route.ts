@@ -154,6 +154,8 @@ export async function POST(request: NextRequest) {
       question_text: q.question,
       question_type: q.type,
       topic: q.topic,
+      subtopic: q.subtopic,
+      skill: q.skill,
       correct_answer: q.correct_answer,
       options: q.options,
       pairs: q.pairs,
@@ -184,6 +186,8 @@ export async function POST(request: NextRequest) {
           topic,
           subtopic,
           question_count: questions.length,
+          exam_length: questions.length,
+          status: 'created',  // New question sets default to unpublished
         },
         transformedQuestions as any
       );

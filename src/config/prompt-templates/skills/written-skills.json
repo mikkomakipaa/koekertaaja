@@ -1,0 +1,39 @@
+{
+  "recall": [
+    "facts",
+    "dates",
+    "names",
+    "definitions",
+    "locations"
+  ],
+  "comprehension": [
+    "cause_effect",
+    "compare_contrast",
+    "sequences",
+    "main_idea",
+    "summarization"
+  ],
+  "application": [
+    "examples",
+    "real_world_connections",
+    "predictions",
+    "scenarios"
+  ],
+  "analysis": [
+    "patterns",
+    "relationships",
+    "conclusions",
+    "inference"
+  ],
+  "geography_map": [
+    "map_reading",
+    "nordic_countries",
+    "eu_member_states",
+    "capital_cities",
+    "border_countries",
+    "continents",
+    "oceans",
+    "climate_zones",
+    "finnish_regions"
+  ]
+}

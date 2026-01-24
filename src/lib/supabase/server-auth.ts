@@ -1,6 +1,7 @@
 import { createServerClient as createSSRServerClient } from '@supabase/ssr';
 import { Database } from '@/types/database';
 import { cookies } from 'next/headers';
+import { isAdmin } from '@/lib/auth/admin';
 
 /**
  * Create a Supabase client for server-side authentication
@@ -63,6 +64,20 @@ export async function requireAuth() {
 
   if (!user) {
     throw new Error('Unauthorized');
+  }
+
+  return user;
+}
+
+/**
+ * Require admin access for API routes
+ * Throws error if not authenticated or not an admin
+ */
+export async function requireAdmin() {
+  const user = await requireAuth();
+
+  if (!isAdmin(user.email || '')) {
+    throw new Error('Forbidden: Admin access required');
   }
 
   return user;

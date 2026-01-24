@@ -1,0 +1,41 @@
+SKILL TAGGING REQUIREMENTS:
+
+1. Each question MUST have exactly ONE skill tag
+2. Choose the PRIMARY skill being tested
+3. DO NOT mix multiple skills in a single question
+4. Use snake_case format (e.g., "verb_tenses", not "Verb Tenses")
+5. Skill is the ability being tested, topic is the content area
+6. If a question would require multiple skills, split into separate questions
+7. Optional "subtopic" refines the topic (not the skill)
+
+EXAMPLES OF GOOD SKILL TAGGING:
+
+✅ GOOD - Single skill:
+Question: "Complete: I ___ to school every day."
+Skill: "verb_tenses"
+
+Question: "What is 45 + 27?"
+Skill: "addition"
+
+Question: "Why did the Roman Empire fall?"
+Skill: "cause_effect"
+
+❌ BAD - Mixed skills:
+Question: "Complete the sentence AND identify the verb tense: I ___ yesterday."
+Problem: Tests both verb_tenses and grammar analysis (mixed)
+
+Question: "Calculate 5 × 8 and explain how multiplication works."
+Problem: Tests both multiplication and comprehension (mixed)
+
+SKILL SELECTION RULES:
+
+- If question tests grammar structure → grammar skill
+- If question tests word meaning → vocabulary skill
+- If question tests calculation → computation skill
+- If question tests problem solving → word_problems skill
+- If question tests factual recall → recall skill
+- If question tests understanding → comprehension skill
+
+AVAILABLE SKILLS BY SUBJECT TYPE:
+
+See the AVAILABLE SKILLS section below and pick exactly one skill per question.

@@ -66,7 +66,22 @@ export default function PlayBrowsePage() {
     const loadQuestionSets = async () => {
       try {
         setState('loading');
-        const sets = await getRecentQuestionSets(100); // Load more sets
+        let sets: QuestionSet[] = [];
+        const response = await fetch('/api/question-sets/play?limit=100', {
+          method: 'GET',
+          credentials: 'same-origin',
+        });
+
+        if (response.ok) {
+          const payload = await response.json();
+          sets = payload.data || [];
+        } else if (response.status === 401) {
+          sets = await getRecentQuestionSets(100);
+        } else {
+          const payload = await response.json();
+          const message = payload?.error || 'Kysymyssarjojen lataaminen epäonnistui';
+          throw new Error(message);
+        }
 
         // Helper function to remove difficulty suffix from name
         const stripDifficultySuffix = (name: string): string => {

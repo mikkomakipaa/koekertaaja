@@ -1,0 +1,192 @@
+MAANTIEDE: MAP-KYSYMYKSET (VAIN MAANTIEDE)
+
+⚠️ TÄRKEÄ: Käytä map-kysymyksiä VAIN maantieteen oppiaineen kysymyksissä. Muilla oppiaineilla MAP-kysymyksiä ei saa luoda.
+⚠️ PAKOLLINEN: KAIKKIEN maantieteen kysymysten TÄYTYY olla map-kysymyksiä (type: "map").
+
+MAP-KYSYMYKSEN RAKENNE:
+- type: "map"
+- options: pakollinen objekti (ei lista)
+- options.mapAsset: karttaresurssin tunniste (esim. "world-110m", "europe-50m", "finland-regions-10m")
+- options.inputMode: "single_region" | "multi_region" | "text"
+- options.regions: lista alueita, joista oppilas valitsee tai jotka auttavat arvioinnissa (vähintään 1)
+  - id: snake_case tunniste (esim. "finland", "uusimaa")
+  - label: selkeä nimi suomeksi (esim. "Suomi", "Uusimaa")
+  - aliases: valinnaiset vaihtoehtoiset nimet (esim. ["Finland"])
+
+- correct_answer:
+  - single_region -> yksi region id (string) esim. "finland"
+  - multi_region -> lista region id:itä (string[]) esim. ["finland", "sweden", "norway"]
+  - text -> oppilaan kirjoittama vastaus (string) esim. "Helsinki"
+
+SAATAVILLA OLEVAT KARTAT:
+- world-110m: Maailmankartta, alhainen tarkkuus (maanosille, valtioille)
+- europe-50m: Euroopan kartta, keskitarkkuus (Euroopan maille, alueille)
+- finland-regions-10m: Suomen maakunnat, korkea tarkkuus (Suomen maakunnille)
+
+LAATUVAATIMUKSET:
+- Käytä map-kysymyksiä karttataitoihin ja sijaintiin (maakunnat, kaupungit, meret, naapurimaat, ilmastoalueet)
+- Aluelista on kattava ja tasapainoinen (vähintään 4 aluetta single_region-tilassa, kaikki valittavissa olevat multi_region-tilassa)
+- Vältä epäselviä raja-alueita tai liian pieniä kohteita
+- Kysymys on yksiselitteinen ja ikätasolle sopiva
+- Kaikki maantieteen kysymykset ovat map-tyyppiä (100%)
+
+═══════════════════════════════════════════════════════════════════════════════
+ESIMERKIT (5 KPL - KATTAVAT ERI SKENAARIOT)
+═══════════════════════════════════════════════════════════════════════════════
+
+ESIMERKKI 1: Multi-region - Pohjoismaat (vuosiluokka 5-6)
+───────────────────────────────────────────────────────────────────────────────
+{
+  "question": "Valitse kartalta kaikki Pohjoismaat.",
+  "type": "map",
+  "topic": "Euroopan maat",
+  "subtopic": "Pohjoismaat",
+  "skill": "nordic_countries",
+  "options": {
+    "mapAsset": "europe-50m",
+    "inputMode": "multi_region",
+    "regions": [
+      { "id": "finland", "label": "Suomi", "aliases": ["Finland"] },
+      { "id": "sweden", "label": "Ruotsi", "aliases": ["Sweden"] },
+      { "id": "norway", "label": "Norja", "aliases": ["Norway"] },
+      { "id": "denmark", "label": "Tanska", "aliases": ["Denmark"] },
+      { "id": "iceland", "label": "Islanti", "aliases": ["Iceland"] },
+      { "id": "germany", "label": "Saksa", "aliases": ["Germany"] },
+      { "id": "poland", "label": "Puola", "aliases": ["Poland"] },
+      { "id": "estonia", "label": "Viro", "aliases": ["Estonia"] }
+    ]
+  },
+  "correct_answer": ["finland", "sweden", "norway", "denmark", "iceland"],
+  "explanation": "Pohjoismaat ovat Suomi, Ruotsi, Norja, Tanska ja Islanti. Ne sijaitsevat Euroopan pohjoisosassa ja niillä on läheinen kulttuurinen ja historiallinen yhteys."
+}
+
+ESIMERKKI 2: Single-region - Suomi Euroopan kartalla (vuosiluokka 4-5)
+───────────────────────────────────────────────────────────────────────────────
+{
+  "question": "Valitse kartalta Suomi.",
+  "type": "map",
+  "topic": "Euroopan maat",
+  "subtopic": "Suomen sijainti",
+  "skill": "map_reading",
+  "options": {
+    "mapAsset": "europe-50m",
+    "inputMode": "single_region",
+    "regions": [
+      { "id": "finland", "label": "Suomi", "aliases": ["Finland"] },
+      { "id": "sweden", "label": "Ruotsi", "aliases": ["Sweden"] },
+      { "id": "norway", "label": "Norja", "aliases": ["Norway"] },
+      { "id": "russia", "label": "Venäjä", "aliases": ["Russia"] },
+      { "id": "estonia", "label": "Viro", "aliases": ["Estonia"] }
+    ]
+  },
+  "correct_answer": "finland",
+  "explanation": "Suomi sijaitsee Pohjois-Euroopassa Skandinavian ja Venäjän välissä. Suomen naapurimaat ovat Ruotsi lännessä, Norja pohjoisessa ja Venäjä idässä."
+}
+
+ESIMERKKI 3: Multi-region - EU-maat validointisäännöillä (vuosiluokka 6)
+───────────────────────────────────────────────────────────────────────────────
+{
+  "question": "Valitse kartalta viisi Euroopan unionin jäsenmaata.",
+  "type": "map",
+  "topic": "Euroopan unionin maat",
+  "subtopic": "EU-jäsenvaltiot",
+  "skill": "eu_member_states",
+  "options": {
+    "mapAsset": "europe-50m",
+    "inputMode": "multi_region",
+    "regions": [
+      { "id": "finland", "label": "Suomi", "aliases": ["Finland"] },
+      { "id": "sweden", "label": "Ruotsi", "aliases": ["Sweden"] },
+      { "id": "germany", "label": "Saksa", "aliases": ["Germany"] },
+      { "id": "france", "label": "Ranska", "aliases": ["France"] },
+      { "id": "italy", "label": "Italia", "aliases": ["Italy"] },
+      { "id": "spain", "label": "Espanja", "aliases": ["Spain"] },
+      { "id": "poland", "label": "Puola", "aliases": ["Poland"] },
+      { "id": "norway", "label": "Norja", "aliases": ["Norway"] },
+      { "id": "switzerland", "label": "Sveitsi", "aliases": ["Switzerland"] },
+      { "id": "united_kingdom", "label": "Yhdistynyt kuningaskunta", "aliases": ["UK", "Britain"] }
+    ]
+  },
+  "correct_answer": ["finland", "sweden", "germany", "france", "italy"],
+  "explanation": "Euroopan unioniin kuuluu 27 jäsenmaata. Suomi, Ruotsi, Saksa, Ranska ja Italia ovat kaikki EU:n jäseniä. Norja, Sveitsi ja Yhdistynyt kuningaskunta eivät kuulu EU:hun."
+}
+
+ESIMERKKI 4: Text answer - Pääkaupunki karttakontekstilla (vuosiluokka 5-6)
+───────────────────────────────────────────────────────────────────────────────
+{
+  "question": "Mikä on Suomen pääkaupunki? (Katso karttaa apuna.)",
+  "type": "map",
+  "topic": "Suomen pääkaupunki",
+  "subtopic": "Pääkaupungit",
+  "skill": "capital_cities",
+  "options": {
+    "mapAsset": "finland-regions-10m",
+    "inputMode": "text",
+    "regions": [
+      { "id": "uusimaa", "label": "Uusimaa" },
+      { "id": "pirkanmaa", "label": "Pirkanmaa" },
+      { "id": "varsinais_suomi", "label": "Varsinais-Suomi" }
+    ]
+  },
+  "correct_answer": "Helsinki",
+  "explanation": "Helsinki on Suomen pääkaupunki ja sijaitsee Uudenmaan maakunnassa Suomen etelärannikolla. Se on Suomen suurin kaupunki."
+}
+
+ESIMERKKI 5: Multi-region - Venäjän rajamaat (vuosiluokka 6, monimutkainen)
+───────────────────────────────────────────────────────────────────────────────
+{
+  "question": "Valitse kartalta Euroopan maat, jotka rajoittuvat Venäjään.",
+  "type": "map",
+  "topic": "Euroopan maantiede",
+  "subtopic": "Venäjän naapurimaat",
+  "skill": "border_countries",
+  "options": {
+    "mapAsset": "europe-50m",
+    "inputMode": "multi_region",
+    "regions": [
+      { "id": "finland", "label": "Suomi", "aliases": ["Finland"] },
+      { "id": "estonia", "label": "Viro", "aliases": ["Estonia"] },
+      { "id": "latvia", "label": "Latvia", "aliases": ["Latvia"] },
+      { "id": "lithuania", "label": "Liettua", "aliases": ["Lithuania"] },
+      { "id": "poland", "label": "Puola", "aliases": ["Poland"] },
+      { "id": "norway", "label": "Norja", "aliases": ["Norway"] },
+      { "id": "belarus", "label": "Valko-Venäjä", "aliases": ["Belarus"] },
+      { "id": "ukraine", "label": "Ukraina", "aliases": ["Ukraine"] },
+      { "id": "sweden", "label": "Ruotsi", "aliases": ["Sweden"] },
+      { "id": "denmark", "label": "Tanska", "aliases": ["Denmark"] },
+      { "id": "germany", "label": "Saksa", "aliases": ["Germany"] }
+    ]
+  },
+  "correct_answer": ["finland", "estonia", "latvia", "norway"],
+  "explanation": "Euroopassa Venäjään rajoittuvat maat ovat Suomi, Viro, Latvia ja Norja. Myös Puola rajoittuu Venäjään pienen Kaliningradin alueen kautta, mutta tämä ei näy kaikissa kartoissa."
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+
+IKÄTASOITTELU (Vuosiluokat 4-6):
+
+Vuosiluokka 4:
+- Suomen maakunnat (single_region)
+- Suomen naapurimaat (multi_region, max 3-4 maata)
+- Pohjoismaat (multi_region)
+
+Vuosiluokka 5:
+- Euroopan maat (single_region, multi_region)
+- Ilmastoalueet kartalla (multi_region)
+- Maanosien tunnistaminen (single_region)
+
+Vuosiluokka 6:
+- EU-jäsenvaltiot (multi_region, validointisäännöillä)
+- Maanosat ja valtameret (multi_region)
+- Pääkaupungit (text)
+- Naapurimaiden tunnistaminen (multi_region, monimutkainen)
+
+MUISTILISTA MAP-KYSYMYKSIÄ LUODESSA:
+✅ Varmista että kysymys on VAIN maantieteessä
+✅ Valitse oikea kartta (world-110m, europe-50m, finland-regions-10m)
+✅ Käytä snake_case tunnistetta region id:ssä
+✅ Anna selkeä suomenkielinen label jokaiselle alueelle
+✅ Lisää aliases tarvittaessa (esim. englanninkieliset nimet)
+✅ Varmista että correct_answer vastaa inputMode-tyyppiä
+✅ Kirjoita selkeä ja pedagoginen explanation
+✅ Aseta skill-tagi (esim. "map_reading", "nordic_countries", "eu_member_states")

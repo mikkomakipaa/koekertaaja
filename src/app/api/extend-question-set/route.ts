@@ -7,6 +7,7 @@ import { getQuestionSetById } from '@/lib/supabase/queries';
 import { createLogger } from '@/lib/logger';
 import { requireAuth } from '@/lib/supabase/server-auth';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { extendQuestionCountSchema } from '@/lib/validation/schemas';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 300; // 5 minutes timeout for AI generation
@@ -34,7 +35,9 @@ export async function POST(request: NextRequest) {
 
     // Extract form data
     const questionSetId = formData.get('questionSetId') as string;
-    const questionsToAdd = parseInt(formData.get('questionsToAdd') as string);
+    const questionsToAddResult = extendQuestionCountSchema.safeParse(
+      formData.get('questionsToAdd')
+    );
     const materialText = (formData.get('materialText') as string | null) || undefined;
 
     if (!questionSetId) {
@@ -43,6 +46,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    if (!questionsToAddResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid questionsToAdd. Must be an integer between 1 and 200.' },
+        { status: 400 }
+      );
+    }
+
+    const questionsToAdd = questionsToAddResult.data;
 
     // Get existing question set
     const existingSet = await getQuestionSetById(questionSetId);
@@ -65,8 +77,8 @@ export async function POST(request: NextRequest) {
     );
 
     // Process uploaded files with same validation as generate-questions
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB per file
-    const MAX_FILES = 2;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
+    const MAX_FILES = 1;
     const ALLOWED_MIME_TYPES = [
       'application/pdf',
       'image/jpeg',
@@ -85,7 +97,7 @@ export async function POST(request: NextRequest) {
     if (fileEntries.length > MAX_FILES) {
       return NextResponse.json(
         {
-          error: `Maximum ${MAX_FILES} files allowed.`,
+          error: `Maximum ${MAX_FILES} file allowed.`,
         },
         { status: 400 }
       );
@@ -96,7 +108,7 @@ export async function POST(request: NextRequest) {
         // Validate file size
         if (value.size > MAX_FILE_SIZE) {
           return NextResponse.json(
-            { error: `File "${value.name}" exceeds 2MB limit.` },
+            { error: `File "${value.name}" exceeds 5MB limit.` },
             { status: 400 }
           );
         }
@@ -202,6 +214,8 @@ export async function POST(request: NextRequest) {
       question_text: q.question_text,
       question_type: q.question_type,
       topic: (q as any).topic || null,
+      skill: (q as any).skill || null,
+      subtopic: (q as any).subtopic || null,
       correct_answer: (q as any).correct_answer,
       options: (q as any).options || null,
       explanation: q.explanation,

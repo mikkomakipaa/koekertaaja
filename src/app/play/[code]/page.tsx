@@ -20,7 +20,6 @@ import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
 import { shuffleArray } from '@/lib/utils';
 import { QuestionSetWithQuestions, StudyMode, Flashcard } from '@/types';
 import { CircleNotch, ListBullets, DiamondsFour, Fire, Book } from '@phosphor-icons/react';
-import posthog from 'posthog-js';
 
 type PlayState = 'loading' | 'error' | 'playing' | 'results';
 
@@ -59,7 +58,7 @@ export default function PlayPage() {
     startNewSession,
   } = useGameSession(
     questionSet?.questions || [],
-    15, // default questions per session
+    questionSet?.exam_length ?? 15,
     questionSet?.grade // pass grade for age-appropriate answer checking
   );
 
@@ -69,18 +68,49 @@ export default function PlayPage() {
       try {
         setState('loading');
 
+        const fetchByCode = async (codeValue: string) => {
+          const response = await fetch(`/api/question-sets/by-code?code=${encodeURIComponent(codeValue)}`, {
+            method: 'GET',
+            credentials: 'same-origin',
+          });
+
+          if (response.ok) {
+            const payload = await response.json();
+            return payload.data as QuestionSetWithQuestions;
+          }
+
+          if (response.status === 401) {
+            return null;
+          }
+
+          if (response.status === 404) {
+            return null;
+          }
+
+          const payload = await response.json();
+          const message = payload?.error || 'Kysymyssarjan lataaminen epäonnistui';
+          throw new Error(message);
+        };
+
         // If allCodes parameter exists, load all question sets for study mode
         if (allCodes && studyMode === 'opettele') {
           const codes = allCodes.split(',');
           const allSets = await Promise.all(
-            codes.map(c => getQuestionSetByCode(c.trim()))
+            codes.map(async (c) => {
+              const trimmed = c.trim();
+              const adminSet = await fetchByCode(trimmed);
+              if (adminSet) {
+                return adminSet;
+              }
+              return getQuestionSetByCode(trimmed);
+            })
           );
 
           // Filter out any null results and combine questions
           const validSets = allSets.filter(s => s !== null) as QuestionSetWithQuestions[];
 
           if (validSets.length === 0) {
-            setError('Kysymyssarjoja ei löytynyt');
+            setError('Kysymyssarjoja ei löytynyt. Tarkista koodit tai varmista että kysymyssarjat on julkaistu.');
             setState('error');
             return;
           }
@@ -89,7 +119,8 @@ export default function PlayPage() {
           const combinedSet = {
             ...validSets[0],
             questions: validSets.flatMap(s => s.questions),
-            question_count: validSets.reduce((sum, s) => sum + s.question_count, 0)
+            question_count: validSets.reduce((sum, s) => sum + s.question_count, 0),
+            exam_length: validSets[0]?.exam_length ?? 15,
           };
 
           setQuestionSet(combinedSet);
@@ -111,10 +142,11 @@ export default function PlayPage() {
           setState('playing');
         } else {
           // Normal single question set loading
-          const data = await getQuestionSetByCode(code);
+          const adminSet = await fetchByCode(code);
+          const data = adminSet || await getQuestionSetByCode(code);
 
           if (!data) {
-            setError(`Kysymyssarjaa ei löytynyt koodilla: ${code}`);
+            setError(`Kysymyssarjaa ei löytynyt koodilla: ${code}. Tarkista koodi tai varmista että kysymyssarja on julkaistu.`);
             setState('error');
             return;
           }
@@ -136,18 +168,6 @@ export default function PlayPage() {
             setSelectedTopic('ALL');
           }
 
-          // PostHog: Track question set loaded by code
-          posthog.capture('question_set_loaded_by_code', {
-            question_set_code: code,
-            question_set_name: data.name,
-            subject: data.subject,
-            difficulty: data.difficulty,
-            mode: data.mode,
-            question_count: data.question_count,
-            grade: data.grade,
-            study_mode: studyMode,
-          });
-
           setState('playing');
         }
       } catch (err) {
@@ -167,22 +187,7 @@ export default function PlayPage() {
     if (questionSet && state === 'playing' && selectedQuestions.length === 0) {
       startNewSession();
       setSessionStartTime(Date.now());
-
-      // PostHog: Track quiz session started (initial)
-      if (studyMode === 'pelaa') {
-        posthog.capture('quiz_session_started', {
-          question_set_code: code,
-          question_set_name: questionSet.name,
-          subject: questionSet.subject,
-          difficulty: questionSet.difficulty,
-          mode: questionSet.mode,
-          question_count: questionSet.question_count,
-          grade: questionSet.grade,
-          is_replay: false,
-        });
-      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionSet, state]);
 
   const handleSubmitAnswer = () => {
@@ -219,20 +224,6 @@ export default function PlayPage() {
     startNewSession();
     setSessionStartTime(Date.now());
     setState('playing');
-
-    // PostHog: Track quiz session started (replay)
-    if (questionSet) {
-      posthog.capture('quiz_session_started', {
-        question_set_code: code,
-        question_set_name: questionSet.name,
-        subject: questionSet.subject,
-        difficulty: questionSet.difficulty,
-        mode: questionSet.mode,
-        question_count: questionSet.question_count,
-        grade: questionSet.grade,
-        is_replay: true,
-      });
-    }
   };
 
   const handleBrowseQuestionSets = () => {

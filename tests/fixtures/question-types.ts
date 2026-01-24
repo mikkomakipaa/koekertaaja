@@ -1,0 +1,191 @@
+import type { AIQuestion } from '../../src/lib/validation/schemas';
+import type { DatabaseQuestion } from '../../src/types/database';
+import type { MapQuestion, QuestionType } from '../../src/types/questions';
+
+export const aiQuestionFixtures = {
+  multiple_choice: {
+    question: 'Mikä on 2 + 2?',
+    type: 'multiple_choice',
+    topic: 'Matematiikka',
+    options: ['2', '3', '4', '5'],
+    correct_answer: '4',
+    explanation: 'Peruslaskutoimituksen tulos on 4.',
+  },
+  fill_blank: {
+    question: 'Suomi itsenäistyi vuonna ____.',
+    type: 'fill_blank',
+    topic: 'Historia',
+    correct_answer: '1917',
+    acceptable_answers: ['1917', 'vuonna 1917'],
+    explanation: 'Suomi itsenäistyi 6.12.1917.',
+  },
+  true_false: {
+    question: 'Helsinki on Suomen pääkaupunki.',
+    type: 'true_false',
+    topic: 'Maantieto',
+    correct_answer: true,
+    explanation: 'Helsinki on Suomen pääkaupunki.',
+  },
+  matching: {
+    question: 'Yhdistä maat ja pääkaupungit.',
+    type: 'matching',
+    topic: 'Maantieto',
+    pairs: [
+      { left: 'Suomi', right: 'Helsinki' },
+      { left: 'Ruotsi', right: 'Tukholma' },
+    ],
+    correct_answer: [],
+    explanation: 'Suomessa on Helsinki ja Ruotsissa Tukholma.',
+  },
+  short_answer: {
+    question: 'Mikä on Suomen suurin kaupunki?',
+    type: 'short_answer',
+    topic: 'Maantieto',
+    correct_answer: 'Helsinki',
+    acceptable_answers: ['Helsinki', 'Helsingin kaupunki'],
+    explanation: 'Helsinki on Suomen suurin kaupunki.',
+  },
+  sequential: {
+    question: 'Laita tapahtumat aikajärjestykseen.',
+    type: 'sequential',
+    topic: 'Historia',
+    items: ['Tapahtuma 1', 'Tapahtuma 2', 'Tapahtuma 3'],
+    correct_order: [0, 1, 2],
+    correct_answer: [],
+    explanation: 'Tapahtumat järjestetään vanhimmasta uusimpaan.',
+  },
+  map: {
+    question: 'Valitse kartasta Suomen maakunta, jossa Helsinki sijaitsee.',
+    type: 'map',
+    topic: 'Suomen maakunnat',
+    options: {
+      mapAsset: '/maps/finland/finland_counties_v1.png',
+      inputMode: 'single_region',
+      regions: [
+        { id: 'uusimaa', label: 'Uusimaa', aliases: ['Uudenmaan maakunta'] },
+        { id: 'pirkanmaa', label: 'Pirkanmaa' },
+      ],
+    },
+    correct_answer: 'uusimaa',
+    explanation: 'Helsinki sijaitsee Uudenmaan maakunnassa.',
+  },
+} satisfies Record<QuestionType, AIQuestion>;
+
+export const dbQuestionFixtures = {
+  multiple_choice: {
+    id: 'db-mc-1',
+    question_set_id: 'set-1',
+    question_text: 'Mikä on 2 + 2?',
+    question_type: 'multiple_choice',
+    correct_answer: '4',
+    options: ['2', '3', '4', '5'],
+    explanation: 'Peruslaskutoimituksen tulos on 4.',
+    order_index: 0,
+    created_at: '2024-01-01T00:00:00.000Z',
+    topic: 'Matematiikka',
+  },
+  fill_blank: {
+    id: 'db-fb-1',
+    question_set_id: 'set-1',
+    question_text: 'Suomi itsenäistyi vuonna ____.',
+    question_type: 'fill_blank',
+    correct_answer: '1917',
+    options: ['1917', 'vuonna 1917'],
+    explanation: 'Suomi itsenäistyi 6.12.1917.',
+    order_index: 1,
+    created_at: '2024-01-01T00:00:00.000Z',
+    topic: 'Historia',
+  },
+  true_false: {
+    id: 'db-tf-1',
+    question_set_id: 'set-1',
+    question_text: 'Helsinki on Suomen pääkaupunki.',
+    question_type: 'true_false',
+    correct_answer: 'totta',
+    explanation: 'Helsinki on Suomen pääkaupunki.',
+    order_index: 2,
+    created_at: '2024-01-01T00:00:00.000Z',
+    topic: 'Maantieto',
+  },
+  matching: {
+    id: 'db-match-1',
+    question_set_id: 'set-1',
+    question_text: 'Yhdistä maat ja pääkaupungit.',
+    question_type: 'matching',
+    correct_answer: [
+      { left: 'Suomi', right: 'Helsinki' },
+      { left: 'Ruotsi', right: 'Tukholma' },
+    ],
+    explanation: 'Suomessa on Helsinki ja Ruotsissa Tukholma.',
+    order_index: 3,
+    created_at: '2024-01-01T00:00:00.000Z',
+    topic: 'Maantieto',
+  },
+  short_answer: {
+    id: 'db-sa-1',
+    question_set_id: 'set-1',
+    question_text: 'Mikä on Suomen suurin kaupunki?',
+    question_type: 'short_answer',
+    correct_answer: 'Helsinki',
+    options: ['Helsinki', 'Helsingin kaupunki'],
+    explanation: 'Helsinki on Suomen suurin kaupunki.',
+    order_index: 4,
+    created_at: '2024-01-01T00:00:00.000Z',
+    topic: 'Maantieto',
+  },
+  sequential: {
+    id: 'db-seq-1',
+    question_set_id: 'set-1',
+    question_text: 'Järjestä tapahtumat.',
+    question_type: 'sequential',
+    correct_answer: {
+      items: ['A', 'B', 'C'],
+      correct_order: [0, 1, 2],
+    },
+    options: null,
+    explanation: 'Tapahtumat järjestyvät aikajärjestykseen.',
+    order_index: 5,
+    created_at: '2024-01-01T00:00:00.000Z',
+    topic: 'Historia',
+  },
+  map: {
+    id: 'db-map-1',
+    question_set_id: 'set-1',
+    question_text: 'Missa maakunnassa Helsinki sijaitsee?',
+    question_type: 'map',
+    correct_answer: 'uusimaa',
+    options: {
+      mapAsset: '/maps/finland/finland_counties_v1.png',
+      inputMode: 'single_region',
+      regions: [
+        { id: 'uusimaa', label: 'Uusimaa', aliases: ['Uudenmaan maakunta'] },
+        { id: 'pirkanmaa', label: 'Pirkanmaa' },
+      ],
+    },
+    explanation: 'Helsinki sijaitsee Uudenmaan maakunnassa.',
+    order_index: 6,
+    created_at: '2024-01-01T00:00:00.000Z',
+    topic: 'Suomen maakunnat',
+  },
+} satisfies Record<QuestionType, DatabaseQuestion>;
+
+export const baseMapAIQuestion = aiQuestionFixtures.map;
+
+export const baseMapQuestion: MapQuestion = {
+  id: 'map-q-1',
+  question_set_id: 'set-1',
+  question_text: 'Missa maakunnassa Helsinki sijaitsee?',
+  question_type: 'map',
+  explanation: 'Helsinki sijaitsee Uudenmaan maakunnassa.',
+  order_index: 0,
+  options: {
+    mapAsset: '/maps/finland/finland_counties_v1.png',
+    inputMode: 'single_region',
+    regions: [
+      { id: 'uusimaa', label: 'Uusimaa', aliases: ['Uudenmaan maakunta'] },
+      { id: 'pirkanmaa', label: 'Pirkanmaa' },
+    ],
+  },
+  correct_answer: 'uusimaa',
+  topic: 'Suomen maakunnat',
+};

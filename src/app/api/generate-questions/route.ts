@@ -14,7 +14,7 @@ import { requireAuth } from '@/lib/supabase/server-auth';
 export const maxDuration = 300; // 5 minutes timeout for AI generation
 
 // Configure route to handle larger request bodies
-// Max: 5 files × 5MB each = 25MB + text content + overhead = 30MB total
+// Max: 1 file × 5MB + text content + overhead = ~5MB total
 // Note: Next.js App Router uses bodyParser from next.config.js
 // This route uses FormData which bypasses the default body parser
 
@@ -40,6 +40,11 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
 
     // Extract form data
+    const targetWordsRaw = formData.get('targetWords') as string | null;
+    const targetWords = targetWordsRaw
+      ? targetWordsRaw.split(',').map(w => w.trim()).filter(Boolean)
+      : undefined;
+
     const rawData = {
       subject: formData.get('subject') as string,
       questionCount: parseInt(formData.get('questionCount') as string),
@@ -49,6 +54,8 @@ export async function POST(request: NextRequest) {
       topic: (formData.get('topic') as string | null) || undefined,
       subtopic: (formData.get('subtopic') as string | null) || undefined,
       materialText: (formData.get('materialText') as string | null) || undefined,
+      subjectType: (formData.get('subjectType') as string | null) || undefined,
+      targetWords,
     };
 
     const generationMode = (formData.get('generationMode') as string) || 'quiz';
@@ -71,13 +78,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { subject, questionCount, examLength, questionSetName, grade, topic, subtopic, materialText } = validationResult.data;
+    const {
+      subject,
+      subjectType,
+      questionCount,
+      examLength,
+      questionSetName,
+      grade,
+      topic,
+      subtopic,
+      materialText,
+      targetWords: validatedTargetWords,
+    } = validationResult.data;
 
     // Process uploaded files with validation
     // Note: Vercel Hobby tier has 5MB request body limit
-    // Reduced limits to work within this constraint (2MB × 2 files = 4MB + overhead)
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB per file
-    const MAX_FILES = 2; // Max 2 files to stay under 5MB total request limit
+    // Reduced limits to work within this constraint (1 file × 5MB + overhead)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
+    const MAX_FILES = 1; // Max 1 file to stay under 5MB total request limit
     const ALLOWED_MIME_TYPES = [
       'application/pdf',
       'image/jpeg',
@@ -96,7 +114,7 @@ export async function POST(request: NextRequest) {
     if (fileEntries.length > MAX_FILES) {
       return NextResponse.json(
         {
-          error: `Maximum ${MAX_FILES} files allowed. This limit ensures requests stay under the 5MB total size limit.`,
+          error: `Maximum ${MAX_FILES} file allowed. This limit ensures requests stay under the 5MB total size limit.`,
           details: 'For larger uploads, consider splitting materials or using text input instead of files.'
         },
         { status: 400 }
@@ -111,12 +129,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Vercel Hobby tier has 5MB request limit, keep some margin for overhead
-    const MAX_TOTAL_SIZE = 4.5 * 1024 * 1024; // 4.5MB
+    // Vercel Hobby tier has 5MB request limit
+    const MAX_TOTAL_SIZE = 5 * 1024 * 1024; // 5MB
     if (totalSize > MAX_TOTAL_SIZE) {
       return NextResponse.json(
         {
-          error: `Total request size (${Math.round(totalSize / 1024 / 1024 * 10) / 10}MB) exceeds the 4.5MB limit.`,
+          error: `Total request size (${Math.round(totalSize / 1024 / 1024 * 10) / 10}MB) exceeds the 5MB limit.`,
           details: 'Please reduce file sizes, use fewer files, or shorten the text material.'
         },
         { status: 413 }
@@ -128,7 +146,7 @@ export async function POST(request: NextRequest) {
         // Validate file size
         if (value.size > MAX_FILE_SIZE) {
           return NextResponse.json(
-            { error: `File "${value.name}" exceeds 2MB limit. Please use smaller files or reduce the number of files.` },
+            { error: `File "${value.name}" exceeds 5MB limit. Please use a smaller file.` },
             { status: 400 }
           );
         }
@@ -186,14 +204,12 @@ export async function POST(request: NextRequest) {
       'Topics identified successfully'
     );
 
-    // Calculate flashcard question count: ~10 cards per topic
-    const CARDS_PER_TOPIC = 10;
-    const flashcardQuestionCount = topicAnalysis.topics.length * CARDS_PER_TOPIC;
+    // Flashcard question count uses requested questionCount (same as quiz pool size)
+    const flashcardQuestionCount = questionCount;
 
     logger.info(
       {
         topicCount: topicAnalysis.topics.length,
-        cardsPerTopic: CARDS_PER_TOPIC,
         totalFlashcards: flashcardQuestionCount,
       },
       'Calculated flashcard generation count'
@@ -218,6 +234,7 @@ export async function POST(request: NextRequest) {
         generationTasks.push(
           generateQuestions({
             subject,
+            subjectType,
             difficulty,
             questionCount: questionCount, // Use pool size (40-400), not session length
             grade,
@@ -225,6 +242,7 @@ export async function POST(request: NextRequest) {
             materialFiles: files.length > 0 ? files : undefined,
             mode: 'quiz',
             identifiedTopics: topicAnalysis.topics, // Pass identified topics
+            targetWords: validatedTargetWords,
           }).then((questions) => ({ questions, difficulty, mode: 'quiz' as const }))
         );
       }
@@ -235,13 +253,15 @@ export async function POST(request: NextRequest) {
       generationTasks.push(
         generateQuestions({
           subject,
+          subjectType,
           difficulty: 'normaali', // Flashcards use normaali as placeholder
-          questionCount: flashcardQuestionCount, // Generate ~10 cards per topic
+            questionCount: flashcardQuestionCount,
           grade,
           materialText,
           materialFiles: files.length > 0 ? files : undefined,
           mode: 'flashcard',
           identifiedTopics: topicAnalysis.topics, // Pass identified topics
+          targetWords: validatedTargetWords,
         }).then((questions) => ({ questions, mode: 'flashcard' as const }))
       );
     }
@@ -291,7 +311,10 @@ export async function POST(request: NextRequest) {
             grade,
             topic,
             subtopic,
+            subject_type: subjectType,
             question_count: questions.length,
+            exam_length: examLength,
+            status: 'created',  // New question sets default to unpublished
           },
           questions
         );

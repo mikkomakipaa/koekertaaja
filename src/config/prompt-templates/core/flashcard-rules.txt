@@ -1,0 +1,11 @@
+FLASHCARD-MOODIN SÄÄNNÖT:
+
+- Flashcardit mittaavat aktiivista muistamista, eivät vain tunnistamista.
+- Käytä VAIN seuraavia tyyppejä: fill_blank, short_answer, matching.
+- Noudata korttityyppien jakaumaa täsmälleen.
+- Kysy yksi selkeä asia per kortti.
+- Selitykset ovat ystävällisiä, ikätasolle sopivia ja 20-300 merkkiä.
+- Pysy annetussa materiaalissa, älä lisää uutta sisältöä.
+- Käytä acceptable_answers -listaa vaihtoehtoisille hyväksyttäville vastauksille.
+
+Jos muualla mainitaan muita kysymystyyppejä, NE EIVÄT OLE SALLITTUJA flashcard-tilassa.

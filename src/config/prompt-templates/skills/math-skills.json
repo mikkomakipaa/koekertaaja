@@ -1,0 +1,29 @@
+{
+  "computation": [
+    "addition",
+    "subtraction",
+    "multiplication",
+    "division",
+    "mental_math"
+  ],
+  "word_problems": [
+    "problem_solving",
+    "multi_step",
+    "units_conversion",
+    "estimation"
+  ],
+  "geometry": [
+    "shapes",
+    "area",
+    "perimeter",
+    "volume",
+    "angles"
+  ],
+  "number_sense": [
+    "place_value",
+    "fractions",
+    "decimals",
+    "percentages",
+    "number_comparison"
+  ]
+}

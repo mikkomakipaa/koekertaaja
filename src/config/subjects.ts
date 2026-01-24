@@ -1,4 +1,5 @@
 import { Subject, QuestionType } from '@/types';
+import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
 
 export interface SubjectConfig {
   id: Subject;
@@ -11,6 +12,7 @@ export interface SubjectConfig {
   maxQuestionCount: number;
   supportedMaterials: string[];
   requiresLatex?: boolean;
+  subjectType?: SubjectType;
   description: string;
 }
 
@@ -25,6 +27,7 @@ export const SUBJECTS: Record<Subject, SubjectConfig> = {
     minQuestionCount: 20,
     maxQuestionCount: 100,
     supportedMaterials: ['pdf', 'text', 'image'],
+    subjectType: 'language',
     description: 'Englannin kielen sanasto ja kielioppi',
   },
   math: {
@@ -38,6 +41,7 @@ export const SUBJECTS: Record<Subject, SubjectConfig> = {
     maxQuestionCount: 100,
     supportedMaterials: ['pdf', 'text', 'image'],
     requiresLatex: true,
+    subjectType: 'math',
     description: 'Matematiikan tehtävät ja laskut',
   },
   history: {
@@ -50,6 +54,7 @@ export const SUBJECTS: Record<Subject, SubjectConfig> = {
     minQuestionCount: 20,
     maxQuestionCount: 100,
     supportedMaterials: ['pdf', 'text', 'image'],
+    subjectType: 'written',
     description: 'Historian tapahtumat ja henkilöt',
   },
   society: {
@@ -62,6 +67,7 @@ export const SUBJECTS: Record<Subject, SubjectConfig> = {
     minQuestionCount: 20,
     maxQuestionCount: 100,
     supportedMaterials: ['pdf', 'text', 'image'],
+    subjectType: 'written',
     description: 'Yhteiskunnan rakenteet ja toiminta',
   },
 } as const;

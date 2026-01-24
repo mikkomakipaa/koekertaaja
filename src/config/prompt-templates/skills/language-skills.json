@@ -1,0 +1,29 @@
+{
+  "grammar": [
+    "verb_tenses",
+    "sentence_structure",
+    "parts_of_speech",
+    "punctuation",
+    "word_order"
+  ],
+  "vocabulary": [
+    "word_meaning",
+    "synonyms_antonyms",
+    "context_clues",
+    "word_families",
+    "idioms"
+  ],
+  "reading": [
+    "comprehension",
+    "inference",
+    "main_idea",
+    "details",
+    "prediction"
+  ],
+  "writing": [
+    "sentence_formation",
+    "paragraph_structure",
+    "spelling",
+    "capitalization"
+  ]
+}

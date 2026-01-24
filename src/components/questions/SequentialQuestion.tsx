@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SequentialQuestion as SequentialQuestionType } from '@/types';
-import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
+import { TimelineView } from '@/components/questions/TimelineView';
+import { getSequentialDisplayMode, normalizeSequentialItems } from '@/lib/questions/sequential-utils';
 import { ArrowUp, ArrowDown, ListNumbers, CheckCircle, XCircle } from '@phosphor-icons/react';
 
 interface SequentialQuestionProps {
@@ -21,6 +22,16 @@ export function SequentialQuestion({
 }: SequentialQuestionProps) {
   // State: current order of items (indices)
   const [currentOrder, setCurrentOrder] = useState<number[]>([]);
+  const normalizedItems = useMemo(() => normalizeSequentialItems(question.items), [question.items]);
+  const displayMode = useMemo(() => getSequentialDisplayMode(normalizedItems), [normalizedItems]);
+
+  const handleOrderChange = useCallback(
+    (newOrder: number[]) => {
+      setCurrentOrder(newOrder);
+      onAnswerChange(newOrder);
+    },
+    [onAnswerChange]
+  );
 
   // Initialize: shuffle items on mount or use userAnswer if it exists
   useEffect(() => {
@@ -28,23 +39,21 @@ export function SequentialQuestion({
       setCurrentOrder(userAnswer);
     } else {
       // Fisher-Yates shuffle
-      const indices = question.items.map((_, i) => i);
+      const indices = normalizedItems.map((_, i) => i);
       for (let i = indices.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [indices[i], indices[j]] = [indices[j], indices[i]];
       }
-      setCurrentOrder(indices);
-      onAnswerChange(indices); // Set initial answer
+      handleOrderChange(indices); // Set initial answer
     }
-  }, [question.items]);
+  }, [handleOrderChange, normalizedItems, userAnswer]);
 
   // Move item up
   const moveUp = (index: number) => {
     if (index === 0 || showExplanation) return;
     const newOrder = [...currentOrder];
     [newOrder[index], newOrder[index - 1]] = [newOrder[index - 1], newOrder[index]];
-    setCurrentOrder(newOrder);
-    onAnswerChange(newOrder);
+    handleOrderChange(newOrder);
   };
 
   // Move item down
@@ -52,8 +61,7 @@ export function SequentialQuestion({
     if (index === currentOrder.length - 1 || showExplanation) return;
     const newOrder = [...currentOrder];
     [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
-    setCurrentOrder(newOrder);
-    onAnswerChange(newOrder);
+    handleOrderChange(newOrder);
   };
 
   // Get item status (correct position / incorrect position / not submitted yet)
@@ -70,87 +78,96 @@ export function SequentialQuestion({
         <MathText>{question.question_text}</MathText>
       </div>
 
-      {/* Items List */}
-      <div className="space-y-2">
-        {currentOrder.map((itemIndex, displayIndex) => {
-          const status = getItemStatus(displayIndex);
-          const item = question.items[itemIndex];
+      {displayMode === 'timeline' ? (
+        <TimelineView
+          items={normalizedItems}
+          currentOrder={currentOrder}
+          correctOrder={question.correct_order}
+          showExplanation={showExplanation}
+          onOrderChange={handleOrderChange}
+        />
+      ) : (
+        <div className="space-y-2">
+          {currentOrder.map((itemIndex, displayIndex) => {
+            const status = getItemStatus(displayIndex);
+            const item = normalizedItems[itemIndex];
 
-          return (
-            <div
-              key={`${itemIndex}-${displayIndex}`}
-              className={`
-                flex items-center gap-3 p-4 rounded-lg border-2 transition-all
-                ${status === 'correct' ? 'bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-600' : ''}
-                ${status === 'incorrect' ? 'bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-600' : ''}
-                ${status === 'pending' ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600' : ''}
-              `}
-            >
-              {/* Position Number */}
+            return (
               <div
+                key={`${itemIndex}-${displayIndex}`}
                 className={`
-                  flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                  ${status === 'correct' ? 'bg-green-500 dark:bg-green-600 text-white' : ''}
-                  ${status === 'incorrect' ? 'bg-red-500 dark:bg-red-600 text-white' : ''}
-                  ${status === 'pending' ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' : ''}
+                  flex items-center gap-3 p-4 rounded-lg border-2 transition-all
+                  ${status === 'correct' ? 'bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-600' : ''}
+                  ${status === 'incorrect' ? 'bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-600' : ''}
+                  ${status === 'pending' ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600' : ''}
                 `}
               >
-                {displayIndex + 1}
-              </div>
-
-              {/* Item Text */}
-              <div className="flex-1 text-gray-900 dark:text-gray-100">
-                <MathText>{item}</MathText>
-              </div>
-
-              {/* Status Icon (after submission) */}
-              {showExplanation && (
-                <div className="flex-shrink-0">
-                  {status === 'correct' ? (
-                    <CheckCircle size={24} weight="fill" className="text-green-600 dark:text-green-400" />
-                  ) : (
-                    <XCircle size={24} weight="fill" className="text-red-600 dark:text-red-400" />
-                  )}
+                {/* Position Number */}
+                <div
+                  className={`
+                    flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
+                    ${status === 'correct' ? 'bg-green-500 dark:bg-green-600 text-white' : ''}
+                    ${status === 'incorrect' ? 'bg-red-500 dark:bg-red-600 text-white' : ''}
+                    ${status === 'pending' ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' : ''}
+                  `}
+                >
+                  {displayIndex + 1}
                 </div>
-              )}
 
-              {/* Arrow Controls (before submission) */}
-              {!showExplanation && (
-                <div className="flex flex-col gap-1 flex-shrink-0">
-                  <button
-                    onClick={() => moveUp(displayIndex)}
-                    disabled={displayIndex === 0}
-                    className={`
-                      p-1.5 rounded transition-colors
-                      ${displayIndex === 0
-                        ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
-                      }
-                    `}
-                    aria-label="Move up"
-                  >
-                    <ArrowUp size={20} weight="bold" />
-                  </button>
-                  <button
-                    onClick={() => moveDown(displayIndex)}
-                    disabled={displayIndex === currentOrder.length - 1}
-                    className={`
-                      p-1.5 rounded transition-colors
-                      ${displayIndex === currentOrder.length - 1
-                        ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
-                      }
-                    `}
-                    aria-label="Move down"
-                  >
-                    <ArrowDown size={20} weight="bold" />
-                  </button>
+                {/* Item Text */}
+                <div className="flex-1 text-gray-900 dark:text-gray-100">
+                  <MathText>{item?.text ?? ''}</MathText>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+
+                {/* Status Icon (after submission) */}
+                {showExplanation && (
+                  <div className="flex-shrink-0">
+                    {status === 'correct' ? (
+                      <CheckCircle size={24} weight="fill" className="text-green-600 dark:text-green-400" />
+                    ) : (
+                      <XCircle size={24} weight="fill" className="text-red-600 dark:text-red-400" />
+                    )}
+                  </div>
+                )}
+
+                {/* Arrow Controls (before submission) */}
+                {!showExplanation && (
+                  <div className="flex flex-col gap-1 flex-shrink-0">
+                    <button
+                      onClick={() => moveUp(displayIndex)}
+                      disabled={displayIndex === 0}
+                      className={`
+                        p-1.5 rounded transition-colors
+                        ${displayIndex === 0
+                          ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                          : 'text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
+                        }
+                      `}
+                      aria-label="Move up"
+                    >
+                      <ArrowUp size={20} weight="bold" />
+                    </button>
+                    <button
+                      onClick={() => moveDown(displayIndex)}
+                      disabled={displayIndex === currentOrder.length - 1}
+                      className={`
+                        p-1.5 rounded transition-colors
+                        ${displayIndex === currentOrder.length - 1
+                          ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                          : 'text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
+                        }
+                      `}
+                      aria-label="Move down"
+                    >
+                      <ArrowDown size={20} weight="bold" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Correct Order Display (after wrong answer) */}
       {showExplanation && JSON.stringify(currentOrder) !== JSON.stringify(question.correct_order) && (
@@ -160,7 +177,12 @@ export function SequentialQuestion({
             {question.correct_order.map((itemIndex, position) => (
               <li key={position} className="flex items-start gap-2 text-blue-900 dark:text-blue-100">
                 <span className="font-bold">{position + 1}.</span>
-                <MathText>{question.items[itemIndex]}</MathText>
+                {typeof normalizedItems[itemIndex]?.year === 'number' && (
+                  <span className="font-semibold text-blue-700 dark:text-blue-300">
+                    {normalizedItems[itemIndex]?.year} -
+                  </span>
+                )}
+                <MathText>{normalizedItems[itemIndex]?.text ?? ''}</MathText>
               </li>
             ))}
           </ol>

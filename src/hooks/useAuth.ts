@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createBrowserClient } from '@/lib/supabase/auth';
 import type { User } from '@supabase/supabase-js';
-import posthog from 'posthog-js';
 
 export interface AuthState {
   user: User | null;
@@ -59,17 +58,6 @@ export function useAuth() {
       return { success: false, error: error.message };
     }
 
-    // PostHog: Identify user and capture sign in event
-    if (data.user) {
-      posthog.identify(data.user.id, {
-        email: data.user.email,
-      });
-      posthog.capture('user_signed_in', {
-        user_id: data.user.id,
-        email: data.user.email,
-      });
-    }
-
     setState({ user: data.user, loading: false, error: null });
     return { success: true, user: data.user };
   };
@@ -96,18 +84,12 @@ export function useAuth() {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     const supabase = getSupabase();
 
-    // PostHog: Capture sign out event before resetting
-    posthog.capture('user_signed_out');
-
     const { error } = await supabase.auth.signOut();
 
     if (error) {
       setState((prev) => ({ ...prev, loading: false, error: error.message }));
       return { success: false, error: error.message };
     }
-
-    // PostHog: Reset user identity after sign out
-    posthog.reset();
 
     setState({ user: null, loading: false, error: null });
     return { success: true };

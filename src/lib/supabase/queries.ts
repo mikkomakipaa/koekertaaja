@@ -4,11 +4,12 @@
  */
 
 import { supabase } from './client';
-import { QuestionSet, QuestionSetWithQuestions } from '@/types';
-import { parseDatabaseQuestion } from '@/types/database';
+import { MapQuestionEntity, QuestionSet, QuestionSetWithQuestions } from '@/types';
+import { parseDatabaseMapQuestion, parseDatabaseQuestion } from '@/types/database';
 
 /**
  * Get a question set by its code
+ * Only returns published question sets
  */
 export async function getQuestionSetByCode(
   code: string
@@ -17,6 +18,7 @@ export async function getQuestionSetByCode(
     .from('question_sets')
     .select('*')
     .eq('code', code.toUpperCase())
+    .eq('status', 'published')
     .single();
 
   if (setError || !questionSet) {
@@ -43,11 +45,13 @@ export async function getQuestionSetByCode(
 
 /**
  * Get recent question sets (for future browse feature)
+ * Only returns published question sets
  */
 export async function getRecentQuestionSets(limit = 10): Promise<QuestionSet[]> {
   const { data, error } = await supabase
     .from('question_sets')
     .select('*')
+    .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(limit);
 
@@ -61,6 +65,7 @@ export async function getRecentQuestionSets(limit = 10): Promise<QuestionSet[]> 
 
 /**
  * Search question sets by subject
+ * Only returns published question sets
  */
 export async function getQuestionSetsBySubject(
   subject: string,
@@ -70,6 +75,7 @@ export async function getQuestionSetsBySubject(
     .from('question_sets')
     .select('*')
     .eq('subject', subject)
+    .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(limit);
 
@@ -83,15 +89,34 @@ export async function getQuestionSetsBySubject(
 
 /**
  * Get all question sets
+ * Only returns published question sets
  */
 export async function getAllQuestionSets(): Promise<QuestionSet[]> {
+  const { data, error } = await supabase
+    .from('question_sets')
+    .select('*')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching all question sets:', error);
+    return [];
+  }
+
+  return (data || []) as QuestionSet[];
+}
+
+/**
+ * Get all question sets for management (includes drafts and published)
+ */
+export async function getAllQuestionSetsForManage(): Promise<QuestionSet[]> {
   const { data, error } = await supabase
     .from('question_sets')
     .select('*')
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching all question sets:', error);
+    console.error('Error fetching question sets for manage:', error);
     return [];
   }
 
@@ -134,4 +159,61 @@ export async function getQuestionSetById(id: string): Promise<QuestionSet | null
   }
 
   return data as QuestionSet;
+}
+
+/**
+ * Get question sets with status 'created' (not yet published)
+ * For management/admin view
+ */
+export async function getCreatedQuestionSets(limit = 50): Promise<QuestionSet[]> {
+  const { data, error } = await supabase
+    .from('question_sets')
+    .select('*')
+    .eq('status', 'created')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Error fetching created question sets:', error);
+    return [];
+  }
+
+  return (data || []) as QuestionSet[];
+}
+
+/**
+ * Get a map question by ID
+ */
+export async function getMapQuestionById(id: string): Promise<MapQuestionEntity | null> {
+  const { data, error } = await supabase
+    .from('map_questions')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return parseDatabaseMapQuestion(data as any);
+}
+
+/**
+ * Get map questions for a question set
+ */
+export async function getMapQuestionsByQuestionSetId(
+  questionSetId: string
+): Promise<MapQuestionEntity[]> {
+  const { data, error } = await supabase
+    .from('map_questions')
+    .select('*')
+    .eq('question_set_id', questionSetId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching map questions:', error);
+    return [];
+  }
+
+  return (data || []).map((row: any) => parseDatabaseMapQuestion(row));
 }

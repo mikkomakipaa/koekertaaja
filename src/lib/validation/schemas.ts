@@ -3,6 +3,8 @@ import { z } from 'zod';
 /**
  * Schema for create question set API request
  */
+const subjectTypeSchema = z.enum(['language', 'math', 'written', 'skills', 'concepts', 'geography']);
+
 export const createQuestionSetSchema = z.object({
   questionSetName: z
     .string()
@@ -17,8 +19,8 @@ export const createQuestionSetSchema = z.object({
   questionCount: z
     .number()
     .int('Question count must be an integer')
-    .min(40, 'Minimum 40 questions required')
-    .max(400, 'Maximum 400 questions allowed'),
+    .min(20, 'Minimum 20 questions required')
+    .max(200, 'Maximum 200 questions allowed'),
   examLength: z
     .number()
     .int('Exam length must be an integer')
@@ -42,6 +44,11 @@ export const createQuestionSetSchema = z.object({
     .string()
     .max(50000, 'Material text must be 50,000 characters or less')
     .optional(),
+  subjectType: subjectTypeSchema.optional(),
+  targetWords: z
+    .array(z.string().trim().min(1, 'Target word must not be empty'))
+    .max(100, 'Maximum 100 target words allowed')
+    .optional(),
 });
 
 export type CreateQuestionSetInput = z.infer<typeof createQuestionSetSchema>;
@@ -49,6 +56,28 @@ export type CreateQuestionSetInput = z.infer<typeof createQuestionSetSchema>;
 /**
  * Schema for AI-generated questions
  */
+const sequentialItemSchema = z.object({
+  text: z.string().min(1, 'Item text must not be empty').max(500, 'Item text must be 500 characters or less'),
+  year: z
+    .number()
+    .int()
+    .min(1000, 'Year must be between 1000 and 3000')
+    .max(3000, 'Year must be between 1000 and 3000')
+    .optional(),
+});
+
+const mapRegionSchema = z.object({
+  id: z.string().min(1, 'Region id must not be empty').max(100, 'Region id must be 100 characters or less'),
+  label: z.string().min(1, 'Region label must not be empty').max(200, 'Region label must be 200 characters or less'),
+  aliases: z.array(z.string().min(1, 'Alias must not be empty').max(200, 'Alias must be 200 characters or less')).optional(),
+});
+
+const mapOptionsSchema = z.object({
+  mapAsset: z.string().min(1, 'Map asset is required').max(500, 'Map asset must be 500 characters or less'),
+  regions: z.array(mapRegionSchema).min(1, 'Map questions must include at least 1 region'),
+  inputMode: z.enum(['single_region', 'multi_region', 'text']),
+});
+
 export const aiQuestionSchema = z.object({
   question: z
     .string()
@@ -61,13 +90,26 @@ export const aiQuestionSchema = z.object({
     'matching',
     'short_answer',
     'sequential',
+    'map',
   ]),
   topic: z
     .string()
     .min(1, 'Topic must not be empty')
-    .max(100, 'Topic must be 100 characters or less')
-    .optional(),  // Optional for backward compatibility with existing questions
-  options: z.array(z.string()).min(2, 'Multiple choice questions must have at least 2 options').optional(),
+    .max(100, 'Topic must be 100 characters or less'),  // Required - every question must have a topic
+  subtopic: z
+    .string()
+    .min(1, 'Subtopic must not be empty')
+    .max(100, 'Subtopic must be 100 characters or less')
+    .optional(),
+  skill: z
+    .string()
+    .regex(/^[a-z_]+$/, 'Skill must be snake_case')
+    .max(100, 'Skill must be 100 characters or less')
+    .optional(),
+  options: z.union([
+    z.array(z.string()).min(2, 'Multiple choice questions must have at least 2 options'),
+    mapOptionsSchema,
+  ]).optional(),
   correct_answer: z.union([
     z.string(),
     z.boolean(),
@@ -82,12 +124,19 @@ export const aiQuestionSchema = z.object({
     left: z.string(),
     right: z.string(),
   })).optional(),
-  items: z.array(z.string()).min(3, 'Sequential questions must have at least 3 items').max(8, 'Sequential questions must have at most 8 items').optional(),
+  items: z.union([
+    z.array(sequentialItemSchema)
+      .min(3, 'Sequential questions must have at least 3 items')
+      .max(8, 'Sequential questions must have at most 8 items'),
+    z.array(z.string().min(1, 'Item text must not be empty').max(500, 'Item text must be 500 characters or less'))
+      .min(3, 'Sequential questions must have at least 3 items')
+      .max(8, 'Sequential questions must have at most 8 items'),
+  ]).optional(),
   correct_order: z.array(z.number()).optional(),
 }).superRefine((data, ctx) => {
   // Validate that multiple_choice has at least 2 options (ideally 4)
   if (data.type === 'multiple_choice') {
-    if (!data.options || data.options.length < 2) {
+    if (!Array.isArray(data.options) || data.options.length < 2) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Multiple choice questions must have at least 2 options',
@@ -109,23 +158,25 @@ export const aiQuestionSchema = z.object({
 
   // Validate that sequential has items and correct_order
   if (data.type === 'sequential') {
-    if (!data.items || data.items.length < 3) {
+    const itemCount = Array.isArray(data.items) ? data.items.length : 0;
+
+    if (!data.items || itemCount < 3) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Sequential questions must have at least 3 items',
         path: ['items'],
       });
     }
-    if (!data.correct_order || data.correct_order.length !== data.items?.length) {
+    if (!data.correct_order || data.correct_order.length !== itemCount) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Sequential questions must have correct_order matching items length',
+        message: 'Sequential correct_order must match items length',
         path: ['correct_order'],
       });
     }
     // Validate that correct_order contains valid indices
-    if (data.correct_order && data.items) {
-      const maxIndex = data.items.length - 1;
+    if (data.correct_order && itemCount > 0) {
+      const maxIndex = itemCount - 1;
       const hasInvalidIndex = data.correct_order.some(idx => idx < 0 || idx > maxIndex);
       if (hasInvalidIndex) {
         ctx.addIssue({
@@ -136,8 +187,48 @@ export const aiQuestionSchema = z.object({
       }
     }
   }
+
+  if (data.type === 'map') {
+    if (!data.options || Array.isArray(data.options)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Map questions must include map configuration options',
+        path: ['options'],
+      });
+    } else {
+      const inputMode = (data.options as { inputMode?: string }).inputMode;
+      if (inputMode === 'multi_region') {
+        if (
+          !Array.isArray(data.correct_answer)
+          || data.correct_answer.length === 0
+          || !data.correct_answer.every((answer) => typeof answer === 'string')
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Map questions with multi_region inputMode must have an array of region ids as correct_answer',
+            path: ['correct_answer'],
+          });
+        }
+      } else {
+        if (typeof data.correct_answer !== 'string') {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Map questions with single_region or text inputMode must have a string correct_answer',
+            path: ['correct_answer'],
+          });
+        }
+      }
+    }
+  }
 });
 
 export const aiQuestionArraySchema = z.array(aiQuestionSchema);
 
 export type AIQuestion = z.infer<typeof aiQuestionSchema>;
+
+export const extendQuestionCountSchema = z
+  .coerce
+  .number()
+  .int('Question count must be an integer')
+  .min(1, 'Question count must be at least 1')
+  .max(200, 'Question count must be 200 or less');

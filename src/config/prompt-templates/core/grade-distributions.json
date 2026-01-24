@@ -1,0 +1,448 @@
+{
+  "language": {
+    "quiz": {
+      "4": {
+        "helppo": {
+          "multiple_choice": 60,
+          "true_false": 25,
+          "fill_blank": 15
+        },
+        "normaali": {
+          "multiple_choice": 45,
+          "fill_blank": 25,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5
+        }
+      },
+      "5": {
+        "helppo": {
+          "multiple_choice": 50,
+          "true_false": 20,
+          "fill_blank": 20,
+          "matching": 10
+        },
+        "normaali": {
+          "multiple_choice": 35,
+          "fill_blank": 30,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 10
+        }
+      },
+      "6": {
+        "helppo": {
+          "multiple_choice": 45,
+          "true_false": 15,
+          "fill_blank": 30,
+          "matching": 10
+        },
+        "normaali": {
+          "multiple_choice": 25,
+          "fill_blank": 40,
+          "true_false": 10,
+          "sequential": 10,
+          "short_answer": 15
+        }
+      }
+    },
+    "flashcard": {
+      "4": {
+        "fill_blank": 60,
+        "short_answer": 30,
+        "matching": 10
+      },
+      "5": {
+        "fill_blank": 60,
+        "short_answer": 30,
+        "matching": 10
+      },
+      "6": {
+        "fill_blank": 60,
+        "short_answer": 30,
+        "matching": 10
+      }
+    }
+  },
+  "math": {
+    "quiz": {
+      "4": {
+        "helppo": {
+          "multiple_choice": 60,
+          "true_false": 25,
+          "fill_blank": 15
+        },
+        "normaali": {
+          "multiple_choice": 45,
+          "fill_blank": 30,
+          "true_false": 15,
+          "sequential": 10
+        }
+      },
+      "5": {
+        "helppo": {
+          "multiple_choice": 50,
+          "true_false": 20,
+          "fill_blank": 20,
+          "matching": 10
+        },
+        "normaali": {
+          "multiple_choice": 35,
+          "fill_blank": 40,
+          "true_false": 15,
+          "sequential": 10
+        }
+      },
+      "6": {
+        "helppo": {
+          "multiple_choice": 45,
+          "true_false": 15,
+          "fill_blank": 30,
+          "matching": 10
+        },
+        "normaali": {
+          "multiple_choice": 25,
+          "fill_blank": 50,
+          "true_false": 10,
+          "sequential": 10,
+          "matching": 5
+        }
+      }
+    },
+    "flashcard": {
+      "4": {
+        "fill_blank": 70,
+        "matching": 20,
+        "short_answer": 10
+      },
+      "5": {
+        "fill_blank": 70,
+        "matching": 20,
+        "short_answer": 10
+      },
+      "6": {
+        "fill_blank": 70,
+        "matching": 20,
+        "short_answer": 10
+      }
+    }
+  },
+  "written": {
+    "quiz": {
+      "4": {
+        "helppo": {
+          "multiple_choice": 55,
+          "true_false": 25,
+          "fill_blank": 10,
+          "sequential": 10
+        },
+        "normaali": {
+          "multiple_choice": 45,
+          "fill_blank": 20,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5,
+          "matching": 5
+        },
+        "vaikea": {
+          "short_answer": 35,
+          "multiple_choice": 30,
+          "fill_blank": 20,
+          "matching": 10,
+          "true_false": 5
+        }
+      },
+      "5": {
+        "helppo": {
+          "multiple_choice": 55,
+          "true_false": 25,
+          "fill_blank": 10,
+          "sequential": 10
+        },
+        "normaali": {
+          "multiple_choice": 45,
+          "fill_blank": 20,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5,
+          "matching": 5
+        },
+        "vaikea": {
+          "short_answer": 35,
+          "multiple_choice": 30,
+          "fill_blank": 20,
+          "matching": 10,
+          "true_false": 5
+        }
+      },
+      "6": {
+        "helppo": {
+          "multiple_choice": 55,
+          "true_false": 25,
+          "fill_blank": 10,
+          "sequential": 10
+        },
+        "normaali": {
+          "multiple_choice": 45,
+          "fill_blank": 20,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5,
+          "matching": 5
+        },
+        "vaikea": {
+          "short_answer": 35,
+          "multiple_choice": 30,
+          "fill_blank": 20,
+          "matching": 10,
+          "true_false": 5
+        }
+      }
+    },
+    "flashcard": {
+      "4": {
+        "fill_blank": 50,
+        "short_answer": 30,
+        "matching": 20
+      },
+      "5": {
+        "fill_blank": 50,
+        "short_answer": 30,
+        "matching": 20
+      },
+      "6": {
+        "fill_blank": 50,
+        "short_answer": 30,
+        "matching": 20
+      }
+    }
+  },
+  "skills": {
+    "quiz": {
+      "4": {
+        "helppo": {
+          "multiple_choice": 55,
+          "true_false": 25,
+          "fill_blank": 10,
+          "sequential": 10
+        },
+        "normaali": {
+          "multiple_choice": 45,
+          "fill_blank": 20,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5,
+          "matching": 5
+        },
+        "vaikea": {
+          "short_answer": 35,
+          "multiple_choice": 30,
+          "fill_blank": 20,
+          "matching": 10,
+          "true_false": 5
+        }
+      },
+      "5": {
+        "helppo": {
+          "multiple_choice": 55,
+          "true_false": 25,
+          "fill_blank": 10,
+          "sequential": 10
+        },
+        "normaali": {
+          "multiple_choice": 45,
+          "fill_blank": 20,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5,
+          "matching": 5
+        },
+        "vaikea": {
+          "short_answer": 35,
+          "multiple_choice": 30,
+          "fill_blank": 20,
+          "matching": 10,
+          "true_false": 5
+        }
+      },
+      "6": {
+        "helppo": {
+          "multiple_choice": 55,
+          "true_false": 25,
+          "fill_blank": 10,
+          "sequential": 10
+        },
+        "normaali": {
+          "multiple_choice": 45,
+          "fill_blank": 20,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5,
+          "matching": 5
+        },
+        "vaikea": {
+          "short_answer": 35,
+          "multiple_choice": 30,
+          "fill_blank": 20,
+          "matching": 10,
+          "true_false": 5
+        }
+      }
+    },
+    "flashcard": {
+      "4": {
+        "fill_blank": 50,
+        "short_answer": 30,
+        "matching": 20
+      },
+      "5": {
+        "fill_blank": 50,
+        "short_answer": 30,
+        "matching": 20
+      },
+      "6": {
+        "fill_blank": 50,
+        "short_answer": 30,
+        "matching": 20
+      }
+    }
+  },
+  "concepts": {
+    "quiz": {
+      "4": {
+        "helppo": {
+          "multiple_choice": 55,
+          "true_false": 25,
+          "fill_blank": 10,
+          "sequential": 10
+        },
+        "normaali": {
+          "multiple_choice": 45,
+          "fill_blank": 20,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5,
+          "matching": 5
+        },
+        "vaikea": {
+          "short_answer": 35,
+          "multiple_choice": 30,
+          "fill_blank": 20,
+          "matching": 10,
+          "true_false": 5
+        }
+      },
+      "5": {
+        "helppo": {
+          "multiple_choice": 55,
+          "true_false": 25,
+          "fill_blank": 10,
+          "sequential": 10
+        },
+        "normaali": {
+          "multiple_choice": 45,
+          "fill_blank": 20,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5,
+          "matching": 5
+        },
+        "vaikea": {
+          "short_answer": 35,
+          "multiple_choice": 30,
+          "fill_blank": 20,
+          "matching": 10,
+          "true_false": 5
+        }
+      },
+      "6": {
+        "helppo": {
+          "multiple_choice": 55,
+          "true_false": 25,
+          "fill_blank": 10,
+          "sequential": 10
+        },
+        "normaali": {
+          "multiple_choice": 45,
+          "fill_blank": 20,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5,
+          "matching": 5
+        },
+        "vaikea": {
+          "short_answer": 35,
+          "multiple_choice": 30,
+          "fill_blank": 20,
+          "matching": 10,
+          "true_false": 5
+        }
+      }
+    },
+    "flashcard": {
+      "4": {
+        "fill_blank": 50,
+        "short_answer": 30,
+        "matching": 20
+      },
+      "5": {
+        "fill_blank": 50,
+        "short_answer": 30,
+        "matching": 20
+      },
+      "6": {
+        "fill_blank": 50,
+        "short_answer": 30,
+        "matching": 20
+      }
+    }
+  },
+  "geography": {
+    "quiz": {
+      "4": {
+        "helppo": {
+          "map": 100
+        },
+        "normaali": {
+          "map": 100
+        },
+        "vaikea": {
+          "map": 100
+        }
+      },
+      "5": {
+        "helppo": {
+          "map": 100
+        },
+        "normaali": {
+          "map": 100
+        },
+        "vaikea": {
+          "map": 100
+        }
+      },
+      "6": {
+        "helppo": {
+          "map": 100
+        },
+        "normaali": {
+          "map": 100
+        },
+        "vaikea": {
+          "map": 100
+        }
+      }
+    },
+    "flashcard": {
+      "4": {
+        "map": 100
+      },
+      "5": {
+        "map": 100
+      },
+      "6": {
+        "map": 100
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "values": [
+    "identification",
+    "importance",
+    "application",
+    "conflicts"
+  ],
+  "perspectives": [
+    "comparison",
+    "understanding",
+    "empathy",
+    "diversity"
+  ],
+  "scenarios": [
+    "analysis",
+    "decision_making",
+    "consequences",
+    "alternatives"
+  ],
+  "reflection": [
+    "personal_connection",
+    "critical_thinking",
+    "self_awareness",
+    "growth"
+  ]
+}

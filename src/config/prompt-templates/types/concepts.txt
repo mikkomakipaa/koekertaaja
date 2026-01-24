@@ -1,0 +1,161 @@
+{{concepts_intro}}
+
+{{difficulty_instructions}}
+
+{{grade_note}}
+
+{{material_section}}TÄRKEÄÄ - KYSYMYSTEN MUOTO:
+- Kysymykset esitetään SUOMEKSI
+- Luo kysymyksiä jotka testaavat ymmärrystä aiheesta "{{subject}}"
+- Vaihtele kysymystyyppejä
+- Luo TÄSMÄLLEEN {{question_count}} kysymystä
+- Perusta kysymykset annettuun materiaaliin {{grade_context_note}}
+- NOUDATA TARKASTI vaikeustason kysymystyyppien jakaumaa
+- Map-kysymykset (type: map) sallitaan VAIN maantieteessä; muissa aineissa map-tyyppi on kielletty. Jos subject on maantiede, vähintään 1 map-kysymys on pakollinen
+
+SKILL TAGGING (PAKOLLINEN):
+- Jokaisessa kysymyksessä TÄYTYY olla "skill" kenttä
+- Valitse YKSI ensisijainen taito AVAILABLE SKILLS -listalta
+- ÄLÄ MIKSAA useita taitoja samaan kysymykseen
+- Esimerkkejä: "importance", "comparison", "decision_making"
+
+FOKUSOI ARVOIHIN JA NÄKÖKULMIIN:
+- Arvot ja periaatteet
+- Näkökulmien vertailu
+- Skenaarioanalyysi ja esimerkit
+- Henkilökohtainen pohdinta (mutta arvioitava vastaus)
+
+ESIMERKKIKYSYMYKSIÄ:
+- "Miksi ____ on tärkeää?"
+- "Miten ____ vaikuttaa ____?"
+- "Mitä ajattelet kun ____?"
+
+QUIZ-MOODI: KYSYMYSTYYPPIEN KÄYTTÖOHJEET
+
+1. MULTIPLE_CHOICE (monivalinta):
+   - Sopii: käsitteiden tunnistaminen, faktat, prosessit
+   *** PAKOLLINEN: Jokaisessa multiple_choice kysymyksessä TÄYTYY olla TASAN 4 vaihtoehtoa ***
+   Esim: "Mikä seuraavista on oikein?"
+   Vaihtoehdot: ["vaihtoehto 1", "vaihtoehto 2", "vaihtoehto 3", "vaihtoehto 4"]
+   - TÄYTYY olla 4 vaihtoehtoa, yksi oikea
+   - Väärät vastaukset uskottavia ja lähellä oikeaa vastausta
+
+2. TRUE_FALSE (totta/tarua):
+   - Sopii: väittämät, tosiasiat, käsitteiden ymmärtäminen
+   Esim: "Totta vai tarua: [väite aiheesta]"
+   correct_answer: true tai false (boolean)
+
+3. FILL_BLANK (täydennä):
+   - Helppo: yksi puuttuva sana tai luku
+   - Normaali/Vaikea: useampi sana tai käsite
+   Esim: "Täydennä: Suomen pääkaupunki on ___."
+   Vastaus: "Helsinki"
+   - Anna acceptable_answers listaan vaihtoehtoiset hyväksyttävät vastaukset
+
+4. SHORT_ANSWER (lyhyt avoin vastaus):
+   - VAIN normaali ja vaikea vaikeustasoilla
+   - Vaatii selitystä, perustelua tai kuvausta
+
+   Normaali taso:
+   Esim: "Selitä lyhyesti mikä on [käsite]."
+   Vastaus: "1-2 lauseen selitys"
+
+   Vaikea taso:
+   Esim: "Analysoi ja perustele miksi [ilmiö] tapahtuu."
+   Vastaus: "Perusteellinen selitys useammalla lauseella"
+
+   - Anna acceptable_answers listaan erilaisia hyväksyttäviä vastauksia
+
+5. MATCHING (parit):
+   - Sopii: käsitteet ja määritelmät, termit ja kuvaukset
+   - Käytä normaali ja vaikea tasoilla jos aihe sopii
+   *** PAKOLLINEN: Jokaisessa matching kysymyksessä TÄYTYY olla VÄHINTÄÄN 4 paria ***
+   Esim: Yhdistä käsite ja määritelmä
+   Parit: [{"left": "käsite1", "right": "määritelmä1"}, {"left": "käsite2", "right": "määritelmä2"}, {"left": "käsite3", "right": "määritelmä3"}, {"left": "käsite4", "right": "määritelmä4"}]
+
+6. SEQUENTIAL (järjestys):
+   - Sopii: prosessien vaiheet, kronologinen järjestys, tapahtumat
+   - Käytä helppo ja normaali tasoilla
+   - Helppo taso: 4 vaihetta, Normaali taso: 5-6 vaihetta
+
+   Timeline Format - Suomen historia (vuosiluvut mukana):
+   Kysymys: "Järjestä nämä Suomen historian tapahtumat aikajärjestykseen:"
+   items: [
+     {"text": "Suomi julistautui itsenäiseksi", "year": 1917},
+     {"text": "Talvisota alkoi", "year": 1939},
+     {"text": "Helsinki järjesti olympialaiset", "year": 1952},
+     {"text": "Suomi liittyi Euroopan unioniin", "year": 1995}
+   ]
+   correct_order: [0, 1, 2, 3]
+
+   Timeline Format - Tieteelliset keksinnöt (vuosiluvut mukana):
+   Kysymys: "Järjestä nämä keksinnöt aikajärjestykseen:"
+   items: [
+     {"text": "Louis Pasteur kehitti pastöroinnin", "year": 1864},
+     {"text": "Marie Curie sai Nobelin radiumtutkimuksesta", "year": 1903},
+     {"text": "Alexander Fleming löysi penisilliinin", "year": 1928},
+     {"text": "Watson ja Crick löysivät DNA:n rakenteen", "year": 1953}
+   ]
+   correct_order: [0, 1, 2, 3]
+
+   Timeline Format - Elinkaaren vaiheet (vaihenumerot):
+   Kysymys: "Järjestä perhosen elinkaaren vaiheet oikeaan järjestykseen:"
+   items: [
+     {"text": "Muna (3-5 päivää)", "year": 1},
+     {"text": "Toukka (2-3 viikkoa)", "year": 2},
+     {"text": "Kotelo (1-2 viikkoa)", "year": 3},
+     {"text": "Aikuinen perhonen (3-4 viikkoa)", "year": 4}
+   ]
+   correct_order: [0, 1, 2, 3]
+   Huom: year-kenttä voi olla vaihenumero, ei pakollisesti kalenterivuosi
+
+   Helppo taso - Prosessin vaiheet:
+   Kysymys: "Järjestä nämä vaiheet oikeaan järjestykseen (prosessi aiheesta {{subject}}):"
+   items: [
+     "Vaihe 1 kuvaus",
+     "Vaihe 2 kuvaus",
+     "Vaihe 3 kuvaus",
+     "Vaihe 4 kuvaus"
+   ]
+   correct_order: [0, 1, 2, 3]
+
+   Normaali taso - Monivaiheinen prosessi:
+   Kysymys: "Järjestä nämä vaiheet oikeaan järjestykseen (aihe liittyen {{subject}}):"
+   items: [
+     "Ensimmäinen vaihe",
+     "Toinen vaihe",
+     "Kolmas vaihe",
+     "Neljäs vaihe",
+     "Viides vaihe",
+     "Kuudes vaihe"
+   ]
+   correct_order: [0, 1, 2, 3, 4, 5]
+
+   MILLOIN KÄYTTÄÄ TIMELINE-MUOTOA (year-kentän kanssa):
+   - Historialliset tapahtumat (vuosiluvut)
+   - Tieteelliset löydöt ja keksinnöt (vuosiluvut)
+   - Kirjalliset julkaisut (julkaisuvuodet)
+   - Elämäkerralliset tapahtumat (ikävuodet tai kalenterivuodet)
+   - Elinkaaren vaiheet (vaihenumero year-kentässä)
+
+   MILLOIN KÄYTTÄÄ TAVALLISTA MUOTOA (ilman year-kenttää):
+   - Prosessien vaiheet (ei kalenterivuosia)
+   - Dialogin järjestys
+   - Lauseiden järjestäminen kappaleeksi
+   - Loogiset sarjat (ei kronologiset)
+
+   YEAR-KENTÄN OHJEET:
+   - Käytä vain kronologiseen järjestykseen
+   - Elinkaarissa käytä vaihenumeroita (1, 2, 3, 4) tai ikävuosia
+   - Jätä pois, jos järjestys on looginen eikä ajallinen
+   - Varmista realistinen haarukka: -3000 ... 3000
+
+VÄÄRÄT VASTAUKSET (multiple_choice):
+- Liity samaan aihepiiriin
+- Sisällä yleisiä väärinkäsityksiä
+- Ole lähellä oikeaa vastausta mutta selvästi väärin
+- Testaa ymmärrystä, älä vain muistia
+
+LISÄTARKISTUKSET (arvot ja näkökulmat):
+- Vältä moralisoivaa sävyä, pidä neutraali ja ikätasolle sopiva
+- Selitykset ovat informatiivisia ja selkeitä

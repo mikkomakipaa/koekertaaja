@@ -5,7 +5,6 @@ import { Flashcard } from '@/types';
 import { FlashcardCard } from './FlashcardCard';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, BookOpen, Check, X, Book, CheckCircle } from '@phosphor-icons/react';
-import posthog from 'posthog-js';
 
 interface FlashcardSessionProps {
   flashcards: Flashcard[];
@@ -28,18 +27,7 @@ export function FlashcardSession({
   const progress = ((currentIndex + 1) / totalCards) * 100;
 
   // Track if session started event has been captured
-  const sessionStartedRef = useRef(false);
 
-  // PostHog: Track flashcard session started (on first render)
-  useEffect(() => {
-    if (!sessionStartedRef.current && flashcards.length > 0) {
-      sessionStartedRef.current = true;
-      posthog.capture('flashcard_session_started', {
-        question_set_name: questionSetName,
-        total_cards: totalCards,
-      });
-    }
-  }, [flashcards.length, questionSetName, totalCards]);
 
   const handleFlip = () => {
     if (!isFlipped) {
@@ -57,13 +45,6 @@ export function FlashcardSession({
       // Session complete
       setReviewedCount(reviewedCount + 1);
       setIsComplete(true);
-
-      // PostHog: Track flashcard session completed
-      posthog.capture('flashcard_session_completed', {
-        question_set_name: questionSetName,
-        total_cards: totalCards,
-        cards_reviewed: reviewedCount + 1,
-      });
     }
   };
 

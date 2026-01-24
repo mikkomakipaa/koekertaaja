@@ -46,3 +46,7 @@ english-exam-game.tsx
 .swarm/
 .claude/checkpoints
 .github
+
+# map data (regenerated with npm run maps:download)
+/data/maps/natural-earth/
+/data/maps/*.zip

@@ -1,0 +1,63 @@
+{{geography_intro}}
+
+{{difficulty_instructions}}
+
+{{grade_note}}
+
+{{material_section}}TÄRKEÄÄ - KYSYMYSTEN MUOTO:
+- Kysymykset esitetään SUOMEKSI
+- Luo kysymyksiä jotka testaavat ymmärrystä aiheesta "{{subject}}"
+- Käytä AINOASTAAN map-kysymyksiä (type: "map")
+- Luo TÄSMÄLLEEN {{question_count}} kysymystä
+- Perusta kysymykset annettuun materiaaliin {{grade_context_note}}
+- NOUDATA TARKASTI vaikeustason kysymystyyppien jakaumaa
+- KAIKKIEN kysymysten type TÄYTYY olla "map" (100% map)
+- ÄLÄ luo multiple_choice, true_false, fill_blank, short_answer, matching, sequential -kysymyksiä
+
+TAGIEN EROTUS (MAANTIETO):
+- Topic = sisältöalue (esim. "Suomen maakunnat", "Euroopan valtiot")
+- Skill = maantiedon taito (esim. "map_reading", "capital_cities", "climate_zones")
+- ÄLÄ tee topicista taitoa, äläkä käytä skill-tagina sisältöaihetta
+- Subtopic on vapaaehtoinen tarkenne (esim. "Itä-Suomi", "Etelä-Eurooppa")
+
+FOKUSOI KARTTATAITOON JA SIJAINTIIN:
+- Kartalta tunnistaminen
+- Naapurialueet ja rajat
+- Alueiden sijainti suhteessa toisiin
+- Pääkaupungit ja tärkeät kaupungit
+
+ESIMERKKIKYSYMYKSIÄ:
+- "Valitse kartasta maakunta, jossa ____ sijaitsee"
+- "Mikä valtio sijaitsee ____ vieressä?"
+- "Missä päin Suomea ____ sijaitsee?"
+
+KARTTAKYSYMYKSET (type: map):
+- options sisältää mapAsset, inputMode ja regions (ei lista vaan objekti)
+- inputMode: "single_region" | "multi_region" | "text"
+- correct_answer:
+  - single_region/text: string
+  - multi_region: string[]
+- regions sisältää selkeät id- ja label-arvot (snake_case id)
+- Jos mapAsset ei ole materiaalissa, käytä oletuksena: "/maps/finland/finland_counties_v1.png"
+
+ESIMERKKI (MAP-JSON):
+{
+  "question": "Valitse kartasta maakunta, jossa Helsinki sijaitsee.",
+  "type": "map",
+  "topic": "Suomen maakunnat",
+  "skill": "map_reading",
+  "options": {
+    "mapAsset": "/maps/finland/finland_counties_v1.png",
+    "inputMode": "single_region",
+    "regions": [
+      { "id": "uusimaa", "label": "Uusimaa", "aliases": ["Uudenmaan maakunta"] },
+      { "id": "pirkanmaa", "label": "Pirkanmaa" }
+    ]
+  },
+  "correct_answer": "uusimaa",
+  "explanation": "Helsinki sijaitsee Uudenmaan maakunnassa."
+}
+
+LISÄTARKISTUKSET (maantieto):
+- Karttakysymykset käyttävät oikeita alueita ja nimiä
+- Kysymykset kattavat materiaalin laajasti

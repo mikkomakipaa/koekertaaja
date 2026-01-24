@@ -258,6 +258,35 @@ See the LICENSE file for details.
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [Phosphor Icons](https://phosphoricons.com/) - Icon system
 
+## 🗺️ Map Data Sources
+
+Interactive map questions use geographic data from the following sources:
+
+### Natural Earth Data
+- **License**: [CC0 1.0 (Public Domain)](https://creativecommons.org/publicdomain/zero/1.0/)
+- **Source**: [naturalearthdata.com](https://www.naturalearthdata.com/)
+- **Usage**: World, Europe, and Finland country boundaries
+- **Attribution**: Not required, but we credit them: "Made with Natural Earth"
+
+Natural Earth provides free, public domain map datasets at multiple scales. All map files are derived from Natural Earth v5.1.0 data.
+
+### TopoJSON World Atlas
+- **License**: [ISC License](https://opensource.org/licenses/ISC) (permissive)
+- **Source**: [github.com/topojson/world-atlas](https://github.com/topojson/world-atlas)
+- **Copyright**: Mike Bostock
+- **Usage**: Pre-optimized TopoJSON world maps
+- **Attribution**: Not required, but we credit them
+
+TopoJSON World Atlas provides web-optimized geographic data in TopoJSON format for efficient map rendering.
+
+### License Compliance
+All map data used in Koekertaaja is from **public domain or permissive open-source licenses**:
+- ✅ Free for educational and commercial use
+- ✅ No attribution legally required (but we provide it anyway)
+- ✅ Fully documented in [`/public/maps/LICENSES.md`](public/maps/LICENSES.md)
+
+For full license details and data processing information, see the [Map Data Licenses](public/maps/LICENSES.md) documentation.
+
 ---
 
 Made with ❤️ for learners | [GitHub](https://github.com/mikkomakipaa/koekertaaja)

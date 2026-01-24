@@ -1,0 +1,24 @@
+AIHEIDEN TASAPAINO (PAKOLLINEN):
+
+1. KÄYTÄ NÄITÄ TUNNISTETTUJA AIHEALUEITA ({{topic_count}} kpl):
+{{topics_list}}
+
+   - ÄLÄ KEKSI UUSIA AIHEALUEITA
+   - KÄYTÄ TÄSMÄLLEEN SAMAA KIRJOITUSASUA KUIN YLLÄ
+
+2. JOKA IKINEN kysymys/kortti TÄYTYY sisältää "topic"-kenttä
+   - Valitse yksi yllä olevista aihealueista jokaiselle kysymykselle
+   - Kopioi aihealueen nimi TÄSMÄLLEEN sellaisenaan
+   - "subtopic" on VAPAAEHTOINEN tarkenne, käytä vain jos se selkeyttää topicia
+
+3. TASAINEN JAKAUTUMINEN kaikille aihealueille:
+   - TAVOITE: ~{{questions_per_topic}} kysymystä per aihealue
+   - Jaa {{question_count}} kysymystä TASAISESTI {{topic_count}} aihealueen kesken
+   - Älä suosi yhtä aihealuetta toisten kustannuksella
+   - Sallittu vaihtelu: ±1 kysymys per aihealue
+
+4. VARMISTA että JOKAINEN kysymys on merkitty aihealueella
+   - Tarkista että jokainen kysymys sisältää "topic"-kentän
+   - Tarkista että topic-kenttä vastaa yhtä yllä olevista aihealueista
+
+KYSYMYKSET ILMAN TOPIC-KENTTÄÄ TAI VÄÄRÄLLÄ TOPIC-ARVOLLA HYLÄTÄÄN.

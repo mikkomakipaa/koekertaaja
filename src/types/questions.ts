@@ -1,3 +1,5 @@
+import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
+
 // Question Types
 export type QuestionType =
   | 'multiple_choice'
@@ -5,13 +7,16 @@ export type QuestionType =
   | 'true_false'
   | 'matching'
   | 'short_answer'
-  | 'sequential';
+  | 'sequential'
+  | 'map';
 
 export type Subject = string;
 
 export type Difficulty = 'helppo' | 'normaali';
 
 export type Mode = 'quiz' | 'flashcard';
+
+export type QuestionSetStatus = 'created' | 'published';
 
 // Base Question Interface
 export interface BaseQuestion {
@@ -23,6 +28,8 @@ export interface BaseQuestion {
   image_url?: string;
   order_index: number;
   topic?: string;  // High-level topic (e.g., "Grammar", "Vocabulary", "Reading")
+  skill?: string;  // Specific skill tag (snake_case)
+  subtopic?: string;  // Optional finer-grained subtopic within a topic
 }
 
 // Specific Question Types
@@ -60,10 +67,66 @@ export interface ShortAnswerQuestion extends BaseQuestion {
   max_length?: number;
 }
 
+export interface SequentialItem {
+  text: string;
+  year?: number;
+}
+
 export interface SequentialQuestion extends BaseQuestion {
   question_type: 'sequential';
-  items: string[];  // Items in scrambled order (displayed to user)
+  items: SequentialItem[] | string[];  // Items in scrambled order (displayed to user)
   correct_order: number[];  // Correct indices [0, 2, 1, 3] representing original item positions
+}
+
+export interface MapRegion {
+  id: string;
+  label: string;
+  aliases?: string[];
+}
+
+export type MapInputMode = 'single_region' | 'multi_region' | 'text';
+
+export interface MapQuestionOptions {
+  mapAsset: string;
+  regions: MapRegion[];
+  inputMode: MapInputMode;
+}
+
+export interface MapQuestion extends BaseQuestion {
+  question_type: 'map';
+  options: MapQuestionOptions;
+  correct_answer: string | string[];
+}
+
+export interface MapQuestionEntity {
+  id: string;
+  question_set_id: string | null;
+  subject: Subject;
+  grade?: number | null;
+  difficulty?: Difficulty | null;
+  question: string;
+  explanation: string;
+  topic?: string | null;
+  subtopic?: string | null;
+  skill?: string | null;
+  map_asset: string;
+  input_mode: MapInputMode;
+  regions: MapRegion[];
+  correct_answer: string | string[];
+  acceptable_answers?: string[] | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at?: string;
+}
+
+export function isSequentialItemArray(items: unknown): items is SequentialItem[] {
+  return Array.isArray(items) && items.every(
+    (item) => typeof item === 'object' && item !== null && 'text' in item
+  );
+}
+
+export function isStringArray(items: unknown): items is string[] {
+  return Array.isArray(items) && items.every((item) => typeof item === 'string');
 }
 
 // Union type of all question types
@@ -73,7 +136,8 @@ export type Question =
   | TrueFalseQuestion
   | MatchingQuestion
   | ShortAnswerQuestion
-  | SequentialQuestion;
+  | SequentialQuestion
+  | MapQuestion;
 
 // Question Set
 export interface QuestionSet {
@@ -81,12 +145,15 @@ export interface QuestionSet {
   code: string;
   name: string;
   subject: Subject;
+  subject_type?: SubjectType;
   grade?: number;
   difficulty: Difficulty;
   mode: Mode;  // 'quiz' for traditional assessment, 'flashcard' for memorization-focused
   topic?: string;
   subtopic?: string;
   question_count: number;
+  exam_length?: number;
+  status: QuestionSetStatus;  // 'created' (unpublished) or 'published' (visible on play pages)
   created_at: string;
   updated_at?: string;
 }
@@ -190,6 +257,7 @@ export interface MaterialUpload {
 // Question Generation Request
 export interface QuestionGenerationRequest {
   subject: Subject;
+  subjectType?: SubjectType;
   grade?: number;
   difficulty: Difficulty;
   questionCount: number;

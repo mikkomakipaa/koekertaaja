@@ -5,10 +5,13 @@ This document provides API-compatible schemas for integrating question generatio
 ## Table of Contents
 
 1. [Question Schema (JSON Schema)](#question-schema-json-schema)
-2. [Question Set Schema](#question-set-schema)
-3. [API Endpoint Schema](#api-endpoint-schema)
-4. [Example Payloads](#example-payloads)
-5. [OpenAPI Specification](#openapi-specification)
+2. [Question Type Contracts (AI Output)](#question-type-contracts-ai-output)
+3. [Map Question Entity Schema](#map-question-entity-schema)
+4. [Question Set Schema](#question-set-schema)
+5. [API Endpoint Schema](#api-endpoint-schema)
+6. [Admin API - Publish/Unpublish](#admin-api---publishunpublish)
+7. [Example Payloads](#example-payloads)
+8. [OpenAPI Specification](#openapi-specification)
 
 ---
 
@@ -20,7 +23,7 @@ This document provides API-compatible schemas for integrating question generatio
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["question", "type", "correct_answer", "explanation"],
+  "required": ["question", "type", "topic", "correct_answer", "explanation"],
   "properties": {
     "question": {
       "type": "string",
@@ -36,7 +39,8 @@ This document provides API-compatible schemas for integrating question generatio
         "true_false",
         "matching",
         "short_answer",
-        "sequential"
+        "sequential",
+        "map"
       ],
       "description": "Question type"
     },
@@ -45,6 +49,18 @@ This document provides API-compatible schemas for integrating question generatio
       "minLength": 1,
       "maxLength": 100,
       "description": "High-level topic (e.g., 'Grammar', 'Vocabulary')"
+    },
+    "subtopic": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Optional subtopic that refines the topic"
+    },
+    "skill": {
+      "type": "string",
+      "pattern": "^[a-z_]+$",
+      "maxLength": 100,
+      "description": "Skill tag in snake_case (e.g., 'verb_tenses')"
     },
     "correct_answer": {
       "oneOf": [
@@ -61,10 +77,38 @@ This document provides API-compatible schemas for integrating question generatio
       "description": "Why this answer is correct"
     },
     "options": {
-      "type": "array",
-      "items": { "type": "string" },
-      "minItems": 2,
-      "description": "Options for multiple_choice questions"
+      "description": "Multiple choice options (string array) or map configuration options (object)",
+      "anyOf": [
+        {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 2
+        },
+        {
+          "type": "object",
+          "required": ["mapAsset", "regions", "inputMode"],
+          "properties": {
+            "mapAsset": { "type": "string", "minLength": 1, "maxLength": 500 },
+            "regions": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": ["id", "label"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1, "maxLength": 100 },
+                  "label": { "type": "string", "minLength": 1, "maxLength": 200 },
+                  "aliases": {
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+                  }
+                }
+              }
+            },
+            "inputMode": { "type": "string", "enum": ["single_region", "multi_region", "text"] }
+          }
+        }
+      ]
     },
     "acceptable_answers": {
       "type": "array",
@@ -85,20 +129,33 @@ This document provides API-compatible schemas for integrating question generatio
       "description": "Pairs for matching questions"
     },
     "items": {
-      "type": "array",
-      "items": { "type": "string" },
-      "minItems": 3,
-      "maxItems": 8,
-      "description": "Items for sequential questions (in scrambled order)"
+      "description": "Items for sequential questions (in scrambled order)",
+      "anyOf": [
+        {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 500 },
+          "minItems": 3,
+          "maxItems": 8
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["text"],
+            "properties": {
+              "text": { "type": "string", "minLength": 1, "maxLength": 500 },
+              "year": { "type": "integer", "minimum": 1000, "maximum": 3000 }
+            }
+          },
+          "minItems": 3,
+          "maxItems": 8
+        }
+      ]
     },
     "correct_order": {
       "type": "array",
       "items": { "type": "integer" },
-      "description": "Correct indices for sequential questions (e.g., [0, 2, 1, 3])"
-    },
-    "max_length": {
-      "type": "integer",
-      "description": "Max character length for short_answer questions"
+      "description": "Correct indices for sequential questions (e.g., [0, 2, 1, 3]). Must match items length and be valid indices."
     }
   }
 }
@@ -114,6 +171,283 @@ This document provides API-compatible schemas for integrating question generatio
     "$ref": "#/definitions/Question"
   },
   "minItems": 1
+}
+```
+
+---
+
+## Question Type Contracts (AI Output)
+
+These contracts match the Zod validation rules in `src/lib/validation/schemas.ts` for AI-generated questions.
+
+### Shared fields (all types)
+
+- `question` (required): string, 5-1000 chars
+- `type` (required): enum
+- `topic` (required): string, 1-100 chars
+- `correct_answer` (required): string | boolean | array (shape depends on type)
+- `explanation` (required): string, 10-2000 chars
+- `subtopic` (optional): string, 1-100 chars
+- `skill` (optional): snake_case string, max 100 chars
+- `acceptable_answers` (optional): string[]
+
+### multiple_choice
+
+Required fields:
+- `options`: string[] with at least 2 items
+- `correct_answer`: string (should match one of `options`)
+
+Example:
+```json
+{
+  "question": "Mikä on Suomen pääkaupunki?",
+  "type": "multiple_choice",
+  "topic": "Maantieto",
+  "options": ["Helsinki", "Turku", "Tampere", "Oulu"],
+  "correct_answer": "Helsinki",
+  "explanation": "Helsinki on Suomen pääkaupunki."
+}
+```
+
+### fill_blank
+
+Required fields:
+- `correct_answer`: string
+
+Optional:
+- `acceptable_answers`: string[]
+
+Example:
+```json
+{
+  "question": "Suomen suurin järvi on ____.",
+  "type": "fill_blank",
+  "topic": "Maantieto",
+  "correct_answer": "Saimaa",
+  "acceptable_answers": ["Saimaanjärvi"],
+  "explanation": "Saimaa on Suomen suurin järvi."
+}
+```
+
+### true_false
+
+Required fields:
+- `correct_answer`: boolean
+
+Example:
+```json
+{
+  "question": "Vesi jäätyy 0 celsiusasteessa.",
+  "type": "true_false",
+  "topic": "Fysiikka",
+  "correct_answer": true,
+  "explanation": "Puhdas vesi jäätyy 0 asteessa normaalipaineessa."
+}
+```
+
+### short_answer
+
+Required fields:
+- `correct_answer`: string
+
+Optional:
+- `acceptable_answers`: string[]
+
+Example:
+```json
+{
+  "question": "Mikä on 7 x 8?",
+  "type": "short_answer",
+  "topic": "Matematiikka",
+  "correct_answer": "56",
+  "acceptable_answers": ["viisikymmentäkuusi"],
+  "explanation": "7 kertaa 8 on 56."
+}
+```
+
+### matching
+
+Required fields:
+- `pairs`: array of objects with `left` and `right`, min 2
+- `correct_answer`: required by schema but not used at runtime; use an array of right-side values or an empty array
+
+Example:
+```json
+{
+  "question": "Yhdistä valtio ja pääkaupunki.",
+  "type": "matching",
+  "topic": "Maantieto",
+  "pairs": [
+    { "left": "Suomi", "right": "Helsinki" },
+    { "left": "Ruotsi", "right": "Tukholma" },
+    { "left": "Norja", "right": "Oslo" }
+  ],
+  "correct_answer": ["Helsinki", "Tukholma", "Oslo"],
+  "explanation": "Jokaisella valtiolla on oma pääkaupunkinsa."
+}
+```
+
+### sequential
+
+Required fields:
+- `items`: array of strings or `{ text, year? }`, min 3, max 8
+- `correct_order`: array of indices matching `items` length; indices must be valid (0..n-1)
+- `correct_answer`: required by schema; use the same array as `correct_order`
+
+Example:
+```json
+{
+  "question": "Järjestä vaiheet oikeaan järjestykseen.",
+  "type": "sequential",
+  "topic": "Biologia",
+  "items": [
+    { "text": "Siemen itää" },
+    { "text": "Kasvi kasvaa" },
+    { "text": "Kasvi kukkii" },
+    { "text": "Siemenet muodostuvat" }
+  ],
+  "correct_order": [0, 1, 2, 3],
+  "correct_answer": [0, 1, 2, 3],
+  "explanation": "Kasvin elinkaari etenee siemenestä kasvuun ja siementen muodostumiseen."
+}
+```
+
+### map
+
+Required fields:
+- `options`: object with `mapAsset`, `regions`, `inputMode`
+- `correct_answer`:
+  - `single_region`: string region id
+  - `multi_region`: string[] of region ids
+  - `text`: string (region id or label)
+
+Optional:
+- `acceptable_answers`: string[] (used for text answers)
+
+Example:
+```json
+{
+  "question": "Valitse Pohjanmaa kartalta.",
+  "type": "map",
+  "topic": "Suomen maakunnat",
+  "options": {
+    "mapAsset": "/maps/finland-provinces.json",
+    "inputMode": "single_region",
+    "regions": [
+      { "id": "pohjanmaa", "label": "Pohjanmaa", "aliases": ["Österbotten"] },
+      { "id": "uusimaa", "label": "Uusimaa" }
+    ]
+  },
+  "correct_answer": "pohjanmaa",
+  "explanation": "Pohjanmaa sijaitsee Suomen länsirannikolla."
+}
+```
+
+---
+
+## Map Question Entity Schema
+
+Map questions are stored as a dedicated entity (`map_questions`) instead of the generic `questions` table. A map question may optionally belong to a `question_set` when created from a larger set, but it can also stand alone for map-only experiences.
+
+### Relationship to question_sets
+
+- `map_questions.question_set_id` is nullable.
+- When provided, the map question is grouped under that question set for publishing and share-code access.
+- When `null`, the map question exists independently (intended for future map-only flows).
+
+### Proposed Table Schema (map_questions)
+
+```sql
+create table map_questions (
+  id uuid primary key default gen_random_uuid(),
+  question_set_id uuid references question_sets(id) on delete set null,
+  subject text not null default 'Maantieto',
+  grade smallint,
+  difficulty text,
+  question text not null,
+  explanation text not null,
+  topic text,
+  subtopic text,
+  skill text,
+  map_asset text not null,
+  input_mode text not null,
+  regions jsonb not null,
+  correct_answer jsonb not null,
+  acceptable_answers text[],
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+```
+
+### Map Question Entity (JSON Schema)
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "question",
+    "explanation",
+    "mapAsset",
+    "inputMode",
+    "regions",
+    "correctAnswer"
+  ],
+  "properties": {
+    "questionSetId": {
+      "type": ["string", "null"],
+      "description": "Optional question_set foreign key"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Geography-only (Finnish: Maantieto)"
+    },
+    "grade": { "type": "integer", "minimum": 1, "maximum": 13 },
+    "difficulty": { "type": "string", "enum": ["helppo", "normaali"] },
+    "question": { "type": "string", "minLength": 5, "maxLength": 1000 },
+    "explanation": { "type": "string", "minLength": 10, "maxLength": 2000 },
+    "topic": { "type": "string", "maxLength": 100 },
+    "subtopic": { "type": "string", "maxLength": 100 },
+    "skill": { "type": "string", "pattern": "^[a-z_]+$", "maxLength": 100 },
+    "mapAsset": {
+      "type": "string",
+      "description": "Public asset path (/maps/...) or absolute URL"
+    },
+    "inputMode": {
+      "type": "string",
+      "enum": ["single_region", "multi_region", "text"],
+      "description": "single_region=select one region, multi_region=select many, text=typed answer"
+    },
+    "regions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "aliases": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "correctAnswer": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } }
+      ],
+      "description": "Region id(s) or text answer based on inputMode"
+    },
+    "acceptableAnswers": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional map config (hints, accessibility, validation)"
+    }
+  }
 }
 ```
 
@@ -244,9 +578,212 @@ Submit generated questions to Koekertaaja from external workflow.
 }
 ```
 
+### POST /api/map-questions/submit
+
+Create a standalone map question (stored in `map_questions`). Optionally attach it to a `question_set` using `questionSetId`.
+
+**Request Body:**
+
+```json
+{
+  "questionSetId": "uuid (optional)",
+  "subject": "Maantieto",
+  "grade": 6,
+  "difficulty": "normaali",
+  "question": "string",
+  "explanation": "string",
+  "topic": "string (optional)",
+  "subtopic": "string (optional)",
+  "skill": "string (optional)",
+  "mapAsset": "/maps/... or https://...",
+  "inputMode": "single_region|multi_region|text",
+  "regions": [{ "id": "string", "label": "string", "aliases": ["string"] }],
+  "correctAnswer": "string|array",
+  "acceptableAnswers": ["string"] (optional),
+  "metadata": {
+    "hints": { "showLabels": false },
+    "accessibility": { "fallbackToText": true },
+    "validation": { "maxSelections": 3 }
+  }
+}
+```
+
+**Response (Success - 200):**
+
+```json
+{
+  "success": true,
+  "mapQuestion": {
+    "id": "uuid",
+    "question_set_id": "uuid|null",
+    "subject": "Maantieto",
+    "grade": 6,
+    "difficulty": "normaali",
+    "question": "string",
+    "explanation": "string",
+    "map_asset": "/maps/finland/finland_counties_v1.png",
+    "input_mode": "single_region",
+    "regions": [{ "id": "uusimaa", "label": "Uusimaa" }],
+    "correct_answer": "uusimaa",
+    "acceptable_answers": ["Uusimaa"],
+    "metadata": {},
+    "created_at": "2025-12-10T12:00:00Z"
+  }
+}
+```
+
+**Response (Error - 400/500):**
+
+```json
+{
+  "error": "Error message",
+  "details": ["Validation error 1", "Validation error 2"]
+}
+```
+
+---
+
+## Admin API - Publish/Unpublish
+
+### PATCH /api/question-sets/publish
+
+Admin-only endpoint to publish or unpublish question sets. Changes the status between `'created'` (unpublished, default for new sets) and `'published'` (visible on play pages).
+
+**Authorization:**
+- Requires authentication (valid session)
+- Requires admin access (email must be in `ADMIN_EMAILS` environment variable)
+
+**Request Body:**
+
+```json
+{
+  "questionSetId": "uuid",
+  "status": "created" | "published"
+}
+```
+
+**Response (Success - 200):**
+
+```json
+{
+  "success": true,
+  "questionSet": {
+    "id": "uuid",
+    "code": "ABC123",
+    "name": "Question Set Name",
+    "status": "published",
+    "updated_at": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+**Error Responses:**
+
+- **401 Unauthorized** - Not authenticated
+  ```json
+  {
+    "error": "Unauthorized. Please log in."
+  }
+  ```
+
+- **403 Forbidden** - Not an admin
+  ```json
+  {
+    "error": "Forbidden. Admin access required to publish question sets."
+  }
+  ```
+
+- **400 Bad Request** - Invalid request data
+  ```json
+  {
+    "error": "Validation failed",
+    "details": [
+      "questionSetId: Invalid question set ID",
+      "status: Status must be \"created\" or \"published\""
+    ]
+  }
+  ```
+
+- **404 Not Found** - Question set doesn't exist
+  ```json
+  {
+    "error": "Question set not found"
+  }
+  ```
+
+- **500 Internal Server Error** - Server error
+  ```json
+  {
+    "error": "Failed to update question set status"
+  }
+  ```
+
+**Configuration:**
+
+Set `ADMIN_EMAILS` environment variable with comma-separated admin emails:
+
+```bash
+ADMIN_EMAILS=admin@example.com,super@example.com
+```
+
+**Example Usage:**
+
+```bash
+# Publish a question set
+curl -X PATCH https://your-domain.com/api/question-sets/publish \
+  -H "Content-Type: application/json" \
+  -H "Cookie: your-session-cookie" \
+  -d '{
+    "questionSetId": "123e4567-e89b-12d3-a456-426614174000",
+    "status": "published"
+  }'
+
+# Unpublish (revert to created status)
+curl -X PATCH https://your-domain.com/api/question-sets/publish \
+  -H "Content-Type: application/json" \
+  -H "Cookie: your-session-cookie" \
+  -d '{
+    "questionSetId": "123e4567-e89b-12d3-a456-426614174000",
+    "status": "created"
+  }'
+```
+
 ---
 
 ## Example Payloads
+
+### Map Questions (Geography Only)
+
+Map questions are only allowed for the Geography subject (Finnish: Maantieto). They are stored in the dedicated `map_questions` entity and can be optionally linked to a `question_set` using `questionSetId`.
+
+Use `POST /api/map-questions/submit` for creation. Map questions are not accepted in `/api/question-sets/submit`.
+
+**Asset references**
+- Preferred: public assets in `public/maps/` and referenced as `/maps/...`
+- Allowed: absolute URLs for externally hosted assets
+- Naming: `public/maps/{region}/{map_slug}_v{number}.png` (example: `public/maps/finland/finland_counties_v1.png`)
+
+**Answer format**
+- `inputMode: "single_region"` -> `correctAnswer` is a single region id string
+- `inputMode: "multi_region"` -> `correctAnswer` is an array of region id strings
+- `inputMode: "text"` -> `correctAnswer` is a string (typed answer)
+
+```json
+{
+  "questionSetId": "uuid (optional)",
+  "topic": "Suomen maakunnat",
+  "question": "Valitse kartasta Suomen maakunta, jossa Helsinki sijaitsee.",
+  "explanation": "Helsinki sijaitsee Uudenmaan maakunnassa.",
+  "mapAsset": "/maps/finland/finland_counties_v1.png",
+  "inputMode": "single_region",
+  "regions": [
+    { "id": "uusimaa", "label": "Uusimaa", "aliases": ["Uusimaa", "Uudenmaan maakunta"] },
+    { "id": "varsinais_suomi", "label": "Varsinais-Suomi" },
+    { "id": "paijat_hame", "label": "Päijät-Häme" }
+  ],
+  "correctAnswer": "uusimaa"
+}
+```
 
 ### Example 1: Multiple Choice Question (Math)
 
@@ -579,6 +1116,11 @@ components:
               type: string
             mode:
               type: string
+            status:
+              type: string
+              enum: [created, published]
+              description: "Publishing status: 'created' (unpublished) or 'published' (visible on play pages)"
+              default: created
             question_count:
               type: integer
             created_at:

@@ -155,6 +155,53 @@ WHERE question_set_id = 'YOUR_QUESTION_SET_ID'
 GROUP BY topic;
 ```
 
+### 20250219_add_status_to_question_sets.sql
+Adds `status` column to question_sets for publishing workflow.
+
+This migration:
+1. **Creates enum type** `question_set_status` with values ('created', 'published')
+2. **Adds status column** to `question_sets` table
+   - Type: question_set_status
+   - Default value: 'created' for new sets
+   - NOT NULL constraint
+3. **Creates index** on status column for efficient filtering
+4. **Updates RLS policy** to only show published sets to public
+   - Drops old "Enable read access for all users" policy
+   - Creates new "Enable read access for published question sets" policy
+
+**Why this is needed:**
+- Enables admin review/approval workflow before publishing question sets
+- Prevents unvalidated content from appearing on play pages
+- Allows gradual migration of existing sets to published status
+- Improves content quality and moderation capabilities
+
+### 20250219_backfill_published_status.sql
+Backfills existing question_sets to 'published' status to maintain visibility.
+
+This migration:
+1. **Updates all existing question sets** to status = 'published'
+2. **Logs the backfill count** for audit purposes
+3. **Is idempotent** - safe to run multiple times (only updates 'created' sets)
+
+**Why this is needed:**
+- Ensures existing question sets remain visible after status column was added
+- Prevents breaking change for users expecting existing sets to be available
+- Establishes baseline: all pre-migration sets are considered "published"
+- New sets created after migration will default to 'created' and require explicit publishing
+
+**Testing the backfill:**
+```sql
+-- Verify all question sets are published
+SELECT status, COUNT(*)
+FROM question_sets
+GROUP BY status;
+
+-- Check specific set is visible
+SELECT code, name, status
+FROM question_sets
+WHERE code = 'YOUR_CODE';
+```
+
 ## Running Migrations
 
 If you're using Supabase CLI:

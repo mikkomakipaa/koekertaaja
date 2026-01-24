@@ -1,0 +1,65 @@
+JSON-VASTAUSMUOTO - NOUDATA TARKASTI
+VASTAA VAIN JSON-TAULUKOLLA. EI MUUTA TEKSTIÄ.
+
+[
+  {
+    "question": "kysymysteksti",
+    "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching" | "sequential" | "map",
+    "topic": "aihealue",
+    "subtopic": "tarkentava alateema (valinnainen)",
+    "skill": "taito_tagi",
+    "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"],
+    "pairs": [{"left": "vasen", "right": "oikea"}],
+    "items": ["kohta1", "kohta2", "kohta3", "kohta4"],
+    "correct_order": [0, 2, 1, 3],
+    "correct_answer": "oikea vastaus",
+    "acceptable_answers": ["vaihtoehtoinen vastaus"],
+    "explanation": "selitys suomeksi"
+  }
+]
+
+SEQUENTIAL-items formaatit (BACKWARD COMPATIBLE):
+
+Timeline-muoto (year-kentän kanssa):
+{
+  "question": "Järjestä tapahtumat aikajärjestykseen:",
+  "type": "sequential",
+  "topic": "Historia",
+  "skill": "sequences",
+  "items": [
+    {"text": "Tapahtuma 1 kuvaus", "year": 1917},
+    {"text": "Tapahtuma 2 kuvaus", "year": 1939},
+    {"text": "Tapahtuma 3 kuvaus", "year": 1952},
+    {"text": "Tapahtuma 4 kuvaus", "year": 1995}
+  ],
+  "correct_order": [0, 1, 2, 3],
+  "explanation": "Selitys kronologisesta järjestyksestä"
+}
+
+Tavallinen muoto (ilman year-kenttää):
+{
+  "question": "Järjestä vaiheet oikeaan järjestykseen:",
+  "type": "sequential",
+  "topic": "Tiede",
+  "skill": "sequences",
+  "items": [
+    "Vaihe 1 kuvaus",
+    "Vaihe 2 kuvaus",
+    "Vaihe 3 kuvaus",
+    "Vaihe 4 kuvaus"
+  ],
+  "correct_order": [0, 1, 2, 3],
+  "explanation": "Selitys prosessin vaiheista"
+}
+
+YHTEISET VAATIMUKSET:
+- PAKOLLINEN: Jokaisessa kysymyksessä/kortissa TÄYTYY olla "topic"-kenttä (ei tyhjä).
+- PAKOLLINEN: Jokaisessa kysymyksessä/kortissa TÄYTYY olla "skill"-kenttä.
+- VAPAAEHTOINEN: "subtopic" on valinnainen tarkennus, käytä vain jos hyödyllinen.
+- Luo TASAN {{question_count}} kysymystä/korttia.
+- Käytä vain niitä kysymystyyppejä, joita tässä promptissa sallitaan.
+- Tyyppikohtaiset kentät ovat pakollisia vain vastaavissa tyypeissä.
+- "options" on monivalinnoissa taulukko ja karttakysymyksissä objekti.
+- VASTAA PELKÄLLÄ JSON-TAULUKOLLA.
+
+KYSYMYKSET ILMAN "topic"-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI.

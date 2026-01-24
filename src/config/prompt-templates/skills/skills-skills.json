@@ -1,0 +1,26 @@
+{
+  "technique": [
+    "identification",
+    "execution",
+    "comparison",
+    "improvement"
+  ],
+  "equipment": [
+    "recognition",
+    "usage",
+    "safety",
+    "maintenance"
+  ],
+  "culture": [
+    "historical_context",
+    "regional_styles",
+    "famous_works",
+    "artists"
+  ],
+  "practice": [
+    "warm_up",
+    "drills",
+    "performance",
+    "evaluation"
+  ]
+}

@@ -1,0 +1,11 @@
+# Ignore downloaded Natural Earth data (can be regenerated with npm run maps:download)
+natural-earth/
+*.zip
+*.shp
+*.dbf
+*.prj
+*.cpg
+*.shx
+
+# Keep this .gitignore file
+!.gitignore
