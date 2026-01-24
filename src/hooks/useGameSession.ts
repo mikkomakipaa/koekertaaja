@@ -3,6 +3,7 @@ import { Question, Answer } from '@/types';
 import { shuffleArray } from '@/lib/utils';
 import { evaluateQuestionAnswer } from '@/lib/questions/answer-evaluation';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
+import { useTopicMastery } from '@/hooks/useTopicMastery';
 
 const DEFAULT_QUESTIONS_PER_SESSION = 15;
 const POINTS_PER_CORRECT = 10;
@@ -26,6 +27,7 @@ export function useGameSession(
   const [currentStreak, setCurrentStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const { addMistake, removeMistake, error: mistakesError } = useReviewMistakes(questionSetCode);
+  const { updateMastery } = useTopicMastery(questionSetCode);
 
   const startNewSession = useCallback(() => {
     if (reviewMode) {
@@ -189,6 +191,8 @@ export function useGameSession(
       removeMistake(currentQuestion.id);
     }
 
+    updateMastery(currentQuestion.topic, isCorrect);
+
     setAnswers((prev) => [
       ...prev,
       {
@@ -214,6 +218,7 @@ export function useGameSession(
     reviewMode,
     addMistake,
     removeMistake,
+    updateMastery,
   ]);
 
   const nextQuestion = useCallback(() => {

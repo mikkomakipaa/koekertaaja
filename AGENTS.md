@@ -22,6 +22,7 @@ Koekertaaja (Exam Prepper) is an AI-powered exam preparation app for Finnish pri
 - **Age-appropriate gamification**: Points, streaks, badges, personal bests (no leaderboards).
 - **Lenient answer matching**: Grade-based thresholds to reduce frustration.
 - **Review mistakes mode**: LocalStorage-based mistake banks per question set with fast correction loops.
+- **Topic mastery tracking**: LocalStorage-based per-question-set topic mastery shown on browse cards.
 - **Public access via shareable codes** with server-side guarded writes.
 
 ## Project Goals
@@ -246,6 +247,17 @@ docs/
 - Keep grade-specific distributions aligned with prompt constants.
 - Default pool size 40-400 questions; exam length 5-20 per session.
 - Flashcard distributions: English (60/30/10), Math (70/20/10), Generic (50/30/20).
+
+#### Enhanced Explanations (2026-01-24)
+All AI-generated explanations include three pedagogical components in 2-3 Finnish sentences:
+1. Why the answer is correct
+2. Common mistakes students make
+3. Related concepts for deeper understanding
+
+Example (Math):
+> "12 × 8 = 96, koska 12 kertaa 8 on 96 (voit laskea 10×8=80 ja 2×8=16, yhteensä 96). Yleinen virhe on kertoa vain kymmenet (10×8=80) ja unohtaa loput. Tämä liittyy kertotauluihin ja hajottamismenetelmään."
+
+Cost impact: about +$0.023 per question set creation (one-time).
 
 ### Game Session Management
 - Stratified sampling by topic; fallback to random when topics are sparse.

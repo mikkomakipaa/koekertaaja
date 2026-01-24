@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ModeToggle } from '@/components/play/ModeToggle';
+import { TopicMasteryDisplay } from '@/components/play/TopicMasteryDisplay';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { QuestionSet, Difficulty, StudyMode } from '@/types';
 import { readMistakesFromStorage } from '@/hooks/useReviewMistakes';
@@ -304,6 +305,7 @@ export default function PlayBrowsePage() {
             {filteredSets.map((group) => {
               const availableDifficulties = getAvailableDifficulties(group.sets);
               const groupHasFlashcards = hasFlashcards(group.sets);
+              const masterySet = group.sets.find(set => set.mode === 'quiz') ?? group.sets[0];
               const difficultyOrder: Difficulty[] = ['helppo', 'normaali'];
               const reviewCandidates = difficultyOrder
                 .map(difficulty => group.sets.find(
@@ -406,6 +408,10 @@ export default function PlayBrowsePage() {
                       </button>
                     )}
                   </div>
+
+                  {masterySet?.code && (
+                    <TopicMasteryDisplay questionSetCode={masterySet.code} />
+                  )}
                 </div>
               );
             })}
