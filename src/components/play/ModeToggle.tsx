@@ -15,22 +15,24 @@ export function ModeToggle({ currentMode, onModeChange }: ModeToggleProps) {
         <div className="flex gap-2">
           <button
             onClick={() => onModeChange('pelaa')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all duration-150 ${
               currentMode === 'pelaa'
-                ? 'bg-purple-600 text-white shadow-md'
+                ? 'bg-indigo-600 dark:bg-indigo-500 text-white shadow-lg ring-2 ring-indigo-400 dark:ring-indigo-300'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
+            aria-current={currentMode === 'pelaa' ? 'page' : undefined}
           >
             <GameController size={20} weight={currentMode === 'pelaa' ? 'fill' : 'regular'} />
             Pelaa
           </button>
           <button
             onClick={() => onModeChange('opettele')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all duration-150 ${
               currentMode === 'opettele'
-                ? 'bg-purple-600 text-white shadow-md'
+                ? 'bg-teal-600 dark:bg-teal-500 text-white shadow-lg ring-2 ring-teal-400 dark:ring-teal-300'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
+            aria-current={currentMode === 'opettele' ? 'page' : undefined}
           >
             <Book size={20} weight={currentMode === 'opettele' ? 'fill' : 'regular'} />
             Opettele

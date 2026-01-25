@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
-import { Answer, Badge } from '@/types';
-import { Card, CardContent } from '@/components/ui/card';
+import { useEffect, useRef, useState } from 'react';
+import { Answer } from '@/types';
 import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
 import { useBadges } from '@/hooks/useBadges';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
+import { useLastScore } from '@/hooks/useLastScore';
 import { CheckCircle, XCircle, Medal, ArrowCounterClockwise } from '@phosphor-icons/react';
 import {
   DiamondsFour,
@@ -31,6 +31,7 @@ interface ResultsScreenProps {
   questionSetCode?: string;
   difficulty?: string;
   durationSeconds?: number;
+  mode?: 'quiz' | 'flashcard';
   onPlayAgain: () => void;
   onReviewMistakes?: () => void;
   onBackToMenu: () => void;
@@ -45,6 +46,7 @@ export function ResultsScreen({
   questionSetCode,
   difficulty,
   durationSeconds,
+  mode = 'quiz',
   onPlayAgain,
   onReviewMistakes,
   onBackToMenu,
@@ -58,11 +60,13 @@ export function ResultsScreen({
     updatePersonalBest,
   } = useBadges(questionSetCode);
   const { mistakeCount } = useReviewMistakes(questionSetCode);
+  const { saveLastScore } = useLastScore(questionSetCode);
 
   const [personalBest, setPersonalBest] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [showAllAnswers, setShowAllAnswers] = useState(false);
   const [showAllBadges, setShowAllBadges] = useState(false);
+  const hasRecordedRef = useRef(false);
   const sessionMistakeCount = answers.filter(answer => !answer.isCorrect).length;
   const reviewMistakeCount = mistakeCount > 0 ? mistakeCount : sessionMistakeCount;
 
@@ -70,23 +74,38 @@ export function ResultsScreen({
 
   // Record session and check for new badges/records
   useEffect(() => {
-    if (questionSetCode) {
-      const currentBest = getPersonalBest(questionSetCode);
-      setPersonalBest(currentBest);
+    if (!questionSetCode || hasRecordedRef.current) return;
 
-      const newRecord = updatePersonalBest(questionSetCode, totalPoints);
-      setIsNewRecord(newRecord);
+    const currentBest = getPersonalBest(questionSetCode);
+    setPersonalBest(currentBest);
 
-      recordSession({
-        score,
-        totalQuestions: total,
-        bestStreak,
-        totalPoints,
-        durationSeconds,
-        difficulty,
-      });
-    }
-  }, []);
+    const newRecord = updatePersonalBest(questionSetCode, totalPoints);
+    setIsNewRecord(newRecord);
+
+    recordSession({
+      score,
+      totalQuestions: total,
+      bestStreak,
+      totalPoints,
+      durationSeconds,
+      difficulty,
+    });
+
+    saveLastScore(score, total, difficulty);
+    hasRecordedRef.current = true;
+  }, [
+    bestStreak,
+    difficulty,
+    durationSeconds,
+    getPersonalBest,
+    questionSetCode,
+    recordSession,
+    saveLastScore,
+    score,
+    total,
+    totalPoints,
+    updatePersonalBest,
+  ]);
 
 
   // Determine celebration level
@@ -115,6 +134,20 @@ export function ResultsScreen({
 
   const celebration = getCelebration();
 
+  const modeColors = mode === 'quiz'
+    ? {
+        bg: 'from-indigo-50 to-white dark:from-gray-900 dark:to-gray-800',
+        accent: 'text-indigo-600 dark:text-indigo-400',
+        iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
+        button: 'bg-indigo-600 hover:bg-indigo-700 text-white',
+      }
+    : {
+        bg: 'from-teal-50 to-white dark:from-gray-900 dark:to-gray-800',
+        accent: 'text-teal-600 dark:text-teal-400',
+        iconBg: 'bg-teal-100 dark:bg-teal-900/30',
+        button: 'bg-teal-600 hover:bg-teal-700 text-white',
+      };
+
   // Get badge icon based on ID
   const getBadgeIcon = (badgeId: BadgeId, size: number = 32) => {
     const iconMap = {
@@ -135,36 +168,36 @@ export function ResultsScreen({
 
   // Get badge colors based on category
   const getBadgeColors = (badgeId: string) => {
-    // Practice/Milestone badges (purple - matches app theme)
+    // Practice/Milestone badges (Indigo - matches Quiz)
     if (['first_session', '5_sessions', '10_sessions', '25_sessions'].includes(badgeId)) {
       return {
-        light: 'from-purple-50 to-purple-100 border-purple-400',
-        dark: 'dark:from-purple-900 dark:to-purple-800 dark:border-purple-600',
-        text: 'text-purple-900 dark:text-purple-100'
+        light: 'from-indigo-50 to-indigo-100 border-indigo-500',
+        dark: 'dark:from-indigo-900/30 dark:to-indigo-800/20 dark:border-indigo-600',
+        text: 'text-indigo-900 dark:text-indigo-100'
       };
     }
-    // Performance badges (gold/yellow - achievement)
+    // Performance badges (Amber - challenge)
     if (['perfect_score', 'beat_personal_best'].includes(badgeId)) {
       return {
-        light: 'from-yellow-50 to-amber-100 border-yellow-400',
-        dark: 'dark:from-yellow-900 dark:to-amber-900 dark:border-yellow-600',
-        text: 'text-yellow-900 dark:text-yellow-100'
+        light: 'from-amber-50 to-amber-100 border-amber-500',
+        dark: 'dark:from-amber-900/30 dark:to-amber-800/20 dark:border-amber-600',
+        text: 'text-amber-900 dark:text-amber-100'
       };
     }
-    // Speed badge (blue - fast, energetic)
+    // Speed badge (Cyan - matches Easy)
     if (badgeId === 'speed_demon') {
       return {
-        light: 'from-blue-50 to-cyan-100 border-blue-400',
-        dark: 'dark:from-blue-900 dark:to-cyan-900 dark:border-blue-600',
-        text: 'text-blue-900 dark:text-blue-100'
+        light: 'from-cyan-50 to-cyan-100 border-cyan-500',
+        dark: 'dark:from-cyan-900/30 dark:to-cyan-800/20 dark:border-cyan-600',
+        text: 'text-cyan-900 dark:text-cyan-100'
       };
     }
-    // Exploration badge (green - variety, growth)
+    // Exploration badge (Teal - matches Study)
     if (badgeId === 'tried_both_levels') {
       return {
-        light: 'from-green-50 to-emerald-100 border-green-400',
-        dark: 'dark:from-green-900 dark:to-emerald-900 dark:border-green-600',
-        text: 'text-green-900 dark:text-green-100'
+        light: 'from-teal-50 to-teal-100 border-teal-500',
+        dark: 'dark:from-teal-900/30 dark:to-teal-800/20 dark:border-teal-600',
+        text: 'text-teal-900 dark:text-teal-100'
       };
     }
     // Streak badges (orange/red - fire, consistency)
@@ -184,11 +217,15 @@ export function ResultsScreen({
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 p-4 md:p-8 transition-colors">
+    <div className={`min-h-screen bg-gradient-to-b ${modeColors.bg} p-4 md:p-8 transition-colors`}>
       <div className="max-w-2xl mx-auto">
         {/* Results Header */}
         <div className="text-center mb-10">
-          <div className="mb-4 flex justify-center">{celebration.icon}</div>
+          <div className="mb-4 flex justify-center">
+            <div className={`${modeColors.iconBg} p-6 rounded-full`}>
+              {celebration.icon}
+            </div>
+          </div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             {celebration.text}
           </h1>
@@ -201,8 +238,8 @@ export function ResultsScreen({
         <div className="flex justify-center gap-6 mb-10">
           <div className="text-center">
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pisteet</div>
-            <div className="flex items-center justify-center gap-2 text-3xl font-bold text-purple-600 dark:text-purple-400">
-              <DiamondsFour size={32} weight="duotone" className="text-amber-500" />
+            <div className="flex items-center justify-center gap-2 text-3xl font-bold text-yellow-600 dark:text-yellow-500">
+              <DiamondsFour size={32} weight="duotone" className="text-yellow-500" />
               {totalPoints}
             </div>
             {personalBest > 0 && (
@@ -220,7 +257,7 @@ export function ResultsScreen({
           {bestStreak > 0 && (
             <div className="text-center">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Paras putki</div>
-              <div className="flex items-center justify-center gap-2 text-3xl font-bold text-orange-600 dark:text-orange-400">
+              <div className="flex items-center justify-center gap-2 text-3xl font-bold text-orange-600 dark:text-orange-500">
                 <Fire size={32} weight="duotone" className="text-orange-500" />
                 {bestStreak}
               </div>
@@ -238,7 +275,7 @@ export function ResultsScreen({
               </h3>
               <button
                 onClick={() => setShowAllBadges(!showAllBadges)}
-                className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+                className={`text-sm ${modeColors.accent} hover:opacity-80 font-medium`}
               >
                 {showAllBadges ? 'Piilota merkit' : 'Näytä kaikki merkit'}
               </button>
@@ -295,7 +332,7 @@ export function ResultsScreen({
             <h3 className="font-semibold text-gray-900 dark:text-gray-100">Vastausten yhteenveto</h3>
             <button
               onClick={() => setShowAllAnswers(!showAllAnswers)}
-              className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+              className={`text-sm ${modeColors.accent} hover:opacity-80 font-medium`}
             >
               {showAllAnswers ? 'Näytä vain virheet' : 'Näytä kaikki'}
             </button>
@@ -352,7 +389,7 @@ export function ResultsScreen({
           )}
           <Button
             onClick={onPlayAgain}
-            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-6 rounded-xl font-medium"
+            className={`flex-1 ${modeColors.button} py-6 rounded-xl font-medium`}
           >
             Pelaa uudelleen
           </Button>

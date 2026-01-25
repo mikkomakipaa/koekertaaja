@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from 'react';
 
 // Force dynamic rendering (no static optimization)
 // Prevents "document is not defined" error during build
 export const dynamic = 'force-dynamic';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MathText } from '@/components/ui/math-text';
@@ -16,13 +15,91 @@ import { ResultsScreen } from '@/components/play/ResultsScreen';
 import { FlashcardSession } from '@/components/play/FlashcardSession';
 import { useGameSession } from '@/hooks/useGameSession';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
+import { useSessionProgress } from '@/hooks/useSessionProgress';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
 import { shuffleArray } from '@/lib/utils';
-import { QuestionSetWithQuestions, StudyMode, Flashcard } from '@/types';
-import { CircleNotch, ListBullets, DiamondsFour, Fire, Book, ArrowCounterClockwise } from '@phosphor-icons/react';
+import { QuestionSetWithQuestions, StudyMode, Flashcard, type QuestionType } from '@/types';
+import {
+  CircleNotch,
+  ListBullets,
+  DiamondsFour,
+  Fire,
+  Book,
+  ArrowCounterClockwise,
+  GameController,
+  ArrowRight,
+  TextT,
+  ListChecks,
+  CheckCircle,
+  Shuffle,
+  ChatText,
+  ListNumbers,
+  MapPin,
+  Article,
+  Smiley,
+  Target,
+  X,
+} from '@phosphor-icons/react';
 
 type PlayState = 'loading' | 'error' | 'playing' | 'results';
+
+const getQuestionTypeInfo = (type: QuestionType): { label: string; icon: ReactNode } => {
+  const typeMap: Record<QuestionType, { label: string; icon: ReactNode }> = {
+    fill_blank: {
+      label: 'Täydennä lause',
+      icon: <TextT size={14} weight="duotone" />,
+    },
+    multiple_choice: {
+      label: 'Monivalinta',
+      icon: <ListChecks size={14} weight="duotone" />,
+    },
+    true_false: {
+      label: 'Totta vai tarua',
+      icon: <CheckCircle size={14} weight="duotone" />,
+    },
+    matching: {
+      label: 'Yhdistä parit',
+      icon: <Shuffle size={14} weight="duotone" />,
+    },
+    short_answer: {
+      label: 'Lyhyt vastaus',
+      icon: <ChatText size={14} weight="duotone" />,
+    },
+    sequential: {
+      label: 'Järjestä oikein',
+      icon: <ListNumbers size={14} weight="duotone" />,
+    },
+    map: {
+      label: 'Kartta',
+      icon: <MapPin size={14} weight="duotone" />,
+    },
+  };
+
+  return typeMap[type] ?? {
+    label: 'Kysymys',
+    icon: <Article size={14} weight="duotone" />,
+  };
+};
+
+const getPlaceholderHint = (questionType: QuestionType, questionText: string): string => {
+  const baseHints: Record<QuestionType, string> = {
+    fill_blank: 'Esim: sana, termi tai lyhyt vastaus',
+    short_answer: 'Kirjoita omin sanoin (1-3 lausetta)',
+    multiple_choice: 'Valitse yksi vaihtoehto',
+    true_false: 'Valitse totta tai tarua',
+    matching: 'Yhdistä oikeat parit',
+    sequential: 'Järjestä kohteet oikeaan järjestykseen',
+    map: 'Valitse alue kartalta tai kirjoita vastaus',
+  };
+
+  const lowerText = questionText.toLowerCase();
+  if (questionType === 'fill_blank' && lowerText.includes('miksi')) {
+    return 'Vinkki: aloita sanalla koska...';
+  }
+
+  return baseHints[questionType];
+};
 
 export default function PlayPage() {
   const params = useParams();
@@ -32,6 +109,7 @@ export default function PlayPage() {
   const modeParam = searchParams.get('mode');
   const isReviewMode = modeParam === 'review';
   const studyMode: StudyMode = modeParam === 'opettele' ? 'opettele' : 'pelaa';
+  const isFlashcardMode = studyMode === 'opettele';
   const allCodes = searchParams.get('all'); // Comma-separated codes for study mode
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -43,6 +121,7 @@ export default function PlayPage() {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [availableTopics, setAvailableTopics] = useState<string[]>([]);
   const { getMistakes, removeMistake, mistakeCount, error: mistakesError } = useReviewMistakes(code);
+  const { updateProgress, clearProgress } = useSessionProgress(questionSet?.code ?? code);
 
   const mistakeQuestions = useMemo(() => {
     if (!isReviewMode || !questionSet?.questions) return [];
@@ -66,6 +145,7 @@ export default function PlayPage() {
     mistakesError: sessionMistakesError,
     setUserAnswer,
     submitAnswer,
+    skipQuestion,
     nextQuestion,
     startNewSession,
   } = useGameSession(
@@ -219,9 +299,38 @@ export default function PlayPage() {
     invalidMistakes.forEach(mistake => removeMistake(mistake.questionId));
   }, [isReviewMode, questionSet, getMistakes, removeMistake]);
 
-  const handleSubmitAnswer = () => {
+  const isAnswerEmpty = useCallback((answer: unknown) => {
+    if (answer === null || answer === '') return true;
+    if (typeof answer === 'object') {
+      return Object.keys(answer as Record<string, unknown>).length === 0;
+    }
+    return false;
+  }, []);
+
+  const clearAnswer = useCallback(() => {
+    if (showExplanation) return;
+    if (typeof userAnswer === 'string') {
+      setUserAnswer('');
+      return;
+    }
+    if (Array.isArray(userAnswer)) {
+      setUserAnswer([]);
+      return;
+    }
+    if (userAnswer && typeof userAnswer === 'object') {
+      setUserAnswer({});
+      return;
+    }
+    setUserAnswer(null);
+  }, [showExplanation, userAnswer, setUserAnswer]);
+
+  const handleSubmitAnswer = useCallback(() => {
     submitAnswer();
-  };
+  }, [submitAnswer]);
+
+  const handleSkipQuestion = useCallback(() => {
+    skipQuestion();
+  }, [skipQuestion]);
 
   const handleNextQuestion = () => {
     if (isLastQuestion) {
@@ -249,6 +358,54 @@ export default function PlayPage() {
     }
   }, [currentQuestionIndex]);
 
+  useEffect(() => {
+    if (isFlashcardMode || state !== 'playing') return;
+    if (selectedQuestions.length === 0) return;
+    updateProgress(answers.length, selectedQuestions.length);
+  }, [answers.length, isFlashcardMode, selectedQuestions.length, state, updateProgress]);
+
+  useEffect(() => {
+    if (isFlashcardMode) return;
+    if (state === 'results') {
+      clearProgress();
+    }
+  }, [clearProgress, isFlashcardMode, state]);
+
+  useEffect(() => {
+    if (isFlashcardMode || state !== 'playing') return;
+    if (!currentQuestion) return;
+
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        clearAnswer();
+        return;
+      }
+
+      const isFillBlank = currentQuestion.question_type === 'fill_blank';
+      if (
+        event.key === 'Enter'
+        && isFillBlank
+        && !showExplanation
+        && !isAnswerEmpty(userAnswer)
+      ) {
+        event.preventDefault();
+        handleSubmitAnswer();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [
+    isFlashcardMode,
+    state,
+    currentQuestion,
+    showExplanation,
+    userAnswer,
+    clearAnswer,
+    isAnswerEmpty,
+    handleSubmitAnswer,
+  ]);
+
   const handlePlayAgain = () => {
     startNewSession();
     setSessionStartTime(Date.now());
@@ -272,7 +429,10 @@ export default function PlayPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <CircleNotch weight="bold" className="w-12 h-12 mx-auto mb-4 animate-spin text-purple-600" />
+          <CircleNotch
+            weight="bold"
+            className={`w-12 h-12 mx-auto mb-4 animate-spin ${isFlashcardMode ? 'text-teal-600' : 'text-indigo-600'}`}
+          />
           <p className="text-lg text-gray-600">Ladataan kysymyssarjaa...</p>
         </div>
       </div>
@@ -311,6 +471,7 @@ export default function PlayPage() {
         questionSetCode={code}
         difficulty={questionSet?.difficulty}
         durationSeconds={durationSeconds}
+        mode={isFlashcardMode ? 'flashcard' : 'quiz'}
         onPlayAgain={handlePlayAgain}
         onReviewMistakes={isReviewMode ? undefined : handleReviewMistakes}
         onBackToMenu={handleBackToMenu}
@@ -318,13 +479,26 @@ export default function PlayPage() {
     );
   }
 
+  // Strip difficulty suffix from name for display
+  const stripDifficultySuffix = (name: string): string => {
+    const suffixes = [' - Helppo', ' - Normaali', ' - Vaikea'];
+    for (const suffix of suffixes) {
+      if (name.endsWith(suffix)) {
+        return name.slice(0, -suffix.length);
+      }
+    }
+    return name;
+  };
+
+  const displayName = questionSet?.name ? stripDifficultySuffix(questionSet.name) : 'Kysymyssarja';
+
   // Flashcard mode
   if (studyMode === 'opettele') {
     if (flashcards.length === 0) {
       return (
         <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center transition-colors">
           <div className="text-center max-w-md p-6">
-            <Book size={64} weight="duotone" className="text-purple-500 mx-auto mb-4" />
+            <Book size={64} weight="duotone" className="text-teal-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
               Ei kortteja opeteltavaksi
             </h2>
@@ -333,7 +507,7 @@ export default function PlayPage() {
             </p>
             <Button
               onClick={() => router.push('/play')}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-teal-600 hover:bg-teal-700 text-white"
             >
               Takaisin valintaan
             </Button>
@@ -348,7 +522,7 @@ export default function PlayPage() {
         <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
           <div className="max-w-2xl mx-auto p-6 md:p-12">
             <div className="mb-8">
-              <Book size={32} weight="duotone" className="text-purple-600 dark:text-purple-400 mb-3" />
+              <Book size={32} weight="duotone" className="text-teal-600 dark:text-teal-400 mb-3" />
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                 Valitse harjoiteltava aihe
               </h1>
@@ -361,7 +535,7 @@ export default function PlayPage() {
               {/* All Topics Option */}
               <button
                 onClick={() => setSelectedTopic('ALL')}
-                className="bg-white dark:bg-gray-800 border-2 border-purple-500 dark:border-purple-400 rounded-xl p-6 text-left hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group"
+                className="bg-white dark:bg-gray-800 border-2 border-teal-500 dark:border-teal-400 rounded-xl p-6 text-left hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all group"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -372,7 +546,7 @@ export default function PlayPage() {
                       Harjoittele kaikkia aiheita ({flashcards.length} korttia)
                     </p>
                   </div>
-                  <div className="text-purple-600 dark:text-purple-400 group-hover:translate-x-1 transition-transform">
+                  <div className="text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform">
                     →
                   </div>
                 </div>
@@ -388,7 +562,7 @@ export default function PlayPage() {
                   <button
                     key={topic}
                     onClick={() => setSelectedTopic(topic)}
-                    className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 text-left hover:border-purple-500 dark:hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group"
+                    className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 text-left hover:border-teal-500 dark:hover:border-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all group"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -399,7 +573,7 @@ export default function PlayPage() {
                           {topicCardCount} korttia
                         </p>
                       </div>
-                      <div className="text-gray-400 dark:text-gray-500 group-hover:text-purple-600 dark:group-hover:text-purple-400 group-hover:translate-x-1 transition-all">
+                      <div className="text-gray-400 dark:text-gray-500 group-hover:text-teal-600 dark:group-hover:text-teal-400 group-hover:translate-x-1 transition-all">
                         →
                       </div>
                     </div>
@@ -421,19 +595,6 @@ export default function PlayPage() {
         </div>
       );
     }
-
-    // Strip difficulty suffix from name for flashcard mode
-    const stripDifficultySuffix = (name: string): string => {
-      const suffixes = [' - Helppo', ' - Normaali', ' - Vaikea'];
-      for (const suffix of suffixes) {
-        if (name.endsWith(suffix)) {
-          return name.slice(0, -suffix.length);
-        }
-      }
-      return name;
-    };
-
-    const displayName = questionSet?.name ? stripDifficultySuffix(questionSet.name) : 'Kysymyssarja';
 
     // Filter flashcards by selected topic
     const filteredFlashcards = selectedTopic && selectedTopic !== 'ALL'
@@ -469,7 +630,7 @@ export default function PlayPage() {
             </p>
             <Button
               onClick={handleBackToMenu}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >
               Takaisin valikkoon
             </Button>
@@ -481,16 +642,40 @@ export default function PlayPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <CircleNotch weight="bold" className="w-12 h-12 mx-auto mb-4 animate-spin text-purple-600" />
+          <CircleNotch
+            weight="bold"
+            className={`w-12 h-12 mx-auto mb-4 animate-spin ${isFlashcardMode ? 'text-teal-600' : 'text-indigo-600'}`}
+          />
           <p className="text-lg text-gray-600">Valmistellaan kysymyksiä...</p>
         </div>
       </div>
     );
   }
 
+  const lastAnswer = answers[answers.length - 1];
+  const lastWasCorrect = Boolean(lastAnswer?.isCorrect);
+  const lastWasSkipped = Boolean(lastAnswer && lastAnswer.userAnswer === null && !lastAnswer.isCorrect);
+  const lastPointsEarned = lastAnswer?.pointsEarned ?? 0;
+  const lastStreakAtAnswer = lastAnswer?.streakAtAnswer ?? 0;
+  const questionTypeInfo = getQuestionTypeInfo(currentQuestion.question_type);
+  const placeholderHint = getPlaceholderHint(currentQuestion.question_type, currentQuestion.question_text);
+  const difficulty = questionSet?.difficulty;
+  const difficultyLabel = difficulty === 'helppo' ? 'Helppo' : difficulty === 'normaali' ? 'Normaali' : difficulty;
+  const difficultyBadgeClass =
+    difficulty === 'helppo'
+      ? 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300'
+      : difficulty === 'normaali'
+        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+        : 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300';
+  const difficultyIcon = difficulty === 'helppo'
+    ? <Smiley size={14} weight="fill" />
+    : <Target size={14} weight="duotone" />;
+  const canSubmit = !isAnswerEmpty(userAnswer);
+  const showKeyboardHint = currentQuestion.question_type === 'fill_blank' && !showExplanation;
+
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 p-4 md:p-8 pb-safe transition-colors">
-      <div ref={topRef} className="max-w-2xl mx-auto pt-2">
+    <div className="min-h-screen bg-white dark:bg-gray-900 pb-safe transition-colors">
+      <div ref={topRef} className="max-w-2xl mx-auto p-4 md:p-8 pt-6">
         {(mistakesError || sessionMistakesError) && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>{mistakesError || sessionMistakesError}</AlertDescription>
@@ -511,31 +696,47 @@ export default function PlayPage() {
           </div>
         )}
 
-        {/* Stats Bar */}
-        <div className="mb-6 flex items-center justify-between">
-          <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
-            Kysymys {currentQuestionIndex + 1} / {selectedQuestions.length}
-          </div>
-          <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-            <span className="flex items-center gap-1.5">
-              <DiamondsFour size={20} weight="duotone" className="text-amber-500" />
-              {totalPoints}
-            </span>
-            {currentStreak > 0 && (
-              <span className="flex items-center gap-1.5">
-                <Fire size={20} weight="duotone" className="text-orange-500" />
-                {currentStreak}
-              </span>
-            )}
-          </div>
-        </div>
+        {!isFlashcardMode && (
+          <div className="bg-gradient-to-r from-indigo-600 to-indigo-500 dark:from-indigo-700 dark:to-indigo-600 text-white sticky top-0 z-10">
+            <div className="max-w-4xl mx-auto px-4 py-4">
+              {/* Top section: Question set name + Exit button */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <GameController size={20} weight="fill" className="text-indigo-100" />
+                  <div>
+                    <h2 className="text-lg font-semibold">{displayName}</h2>
+                    <p className="text-sm text-indigo-100">
+                      Kysymys {currentQuestionIndex + 1} / {selectedQuestions.length}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleBrowseQuestionSets}
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Lopeta harjoitus"
+                  className="text-white/90 hover:text-white hover:bg-white/10"
+                >
+                  <X className="w-5 h-5 mr-1" />
+                  Lopeta
+                </Button>
+              </div>
 
-        {/* Progress Bar */}
-        <ProgressBar
-          current={currentQuestionIndex + 1}
-          total={selectedQuestions.length}
-          score={score}
-        />
+              {/* Progress bar + Percentage (same row) */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 bg-white/30 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-white h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(currentQuestionIndex / selectedQuestions.length) * 100}%` }}
+                  />
+                </div>
+                <span className="text-sm text-indigo-100 font-medium whitespace-nowrap">
+                  {Math.round((currentQuestionIndex / selectedQuestions.length) * 100)}% valmis
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Question Card */}
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-8 mb-6 transition-colors">
@@ -548,29 +749,68 @@ export default function PlayPage() {
             userAnswer={userAnswer}
             showExplanation={showExplanation}
             onAnswerChange={setUserAnswer}
+            placeholderHint={placeholderHint}
           />
+
+          {showKeyboardHint && (
+            <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 text-center flex items-center justify-center gap-4">
+              <div className="flex items-center gap-1">
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono text-xs">
+                  Enter
+                </kbd>
+                <span>lähettää vastauksen</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono text-xs">
+                  Esc
+                </kbd>
+                <span>tyhjentää</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Feedback */}
         {showExplanation && (
           <div className="space-y-3 mb-6">
-            {answers[answers.length - 1]?.isCorrect ? (
-              <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
-                <p className="text-green-900 font-semibold mb-1">
-                  ✓ Oikein! +{answers[answers.length - 1]?.pointsEarned || 10} pistettä
-                </p>
-                {(answers[answers.length - 1]?.streakAtAnswer ?? 0) >= 3 && (
-                  <p className="text-sm text-green-700">🔥 Putki bonus +5 pistettä!</p>
-                )}
+            {lastWasCorrect ? (
+              <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-green-900 dark:text-green-100 font-semibold">
+                    ✓ Oikein! +{lastPointsEarned} pistettä
+                    {lastStreakAtAnswer >= 3 && (
+                      <span className="ml-2 text-sm text-green-700 dark:text-green-300">
+                        (Putkibonus +5 pistettä!)
+                      </span>
+                    )}
+                  </p>
+                  {lastStreakAtAnswer >= 3 && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+                      <Fire size={20} weight="fill" className="text-orange-500" />
+                      <span className="text-sm font-bold text-orange-700 dark:text-orange-300">
+                        {lastStreakAtAnswer} putki
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 text-sm font-semibold text-green-800 dark:text-green-200">
+                  <DiamondsFour size={18} weight="duotone" className="text-amber-600 dark:text-amber-400" />
+                  <span>{totalPoints} pistettä yhteensä</span>
+                </div>
+              </div>
+            ) : lastWasSkipped ? (
+              <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg p-4">
+                <p className="text-amber-900 dark:text-amber-100 font-semibold">Ohitit kysymyksen</p>
               </div>
             ) : (
-              <div className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
-                <p className="text-red-900 font-semibold">✗ Ei aivan oikein</p>
+              <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg p-4">
+                <p className="text-red-900 dark:text-red-100 font-semibold">✗ Ei aivan oikein</p>
               </div>
             )}
-            <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
-              <p className="text-sm text-blue-900 font-medium mb-1">Selitys:</p>
-              <p className="text-blue-800">
+
+            <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg p-4">
+              <p className="text-sm text-blue-900 dark:text-blue-100 font-medium mb-1">Selitys:</p>
+              <p className="text-blue-800 dark:text-blue-200">
                 <MathText>{currentQuestion.explanation}</MathText>
               </p>
             </div>
@@ -580,21 +820,29 @@ export default function PlayPage() {
         {/* Actions */}
         <div className="space-y-3">
           {!showExplanation ? (
-            <Button
-              onClick={handleSubmitAnswer}
-              disabled={
-                userAnswer === null ||
-                userAnswer === '' ||
-                (typeof userAnswer === 'object' && Object.keys(userAnswer).length === 0)
-              }
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-6 rounded-xl font-medium"
-            >
-              Tarkista vastaus
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                onClick={handleSubmitAnswer}
+                disabled={!canSubmit}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-xl font-medium shadow-sm hover:shadow-md transition-all"
+              >
+                Tarkista vastaus
+              </Button>
+              <Button
+                onClick={handleSkipQuestion}
+                type="button"
+                variant="secondary"
+                aria-label="Ohita kysymys"
+                className="px-6 py-6 rounded-xl bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+              >
+                <ArrowRight size={20} weight="bold" />
+                <span className="hidden sm:inline">Ohita</span>
+              </Button>
+            </div>
           ) : (
             <Button
               onClick={handleNextQuestion}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-6 rounded-xl font-medium"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-xl font-medium"
             >
               {isLastQuestion ? 'Näytä tulokset →' : 'Seuraava kysymys →'}
             </Button>

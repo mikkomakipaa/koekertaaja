@@ -1,7 +1,7 @@
 # Component Library
 
 **Version**: 1.0
-**Last Updated**: 2026-01-18
+**Last Updated**: 2026-01-25
 **Purpose**: Document all UI components used in Koekertaaja
 
 ---
@@ -36,6 +36,7 @@ src/components/
     ├── card.tsx
     ├── input.tsx
     ├── modal.tsx
+    ├── skeleton.tsx
     └── ...
 ```
 
@@ -268,24 +269,23 @@ interface ShortAnswerProps {
 interface ProgressBarProps {
   current: number;
   total: number;
-  points: number;
-  streak: number;
+  score: number;
+  mode?: 'quiz' | 'flashcard';
 }
 ```
 
 **Layout**:
 ```
 ┌────────────────────────────────────┐
-│ Kysymys 5/15                       │
-│ ████████░░░░░░ 33%                 │
-│ 💎 50 pistettä  🔥 3 putki         │
+│ Edistyminen            33% valmis  │
+│ ████████░░░░░░░░░░░░░░░░░░░░░░     │
 └────────────────────────────────────┘
 ```
 
 **Features**:
-- **Visual progress bar**: Filled portion shows completion
-- **Points display**: Diamond icon + points
-- **Streak display**: Fire icon + current streak
+- **Mode-aware colors**: Indigo for quiz, teal for flashcards
+- **Clear percentage label**: Shows rounded completion percent
+- **Accessible progressbar**: ARIA values included on the fill
 - **Mobile-optimized**: Compact layout for small screens
 
 **Example**:
@@ -293,8 +293,8 @@ interface ProgressBarProps {
 <ProgressBar
   current={5}
   total={15}
-  points={50}
-  streak={3}
+  score={3}
+  mode="quiz"
 />
 ```
 

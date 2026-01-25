@@ -28,19 +28,19 @@ export function TopicMasteryDisplay({ questionSetCode, className = '' }: TopicMa
   const getColor = (percentage: number) => {
     if (percentage >= 80) {
       return {
-        bg: 'bg-green-500',
-        text: 'text-green-700 dark:text-green-300',
+        bg: 'bg-emerald-500',
+        text: 'text-emerald-700 dark:text-emerald-300',
       };
     }
     if (percentage >= 50) {
       return {
-        bg: 'bg-yellow-500',
-        text: 'text-yellow-700 dark:text-yellow-300',
+        bg: 'bg-amber-500',
+        text: 'text-amber-700 dark:text-amber-300',
       };
     }
     return {
-      bg: 'bg-red-500',
-      text: 'text-red-700 dark:text-red-300',
+      bg: 'bg-rose-500',
+      text: 'text-rose-700 dark:text-rose-300',
     };
   };
 

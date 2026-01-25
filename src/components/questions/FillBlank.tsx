@@ -9,6 +9,7 @@ interface FillBlankProps {
   userAnswer: string;
   showExplanation: boolean;
   onAnswerChange: (answer: string) => void;
+  placeholderHint?: string;
 }
 
 export function FillBlank({
@@ -16,6 +17,7 @@ export function FillBlank({
   userAnswer,
   showExplanation,
   onAnswerChange,
+  placeholderHint,
 }: FillBlankProps) {
   const isCorrect = showExplanation && (
     userAnswer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim() ||
@@ -32,7 +34,7 @@ export function FillBlank({
           value={userAnswer}
           onChange={(e) => !showExplanation && onAnswerChange(e.target.value)}
           disabled={showExplanation}
-          placeholder="Kirjoita vastauksesi tähän..."
+          placeholder={placeholderHint ?? 'Kirjoita vastauksesi tähän...'}
           className={cn(
             "text-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700",
             showExplanation && isCorrect && "border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-400",

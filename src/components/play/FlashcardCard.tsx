@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { Flashcard } from '@/types';
 import { MathText } from '@/components/ui/math-text';
 import { Cards, CheckCircle } from '@phosphor-icons/react';
@@ -8,9 +9,10 @@ interface FlashcardCardProps {
   flashcard: Flashcard;
   isFlipped: boolean;
   onFlip: () => void;
+  overlay?: ReactNode;
 }
 
-export function FlashcardCard({ flashcard, isFlipped, onFlip }: FlashcardCardProps) {
+export function FlashcardCard({ flashcard, isFlipped, onFlip, overlay }: FlashcardCardProps) {
   return (
     <div className="w-full max-w-2xl mx-auto perspective-1000">
       <div
@@ -29,12 +31,18 @@ export function FlashcardCard({ flashcard, isFlipped, onFlip }: FlashcardCardPro
         tabIndex={0}
         aria-label={isFlipped ? 'Käännä kortti takaisin' : 'Käännä kortti nähdäksesi vastaus'}
       >
+        {overlay && (
+          <div className="absolute inset-0 pointer-events-none z-20">
+            {overlay}
+          </div>
+        )}
+
         {/* Front Side - Question */}
         <div
           className={`
             absolute inset-0 backface-hidden
             bg-white dark:bg-gray-800
-            border-2 border-purple-500 dark:border-purple-600
+            border-2 border-teal-500 dark:border-teal-600
             rounded-2xl shadow-lg
             p-8
             flex flex-col items-center justify-center
@@ -42,7 +50,7 @@ export function FlashcardCard({ flashcard, isFlipped, onFlip }: FlashcardCardPro
           `}
         >
           <div className="mb-6">
-            <Cards size={48} weight="duotone" className="text-purple-600 dark:text-purple-400" />
+            <Cards size={48} weight="duotone" className="text-teal-600 dark:text-teal-400" />
           </div>
 
           <div className="text-center space-y-4 w-full">
@@ -50,18 +58,14 @@ export function FlashcardCard({ flashcard, isFlipped, onFlip }: FlashcardCardPro
               <MathText>{flashcard.front}</MathText>
             </div>
           </div>
-
-          <div className="mt-8 text-sm text-gray-500 dark:text-gray-400">
-            Napauta nähdäksesi vastaus
-          </div>
         </div>
 
         {/* Back Side - Explanation Only */}
         <div
           className={`
             absolute inset-0 backface-hidden rotate-y-180
-            bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20
-            border-2 border-purple-500 dark:border-purple-600
+            bg-gradient-to-br from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20
+            border-2 border-teal-500 dark:border-teal-600
             rounded-2xl shadow-lg
             p-8
             flex flex-col
@@ -80,10 +84,6 @@ export function FlashcardCard({ flashcard, isFlipped, onFlip }: FlashcardCardPro
                 <MathText>{flashcard.back.explanation}</MathText>
               </div>
             )}
-          </div>
-
-          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-            Napauta jatkaaksesi
           </div>
         </div>
       </div>

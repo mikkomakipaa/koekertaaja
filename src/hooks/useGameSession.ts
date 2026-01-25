@@ -221,6 +221,52 @@ export function useGameSession(
     updateMastery,
   ]);
 
+  const skipQuestion = useCallback(() => {
+    if (showExplanation) return;
+    const currentQuestion = selectedQuestions[currentQuestionIndex];
+    if (!currentQuestion) return;
+
+    const { correctAnswer } = evaluateQuestionAnswer(currentQuestion, '', grade);
+
+    // Skipping always resets the streak
+    setCurrentStreak(0);
+
+    if (!reviewMode) {
+      addMistake({
+        questionId: currentQuestion.id,
+        questionText: currentQuestion.question_text,
+        correctAnswer,
+        userAnswer: null,
+      });
+    }
+
+    updateMastery(currentQuestion.topic, false);
+
+    setAnswers((prev) => [
+      ...prev,
+      {
+        questionId: currentQuestion.id,
+        questionText: currentQuestion.question_text,
+        userAnswer: null,
+        correctAnswer,
+        isCorrect: false,
+        explanation: currentQuestion.explanation,
+        pointsEarned: 0,
+        streakAtAnswer: 0,
+      },
+    ]);
+
+    setShowExplanation(true);
+  }, [
+    showExplanation,
+    selectedQuestions,
+    currentQuestionIndex,
+    grade,
+    reviewMode,
+    addMistake,
+    updateMastery,
+  ]);
+
   const nextQuestion = useCallback(() => {
     setCurrentQuestionIndex((prev) => prev + 1);
     setUserAnswer(null);
@@ -246,6 +292,7 @@ export function useGameSession(
     mistakesError,
     setUserAnswer,
     submitAnswer,
+    skipQuestion,
     nextQuestion,
     startNewSession,
   };

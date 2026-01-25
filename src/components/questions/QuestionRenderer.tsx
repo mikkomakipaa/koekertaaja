@@ -15,6 +15,7 @@ interface QuestionRendererProps {
   userAnswer: any;
   showExplanation: boolean;
   onAnswerChange: (answer: any) => void;
+  placeholderHint?: string;
 }
 
 export function QuestionRenderer({
@@ -22,6 +23,7 @@ export function QuestionRenderer({
   userAnswer,
   showExplanation,
   onAnswerChange,
+  placeholderHint,
 }: QuestionRendererProps) {
   // Store question type for default case (TypeScript exhaustiveness check)
   const questionType = question.question_type;
@@ -44,6 +46,7 @@ export function QuestionRenderer({
           userAnswer={userAnswer || ''}
           showExplanation={showExplanation}
           onAnswerChange={onAnswerChange}
+          placeholderHint={placeholderHint}
         />
       );
 
@@ -74,6 +77,7 @@ export function QuestionRenderer({
           userAnswer={userAnswer || ''}
           showExplanation={showExplanation}
           onAnswerChange={onAnswerChange}
+          placeholderHint={placeholderHint}
         />
       );
 

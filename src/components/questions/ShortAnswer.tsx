@@ -9,6 +9,7 @@ interface ShortAnswerProps {
   userAnswer: string;
   showExplanation: boolean;
   onAnswerChange: (answer: string) => void;
+  placeholderHint?: string;
 }
 
 export function ShortAnswer({
@@ -16,6 +17,7 @@ export function ShortAnswer({
   userAnswer,
   showExplanation,
   onAnswerChange,
+  placeholderHint,
 }: ShortAnswerProps) {
   // For short answer questions, we'll do a flexible comparison
   // Check if user answer contains key parts of the correct answer
@@ -33,7 +35,7 @@ export function ShortAnswer({
           value={userAnswer}
           onChange={(e) => !showExplanation && onAnswerChange(e.target.value)}
           disabled={showExplanation}
-          placeholder="Kirjoita vastauksesi tähän... (Voit kirjoittaa useamman lauseen)"
+          placeholder={placeholderHint ?? 'Kirjoita vastauksesi tähän... (Voit kirjoittaa useamman lauseen)'}
           rows={6}
           className={cn(
             "text-base resize-none text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700",

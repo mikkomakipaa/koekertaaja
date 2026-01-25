@@ -1,7 +1,7 @@
 # Koekertaaja Design System
 
-**Version**: 1.0
-**Last Updated**: 2026-01-18
+**Version**: 2.0
+**Last Updated**: 2026-01-24
 **Target Audience**: Primary school students (ages 10-12, grades 4-6)
 
 ---
@@ -42,6 +42,34 @@
 ---
 
 ## Color Palette
+
+### Theme Colors (v2.0)
+
+### Quiz Mode (Indigo)
+- **Primary**: `indigo-600` (#4f46e5)
+- **Usage**: Quiz toggle, session headers, progress bars
+- **Personality**: Energetic, competitive, game-like
+
+### Flashcard Mode (Teal)
+- **Primary**: `teal-600` (#0d9488)
+- **Usage**: Flashcard toggle, session headers, progress bars
+- **Personality**: Calm, focused, contemplative
+
+### Difficulty Colors
+- **Helppo**: `slate-600` (#475569) with `cyan-400` (#22d3ee) accent
+- **Normaali**: `amber-600` (#d97706) with `amber-100` (#fef3c7) accent
+
+### Badge Categories
+- **Practice**: `indigo-500` (matches quiz theme)
+- **Performance**: `amber-500` (matches challenge)
+- **Speed**: `cyan-500` (matches easy)
+- **Exploration**: `teal-500` (matches study)
+- **Streaks**: `orange-500` (fire theme)
+
+### Usage Examples
+- **Quiz UI**: Indigo header, indigo progress bar, indigo primary button
+- **Flashcard UI**: Teal header, teal progress bar, teal primary button
+- **Difficulty**: Slate button + cyan icon (Helppo), amber button + amber icon (Normaali)
 
 ### Primary Colors (Gamification)
 
@@ -256,42 +284,75 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica N
 
 ### Buttons
 
-**Primary Button** (CTA: "Aloita harjoittelu", "Luo kysymykset")
+Button interactions should feel tactile, predictable, and accessible across light and dark themes.
+
+**Button Foundation**
+- Use `transition-all duration-150` for hover, focus, shadow, border, and transform changes.
+- Use consistent depth: `shadow-md hover:shadow-lg active:shadow-sm`.
+- Dark mode shadows should be one level stronger: `dark:shadow-lg dark:hover:shadow-xl dark:active:shadow-md`.
+- Provide keyboard focus clarity: `focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-white dark:ring-offset-gray-900`.
+- Use `active:scale-95` on press.
+- Ensure touch targets meet mobile guidance: prefer `min-h-11` (44px) or larger.
+
+**Primary Button** (Main actions: difficulty selection, mode entry)
 ```tsx
 <button className="
-  bg-purple-600 hover:bg-purple-700
-  text-white font-semibold
-  px-6 py-3 rounded-lg
-  min-h-[48px] min-w-[48px]
-  transition-colors
-  dark:bg-purple-500 dark:hover:bg-purple-600
+  bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600
+  text-white font-semibold text-sm
+  px-4 py-3.5 rounded-lg min-h-11
+  shadow-md hover:shadow-lg active:shadow-sm
+  dark:shadow-lg dark:hover:shadow-xl dark:active:shadow-md
+  active:scale-95
+  transition-all duration-150
+  ring-offset-2 ring-offset-white dark:ring-offset-gray-900
+  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400
 ">
   Aloita harjoittelu
 </button>
 ```
 
-**Secondary Button** (Less emphasis: "Peruuta", "Takaisin")
+**Secondary Button** (Important but not primary: review mistakes)
 ```tsx
 <button className="
-  bg-gray-200 hover:bg-gray-300
-  text-gray-900 font-medium
-  px-6 py-3 rounded-lg
-  min-h-[48px]
-  transition-colors
-  dark:bg-gray-700 dark:hover:bg-gray-600
-  dark:text-gray-100
+  bg-rose-500 hover:bg-rose-600 dark:bg-rose-600 dark:hover:bg-rose-700
+  text-white font-semibold text-sm
+  px-4 py-3.5 rounded-lg min-h-11
+  shadow-md hover:shadow-lg active:shadow-sm
+  dark:shadow-lg dark:hover:shadow-xl dark:active:shadow-md
+  active:scale-95
+  transition-all duration-150
+  ring-offset-2 ring-offset-white dark:ring-offset-gray-900
+  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 dark:focus-visible:ring-rose-300
 ">
-  Peruuta
+  Kertaa virheet
+</button>
+```
+
+**Filter Button** (Grade filters and similar toggles)
+```tsx
+<button className="
+  flex items-center gap-2
+  px-4 py-3 rounded-lg min-h-11
+  text-sm font-semibold
+  shadow-sm hover:shadow-md active:shadow-sm
+  dark:shadow-md dark:hover:shadow-lg
+  active:scale-95
+  transition-all duration-150
+  ring-offset-2 ring-offset-white dark:ring-offset-gray-900
+  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400
+">
+  Luokka: 5
 </button>
 ```
 
 **Icon Button** (Copy code, delete)
 ```tsx
 <button className="
-  p-3 rounded-lg
+  p-3 rounded-lg min-h-12 min-w-12
+  shadow-sm hover:shadow-md active:shadow-sm
+  transition-all duration-150
   hover:bg-gray-100 dark:hover:bg-gray-800
-  min-h-[48px] min-w-[48px]
-  transition-colors
+  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ring-offset-white dark:ring-offset-gray-900
 ">
   <Copy size={24} weight="duotone" />
 </button>

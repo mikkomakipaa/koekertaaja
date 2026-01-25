@@ -2,4 +2,3 @@
 > exam-prepper@0.1.0 typecheck
 > tsc --noEmit
 
-src/app/play/page.tsx(311,76): error TS2322: Type '"vaikea"' is not assignable to type 'Difficulty'.
