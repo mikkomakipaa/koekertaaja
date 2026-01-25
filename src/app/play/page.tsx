@@ -262,18 +262,17 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
         }`}
       />
 
-      {showNewBadge && (
-        <div className="pointer-events-none absolute right-4 top-4 z-10 flex flex-col items-end gap-2">
-          <span className="inline-flex animate-pulse items-center gap-1 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
-            <Sparkle size={12} weight="fill" />
-            Uusi!
-          </span>
-        </div>
-      )}
-
       <div className="ml-4">
         <div className="mb-3 flex items-start justify-between gap-3">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{group.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{group.name}</h3>
+            {showNewBadge && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+                <Sparkle size={12} weight="fill" />
+                Uusi!
+              </span>
+            )}
+          </div>
           {group.grade && (
             <span
               className={`ring-1 ring-inset ring-current/20 inline-flex flex-shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-medium ${getGradeColors(group.grade).bg} ${getGradeColors(group.grade).text}`}
@@ -465,6 +464,7 @@ export default function PlayBrowsePage() {
   const filteredSets = useMemo(() => {
     return groupedSets.filter((group) => {
       if (selectedGrade && group.grade !== selectedGrade) return false;
+      if (studyMode === 'opettele' && !hasFlashcards(group.sets)) return false;
 
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -484,7 +484,7 @@ export default function PlayBrowsePage() {
 
       return true;
     });
-  }, [groupedSets, searchQuery, selectedGrade]);
+  }, [groupedSets, searchQuery, selectedGrade, studyMode]);
 
   if (state === 'loading') {
     return (
