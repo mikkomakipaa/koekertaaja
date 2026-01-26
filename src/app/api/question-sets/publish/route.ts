@@ -69,9 +69,7 @@ export async function PATCH(request: NextRequest) {
       .eq('id', questionSetId)
       .select('id, code, name, status, updated_at')
       .returns<PublishedQuestionSet>()
-      .single();
-
-    const questionSet = data as unknown as PublishedQuestionSet;
+      .maybeSingle();
 
     if (error) {
       logger.error({ error: error.message }, 'Failed to update question set');
@@ -88,6 +86,16 @@ export async function PATCH(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    if (!data) {
+      logger.warn({ questionSetId }, 'Question set not found');
+      return NextResponse.json(
+        { error: 'Question set not found' },
+        { status: 404 }
+      );
+    }
+
+    const questionSet = data as PublishedQuestionSet;
 
     logger.info(
       {

@@ -22,6 +22,7 @@ import {
   BookOpenText,
   Book,
   ArrowCounterClockwise,
+  ArrowRight,
   ListNumbers,
   GraduationCap,
   MagnifyingGlass,
@@ -56,20 +57,22 @@ const difficultyLabels: Record<string, string> = {
   normaali: 'Normaali',
 };
 
-const difficultyColors: Record<string, { bg: string; hover: string; text: string; icon: string; focus: string }> = {
+const difficultyColors: Record<string, { bg: string; hover: string; text: string; icon: string; focus: string; shadow: string }> = {
   helppo: {
-    bg: 'bg-slate-600 dark:bg-slate-500',
-    hover: 'hover:bg-slate-700 dark:hover:bg-slate-400',
+    bg: 'bg-gradient-to-r from-slate-600 to-slate-700 dark:from-slate-500 dark:to-slate-600',
+    hover: 'hover:from-slate-700 hover:to-slate-800 dark:hover:from-slate-600 dark:hover:to-slate-700',
     text: 'text-white',
     icon: 'text-cyan-400',
     focus: 'focus-visible:ring-cyan-400 dark:focus-visible:ring-cyan-300',
+    shadow: 'shadow-slate-600/30 dark:shadow-slate-500/30',
   },
   normaali: {
-    bg: 'bg-amber-600 dark:bg-amber-500',
-    hover: 'hover:bg-amber-700 dark:hover:bg-amber-400',
+    bg: 'bg-gradient-to-r from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700',
+    hover: 'hover:from-amber-600 hover:to-amber-700 dark:hover:from-amber-700 dark:hover:to-amber-800',
     text: 'text-white',
     icon: 'text-amber-100',
     focus: 'focus-visible:ring-amber-400 dark:focus-visible:ring-amber-300',
+    shadow: 'shadow-amber-500/30 dark:shadow-amber-600/30',
   },
 };
 
@@ -288,7 +291,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                   <button
                     key={difficulty}
                     onClick={() => set && router.push(`/play/${set.code}?mode=${studyMode}`)}
-                    className={`${colors.bg} ${colors.hover} ${colors.text} ${colors.focus} active:scale-95 active:shadow-sm flex min-h-11 items-center gap-1.5 rounded-lg px-4 py-3.5 text-sm font-semibold shadow-md transition-all duration-150 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:shadow-lg dark:hover:shadow-xl dark:active:shadow-md dark:focus-visible:ring-offset-gray-900`}
+                    className={`${colors.bg} ${colors.hover} ${colors.text} ${colors.focus} ${colors.shadow} active:scale-95 active:shadow-sm flex min-h-11 items-center gap-1.5 rounded-lg px-4 py-3.5 text-sm font-semibold shadow-md transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900`}
                     aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
                   >
                     <span className={colors.icon}>{icon}</span>
@@ -307,11 +310,12 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                   router.push(`/play/${flashcardSet.code}?mode=opettele`);
                 }
               }}
-              className="active:scale-95 active:shadow-sm flex min-h-11 items-center gap-2 rounded-lg bg-teal-600 px-6 py-3.5 text-sm font-semibold text-white shadow-md transition-all duration-150 hover:bg-teal-700 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-teal-500 dark:hover:bg-teal-600 dark:shadow-lg dark:hover:shadow-xl dark:active:shadow-md dark:focus-visible:ring-teal-300 dark:focus-visible:ring-offset-gray-900"
+              className="active:scale-95 active:shadow-sm flex min-h-11 items-center gap-2 rounded-lg bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 dark:from-teal-600 dark:to-teal-700 dark:hover:from-teal-700 dark:hover:to-teal-800 px-6 py-3.5 text-sm font-semibold text-white shadow-md shadow-teal-500/30 dark:shadow-teal-600/30 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-teal-300 dark:focus-visible:ring-offset-gray-900 group"
               aria-label="Opettele korttien avulla"
             >
               <Book size={20} weight="duotone" />
               Opettele
+              <ArrowRight size={18} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
             </button>
           ) : (
             <p className="text-sm text-gray-500 dark:text-gray-400">Ei kortteja saatavilla</p>
@@ -320,11 +324,12 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
           {studyMode === 'pelaa' && reviewCandidate && (
             <button
               onClick={() => router.push(`/play/${reviewCandidate.set.code}?mode=review`)}
-              className="active:scale-95 active:shadow-sm flex min-h-11 items-center gap-1.5 rounded-lg bg-rose-500 px-4 py-3.5 text-sm font-semibold text-white shadow-md transition-all duration-150 hover:bg-rose-600 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-rose-600 dark:hover:bg-rose-700 dark:shadow-lg dark:hover:shadow-xl dark:active:shadow-md dark:focus-visible:ring-rose-300 dark:focus-visible:ring-offset-gray-900"
+              className="active:scale-95 active:shadow-sm flex min-h-11 items-center gap-1.5 rounded-lg bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 dark:from-rose-600 dark:to-rose-700 dark:hover:from-rose-700 dark:hover:to-rose-800 px-4 py-3.5 text-sm font-semibold text-white shadow-md shadow-rose-500/30 dark:shadow-rose-600/30 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-rose-300 dark:focus-visible:ring-offset-gray-900 group"
               aria-label="Kertaa virheet"
             >
               <ArrowCounterClockwise size={20} weight="duotone" className="inline" />
               Kertaa virheet ({reviewCandidate.count})
+              <ArrowRight size={18} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
             </button>
           )}
         </div>

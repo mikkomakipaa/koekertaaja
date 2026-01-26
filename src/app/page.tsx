@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Footer } from '@/components/shared/Footer';
 import { AudienceTabs } from '@/components/landing/AudienceTabs';
-import { BookOpenText, GameController, Cards } from '@phosphor-icons/react';
+import { BookOpenText, GameController, Cards, ArrowRight } from '@phosphor-icons/react';
 import Image from 'next/image';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
@@ -47,11 +47,12 @@ export default function HomePage() {
           <div className="hero-fade hero-fade-delay">
             <Button
               asChild
-              className="w-full bg-primary hover:bg-primary/90 dark:hover:bg-primary/85 text-primary-foreground py-8 rounded-xl font-bold text-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 motion-safe:transition-transform motion-safe:hover:scale-[1.03] motion-safe:active:scale-[0.98]"
+              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 dark:from-emerald-600 dark:to-emerald-700 dark:hover:from-emerald-700 dark:hover:to-emerald-800 text-white py-8 rounded-xl font-bold text-2xl shadow-lg shadow-emerald-500/30 dark:shadow-emerald-600/30 transition-all flex items-center justify-center gap-3 motion-safe:transition-transform motion-safe:hover:scale-[1.03] motion-safe:active:scale-[0.98] group"
             >
-              <Link href="/play">
+              <Link href="/play" className="flex items-center justify-center gap-3">
                 <BookOpenText size={32} weight="duotone" aria-hidden="true" />
                 Aloita harjoittelu
+                <ArrowRight size={28} weight="bold" aria-hidden="true" className="transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
           </div>

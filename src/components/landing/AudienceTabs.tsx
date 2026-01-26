@@ -46,7 +46,7 @@ const guardianItems = [
   },
   {
     title: 'Sisällöt koealueittain',
-    description: 'Kirjat kotona? Sisältö löytyy muistikorteilta.',
+    description: 'Kirjat koulussa? Sisältö löytyy muistikorteilta.',
     icon: BookOpenText,
   },
   {
