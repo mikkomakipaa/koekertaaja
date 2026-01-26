@@ -244,6 +244,8 @@ export async function POST(request: NextRequest) {
             difficulty,
             questionCount: questionCount, // Use pool size (40-400), not session length
             grade,
+            topic,
+            subtopic,
             materialText,
             materialFiles: files.length > 0 ? files : undefined,
             mode: 'quiz',
@@ -266,6 +268,8 @@ export async function POST(request: NextRequest) {
           difficulty: 'normaali', // Flashcards use normaali as placeholder
             questionCount: flashcardQuestionCount,
           grade,
+          topic,
+          subtopic,
           materialText,
           materialFiles: files.length > 0 ? files : undefined,
           mode: 'flashcard',

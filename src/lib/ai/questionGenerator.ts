@@ -27,6 +27,7 @@ import { createLogger } from '@/lib/logger';
 import { PromptBuilder } from '@/lib/prompts/PromptBuilder';
 import { PromptLoader } from '@/lib/prompts/PromptLoader';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
+import { isRuleBasedSubject, validateRuleBasedQuestion } from '@/lib/utils/subjectClassification';
 
 const logger = createLogger({ module: 'questionGenerator' });
 
@@ -49,6 +50,75 @@ const normalizeSkillTag = (value: unknown): string | undefined => {
     return undefined;
   }
   return trimmed.toLowerCase().replace(/[^a-z_]/g, '_');
+};
+
+const sanitizeJsonString = (input: string): string => {
+  let output = '';
+  let inString = false;
+
+  for (let i = 0; i < input.length; i += 1) {
+    const char = input[i];
+
+    if (!inString) {
+      if (char === '"') {
+        inString = true;
+      }
+      output += char;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = false;
+      output += char;
+      continue;
+    }
+
+    if (char === '\\') {
+      const next = input[i + 1];
+      if (next === undefined) {
+        output += '\\\\';
+        continue;
+      }
+
+      if (next === 'u') {
+        const hex = input.slice(i + 2, i + 6);
+        if (/^[0-9a-fA-F]{4}$/.test(hex)) {
+          output += `\\u${hex}`;
+          i += 5;
+          continue;
+        }
+      }
+
+      if ('"\\/bfnrt'.includes(next)) {
+        output += `\\${next}`;
+        i += 1;
+        continue;
+      }
+
+      // Invalid escape sequence inside a string, escape the backslash itself.
+      output += '\\\\';
+      continue;
+    }
+
+    if (char === '\n') {
+      output += '\\n';
+      continue;
+    }
+
+    if (char === '\r') {
+      output += '\\r';
+      continue;
+    }
+
+    if (char === '\t') {
+      output += '\\t';
+      continue;
+    }
+
+    output += char;
+  }
+
+  return output;
 };
 
 /**
@@ -103,6 +173,8 @@ export interface GenerateQuestionsParams {
   difficulty: Difficulty;
   questionCount: number;
   grade?: number;
+  topic?: string; // Topic for subject (e.g., "Grammar", "Geometry")
+  subtopic?: string; // Subtopic within topic
   materialText?: string;
   materialFiles?: Array<{
     type: string;
@@ -126,6 +198,8 @@ export async function generateQuestions(
     difficulty,
     questionCount,
     grade,
+    topic,
+    subtopic,
     materialText,
     materialFiles,
     mode = 'quiz',
@@ -247,18 +321,31 @@ export async function generateQuestions(
       'Successfully parsed AI response'
     );
   } catch (error) {
-    logger.error(
-      {
-        error: error instanceof Error ? error.message : String(error),
-        contentLength: cleanContent.length,
-        contentPreview: process.env.NODE_ENV === 'production'
-          ? undefined
-          : cleanContent.substring(0, 500),
-      },
-      'Failed to parse AI response as JSON'
-    );
+    const sanitizedContent = sanitizeJsonString(cleanContent);
 
-    throw new Error('AI returned invalid JSON format. The response could not be parsed.');
+    try {
+      parsedQuestions = JSON.parse(sanitizedContent);
+      logger.warn(
+        {
+          error: error instanceof Error ? error.message : String(error),
+          contentLength: cleanContent.length,
+        },
+        'Parsed AI response after sanitizing invalid JSON escapes'
+      );
+    } catch (secondError) {
+      logger.error(
+        {
+          error: secondError instanceof Error ? secondError.message : String(secondError),
+          contentLength: cleanContent.length,
+          contentPreview: process.env.NODE_ENV === 'production'
+            ? undefined
+            : cleanContent.substring(0, 500),
+        },
+        'Failed to parse AI response as JSON'
+      );
+
+      throw new Error('AI returned invalid JSON format. The response could not be parsed.');
+    }
   }
 
   // Validate AI response structure with Zod - filter out invalid questions gracefully
@@ -267,6 +354,7 @@ export async function generateQuestions(
   const excludedFlashcardTypes: Array<{ index: number; type: string; question: any }> = [];
   const excludedSubjectMapTypes: Array<{ index: number; question: any }> = [];
   const excludedGeographyNonMapTypes: Array<{ index: number; type: string | undefined; question: any }> = [];
+  const excludedRuleBasedFormat: Array<{ index: number; reason: string; question: any }> = [];
   const normalizedSubject = subject.trim().toLowerCase();
   const isGeographySubject = subjectType === 'geography' || normalizedSubject === 'geography' || normalizedSubject === 'maantiede';
 
@@ -330,6 +418,37 @@ export async function generateQuestions(
         );
         return; // Skip this question
       }
+
+      // CRITICAL: Validate rule-based format for applicable subjects
+      const isRuleBased = isRuleBasedSubject(normalizedSubject, topic);
+      if (isRuleBased) {
+        const validation = validateRuleBasedQuestion(
+          question,
+          normalizedSubject,
+          topic
+        );
+
+        if (!validation.valid) {
+          excludedRuleBasedFormat.push({
+            index,
+            reason: validation.reason || 'Invalid rule-based format',
+            question: {
+              questionPreview: question.question?.substring(0, 50),
+            },
+          });
+          logger.warn(
+            {
+              questionIndex: index,
+              questionPreview: question.question?.substring(0, 50),
+              reason: validation.reason,
+              subject: normalizedSubject,
+              topic,
+            },
+            'Excluded invalid rule-based flashcard format'
+          );
+          return; // Skip this question
+        }
+      }
     }
 
     if (question.skill) {
@@ -383,6 +502,20 @@ export async function generateQuestions(
         excludedTypes: excludedFlashcardTypes.map(({ type }) => type),
       },
       'Excluded invalid question types for flashcard mode (multiple_choice, true_false, sequential not allowed)'
+    );
+  }
+
+  // Log excluded rule-based format violations
+  if (excludedRuleBasedFormat.length > 0) {
+    logger.warn(
+      {
+        excludedCount: excludedRuleBasedFormat.length,
+        subject,
+        topic,
+        mode,
+        reasons: excludedRuleBasedFormat.map(({ reason }) => reason),
+      },
+      'Excluded invalid rule-based flashcard format (calculation questions instead of rule teaching)'
     );
   }
 
@@ -515,11 +648,39 @@ export async function generateQuestions(
 
   // Fail only if we don't have enough valid questions
   // For flashcard mode, be more lenient since we actively filter out question types
-  const baseRequiredPercentage = mode === 'flashcard' ? 0.4 : 0.7; // 40% for flashcard, 70% for quiz
-  const requiredPercentage = questionCount <= 25
-    ? Math.min(baseRequiredPercentage, 0.6)
-    : baseRequiredPercentage;
-  const minRequiredQuestions = Math.ceil(questionCount * requiredPercentage);
+  // For rule-based flashcards, be even more lenient (may only have 5-10 rules in material)
+  const isRuleBasedFlashcard = mode === 'flashcard' && isRuleBasedSubject(subject, topic);
+
+  let minRequiredQuestions: number;
+  let thresholdDescription: string;
+
+  if (isRuleBasedFlashcard) {
+    // For rule-based: Accept minimum of 5 questions OR 20% of requested
+    // Whichever is SMALLER (allows comprehensive coverage of small rule sets)
+    const absoluteMin = 5;
+    const percentageMin = Math.ceil(questionCount * 0.2); // 20%
+    minRequiredQuestions = Math.min(absoluteMin, percentageMin);
+    thresholdDescription = `5 min or 20% (rule-based minimum for comprehensive coverage)`;
+
+    logger.info(
+      {
+        subject,
+        topic,
+        questionCount,
+        minRequiredQuestions,
+        reason: 'Rule-based flashcard - accepting smaller count for comprehensive rule coverage',
+      },
+      'Using rule-based minimum threshold'
+    );
+  } else {
+    // Existing logic for non-rule subjects
+    const baseRequiredPercentage = mode === 'flashcard' ? 0.4 : 0.7; // 40% for flashcard, 70% for quiz
+    const requiredPercentage = questionCount <= 25
+      ? Math.min(baseRequiredPercentage, 0.6)
+      : baseRequiredPercentage;
+    minRequiredQuestions = Math.ceil(questionCount * requiredPercentage);
+    thresholdDescription = `${requiredPercentage * 100}%`;
+  }
 
   if (validQuestions.length < minRequiredQuestions) {
     logger.error(
@@ -527,14 +688,33 @@ export async function generateQuestions(
         validQuestions: validQuestions.length,
         requestedQuestions: questionCount,
         minRequired: minRequiredQuestions,
-        requiredPercentage: `${requiredPercentage * 100}%`,
+        thresholdDescription,
         mode,
+        isRuleBasedFlashcard,
         invalidCount: invalidQuestions.length,
         excludedFlashcardCount: excludedFlashcardTypes.length,
+        excludedRuleBasedFormatCount: excludedRuleBasedFormat.length,
       },
       'Too many invalid questions - insufficient valid questions generated'
     );
-    throw new Error(`AI generated too few valid questions (${validQuestions.length}/${questionCount}). Please try again. (Required: ${minRequiredQuestions}+)`);
+    throw new Error(
+      `AI generated too few valid questions (${validQuestions.length}/${questionCount}). ` +
+      `Required: ${minRequiredQuestions}+` +
+      (isRuleBasedFlashcard ? ' (rule-based minimum threshold)' : '')
+    );
+  }
+
+  // Log when rule-based flashcard set generates fewer than requested
+  if (isRuleBasedFlashcard && validQuestions.length < questionCount) {
+    logger.info(
+      {
+        requestedQuestions: questionCount,
+        generatedQuestions: validQuestions.length,
+        subject,
+        topic,
+      },
+      'Rule-based flashcard set generated fewer questions than requested (comprehensive rule coverage achieved)'
+    );
   }
 
   parsedQuestions = validQuestions;

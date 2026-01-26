@@ -4,6 +4,7 @@ import path from 'path';
 import type { Difficulty, Mode, Subject } from '@/types/questions';
 import { getSubjectType, type SubjectType } from './subjectTypeMapping';
 import { PromptLoader } from './PromptLoader';
+import { isRuleBasedSubject as isRuleBasedSubjectUtil } from '@/lib/utils/subjectClassification';
 
 export interface BuildVariablesParams {
   subject: Subject;
@@ -590,64 +591,14 @@ export class PromptBuilder {
    * Determines if a subject/topic should use rule-based flashcard format.
    * Rule-based format teaches concepts/formulas rather than testing specific calculations.
    *
+   * Delegates to shared utility function.
+   *
    * @param subject - The subject name
    * @param topic - Optional topic within the subject
    * @returns true if rule-based format should be used
    */
   private isRuleBasedSubject(subject: string, topic?: string): boolean {
-    const normalized = subject.toLowerCase();
-
-    // Mathematics - always rule-based
-    if (normalized === 'matematiikka' || normalized === 'math') {
-      return true;
-    }
-
-    // Physics - formulas and laws
-    if (normalized === 'fysiikka' || normalized === 'physics') {
-      return true;
-    }
-
-    // Chemistry - equations and rules
-    if (normalized === 'kemia' || normalized === 'chemistry') {
-      return true;
-    }
-
-    // Language subjects - only for grammar topics
-    const languageSubjects = [
-      'äidinkieli',
-      'finnish',
-      'suomi',
-      'englanti',
-      'english',
-      'ruotsi',
-      'swedish',
-      'svenska',
-    ];
-
-    if (languageSubjects.includes(normalized)) {
-      if (!topic) {
-        return false;
-      }
-
-      const topicLower = topic.toLowerCase();
-      // Check for grammar-related keywords
-      const grammarKeywords = [
-        'kielioppi',
-        'grammar',
-        'verbit',
-        'verbs',
-        'taivutus',
-        'conjugation',
-        'sijamuodot',
-        'cases',
-        'aikamuodot',
-        'tenses',
-      ];
-
-      return grammarKeywords.some(keyword => topicLower.includes(keyword));
-    }
-
-    return false;
+    return isRuleBasedSubjectUtil(subject, topic);
   }
 
   private applyGeographyMapDistribution(
