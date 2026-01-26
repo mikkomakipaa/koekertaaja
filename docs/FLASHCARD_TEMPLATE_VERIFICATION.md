@@ -184,3 +184,177 @@ The existing implementation is correct. The only changes made were:
 - **Bug fix**: Removed undefined `CARDS_PER_TOPIC` from logging
 - **Test coverage**: Added verification tests
 - **Documentation**: Created this report
+
+---
+
+# Rule-Based Flashcard Format (Updated 2026-01-26)
+
+## Overview
+
+**Status**: ✅ IMPLEMENTED
+
+Flashcards for rule-based subjects (mathematics, grammar) now use a teaching-focused format instead of practice-question format.
+
+## Format Change
+
+### Before (Question-Based)
+**Front**: "Laske suorakulmion pinta-ala, kun sivut ovat 4m ja 6m"
+**Back**: "24 m²" + explanation
+
+### After (Rule-Based)
+**Front**: "Miten lasketaan suorakulmion pinta-ala?"
+**Back**: "Pinta-ala = pituus × leveys\n\nEsimerkki: Jos sivut ovat 4m ja 6m, niin pinta-ala = 4m × 6m = 24 m²"
+
+## Subject Classification
+
+### Rule-Based Subjects (Use New Format)
+
+| Subject | Topic Requirement | Examples |
+|---------|------------------|----------|
+| **Matematiikka** | All topics | Geometry, arithmetic, fractions, percentages |
+| **Fysiikka** | All topics | F = ma, kinetic energy formulas |
+| **Kemia** | All topics | Chemical equations, reaction rules |
+| **Kielioppi** | Grammar topics only | Verb conjugation, sentence structure |
+
+### Question-Based Subjects (Use Original Format)
+
+| Subject | Rationale |
+|---------|-----------|
+| **Sanasto** | Vocabulary is fact-based, not rule-based |
+| **Maantiede** | Geography facts (capitals, locations) |
+| **Historia** | Historical events, dates, facts |
+| **Yhteiskuntaoppi** | Social studies facts |
+| **Luonnontiede** | Biology facts, classifications |
+
+## Grammar Topic Detection
+
+For language subjects (Finnish, English, Swedish), the system checks if the topic contains grammar-related keywords:
+
+**Grammar Keywords**:
+- `kielioppi`, `grammar`
+- `verbit`, `verbs`
+- `taivutus`, `conjugation`
+- `sijamuodot`, `cases`
+- `aikamuodot`, `tenses`
+
+**Example**:
+- ✅ **Topic**: "Verbit - Imperfekti" → Rule-based format (grammar)
+- ❌ **Topic**: "Sanasto - Ruoka" → Question-based format (vocabulary)
+
+## Implementation
+
+### 1. Flashcard Rules Template ✅
+
+**File**: `src/config/prompt-templates/core/flashcard-rules.txt`
+
+Added section "SÄÄNTÖPOHJAINEN FLASHCARD-MUOTO" with:
+- Clear instructions for "Miten...?" question format
+- Examples for mathematics and grammar
+- Guidance on formula + worked example structure
+- List of applicable subjects/topics
+
+### 2. Subject Detection Logic ✅
+
+**File**: `src/lib/prompts/PromptBuilder.ts`
+
+**Method**: `isRuleBasedSubject(subject: string, topic?: string): boolean`
+
+**Logic**:
+```typescript
+// Always rule-based
+- matematiikka, math
+- fysiikka, physics
+- kemia, chemistry
+
+// Conditionally rule-based (grammar only)
+- äidinkieli, finnish, suomi
+- englanti, english
+- ruotsi, swedish, svenska
+  → Check if topic contains grammar keywords
+```
+
+**Integration**:
+- When `mode === 'flashcard'` and `isRuleBasedSubject()` returns true
+- Adds emphasis text to prompt: "⚠️ TÄRKEÄÄ: Käytä SÄÄNTÖPOHJAISTA FLASHCARD-MUOTOA"
+- References detailed instructions in flashcard-rules.txt
+
+### 3. Prompt Emphasis ✅
+
+**File**: `src/lib/prompts/PromptBuilder.ts` (line 147-153)
+
+When rule-based subject detected, injects:
+```
+⚠️ TÄRKEÄÄ: Tämä on sääntöpohjainen aihe (matematiikka/kielioppi).
+Sinun TÄYTYY käyttää SÄÄNTÖPOHJAISTA FLASHCARD-MUOTOA:
+- Kysymys: "Miten lasketaan/muodostetaan...?" (EI tiettyjä laskutehtäviä)
+- Vastaus: Sääntö/kaava + toimiva esimerkki
+- Katso tarkat ohjeet "SÄÄNTÖPOHJAINEN FLASHCARD-MUOTO" -osiosta yllä.
+```
+
+## Examples
+
+### Mathematics - Geometry
+
+**Question Type**: fill_blank
+**Front**: "Miten lasketaan suorakulmion pinta-ala?"
+**Back (correct_answer)**: "pituus × leveys"
+**Back (explanation)**: "Pinta-ala = pituus × leveys\n\nEsimerkki: Jos sivut ovat 4m ja 6m, niin pinta-ala = 4m × 6m = 24 m²"
+
+### Mathematics - Volume
+
+**Question Type**: short_answer
+**Front**: "Mikä on kuution tilavuuden kaava?"
+**Back (correct_answer)**: "sivu³"
+**Back (acceptable_answers)**: ["a³", "a × a × a", "sivu^3"]
+**Back (explanation)**: "Tilavuus = sivu × sivu × sivu = sivu³\n\nEsimerkki: Jos sivu on 3cm, niin tilavuus = 3cm × 3cm × 3cm = 27 cm³"
+
+### Grammar - Finnish
+
+**Question Type**: fill_blank
+**Front**: "Miten muodostetaan imperfekti yksikön 1. persoonassa?"
+**Back (correct_answer)**: "verbin vartalo + -in"
+**Back (explanation)**: "Verbin vartalo + -in päätteellä\n\nEsimerkki:\n- puhua → puhuin\n- syödä → söin\n- juosta → juoksin"
+
+### Grammar - English
+
+**Question Type**: short_answer
+**Front**: "How do you form regular plurals in English?"
+**Back (correct_answer)**: "add -s"
+**Back (acceptable_answers)**: ["add s", "adding -s", "+ s"]
+**Back (explanation)**: "Add -s to the end of the word\n\nEsimerkki:\n- cat → cats\n- dog → dogs\n- book → books"
+
+## Testing Guidelines
+
+When generating flashcard sets for rule-based subjects, verify:
+
+1. ✅ **Front format**: Questions ask "Miten...?" or "Mikä on...?"
+   - NOT specific calculations like "Laske: 4 + 5"
+
+2. ✅ **Back format**: Includes both rule/formula AND worked example
+   - Rule: Clear statement of formula/pattern
+   - Example: Concrete numbers or words showing the rule in action
+
+3. ✅ **Examples are age-appropriate**: Match the grade level specified
+
+4. ✅ **MathText rendering**: Formulas display correctly in flashcard UI
+
+5. ✅ **Dark mode**: Text is readable in dark mode
+
+## Backward Compatibility
+
+- ✅ **No backfill required**: Only affects new flashcard generation
+- ✅ **Existing sets unchanged**: Old flashcard sets remain as-is
+- ✅ **No database changes**: Uses existing question schema
+- ✅ **UI compatible**: FlashcardCard.tsx supports multi-line text with MathText
+
+## Files Modified
+
+1. `src/config/prompt-templates/core/flashcard-rules.txt` - Added rule-based format section
+2. `src/lib/prompts/PromptBuilder.ts` - Added isRuleBasedSubject() and emphasis logic
+3. `docs/FLASHCARD_TEMPLATE_VERIFICATION.md` - This documentation update
+
+## Related Documentation
+
+- `todo/task-060-flashcard-rule-based-redesign.md` - Full task specification
+- `todo/task-060-subtasks.md` - Implementation breakdown
+- `todo/task-060-examples.md` - Before/after examples

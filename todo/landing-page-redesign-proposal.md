@@ -22,7 +22,7 @@
 
 ```
 ┌─────────────────────────────┐
-│   ⭐ Koekertaaja            │
+│   *Icon* Koekertaaja        │
 │                             │
 │   Harjoittele kokeisiin     │
 │   ja opi uutta              │
@@ -34,19 +34,17 @@
 │   [Aloita harjoittelu] →    │
 │                             │
 │   Oppilaille | Huoltajille  │
-│   | Opettajille             │
 │   (scroll links)            │
 └─────────────────────────────┘
 ```
 
 **Content**:
-- **Headline**: "Koekertaaja" (with Star icon)
+- **Headline**: "Koekertaaja" (with new icon)
 - **Sub-headline**: "Harjoittele kokeisiin ja opi uutta - Luokat 4-6"
 - **Quick facts** (with checkmarks):
   - ✓ Matematiikka, Äidinkieli, Ympäristöoppi
-  - ✓ AI-ohjattu oppiminen
-  - ✓ Kahden harjoittelutavan: Tietovisat & Kortit
-- **Primary CTA**: Large purple button "Aloita harjoittelu"
+  - ✓ Kaksi harjoittelutapaa: Tietovisat & Kortit
+- **Primary CTA**: Large main color button "Aloita harjoittelu"
 - **Secondary navigation**: Scroll links to audience sections
 
 ---
@@ -139,7 +137,7 @@
 │  tai tietokoneella          │
 │                             │
 │  ✨ Saat välitöntä palautetta│
-│  AI auttaa oppimaan virheistä│
+│  Kertaa virheet             │
 └─────────────────────────────┘
 ```
 
@@ -172,9 +170,9 @@
 │  Sisällöt tukevat koulun    │
 │  opetusta                   │
 │                             │
-│  ✓ AI-ohjattu oppiminen     │
-│  Älykkäät selitykset auttavat│
-│  ymmärtämään                │
+│  ✓ Suunniteltu tukemaan oppimista     │
+│  Selitykset auttavat        │
+│  ymmärtämään asian          │
 │                             │
 │  ✓ Seuranta ja edistyminen  │
 │  Näe lapsesi harjoittelun   │
@@ -192,48 +190,7 @@
 
 **Visuals**:
 - Icons: ShieldCheck, BookOpenText, BrainCircuit, ChartLineUp
-- Trust indicators: No ads badge, GDPR compliant, Curriculum-aligned
 
----
-
-#### Tab/Section: Opettajille (For Teachers)
-**Tone**: Professional, empowering, collaborative
-
-```
-┌─────────────────────────────┐
-│  👨‍🏫 Opettajille              │
-│                             │
-│  📝 Luo omia kysymyssarjoja │
-│  Tee räätälöityjä tehtäviä  │
-│  oppilaillesi               │
-│                             │
-│  🔗 Jaa koodin avulla       │
-│  Oppilaat pääsevät helposti │
-│  käsiksi materiaaliin       │
-│                             │
-│  🤖 AI-avustus              │
-│  Luo kysymyksiä nopeasti    │
-│  AI:n avulla                │
-│                             │
-│  📊 Seuranta (tulossa)      │
-│  Näe oppilaiden edistyminen │
-│  ja tunnista haasteet       │
-└─────────────────────────────┘
-```
-
-**Key Messages**:
-- Luo omia kysymyssarjoja - räätälöity opetus
-- Jaa helposti oppilaiden kanssa - koodi tai linkki
-- AI-avustus kysymysten luomisessa
-- Monipuoliset kysymystyypit (monivalinta, täydennys, jne.)
-- Seuranta ja analytiikka (tulossa pian)
-- Opetussuunnitelman mukainen
-- Ilmainen opettajille
-
-**Visuals**:
-- Icons: Notebook, ShareNetwork, Robot, ChartBar
-- Screenshot of create page
-- Example question set card
 
 ---
 
@@ -258,22 +215,6 @@
 │  kerää saavutuksia          │
 └─────────────────────────────┘
 ```
-
----
-
-### 6. Stats/Social Proof (if available)
-
-```
-┌─────────────────────────────┐
-│  📊 Numerot                 │
-│                             │
-│  ┌─────┐ ┌─────┐ ┌─────┐  │
-│  │ 150+│ │5000+│ │  7  │  │
-│  │Sarjat│ │Kys. │ │Aihe.│  │
-│  └─────┘ └─────┘ └─────┘  │
-└─────────────────────────────┘
-```
-
 ---
 
 ### 7. Final CTA
@@ -283,9 +224,7 @@
 │  Aloita harjoittelu tänään  │
 │                             │
 │  [Aloita harjoittelu] →     │
-│                             │
-│  [Luo kysymyssarja] →       │
-│  (Opettajille)              │
+│                             │            │
 └─────────────────────────────┘
 ```
 
@@ -299,7 +238,7 @@
 ## Visual Design Guidelines
 
 ### Colors
-- **Primary CTA**: Purple-600 (existing)
+- **Primary CTA**: Emerald-600 (NEW - fresh, growth-focused green)
 - **Quiz Mode**: Indigo (existing)
 - **Flashcard Mode**: Teal (existing)
 - **Subjects**:
@@ -307,6 +246,8 @@
   - Äidinkieli: Rose/Pink
   - Ympäristöoppi: Green
   - Englanti: Orange
+
+**Color Harmony**: The emerald primary creates a cohesive cool-toned, nature-inspired palette that complements both indigo and teal. The green symbolizes growth, learning, and freshness - perfect for an educational app.
 
 ### Typography
 - **Headlines (H1)**: 2xl-3xl on mobile, 4xl-5xl on desktop
@@ -390,10 +331,6 @@
 **Guardians**:
 - "Turvallinen tapa tukea lapsen oppimista"
 - "Auta lastasi menestymään koulussa"
-
-**Teachers**:
-- "Luo ja jaa oppimateriaaleja helposti"
-- "AI-avusteinen kysymysten luonti säästää aikaa"
 
 ---
 

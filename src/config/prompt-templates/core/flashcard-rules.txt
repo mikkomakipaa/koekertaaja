@@ -9,3 +9,83 @@ FLASHCARD-MOODIN SÄÄNNÖT:
 - Käytä acceptable_answers -listaa vaihtoehtoisille hyväksyttäville vastauksille.
 
 Jos muualla mainitaan muita kysymystyyppejä, NE EIVÄT OLE SALLITTUJA flashcard-tilassa.
+
+---
+
+SÄÄNTÖPOHJAINEN FLASHCARD-MUOTO (Matematiikka, Kielioppi, Kaavat):
+
+Kun luot flashcardeja sääntöpohjaisille aiheille (matematiikka, kielioppi, kaavat), käytä seuraavaa rakennetta:
+
+KYSYMYKSEN MUOTO (question_text):
+- Kysy "miten" tai "mikä"-kysymyksiä: "Miten lasketaan...?", "Miten muodostetaan...?", "Mikä on kaava...?"
+- Keskity sääntöön/konseptiin, ÄLÄ tiettyyn laskutehtävään
+- Esimerkki: "Miten lasketaan suorakulmion pinta-ala?"
+- EI: "Laske suorakulmion pinta-ala, kun sivut ovat 4m ja 6m"
+
+VASTAUKSEN MUOTO (explanation-kentässä):
+- Ilmoita sääntö/kaava selkeästi
+- Lisää toimiva esimerkki joka näyttää säännön käytännössä
+- Pidä esimerkit yksinkertaisina ja ikätasolle sopivina
+- Muoto: "Sääntö/Kaava\n\nEsimerkki: [konkreettinen esimerkki numeroilla/sanoilla]"
+
+HYVÄT ESIMERKIT:
+
+Matematiikka - Geometria (fill_blank):
+question_text: "Miten lasketaan suorakulmion pinta-ala?"
+correct_answer: "pituus × leveys"
+explanation: "Pinta-ala = pituus × leveys\n\nEsimerkki: Jos suorakulmion sivut ovat 4m ja 6m, niin pinta-ala = 4m × 6m = 24 m²"
+
+Matematiikka - Tilavuus (short_answer):
+question_text: "Mikä on kuution tilavuuden kaava?"
+correct_answer: "sivu³" tai "sivu × sivu × sivu"
+acceptable_answers: ["a³", "a × a × a", "sivu^3"]
+explanation: "Tilavuus = sivu × sivu × sivu = sivu³\n\nEsimerkki: Jos kuution sivu on 3cm, niin tilavuus = 3cm × 3cm × 3cm = 27 cm³"
+
+Kielioppi - Suomi (fill_blank):
+question_text: "Miten muodostetaan imperfekti yksikön 1. persoonassa?"
+correct_answer: "verbin vartalo + -in"
+explanation: "Verbin vartalo + -in päätteellä\n\nEsimerkki:\n- puhua → puhuin\n- syödä → söin\n- juosta → juoksin"
+
+Kielioppi - Englanti (short_answer):
+question_text: "How do you form regular plurals in English?"
+correct_answer: "add -s"
+acceptable_answers: ["add s", "adding -s", "+ s"]
+explanation: "Add -s to the end of the word\n\nEsimerkki:\n- cat → cats\n- dog → dogs\n- book → books"
+
+Matematiikka - Laskujärjestys (matching):
+question_text: "Mikä on laskujärjestys?"
+pairs: [
+  { left: "1. Sulut", right: "( )" },
+  { left: "2. Kerto ja jako", right: "× ÷" },
+  { left: "3. Plus ja miinus", right: "+ −" }
+]
+explanation: "Laskujärjestys:\n1. Sulut\n2. Kerto- ja jakolasku (vasemmalta oikealle)\n3. Yhteen- ja vähennyslasku (vasemmalta oikealle)\n\nEsimerkki: 5 + 3 × 2 = 5 + 6 = 11 (kertolasku ensin!)"
+
+HUONOT ESIMERKIT (ÄLÄ TEE NÄIN):
+
+❌ VÄÄRIN - Tietty laskutehtävä:
+question_text: "Laske: 4m × 6m"
+correct_answer: "24 m²"
+explanation: "Kerrotaan sivut keskenään."
+
+❌ VÄÄRIN - Ei esimerkkiä:
+question_text: "Miten lasketaan suorakulmion pinta-ala?"
+correct_answer: "pituus × leveys"
+explanation: "Kerrotaan suorakulmion sivut keskenään."
+
+❌ VÄÄRIN - Taivutusharjoitus ilman sääntöä:
+question_text: "Taivuta verbi 'puhua' imperfektissä"
+correct_answer: "puhuin"
+explanation: "Imperfekti muodostetaan -in päätteellä."
+
+SOVELTUVAT AIHEET:
+- Matematiikka: Geometria (pinta-ala, tilavuus), aritmetiikka, murtoluvut, desimaaliluvut, prosentit
+- Kielioppi: Verbitaivutus, lauserakenne, kielioppisäännöt (kaikki kielet)
+- Fysiikka: Peruskaavat (jos sovellettavissa)
+- Kemia: Kemiallinen yhtälö (jos sovellettavissa)
+
+MUUT AIHEET (KÄYTÄ KYSYMYSPOHJAISTA MUOTOA):
+- Sanasto (kaikki kielet)
+- Maantiede (faktat, pääkaupungit)
+- Historia (tapahtumat, päivämäärät)
+- Luonnontiede (faktat, luokitukset)

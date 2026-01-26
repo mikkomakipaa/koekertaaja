@@ -7,14 +7,17 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.koekertaaja.fi'),
-  title: 'Koekertaaja – Kivaa koeharjoittelua 4-6-luokkalaisille',
+  title: 'Koekertaaja – Kivaa koeharjoittelua',
   description:
     'Harjoittele kokeisiin hauskasti! Luo omista materiaaleista AI-tekoälyn tekemät visat ja muistikortit, kerää pisteitä ja pidä putki käynnissä.',
   alternates: {
     canonical: '/',
   },
+  icons: {
+    icon: '/favicon.png',
+  },
   openGraph: {
-    title: 'Koekertaaja – Kivaa koeharjoittelua 4-6-luokkalaisille',
+    title: 'Koekertaaja – Kivaa koeharjoittelua',
     description:
       'Harjoittele kokeisiin hauskasti! Luo omista materiaaleista AI-tekoälyn tekemät visat ja muistikortit, kerää pisteitä ja pidä putki käynnissä.',
     url: '/',

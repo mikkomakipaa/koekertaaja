@@ -438,6 +438,7 @@ export default function PlayBrowsePage() {
     return groupedSets.filter((group) => {
       if (selectedGrade && group.grade !== selectedGrade) return false;
       if (studyMode === 'opettele' && !hasFlashcards(group.sets)) return false;
+      if (studyMode === 'pelaa' && getAvailableDifficulties(group.sets).length === 0) return false;
 
       if (searchQuery) {
         const query = searchQuery.toLowerCase();

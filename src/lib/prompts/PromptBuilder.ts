@@ -18,6 +18,8 @@ export interface BuildVariablesParams {
     data: string; // base64
   }>;
   mode?: Mode;
+  topic?: string;
+  subtopic?: string;
   identifiedTopics?: string[];
   targetWords?: string[];
 }
@@ -148,6 +150,12 @@ export class PromptBuilder {
       ? await this.loader.loadModule('core/flashcard-rules.txt')
       : '';
 
+    // Add emphasis for rule-based subjects in flashcard mode
+    const isRuleBased = mode === 'flashcard' && this.isRuleBasedSubject(subjectKey, params.topic);
+    const ruleBasedEmphasis = isRuleBased
+      ? '\n⚠️ TÄRKEÄÄ: Tämä on sääntöpohjainen aihe (matematiikka/kielioppi). Sinun TÄYTYY käyttää SÄÄNTÖPOHJAISTA FLASHCARD-MUOTOA:\n- Kysymys: "Miten lasketaan/muodostetaan...?" (EI tiettyjä laskutehtäviä)\n- Vastaus: Sääntö/kaava + toimiva esimerkki\n- Katso tarkat ohjeet "SÄÄNTÖPOHJAINEN FLASHCARD-MUOTO" -osiosta yllä.\n'
+      : '';
+
     const variables = await this.buildVariables(params, subjectType);
     const assembled = this.concatenateModules([
       format,
@@ -159,6 +167,7 @@ export class PromptBuilder {
       curriculum,
       distributions,
       flashcardRules,
+      ruleBasedEmphasis,
     ]);
 
     return this.loader.substituteVariables(assembled, variables);
@@ -575,6 +584,70 @@ export class PromptBuilder {
   private isHistorySubject(subjectKey: string): boolean {
     const normalized = this.normalizeSubjectKey(subjectKey) ?? subjectKey.toLowerCase();
     return normalized === 'history';
+  }
+
+  /**
+   * Determines if a subject/topic should use rule-based flashcard format.
+   * Rule-based format teaches concepts/formulas rather than testing specific calculations.
+   *
+   * @param subject - The subject name
+   * @param topic - Optional topic within the subject
+   * @returns true if rule-based format should be used
+   */
+  private isRuleBasedSubject(subject: string, topic?: string): boolean {
+    const normalized = subject.toLowerCase();
+
+    // Mathematics - always rule-based
+    if (normalized === 'matematiikka' || normalized === 'math') {
+      return true;
+    }
+
+    // Physics - formulas and laws
+    if (normalized === 'fysiikka' || normalized === 'physics') {
+      return true;
+    }
+
+    // Chemistry - equations and rules
+    if (normalized === 'kemia' || normalized === 'chemistry') {
+      return true;
+    }
+
+    // Language subjects - only for grammar topics
+    const languageSubjects = [
+      'äidinkieli',
+      'finnish',
+      'suomi',
+      'englanti',
+      'english',
+      'ruotsi',
+      'swedish',
+      'svenska',
+    ];
+
+    if (languageSubjects.includes(normalized)) {
+      if (!topic) {
+        return false;
+      }
+
+      const topicLower = topic.toLowerCase();
+      // Check for grammar-related keywords
+      const grammarKeywords = [
+        'kielioppi',
+        'grammar',
+        'verbit',
+        'verbs',
+        'taivutus',
+        'conjugation',
+        'sijamuodot',
+        'cases',
+        'aikamuodot',
+        'tenses',
+      ];
+
+      return grammarKeywords.some(keyword => topicLower.includes(keyword));
+    }
+
+    return false;
   }
 
   private applyGeographyMapDistribution(
