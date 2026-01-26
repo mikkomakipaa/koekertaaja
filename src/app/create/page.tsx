@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +38,31 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { UserMenu } from '@/components/auth/UserMenu';
 
 type CreateState = 'form' | 'loading' | 'success';
+
+interface QuestionGenerationResponse {
+  success: boolean;
+  partial?: boolean;
+  message: string;
+  questionSets: Array<{
+    code: string;
+    name: string;
+    difficulty: string;
+    mode: 'quiz' | 'flashcard';
+    questionCount: number;
+  }>;
+  failures?: Array<{
+    mode: 'quiz' | 'flashcard';
+    difficulty?: string;
+    error: string;
+    errorType?: 'generation' | 'validation' | 'timeout' | 'database';
+  }>;
+  totalQuestions: number;
+  stats?: {
+    requested: number;
+    succeeded: number;
+    failed: number;
+  };
+}
 
 export default function CreatePage() {
   const router = useRouter();
@@ -224,24 +250,131 @@ export default function CreatePage() {
         body: formData,
       });
 
-      const data = await response.json();
+      const data: QuestionGenerationResponse = await response.json();
 
-      if (!response.ok) {
-        const errorMessage = data.error || 'Kysymysten luonti epäonnistui';
-        const errorDetails = data.details ? `\n\n${data.details}` : '';
-        throw new Error(errorMessage + errorDetails);
+      // Handle different success scenarios
+      if (data.success) {
+        if (data.partial) {
+          // Partial success - some sets created, some failed
+          handlePartialSuccess(data);
+        } else {
+          // Full success - all sets created
+          handleFullSuccess(data);
+        }
+
+        // Navigate to manage page with first created set highlighted
+        if (data.questionSets.length > 0) {
+          const firstCode = data.questionSets[0].code;
+
+          if (data.partial) {
+            // Include failure info in URL for potential retry
+            const failedModes = data.failures?.map(f => f.mode).join(',');
+            router.push(`/manage?highlight=${firstCode}&partialSuccess=true&failedModes=${failedModes}`);
+          } else {
+            router.push(`/manage?highlight=${firstCode}`);
+          }
+        } else {
+          // Shouldn't happen, but handle gracefully
+          setState('success');
+        }
+      } else {
+        // Total failure - no sets created
+        handleTotalFailure(data);
+        setState('form');
       }
-
-      // Success
-      setQuestionSetsCreated(data.questionSets || []);
-      setTotalQuestionsCreated(data.totalQuestions || 0);
-      setState('success');
     } catch (err) {
       console.error('Error generating questions:', err);
       const errorMessage = err instanceof Error ? err.message : 'Kysymysten luonti epäonnistui';
-      setError(errorMessage);
+      toast.error('Yhteysongelma', {
+        description: errorMessage,
+      });
       setState('form');
     }
+  };
+
+  /**
+   * Handle full success - all question sets created
+   */
+  const handleFullSuccess = (data: QuestionGenerationResponse) => {
+    const { questionSets, totalQuestions } = data;
+
+    toast.success(`Luotiin ${questionSets.length} kysymyssarjaa!`, {
+      description: `Yhteensä ${totalQuestions} kysymystä`,
+    });
+
+    // Log for analytics
+    console.log('Question generation: full success', {
+      setsCreated: questionSets.length,
+      totalQuestions,
+    });
+  };
+
+  /**
+   * Handle partial success - some sets created, some failed
+   */
+  const handlePartialSuccess = (data: QuestionGenerationResponse) => {
+    const { questionSets, failures, stats } = data;
+
+    // Build user-friendly failure summary
+    const failureSummary = failures?.map(f => {
+      const label = f.mode === 'flashcard'
+        ? 'Kortit'
+        : `Visa (${f.difficulty})`;
+
+      // Simplify error message for user
+      const errorType = f.errorType || 'generation';
+      const userMessage = {
+        timeout: 'Aikakatkö',
+        validation: 'Validointi epäonnistui',
+        database: 'Tallennus epäonnistui',
+        generation: 'Luonti epäonnistui',
+      }[errorType];
+
+      return `${label}: ${userMessage}`;
+    }).join('\n') || 'Osa sarjoista epäonnistui';
+
+    // Show warning toast with details
+    toast.warning(
+      `Luotiin ${stats?.succeeded || questionSets.length} / ${stats?.requested || questionSets.length + (failures?.length || 0)} sarjaa`,
+      {
+        description: `${failureSummary}\n\nVoit yrittää epäonnistuneiden luomista uudestaan.`,
+        duration: 8000, // Longer duration for partial success
+      }
+    );
+
+    // Log for analytics
+    console.warn('Question generation: partial success', {
+      succeeded: stats?.succeeded,
+      failed: stats?.failed,
+      failures: failures?.map(f => ({ mode: f.mode, difficulty: f.difficulty, errorType: f.errorType })),
+    });
+  };
+
+  /**
+   * Handle total failure - no sets created
+   */
+  const handleTotalFailure = (data: QuestionGenerationResponse) => {
+    const { failures, message } = data;
+
+    // Build detailed error message
+    const errorDetails = failures?.map(f => {
+      const label = f.mode === 'flashcard'
+        ? 'Kortit'
+        : `Visa (${f.difficulty})`;
+
+      return `${label}: ${f.error}`;
+    }).join('\n') || message;
+
+    toast.error('Kysymyssarjojen luonti epäonnistui', {
+      description: errorDetails,
+      duration: 10000, // Longer duration for errors
+    });
+
+    // Log for debugging
+    console.error('Question generation: total failure', {
+      message,
+      failures,
+    });
   };
 
   const handleBackToMenu = () => {

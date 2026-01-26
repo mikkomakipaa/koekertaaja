@@ -228,6 +228,12 @@ export async function POST(request: NextRequest) {
       mode: 'quiz' | 'flashcard';
     }>[] = [];
 
+    // Track metadata for error reporting in case of failures
+    const generationTasksMetadata: Array<{
+      mode: 'quiz' | 'flashcard';
+      difficulty?: Difficulty;
+    }> = [];
+
     // Add quiz generation tasks
     if (generationMode === 'quiz' || generationMode === 'both') {
       for (const difficulty of difficulties) {
@@ -245,6 +251,9 @@ export async function POST(request: NextRequest) {
             targetWords: validatedTargetWords,
           }).then((questions) => ({ questions, difficulty, mode: 'quiz' as const }))
         );
+
+        // Track metadata for error reporting
+        generationTasksMetadata.push({ mode: 'quiz', difficulty });
       }
     }
 
@@ -264,89 +273,213 @@ export async function POST(request: NextRequest) {
           targetWords: validatedTargetWords,
         }).then((questions) => ({ questions, mode: 'flashcard' as const }))
       );
+
+      // Track metadata for error reporting
+      generationTasksMetadata.push({ mode: 'flashcard' });
     }
 
-    // Execute all generation tasks in parallel
-    const generationResults = await Promise.all(generationTasks);
+    // Execute all generation tasks in parallel with partial success handling
+    const settledResults = await Promise.allSettled(generationTasks);
+
+    // Process settled results - separate successes from failures
+    const successfulResults: Array<{
+      questions: any[];
+      difficulty?: Difficulty;
+      mode: 'quiz' | 'flashcard';
+    }> = [];
+
+    const failedResults: Array<{
+      mode: 'quiz' | 'flashcard';
+      difficulty?: Difficulty;
+      error: string;
+      errorType?: 'generation' | 'validation' | 'timeout';
+    }> = [];
+
+    settledResults.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        successfulResults.push(result.value);
+
+        logger.info(
+          {
+            mode: result.value.mode,
+            difficulty: result.value.difficulty,
+            questionCount: result.value.questions.length,
+          },
+          'Question generation succeeded'
+        );
+      } else {
+        // Extract mode and difficulty from original task metadata
+        const error = result.reason instanceof Error ? result.reason : new Error(String(result.reason));
+        const errorMessage = error.message;
+
+        // Determine error type for better client handling
+        let errorType: 'generation' | 'validation' | 'timeout' = 'generation';
+        if (errorMessage.toLowerCase().includes('timeout')) {
+          errorType = 'timeout';
+        } else if (errorMessage.toLowerCase().includes('validation')) {
+          errorType = 'validation';
+        }
+
+        const taskMetadata = generationTasksMetadata[index];
+
+        failedResults.push({
+          mode: taskMetadata.mode,
+          difficulty: taskMetadata.difficulty,
+          error: errorMessage,
+          errorType,
+        });
+
+        logger.error(
+          {
+            mode: taskMetadata.mode,
+            difficulty: taskMetadata.difficulty,
+            error: errorMessage,
+            errorType,
+          },
+          'Question generation failed'
+        );
+      }
+    });
 
     logger.info(
       {
-        totalSets: generationResults.length,
-        modes: generationResults.map(r => r.mode),
+        successCount: successfulResults.length,
+        failureCount: failedResults.length,
+        totalRequested: settledResults.length,
       },
-      'Question generation completed'
+      'Question generation batch completed'
     );
 
-    // STEP 3: Create question sets in database
-    logger.info('Step 3: Saving question sets to database');
+    // STEP 3: Create question sets in database (only for successful generations)
+    logger.info(
+      {
+        successfulSets: successfulResults.length,
+        failedSets: failedResults.length,
+      },
+      'Step 3: Saving successful question sets to database'
+    );
     const createdSets: any[] = [];
+    const dbFailures: Array<{
+      mode: 'quiz' | 'flashcard';
+      difficulty?: Difficulty;
+      error: string;
+    }> = [];
 
-    for (const result of generationResults) {
+    for (const result of successfulResults) {
       const { questions, difficulty, mode } = result;
 
       if (questions.length === 0) {
-        logger.warn({ mode, difficulty }, 'No questions generated for this set');
+        logger.warn({ mode, difficulty }, 'Skipping empty question set');
+        dbFailures.push({
+          mode,
+          difficulty,
+          error: 'No questions generated',
+        });
         continue;
       }
 
-      // Generate unique code with collision handling
-      let code = generateCode();
-      let attempts = 0;
-      const maxAttempts = 50;
-      let dbResult = null;
+      try {
+        // Generate unique code with collision handling
+        let code = generateCode();
+        let attempts = 0;
+        const maxAttempts = 50;
+        let dbResult = null;
 
-      // Determine set name based on mode and difficulty
-      const setName = mode === 'flashcard'
-        ? `${questionSetName} - Kortit`
-        : `${questionSetName} - ${difficulty!.charAt(0).toUpperCase() + difficulty!.slice(1)}`;
+        // Determine set name based on mode and difficulty
+        const setName = mode === 'flashcard'
+          ? `${questionSetName} - Kortit`
+          : `${questionSetName} - ${difficulty!.charAt(0).toUpperCase() + difficulty!.slice(1)}`;
 
-      while (attempts < maxAttempts && !dbResult) {
-        dbResult = await createQuestionSet(
-          {
-            code,
-            name: setName,
-            subject: subject as Subject,
-            difficulty: difficulty || 'normaali',
-            mode,
-            grade,
-            topic,
-            subtopic,
-            subject_type: subjectType,
-            question_count: questions.length,
-            exam_length: examLength,
-            status: 'created',  // New question sets default to unpublished
-          },
-          questions
-        );
+        while (attempts < maxAttempts && !dbResult) {
+          dbResult = await createQuestionSet(
+            {
+              code,
+              name: setName,
+              subject: subject as Subject,
+              difficulty: difficulty || 'normaali',
+              mode,
+              grade,
+              topic,
+              subtopic,
+              subject_type: subjectType,
+              question_count: questions.length,
+              exam_length: examLength,
+              status: 'created',  // New question sets default to unpublished
+            },
+            questions
+          );
 
-        if (!dbResult) {
-          attempts++;
-          code = generateCode();
+          if (!dbResult) {
+            attempts++;
+            code = generateCode();
 
-          if (attempts % 10 === 0) {
-            logger.warn({ attempts, mode, difficulty }, 'Code collision detected');
-          }
-
-          if (attempts > 30) {
-            logger.error({ attempts }, 'High collision rate detected');
+            if (attempts % 10 === 0) {
+              logger.warn({ attempts, mode, difficulty }, 'Code collision detected');
+            }
           }
         }
-      }
 
-      if (!dbResult) {
-        logger.error({ maxAttempts, mode, difficulty }, 'Failed to generate unique code');
-        return NextResponse.json(
-          { error: `Failed to create question set. Please try again.` },
-          { status: 500 }
+        if (!dbResult) {
+          logger.error({ maxAttempts, mode, difficulty }, 'Failed to generate unique code');
+          dbFailures.push({
+            mode,
+            difficulty,
+            error: 'Failed to generate unique code after 50 attempts',
+          });
+          continue;
+        }
+
+        createdSets.push(dbResult);
+
+        logger.info(
+          {
+            code: dbResult.code,
+            mode,
+            difficulty,
+            questionCount: dbResult.questionSet.question_count,
+          },
+          'Question set saved successfully'
         );
-      }
+      } catch (dbError) {
+        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
 
-      createdSets.push(dbResult);
+        logger.error(
+          {
+            mode,
+            difficulty,
+            error: errorMessage,
+          },
+          'Failed to save question set to database'
+        );
+
+        dbFailures.push({
+          mode,
+          difficulty,
+          error: `Database error: ${errorMessage}`,
+        });
+      }
     }
 
+    // Merge generation failures and database failures
+    const allFailures = [
+      ...failedResults,
+      ...dbFailures.map(f => ({ ...f, errorType: 'database' as const })),
+    ];
+
+    // Determine overall success status
+    const hasSuccess = createdSets.length > 0;
+    const hasFailures = allFailures.length > 0;
+    const isPartialSuccess = hasSuccess && hasFailures;
+
+    // Build response
     const response = {
-      success: true,
-      message: `Created ${createdSets.length} question sets`,
+      success: hasSuccess, // true if ANY sets were created
+      partial: isPartialSuccess, // true if some succeeded and some failed
+      message: hasSuccess
+        ? isPartialSuccess
+          ? `Created ${createdSets.length} of ${settledResults.length} question sets (${allFailures.length} failed)`
+          : `Successfully created ${createdSets.length} question sets`
+        : `Failed to create question sets (${allFailures.length} errors)`,
       questionSets: createdSets.map(set => ({
         code: set.code,
         name: set.questionSet.name,
@@ -354,18 +487,31 @@ export async function POST(request: NextRequest) {
         mode: set.questionSet.mode,
         questionCount: set.questionSet.question_count,
       })),
+      failures: hasFailures ? allFailures : undefined,
       totalQuestions: createdSets.reduce((sum, set) => sum + set.questionSet.question_count, 0),
+      stats: {
+        requested: settledResults.length,
+        succeeded: createdSets.length,
+        failed: allFailures.length,
+      },
     };
+
+    // Use 200 for partial success (user got something useful)
+    // Use 500 only for total failure (nothing created)
+    const httpStatus = hasSuccess ? 200 : 500;
 
     logger.info(
       {
-        questionSetsCount: createdSets.length,
+        questionSetsCreated: createdSets.length,
+        failuresCount: allFailures.length,
         totalQuestions: response.totalQuestions,
+        isPartialSuccess,
+        httpStatus,
       },
-      'Request completed successfully'
+      'Request completed'
     );
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, { status: httpStatus });
   } catch (error) {
     const isProduction = process.env.NODE_ENV === 'production';
 
