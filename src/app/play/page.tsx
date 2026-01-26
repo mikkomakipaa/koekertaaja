@@ -24,7 +24,6 @@ import {
   ArrowCounterClockwise,
   ListNumbers,
   GraduationCap,
-  Clock,
   MagnifyingGlass,
   X,
   Star,
@@ -169,19 +168,6 @@ const getGradeColors = (grade: number) => {
   };
 };
 
-const estimateDuration = (questionCount: number): string => {
-  const minutes = Math.ceil(questionCount * 0.7);
-
-  if (minutes < 1) return '< 1 min';
-  if (minutes === 1) return '1 min';
-  if (minutes < 60) return `~${minutes} min`;
-
-  const hours = Math.floor(minutes / 60);
-  const remainingMins = minutes % 60;
-
-  return remainingMins > 0 ? `~${hours}h ${remainingMins}min` : `~${hours}h`;
-};
-
 const isNewQuestionSet = (createdAt?: string): boolean => {
   if (!createdAt) return false;
   const created = new Date(createdAt);
@@ -234,8 +220,6 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
 
   const showNewBadge = isNewQuestionSet(newestCreatedAt);
-
-  const questionCount = primaryQuizSet?.question_count ?? primaryQuizSet?.exam_length ?? 15;
 
   const scoreIcon = (() => {
     if (!lastScore) return null;
@@ -291,17 +275,6 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
             </span>
           </div>
         )}
-
-        <div className="mt-3 flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-          <span className="flex items-center gap-1">
-            <ListNumbers size={14} weight="duotone" className="text-gray-400" />
-            <span className="font-medium">{questionCount} kysymystä</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <Clock size={14} weight="duotone" className="text-gray-400" />
-            <span className="font-medium">{estimateDuration(questionCount)}</span>
-          </span>
-        </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
           {studyMode === 'pelaa' ? (
