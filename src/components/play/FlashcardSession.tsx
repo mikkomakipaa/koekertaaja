@@ -458,7 +458,7 @@ export function FlashcardSession({
         <div className="mt-8 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-4">
           <span className="inline-flex items-center gap-1">
             <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono">
-              Space
+              Enter
             </kbd>
             kääntää kortin
           </span>

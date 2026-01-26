@@ -63,13 +63,13 @@ const guardianItems = [
 
 function AudienceGrid({ items }: { items: typeof pupilItems }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {items.map((item) => {
         const Icon = item.icon;
         return (
           <div
             key={item.title}
-            className="flex gap-3 rounded-2xl border border-emerald-100/70 bg-white/95 p-4 shadow-sm transition-all duration-200 motion-reduce:transition-none dark:border-emerald-400/40 dark:bg-slate-900/70 dark:shadow-[0_0_0_1px_rgba(148,163,184,0.12)]"
+            className="flex gap-3 rounded-2xl border border-emerald-100/70 bg-white/95 p-3 shadow-sm transition-all duration-200 motion-reduce:transition-none dark:border-emerald-400/40 dark:bg-slate-900/70 dark:shadow-[0_0_0_1px_rgba(148,163,184,0.12)]"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
               <Icon size={24} weight="duotone" aria-hidden="true" />
@@ -187,38 +187,35 @@ export function AudienceTabs({
   onAudienceChange: (value: AudienceKey) => void;
 }) {
   return (
-    <section className="mt-8 md:mt-12" aria-labelledby="audience-heading">
+    <section aria-labelledby="audience-heading">
       <span id="oppilaille" className="sr-only" aria-hidden="true" />
       <span id="huoltajille" className="sr-only" aria-hidden="true" />
-      <div className="flex flex-col gap-2">
+      <div>
         <h2 id="audience-heading" className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           Kenelle Koekertaaja on?
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Valitse itsellesi sopiva näkymä ja löydä hyödyllisimmät hyödyt.
-        </p>
       </div>
 
-      <div className="mt-4 hidden md:block">
+      <div className="mt-3 hidden md:block">
         <Tabs value={activeAudience} onValueChange={(value) => onAudienceChange(value as AudienceKey)}>
-          <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-gray-100 p-2 transition-colors duration-200 motion-reduce:transition-none dark:bg-gray-800 dark:ring-1 dark:ring-slate-700/60">
+          <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-gray-100 p-1 transition-colors duration-200 motion-reduce:transition-none dark:bg-gray-800 dark:ring-1 dark:ring-slate-700/60">
             <TabsTrigger
               value="oppilaille"
-              className="min-h-[48px] rounded-xl border-b-2 border-transparent px-4 py-2 text-base font-semibold text-gray-700 transition-colors duration-200 motion-reduce:transition-none data-[state=active]:border-emerald-500 data-[state=active]:bg-white data-[state=active]:text-emerald-700 dark:text-gray-200 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-emerald-300"
+              className="rounded-xl border-b-2 border-transparent px-4 py-3 text-base font-semibold text-gray-700 transition-colors duration-200 motion-reduce:transition-none data-[state=active]:border-emerald-500 data-[state=active]:bg-white data-[state=active]:text-emerald-700 dark:text-gray-200 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-emerald-300"
             >
               Oppilaille
             </TabsTrigger>
             <TabsTrigger
               value="huoltajille"
-              className="min-h-[48px] rounded-xl border-b-2 border-transparent px-4 py-2 text-base font-semibold text-gray-700 transition-colors duration-200 motion-reduce:transition-none data-[state=active]:border-emerald-500 data-[state=active]:bg-white data-[state=active]:text-emerald-700 dark:text-gray-200 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-emerald-300"
+              className="rounded-xl border-b-2 border-transparent px-4 py-3 text-base font-semibold text-gray-700 transition-colors duration-200 motion-reduce:transition-none data-[state=active]:border-emerald-500 data-[state=active]:bg-white data-[state=active]:text-emerald-700 dark:text-gray-200 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-emerald-300"
             >
               Huoltajille
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="oppilaille" className="mt-6">
+          <TabsContent value="oppilaille" className="mt-4">
             <AudienceGrid items={pupilItems} />
           </TabsContent>
-          <TabsContent value="huoltajille" className="mt-6">
+          <TabsContent value="huoltajille" className="mt-4">
             <AudienceGrid items={guardianItems} />
           </TabsContent>
         </Tabs>
