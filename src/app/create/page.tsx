@@ -36,8 +36,19 @@ import {
 } from '@phosphor-icons/react';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { UserMenu } from '@/components/auth/UserMenu';
+import { CreationProgressStepper } from '@/components/create/CreationProgressStepper';
 
 type CreateState = 'form' | 'loading' | 'success';
+
+type CreationStep = {
+  id: 'topics' | 'quiz' | 'flashcard';
+  label: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'error';
+  metadata?: {
+    count?: number;
+    message?: string;
+  };
+};
 
 interface QuestionGenerationResponse {
   success: boolean;
@@ -128,6 +139,9 @@ export default function CreatePage() {
   const [targetWords, setTargetWords] = useState('');
   const [error, setError] = useState('');
 
+  // Creation progress state
+  const [creationSteps, setCreationSteps] = useState<CreationStep[]>([]);
+
   // Success state
   const [questionSetsCreated, setQuestionSetsCreated] = useState<any[]>([]);
   const [totalQuestionsCreated, setTotalQuestionsCreated] = useState(0);
@@ -180,6 +194,47 @@ export default function CreatePage() {
     ? allQuestionSets.find((set) => set.id === mapQuestionSetId)
     : null;
 
+  // Helper functions for creation progress
+  const initializeCreationSteps = (): CreationStep[] => {
+    const steps: CreationStep[] = [
+      {
+        id: 'topics',
+        label: 'Tunnistetaan aiheita materiaalista',
+        status: 'pending',
+      },
+    ];
+
+    if (generationMode === 'quiz' || generationMode === 'both') {
+      steps.push({
+        id: 'quiz',
+        label: 'Luodaan visaa',
+        status: 'pending',
+      });
+    }
+
+    if (generationMode === 'flashcard' || generationMode === 'both') {
+      steps.push({
+        id: 'flashcard',
+        label: 'Luodaan muistikortteja',
+        status: 'pending',
+      });
+    }
+
+    return steps;
+  };
+
+  const updateCreationStep = (
+    stepId: string,
+    status: CreationStep['status'],
+    metadata?: { count?: number; message?: string }
+  ) => {
+    setCreationSteps((prev) =>
+      prev.map((step) =>
+        step.id === stepId ? { ...step, status, metadata: { ...step.metadata, ...metadata } } : step
+      )
+    );
+  };
+
   const handleSubmit = async () => {
     // Validation
     if (!questionSetName.trim()) {
@@ -209,6 +264,7 @@ export default function CreatePage() {
 
     setError('');
     setState('loading');
+    setCreationSteps(initializeCreationSteps());
 
     try {
       // Prepare form data
@@ -252,18 +308,21 @@ export default function CreatePage() {
       } = { quizSets: [], flashcardSet: null, errors: [] };
 
       // Step 1: Identify topics (shared across quiz and flashcard)
-      toast.info('Tunnistetaan aiheita materiaalista...', { duration: 2000 });
+      updateCreationStep('topics', 'in_progress', { message: 'Analysoidaan materiaalia...' });
       let topics: string[] = [];
       try {
         const topicsResponse = await fetch('/api/identify-topics', { method: 'POST', body: formData });
         if (topicsResponse.ok) {
           const topicsData = await topicsResponse.json();
           topics = topicsData.topics || [];
-          toast.success(`Tunnistettiin ${topics.length} aihetta`, { duration: 2000 });
+          updateCreationStep('topics', 'completed', {
+            count: topics.length,
+            message: `Tunnistettiin ${topics.length} aihetta`,
+          });
         }
       } catch (error) {
         console.warn('Topic identification failed:', error);
-        toast.warning('Aiheiden tunnistaminen epäonnistui', { duration: 2000 });
+        updateCreationStep('topics', 'error', { message: 'Aiheiden tunnistaminen epäonnistui' });
       }
 
       // Add topics to form data for subsequent requests
@@ -273,39 +332,45 @@ export default function CreatePage() {
 
       // Step 2: Generate quiz sets (if requested)
       if (generationMode === 'quiz' || generationMode === 'both') {
-        toast.info('Luodaan visaa...', { duration: 2000 });
+        updateCreationStep('quiz', 'in_progress', { message: 'Luodaan visaa...' });
         try {
           const quizResponse = await fetch('/api/generate-questions/quiz', { method: 'POST', body: formData });
           const quizData = await quizResponse.json();
           if (quizData.success && quizData.questionSets) {
             results.quizSets = quizData.questionSets;
-            toast.success(`Luotiin ${quizData.questionSets.length} visaa (${quizData.totalQuestions} kysymystä)`, { duration: 4000 });
+            updateCreationStep('quiz', 'completed', {
+              count: quizData.totalQuestions,
+              message: `Luotiin ${quizData.questionSets.length} visaa (${quizData.totalQuestions} kysymystä)`,
+            });
           } else {
             throw new Error(quizData.error || 'Visan luonti epäonnistui');
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Visan luonti epäonnistui';
           results.errors.push({ mode: 'quiz', error: errorMessage });
-          toast.error('Visan luonti epäonnistui', { description: errorMessage, duration: 5000 });
+          updateCreationStep('quiz', 'error', { message: errorMessage });
         }
       }
 
       // Step 3: Generate flashcard set (if requested)
       if (generationMode === 'flashcard' || generationMode === 'both') {
-        toast.info('Luodaan muistikortteja...', { duration: 2000 });
+        updateCreationStep('flashcard', 'in_progress', { message: 'Luodaan muistikortteja...' });
         try {
           const flashcardResponse = await fetch('/api/generate-questions/flashcard', { method: 'POST', body: formData });
           const flashcardData = await flashcardResponse.json();
           if (flashcardData.success && flashcardData.questionSet) {
             results.flashcardSet = flashcardData.questionSet;
-            toast.success(`Luotiin muistikortit (${flashcardData.questionSet.questionCount} kysymystä)`, { duration: 4000 });
+            updateCreationStep('flashcard', 'completed', {
+              count: flashcardData.questionSet.questionCount,
+              message: `Luotiin muistikortit (${flashcardData.questionSet.questionCount} kysymystä)`,
+            });
           } else {
             throw new Error(flashcardData.error || 'Muistikorttien luonti epäonnistui');
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Muistikorttien luonti epäonnistui';
           results.errors.push({ mode: 'flashcard', error: errorMessage });
-          toast.error('Muistikorttien luonti epäonnistui', { description: errorMessage, duration: 5000 });
+          updateCreationStep('flashcard', 'error', { message: errorMessage });
         }
       }
 
@@ -743,24 +808,19 @@ export default function CreatePage() {
 
   // Loading screen
   if (state === 'loading') {
-    const loadingMessage = generationMode === 'flashcard'
-      ? `1 korttisarja × ${questionCount} kysymystä`
-      : generationMode === 'both'
-      ? `2 vaikeustasoa + 1 korttisarja × ${questionCount} kysymystä`
-      : `2 vaikeustasoa × ${questionCount} kysymystä`;
-
     return (
       <AuthGuard>
         <UserMenu />
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-          <Card className="w-96 shadow-lg">
-            <CardContent className="p-12 text-center">
-              <CircleNotch weight="bold" className="w-16 h-16 mx-auto mb-4 animate-spin text-blue-500" />
-              <p className="text-xl font-bold text-indigo-700">
-                Luodaan kysymyssarjoja...
-              </p>
-              <p className="text-gray-600 mt-2 font-medium">{loadingMessage}</p>
-              <p className="text-gray-500 text-sm mt-1">Tämä kestää muutaman minuutin</p>
+        <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-6">
+          <Card className="w-full max-w-2xl shadow-lg dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white rounded-t-lg">
+              <CardTitle className="text-2xl">Luodaan kysymyssarjoja</CardTitle>
+              <CardDescription className="text-white text-base">
+                Tämä kestää muutaman minuutin. Älä sulje ikkunaa.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <CreationProgressStepper steps={creationSteps} />
             </CardContent>
           </Card>
         </div>
