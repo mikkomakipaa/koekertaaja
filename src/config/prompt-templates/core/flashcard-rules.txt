@@ -4,7 +4,9 @@ FLASHCARD-MOODIN SÄÄNNÖT:
 - Käytä VAIN seuraavia tyyppejä: fill_blank, short_answer, matching.
 - Noudata korttityyppien jakaumaa täsmälleen.
 - Kysy yksi selkeä asia per kortti.
-- Selitykset ovat ystävällisiä, ikätasolle sopivia ja 20-300 merkkiä.
+- Selitykset ovat henkilökohtaisia (sinä-muoto), ystävällisiä, ikätasolle sopivia ja 20-300 merkkiä.
+- Puhu suoraan oppilaalle: "Huomaa että...", "Muista että...", "Voit ajatella näin..."
+- ÄLÄ yleistä: "Oppilaat usein..." → "Saatat helposti..."
 - Pysy annetussa materiaalissa, älä lisää uutta sisältöä.
 - Käytä acceptable_answers -listaa vaihtoehtoisille hyväksyttäville vastauksille.
 

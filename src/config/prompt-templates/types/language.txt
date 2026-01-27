@@ -158,4 +158,4 @@ VÄÄRÄT VASTAUKSET (multiple_choice):
 
 LISÄTARKISTUKSET (kieli):
 - Varmista, että sanaston vaikeustaso vastaa {{grade_level_note}}
-- Selitykset ovat informatiivisia ja suomeksi
+- Selitykset ovat henkilökohtaisia (sinä-muoto), informatiivisia ja suomeksi

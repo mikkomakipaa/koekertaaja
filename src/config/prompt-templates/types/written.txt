@@ -108,5 +108,5 @@ VÄÄRÄT VASTAUKSET (multiple_choice):
 - Testaa ymmärrystä, älä vain muistia
 
 LISÄTARKISTUKSET (kirjoitetut aineet):
-- Selitykset ovat informatiivisia ja selkeitä
+- Selitykset ovat henkilökohtaisia (sinä-muoto), informatiivisia ja selkeitä
 - Kysymykset kattavat materiaalin laajasti

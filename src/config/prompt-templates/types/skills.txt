@@ -108,4 +108,4 @@ VÄÄRÄT VASTAUKSET (multiple_choice):
 
 LISÄTARKISTUKSET (taidot):
 - Turvallisuusohjeet ovat oikein ja ikätasolle sopivia
-- Selitykset ovat informatiivisia ja selkeitä
+- Selitykset ovat henkilökohtaisia (sinä-muoto), informatiivisia ja selkeitä
