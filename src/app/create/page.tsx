@@ -322,9 +322,8 @@ export default function CreatePage() {
           const failureSummary = results.errors.map(e => `${e.mode === 'flashcard' ? 'Kortit' : 'Visa'}: Epäonnistui`).join('\n');
           toast.warning(`Luotiin ${allSets.length} sarjaa, ${results.errors.length} epäonnistui`, { description: failureSummary, duration: 8000 });
         }
-        // Navigate to first created set
-        const firstCode = allSets[0].code;
-        router.push(`/manage?highlight=${firstCode}`);
+        // Navigate to play page to view created sets
+        router.push('/play');
       } else {
         // Total failure
         const errorDetails = results.errors.map(e => `${e.mode === 'flashcard' ? 'Kortit' : 'Visa'}: ${e.error}`).join('\n');
