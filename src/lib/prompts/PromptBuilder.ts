@@ -5,6 +5,14 @@ import type { Difficulty, Mode, Subject } from '@/types/questions';
 import { getSubjectType, type SubjectType } from './subjectTypeMapping';
 import { PromptLoader } from './PromptLoader';
 import { isRuleBasedSubject as isRuleBasedSubjectUtil } from '@/lib/utils/subjectClassification';
+import {
+  getQuestionTypeWeights,
+  formatQuestionTypeWeights,
+  calculateWeightedDifficulty,
+} from '@/lib/utils/difficultyMapping';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger({ module: 'PromptBuilder' });
 
 export interface BuildVariablesParams {
   subject: Subject;
@@ -326,6 +334,36 @@ export class PromptBuilder {
       ? this.formatDistributionSection(params.distribution)
       : '';
 
+    // NEW: Add difficulty-based question type guidance (Phase 4)
+    let questionTypeGuidance = '';
+    if (params.enhancedTopics && params.enhancedTopics.length > 0) {
+      // Calculate overall difficulty from topics
+      const overallDifficulty = calculateWeightedDifficulty(
+        params.enhancedTopics.map(t => ({
+          difficulty: t.difficulty,
+          coverage: t.coverage,
+        }))
+      );
+
+      const weights = getQuestionTypeWeights(overallDifficulty);
+      questionTypeGuidance = `
+KYSYMYSTYYPPIEN JAKAUMA (suositus materiaalin vaikeustason perusteella):
+${formatQuestionTypeWeights(weights)}
+
+HUOM: Tämä on suositus. Voit käyttää muita kysymystyyppejä jos materiaali sitä vaatii.
+`.trim();
+
+      logger.info(
+        {
+          overallDifficulty,
+          weights: Object.entries(weights)
+            .filter(([_, w]) => w > 0)
+            .map(([type, weight]) => ({ type, percentage: Math.round(weight * 100) })),
+        },
+        'Using difficulty-based question type weights'
+      );
+    }
+
     return {
       material_type: materialType,
       question_count: String(params.questionCount),
@@ -336,7 +374,8 @@ export class PromptBuilder {
       topic_count: String(effectiveTopicCount),
       topics_list: this.formatTopics(params.identifiedTopics),
       questions_per_topic: String(questionsPerTopic),
-      distribution_section: distributionSection, // NEW
+      distribution_section: distributionSection, // Phase 2
+      question_type_guidance: questionTypeGuidance, // Phase 4
       grade_context_note: gradeContextNote,
       difficulty: params.difficulty,
       grade_level_note: gradeLevelNote,

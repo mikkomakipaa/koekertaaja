@@ -15,6 +15,10 @@ import { createLogger } from '@/lib/logger';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
 import { calculateDistribution, formatDistributionForPrompt } from '@/lib/utils/questionDistribution';
 import { validateCoverage, formatCoverageReport } from '@/lib/utils/coverageValidation';
+import {
+  calculateWeightedDifficulty,
+  validateDifficultyConsistency,
+} from '@/lib/utils/difficultyMapping';
 
 // ============================================================================
 // Type Definitions
@@ -285,6 +289,41 @@ export async function generateQuizSets(
       }
     }
 
+    // Validate difficulty consistency (Phase 4)
+    if (enhancedTopics && enhancedTopics.length > 0) {
+      const expectedDifficulty = calculateWeightedDifficulty(
+        enhancedTopics.map(t => ({
+          difficulty: t.difficulty,
+          coverage: t.coverage,
+        }))
+      );
+
+      const difficultyResult = validateDifficultyConsistency(questions, expectedDifficulty);
+
+      logger.info(
+        {
+          difficulty,
+          expectedDifficulty,
+          questionTypes: Object.entries(difficultyResult.questionTypes).map(([type, pct]) => ({
+            type,
+            percentage: Math.round((pct as number) * 100),
+          })),
+          isConsistent: difficultyResult.isConsistent,
+        },
+        'Difficulty consistency validation for quiz set'
+      );
+
+      if (!difficultyResult.isConsistent) {
+        logger.warn(
+          {
+            difficulty,
+            warnings: difficultyResult.warnings,
+          },
+          'Question types do not match expected difficulty'
+        );
+      }
+    }
+
     // Generate unique code with collision handling
     let code = generateCode();
     let attempts = 0;
@@ -448,6 +487,39 @@ export async function generateFlashcardSet(
           threshold: Math.round(questions.length * 0.1),
         },
         'Generated flashcard questions do not meet coverage targets'
+      );
+    }
+  }
+
+  // Validate difficulty consistency (Phase 4)
+  if (enhancedTopics && enhancedTopics.length > 0) {
+    const expectedDifficulty = calculateWeightedDifficulty(
+      enhancedTopics.map(t => ({
+        difficulty: t.difficulty,
+        coverage: t.coverage,
+      }))
+    );
+
+    const difficultyResult = validateDifficultyConsistency(questions, expectedDifficulty);
+
+    logger.info(
+      {
+        expectedDifficulty,
+        questionTypes: Object.entries(difficultyResult.questionTypes).map(([type, pct]) => ({
+          type,
+          percentage: Math.round((pct as number) * 100),
+        })),
+        isConsistent: difficultyResult.isConsistent,
+      },
+      'Difficulty consistency validation for flashcard set'
+    );
+
+    if (!difficultyResult.isConsistent) {
+      logger.warn(
+        {
+          warnings: difficultyResult.warnings,
+        },
+        'Flashcard question types do not match expected difficulty'
       );
     }
   }
