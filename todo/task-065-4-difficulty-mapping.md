@@ -1,10 +1,12 @@
 # Task 065.4: Difficulty Mapping
 
-**Status:** 🟡 In Progress
+**Status:** ✅ Completed
 **Estimate:** 1 point
 **Priority:** P1
 **Parent:** Task 065
 **Started:** 2026-01-27
+**Completed:** 2026-01-27
+**Commit:** b103ff6
 
 ## Overview
 
@@ -371,15 +373,16 @@ export async function generateQuizSets(
 
 ## Acceptance Criteria
 
-- [ ] `getQuestionTypeWeights()` function with weights for each difficulty level
-- [ ] `formatQuestionTypeWeights()` for AI prompt
-- [ ] `calculateWeightedDifficulty()` for multi-topic difficulty calculation
-- [ ] `validateDifficultyConsistency()` for post-generation validation
-- [ ] Integration with PromptBuilder to include type guidance
-- [ ] Integration with question generation to validate consistency
-- [ ] Structured logging for difficulty metrics
-- [ ] TypeScript compilation passes
-- [ ] Manual test: Verify helppo topics get simpler question types
+- [x] `getQuestionTypeWeights()` function with weights for each difficulty level
+- [x] `formatQuestionTypeWeights()` for AI prompt
+- [x] `calculateWeightedDifficulty()` for multi-topic difficulty calculation
+- [x] `validateDifficultyConsistency()` for post-generation validation
+- [x] Integration with PromptBuilder to include type guidance
+- [x] Integration with question generation to validate consistency
+- [x] Structured logging for difficulty metrics
+- [x] TypeScript compilation passes
+- [x] Adjusted for actual Difficulty type ('helppo' | 'normaali' only)
+- [ ] Manual test: Verify helppo topics get simpler question types (requires user testing)
 
 ## Example
 
