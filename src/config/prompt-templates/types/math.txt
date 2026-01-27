@@ -32,10 +32,12 @@ MATEMAATTINEN MERKINTÄTAPA:
 
 LUKUJEN JA LUKUSARJOJEN MUOTOILU:
 - Desimaalierottimena AINA pilkku (,): 15,25 (ei 15.25)
-- Lukusarjojen erottimena AINA puolipiste (;): "Laske luvut: 5; 10; 15; 20"
-- VÄÄRIN: "Laske luvut: 5, 10, 15, 20" (epäselvä: onko 5.10 ja 15.20?)
-- OIKEIN: "Laske luvut: 5; 10; 15; 20" (selvä: neljä erillistä lukua)
+- Lukusarjojen erottimena AINA puolipiste JA VÄLILYÖNTI (; ): "Laske luvut: 5; 10; 15; 20"
+- PAKOLLINEN: Puolipisteen jälkeen TÄYTYY olla välilyönti luettavuuden vuoksi
+- VÄÄRIN: "Laske luvut: 5,10,15,20" tai "5;10;15;20" (ei välilyöntejä, epäselvä)
+- OIKEIN: "Laske luvut: 5; 10; 15; 20" (puolipiste + välilyönti, selvä)
 - OIKEIN: "Laske: 15,25 + 10,75" (kaksi desimaalia)
+- OIKEIN: "Vertaa lukuja: 2,71; 2,70; 2,17" (desimaalit + puolipiste + välilyönti)
 - Vaihtoehtojen listaus multiple_choice-kysymyksissä: käytä tavallisia taulukkoja, ei erottimia
 - Selityksissä lukusarjat: "...sarja 2; 4; 6; 8 jatkuu..."
 
