@@ -31,11 +31,26 @@ test('aiQuestionSchema accepts sequential items with optional years', () => {
   assert.ok(result.success);
 });
 
+test('aiQuestionSchema accepts phase numbers as years', () => {
+  const result = aiQuestionSchema.safeParse({
+    ...baseSequentialQuestion,
+    items: [
+      { text: 'Muna', year: 1 },
+      { text: 'Toukka', year: 2 },
+      { text: 'Kotelo', year: 3 },
+      { text: 'Aikuinen', year: 4 },
+    ],
+    correct_order: [0, 1, 2, 3],
+  });
+
+  assert.ok(result.success);
+});
+
 test('aiQuestionSchema rejects out-of-range years', () => {
   const result = aiQuestionSchema.safeParse({
     ...baseSequentialQuestion,
     items: [
-      { text: 'Tapahtuma 1', year: 999 },
+      { text: 'Tapahtuma 1', year: -3001 },
       { text: 'Tapahtuma 2', year: 1939 },
       { text: 'Tapahtuma 3' },
     ],
@@ -45,7 +60,7 @@ test('aiQuestionSchema rejects out-of-range years', () => {
   assert.equal(result.success, false);
   if (!result.success) {
     const yearErrors = result.error.errors.filter((error) => error.path.includes('year'));
-    assert.ok(yearErrors.some((error) => error.message === 'Year must be between 1000 and 3000'));
+    assert.ok(yearErrors.some((error) => error.message === 'Year must be between -3000 and 3000'));
   }
 });
 
