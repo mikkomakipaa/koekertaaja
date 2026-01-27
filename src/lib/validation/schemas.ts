@@ -61,8 +61,8 @@ const sequentialItemSchema = z.object({
   year: z
     .number()
     .int()
-    .min(1000, 'Year must be between 1000 and 3000')
-    .max(3000, 'Year must be between 1000 and 3000')
+    .min(-3000, 'Year must be between -3000 and 3000')
+    .max(3000, 'Year must be between -3000 and 3000')
     .optional(),
 });
 
@@ -114,7 +114,7 @@ export const aiQuestionSchema = z.object({
     z.string(),
     z.boolean(),
     z.array(z.any()),
-  ]),
+  ]).optional(),
   acceptable_answers: z.array(z.string()).optional(),
   explanation: z
     .string()
@@ -219,6 +219,15 @@ export const aiQuestionSchema = z.object({
         }
       }
     }
+  }
+
+  // Validate that non-sequential questions have correct_answer
+  if (data.type !== 'sequential' && !data.correct_answer) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Question must have a correct_answer',
+      path: ['correct_answer'],
+    });
   }
 });
 
