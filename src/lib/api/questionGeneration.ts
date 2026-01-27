@@ -7,7 +7,7 @@
 
 import { fileTypeFromBuffer } from 'file-type';
 import { generateQuestions } from '@/lib/ai/questionGenerator';
-import { identifyTopics } from '@/lib/ai/topicIdentifier';
+import { identifyTopics, getSimpleTopics } from '@/lib/ai/topicIdentifier';
 import { createQuestionSet } from '@/lib/supabase/write-queries';
 import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty, QuestionSet } from '@/types';
@@ -153,13 +153,20 @@ export async function identifyTopicsFromMaterial(
 
   logger.info(
     {
-      identifiedTopics: topicAnalysis.topics,
+      enhancedTopics: topicAnalysis.topics.map(t => ({
+        name: t.name,
+        coverage: t.coverage,
+        keywords: t.keywords.length,
+      })),
       topicCount: topicAnalysis.topics.length,
+      metadata: topicAnalysis.metadata,
     },
-    'Topics identified successfully'
+    'Enhanced topics identified successfully'
   );
 
-  return topicAnalysis.topics;
+  // Return simple topic names for backward compatibility
+  // TODO Phase 2: Return full enhanced topics for distribution logic
+  return getSimpleTopics(topicAnalysis);
 }
 
 // ============================================================================

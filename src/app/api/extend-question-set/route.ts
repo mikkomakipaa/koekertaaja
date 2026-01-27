@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fileTypeFromBuffer } from 'file-type';
 import crypto from 'crypto';
 import { generateQuestions } from '@/lib/ai/questionGenerator';
-import { identifyTopics } from '@/lib/ai/topicIdentifier';
+import { identifyTopics, getSimpleTopics } from '@/lib/ai/topicIdentifier';
 import { getQuestionSetById } from '@/lib/supabase/queries';
 import { createLogger } from '@/lib/logger';
 import { requireAuth } from '@/lib/supabase/server-auth';
@@ -157,8 +157,8 @@ export async function POST(request: NextRequest) {
 
     logger.info(
       {
-        identifiedTopics: topicAnalysis.topics,
-        topicCount: topicAnalysis.topics.length,
+        identifiedTopics: getSimpleTopics(topicAnalysis),
+        topicCount: getSimpleTopics(topicAnalysis).length,
       },
       'Topics identified successfully'
     );
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
       materialText,
       materialFiles: files.length > 0 ? files : undefined,
       mode: existingSet.mode || 'quiz',
-      identifiedTopics: topicAnalysis.topics,
+      identifiedTopics: getSimpleTopics(topicAnalysis),
     });
 
     if (newQuestions.length === 0) {

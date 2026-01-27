@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fileTypeFromBuffer } from 'file-type';
 import crypto from 'crypto';
 import { generateQuestions } from '@/lib/ai/questionGenerator';
-import { identifyTopics } from '@/lib/ai/topicIdentifier';
+import { identifyTopics, getSimpleTopics } from '@/lib/ai/topicIdentifier';
 import { createQuestionSet } from '@/lib/supabase/write-queries';
 import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty } from '@/types';
@@ -198,8 +198,8 @@ export async function POST(request: NextRequest) {
 
     logger.info(
       {
-        identifiedTopics: topicAnalysis.topics,
-        topicCount: topicAnalysis.topics.length,
+        identifiedTopics: getSimpleTopics(topicAnalysis),
+        topicCount: getSimpleTopics(topicAnalysis).length,
       },
       'Topics identified successfully'
     );
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
 
     logger.info(
       {
-        topicCount: topicAnalysis.topics.length,
+        topicCount: getSimpleTopics(topicAnalysis).length,
         totalFlashcards: flashcardQuestionCount,
       },
       'Calculated flashcard generation count'
@@ -249,7 +249,7 @@ export async function POST(request: NextRequest) {
             materialText,
             materialFiles: files.length > 0 ? files : undefined,
             mode: 'quiz',
-            identifiedTopics: topicAnalysis.topics, // Pass identified topics
+            identifiedTopics: getSimpleTopics(topicAnalysis), // Pass identified topics
             targetWords: validatedTargetWords,
           }).then((questions) => ({ questions, difficulty, mode: 'quiz' as const }))
         );
@@ -273,7 +273,7 @@ export async function POST(request: NextRequest) {
           materialText,
           materialFiles: files.length > 0 ? files : undefined,
           mode: 'flashcard',
-          identifiedTopics: topicAnalysis.topics, // Pass identified topics
+          identifiedTopics: getSimpleTopics(topicAnalysis), // Pass identified topics
           targetWords: validatedTargetWords,
         }).then((questions) => ({ questions, mode: 'flashcard' as const }))
       );
