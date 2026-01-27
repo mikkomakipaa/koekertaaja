@@ -85,7 +85,6 @@ const SKILLS_BASE_PATH = path.join(TEMPLATE_BASE_PATH, 'skills');
 const DIFFICULTY_LABELS: Record<string, string> = {
   helppo: 'Helppo',
   normaali: 'Normaali',
-  vaikea: 'Vaikea',
 };
 
 const EXTRA_DISTRIBUTION_NOTES: Record<string, Record<string, string[]>> = {
@@ -100,22 +99,18 @@ const EXTRA_DISTRIBUTION_NOTES: Record<string, Record<string, string[]>> = {
   written: {
     helppo: ['- ÄLÄ käytä short_answer tai matching'],
     normaali: [],
-    vaikea: ['- Suosi kysymyksiä jotka vaativat PERUSTELUA ja SOVELTAMISTA'],
   },
   geography: {
     helppo: ['- ÄLÄ käytä short_answer tai matching'],
     normaali: [],
-    vaikea: ['- Suosi kysymyksiä jotka vaativat PERUSTELUA ja SOVELTAMISTA'],
   },
   skills: {
     helppo: ['- ÄLÄ käytä short_answer tai matching'],
     normaali: [],
-    vaikea: ['- Suosi kysymyksiä jotka vaativat PERUSTELUA ja SOVELTAMISTA'],
   },
   concepts: {
     helppo: ['- ÄLÄ käytä short_answer tai matching'],
     normaali: [],
-    vaikea: ['- Suosi kysymyksiä jotka vaativat PERUSTELUA ja SOVELTAMISTA'],
   },
 };
 

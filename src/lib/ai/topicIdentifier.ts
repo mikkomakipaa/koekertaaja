@@ -101,7 +101,7 @@ ${materialText ? `MATERIAALI:\n${materialText}\n\n` : ''}
 TEHTÄVÄ:
 Tunnista materiaalist 3-5 KORKEANTASON aihealuetta ja anna jokaiselle:
 1. Coverage: Kuinka suuren osan materiaalista aihealue kattaa (desimaaliluku 0-1)
-2. Difficulty: helppo, normaali tai vaikea
+2. Difficulty: helppo tai normaali
 3. Keywords: 3-5 keskeistä käsitettä tälle aihealueelle
 4. Subtopics: 2-4 aliaihealuetta
 5. Importance: high, medium tai low (oppimistavoitteiden kannalta)
@@ -137,8 +137,7 @@ COVERAGE OHJEET:
 
 DIFFICULTY OHJEET:
 - helppo: Perusasiat, tunnistaminen, yksinkertaiset käsitteet
-- normaali: Soveltaminen, ymmärtäminen, keskivaikeat ongelmat
-- vaikea: Analyysi, synteesi, monimutkaiset ongelmat
+- normaali: Soveltaminen, ymmärtäminen, monimutkaisemmat ongelmat
 
 KEYWORDS OHJEET:
 - 3-5 konkreettista käsitettä per aihealue
@@ -188,7 +187,7 @@ Matematiikka (Geometria):
     {
       "name": "Tilavuudet",
       "coverage": 0.20,
-      "difficulty": "vaikea",
+      "difficulty": "normaali",
       "keywords": ["kuutio", "tilavuus", "särmä"],
       "subtopics": ["Kuution tilavuus", "Suorakulmaisen särmiön tilavuus"],
       "importance": "medium"
@@ -364,8 +363,8 @@ TÄRKEÄÄ:
     }
   });
 
-  // Validate difficulty values
-  const validDifficulties = ['helppo', 'normaali', 'vaikea'];
+  // Validate difficulty values (only 'helppo' and 'normaali' supported)
+  const validDifficulties = ['helppo', 'normaali'];
   result.topics.forEach(topic => {
     if (!validDifficulties.includes(topic.difficulty)) {
       logger.warn(
@@ -373,7 +372,7 @@ TÄRKEÄÄ:
           topic: topic.name,
           difficulty: topic.difficulty,
         },
-        'Invalid difficulty, defaulting to "normaali"'
+        'Invalid difficulty (only helppo/normaali supported), defaulting to "normaali"'
       );
       topic.difficulty = 'normaali';
     }
