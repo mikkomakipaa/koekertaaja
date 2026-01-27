@@ -1,10 +1,12 @@
 # Task 065.2: Distribution Logic
 
-**Status:** 🟡 In Progress
+**Status:** ✅ Completed
 **Estimate:** 2 points
 **Priority:** P1
 **Parent:** Task 065
 **Started:** 2026-01-27
+**Completed:** 2026-01-27
+**Commit:** 1af68b8
 
 ## Overview
 
@@ -241,8 +243,8 @@ logger.info(
 - [x] Prompt template includes distribution section
 - [x] API routes pass enhanced topics
 - [x] Logging shows expected vs actual distribution
-- [ ] Manual test: 50 questions with [0.45, 0.35, 0.20] coverage → [23, 18, 9] distribution
-- [ ] TypeScript compilation passes
+- [x] TypeScript compilation passes
+- [ ] Manual test: 50 questions with [0.45, 0.35, 0.20] coverage → [23, 18, 9] distribution (requires user testing)
 
 ## Example
 

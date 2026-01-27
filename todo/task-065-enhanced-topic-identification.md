@@ -57,10 +57,13 @@ Enhanced topic output with rich metadata:
 **Completed:** 2026-01-27
 **Commit:** d47a60e
 
-### Phase 2: Distribution Logic (2 points) 🔴 Not Started
+### Phase 2: Distribution Logic (2 points) ✅ Completed
 - Calculate question distribution from coverage
 - Pass distribution to question generator
 - Log coverage stats
+
+**Completed:** 2026-01-27
+**Commit:** 1af68b8
 
 ### Phase 3: Coverage Validation (2 points) 🔴 Not Started
 - Implement coverage validation function
@@ -93,10 +96,13 @@ Enhanced topic output with rich metadata:
 - [x] All consumers updated to use getSimpleTopics()
 - [ ] Manual testing with sample materials (deferred to integration testing)
 
-### Phase 2
-- [ ] Distribution calculator based on coverage percentages
-- [ ] Integration with question generator
-- [ ] Logging for distribution stats
+### Phase 2 ✅
+- [x] Distribution calculator based on coverage percentages
+- [x] Integration with question generator
+- [x] Logging for distribution stats
+- [x] Updated all API routes (quiz, flashcard, identify-topics)
+- [x] TypeScript compilation passes
+- [ ] Manual testing with sample materials (requires user testing)
 
 ### Phase 3
 - [ ] Coverage validation function
