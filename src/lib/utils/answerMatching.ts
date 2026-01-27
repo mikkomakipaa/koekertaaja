@@ -53,11 +53,30 @@ function similarityRatio(str1: string, str2: string): number {
 }
 
 /**
+ * Check if a string represents a numeric value
+ * Supports both dot and comma as decimal separator
+ */
+function isNumericAnswer(str: string): boolean {
+  // Remove spaces and check if it matches a number pattern
+  const cleaned = str.trim().replace(/\s+/g, '');
+  // Match integers, decimals with . or ,, and negative numbers
+  return /^-?\d+([.,]\d+)?$/.test(cleaned);
+}
+
+/**
+ * Normalize numeric string for comparison
+ * Converts both comma and dot to same format for comparison
+ */
+function normalizeNumericString(str: string): string {
+  return str.trim().replace(/\s+/g, '').replace(',', '.');
+}
+
+/**
  * Normalize string for comparison
  * - Convert to lowercase
  * - Trim whitespace
  * - Remove extra spaces
- * - Remove punctuation
+ * - Remove punctuation (except for numeric values)
  */
 function normalizeString(str: string): string {
   return str
@@ -104,7 +123,22 @@ export function isAnswerCorrect(
   correctAnswer: string,
   grade?: number
 ): boolean {
-  // Normalize both answers
+  // Special handling for numeric answers - require exact match
+  if (isNumericAnswer(correctAnswer) && isNumericAnswer(userAnswer)) {
+    const normalizedUser = normalizeNumericString(userAnswer);
+    const normalizedCorrect = normalizeNumericString(correctAnswer);
+
+    // Parse as numbers for exact comparison
+    const userNum = parseFloat(normalizedUser);
+    const correctNum = parseFloat(normalizedCorrect);
+
+    // Check if both parsed successfully and are equal
+    if (!isNaN(userNum) && !isNaN(correctNum)) {
+      return Math.abs(userNum - correctNum) < 0.0001; // Account for floating point precision
+    }
+  }
+
+  // Normalize both answers for text comparison
   const normalizedUser = normalizeString(userAnswer);
   const normalizedCorrect = normalizeString(correctAnswer);
 
@@ -168,11 +202,30 @@ export function getAnswerFeedback(
   isCorrect: boolean;
   similarity: number;
   threshold: number;
-  method: 'exact' | 'contains' | 'fuzzy' | 'none';
+  method: 'exact' | 'contains' | 'fuzzy' | 'numeric' | 'none';
 } {
+  const threshold = getSimilarityThreshold(grade);
+
+  // Check numeric answers first
+  if (isNumericAnswer(correctAnswer) && isNumericAnswer(userAnswer)) {
+    const normalizedUser = normalizeNumericString(userAnswer);
+    const normalizedCorrect = normalizeNumericString(correctAnswer);
+    const userNum = parseFloat(normalizedUser);
+    const correctNum = parseFloat(normalizedCorrect);
+
+    if (!isNaN(userNum) && !isNaN(correctNum)) {
+      const isCorrect = Math.abs(userNum - correctNum) < 0.0001;
+      return {
+        isCorrect,
+        similarity: isCorrect ? 1.0 : 0.0,
+        threshold: 1.0, // Numeric answers require exact match
+        method: 'numeric',
+      };
+    }
+  }
+
   const normalizedUser = normalizeString(userAnswer);
   const normalizedCorrect = normalizeString(correctAnswer);
-  const threshold = getSimilarityThreshold(grade);
 
   // Check exact match
   if (normalizedUser === normalizedCorrect) {
