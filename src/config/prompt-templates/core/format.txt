@@ -62,4 +62,11 @@ YHTEISET VAATIMUKSET:
 - "options" on monivalinnoissa taulukko ja karttakysymyksissä objekti.
 - VASTAA PELKÄLLÄ JSON-TAULUKOLLA.
 
+NUMEROIDEN JA LUKUJEN MUOTOILU (KAIKKI AINEET):
+- Desimaalierottimena AINA pilkku (,): "15,25" (EI pistettä 15.25)
+- Lukusarjojen erottimena AINA puolipiste (;): "luvut 5; 10; 15; 20"
+- VÄÄRIN: "luvut 5, 10, 15, 20" (epäselvä koska pilkku on desimaalierottaja)
+- OIKEIN: "luvut 5; 10; 15; 20" (selvä erottelu)
+- Koskee kaikkia aineita: matematiikka, fysiikka, kemia, maantiede, ym.
+
 KYSYMYKSET ILMAN "topic"-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI.

@@ -30,6 +30,15 @@ MATEMAATTINEN MERKINTÄTAPA:
 - Erikoismerkit: $$\times$$ (kertomerkki), $$\div$$ (jakomerkki), $$\pm$$ (plus-miinus)
 - TÄRKEÄÄ: Käytä AINA $$\div$$ jakolaskuissa yhtälöissä, ÄLÄ käytä / -merkkiä
 
+LUKUJEN JA LUKUSARJOJEN MUOTOILU:
+- Desimaalierottimena AINA pilkku (,): 15,25 (ei 15.25)
+- Lukusarjojen erottimena AINA puolipiste (;): "Laske luvut: 5; 10; 15; 20"
+- VÄÄRIN: "Laske luvut: 5, 10, 15, 20" (epäselvä: onko 5.10 ja 15.20?)
+- OIKEIN: "Laske luvut: 5; 10; 15; 20" (selvä: neljä erillistä lukua)
+- OIKEIN: "Laske: 15,25 + 10,75" (kaksi desimaalia)
+- Vaihtoehtojen listaus multiple_choice-kysymyksissä: käytä tavallisia taulukkoja, ei erottimia
+- Selityksissä lukusarjat: "...sarja 2; 4; 6; 8 jatkuu..."
+
 QUIZ-MOODI: KYSYMYSTYYPPIEN KÄYTTÖOHJEET
 
 1. MULTIPLE_CHOICE (monivalinta):
