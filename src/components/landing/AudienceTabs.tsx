@@ -41,7 +41,7 @@ const pupilItems = [
 const guardianItems = [
   {
     title: 'Turvallinen ympäristö',
-    description: 'Ei mainoksia, ei häiriöitä, ei seurantaa.',
+    description: 'Ei mainoksia, ei tietojenkeruuta, ei seurantaa.',
     icon: ShieldCheck,
   },
   {
@@ -55,8 +55,8 @@ const guardianItems = [
     icon: Brain,
   },
   {
-    title: 'Seuranta ja edistyminen',
-    description: 'Näe lapsesi harjoittelun tulokset ja edistyminen',
+    title: 'Itsenäinen harjoittelu',
+    description: 'Mahdollistaa itsenäisen harjoittelun kokeeseen',
     icon: ChartLineUp,
   },
 ];
