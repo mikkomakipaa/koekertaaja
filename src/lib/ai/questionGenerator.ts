@@ -182,8 +182,10 @@ export interface GenerateQuestionsParams {
     data: string; // base64
   }>;
   mode?: 'quiz' | 'flashcard'; // Mode for quiz or flashcard generation
-  identifiedTopics?: string[]; // Pre-identified topics from Step 1 (optional)
+  identifiedTopics?: string[]; // Pre-identified topics from Step 1 (optional - legacy)
   targetWords?: string[]; // Target vocabulary words that must be included
+  enhancedTopics?: import('@/lib/ai/topicIdentifier').EnhancedTopic[]; // Enhanced topics with coverage/keywords (Phase 2)
+  distribution?: import('@/lib/utils/questionDistribution').TopicDistribution[]; // Calculated distribution (Phase 2)
 }
 
 /**
@@ -205,6 +207,8 @@ export async function generateQuestions(
     mode = 'quiz',
     identifiedTopics,
     targetWords,
+    enhancedTopics,
+    distribution,
   } = params;
 
   logger.info(
@@ -217,6 +221,9 @@ export async function generateQuestions(
       topicCount: identifiedTopics?.length,
       hasTargetWords: !!targetWords,
       targetWordCount: targetWords?.length,
+      hasEnhancedTopics: !!enhancedTopics,
+      enhancedTopicCount: enhancedTopics?.length,
+      hasDistribution: !!distribution,
     },
     'Starting question generation'
   );
@@ -278,6 +285,8 @@ export async function generateQuestions(
       mode,
       identifiedTopics,
       targetWords,
+      enhancedTopics,
+      distribution,
     });
 
     logger.info(

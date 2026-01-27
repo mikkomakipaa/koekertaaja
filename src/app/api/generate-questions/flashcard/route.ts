@@ -9,6 +9,7 @@ import {
   generateFlashcardSet,
   FlashcardGenerationRequest,
 } from '@/lib/api/questionGeneration';
+import { getSimpleTopics } from '@/lib/ai/topicIdentifier';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 240; // 4 minutes for flashcard generation
@@ -107,15 +108,18 @@ export async function POST(request: NextRequest) {
     );
 
     // Step 1: Identify topics (if not provided)
+    let topicAnalysis;
     let topics = identifiedTopics;
+
     if (!topics) {
       logger.info('Topics not provided, identifying topics from material');
-      topics = await identifyTopicsFromMaterial({
+      topicAnalysis = await identifyTopicsFromMaterial({
         subject,
         grade,
         materialText,
         materialFiles: files.length > 0 ? files : undefined,
       });
+      topics = getSimpleTopics(topicAnalysis);
     } else {
       logger.info(
         { topicCount: topics.length },
@@ -139,7 +143,11 @@ export async function POST(request: NextRequest) {
       identifiedTopics: topics,
     };
 
-    const flashcardSet = await generateFlashcardSet(flashcardRequest);
+    // Pass enhanced topics if available (Phase 2)
+    const flashcardSet = await generateFlashcardSet(
+      flashcardRequest,
+      topicAnalysis?.topics // Enhanced topics with coverage/keywords
+    );
 
     logger.info(
       {

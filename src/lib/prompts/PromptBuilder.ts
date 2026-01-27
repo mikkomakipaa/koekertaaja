@@ -23,6 +23,8 @@ export interface BuildVariablesParams {
   subtopic?: string;
   identifiedTopics?: string[];
   targetWords?: string[];
+  enhancedTopics?: import('@/lib/ai/topicIdentifier').EnhancedTopic[];
+  distribution?: import('@/lib/utils/questionDistribution').TopicDistribution[];
 }
 
 type DistributionMap = Record<string, number>;
@@ -319,6 +321,11 @@ export class PromptBuilder {
     const { languageSubjectNote, languageAnswerLanguageRules } =
       this.formatLanguageSubjectNotes(params.subject);
 
+    // NEW: Use distribution if available (Phase 2)
+    const distributionSection = params.distribution
+      ? this.formatDistributionSection(params.distribution)
+      : '';
+
     return {
       material_type: materialType,
       question_count: String(params.questionCount),
@@ -329,6 +336,7 @@ export class PromptBuilder {
       topic_count: String(effectiveTopicCount),
       topics_list: this.formatTopics(params.identifiedTopics),
       questions_per_topic: String(questionsPerTopic),
+      distribution_section: distributionSection, // NEW
       grade_context_note: gradeContextNote,
       difficulty: params.difficulty,
       grade_level_note: gradeLevelNote,
@@ -357,6 +365,24 @@ export class PromptBuilder {
     }
 
     return topics.map((topic, index) => `${index + 1}. ${topic}`).join('\n');
+  }
+
+  private formatDistributionSection(
+    distribution: import('@/lib/utils/questionDistribution').TopicDistribution[]
+  ): string {
+    const { formatDistributionForPrompt } = require('@/lib/utils/questionDistribution');
+    const formattedDistribution = formatDistributionForPrompt(distribution);
+
+    return `
+AIHEALUEIDEN JAKAUMA (NOUDATA TARKASTI):
+${formattedDistribution}
+
+TÄRKEÄÄ:
+- Luo TÄSMÄLLEEN oikea määrä kysymyksiä jokaisesta aihealueesta
+- Käytä annettuja avainsanoja kysymyksissä
+- Kata kaikki aihealueen aliaihealueet
+- Noudata vaikeustasoa joka aihealueelle
+`.trim();
   }
 
   private formatMaterialSection(materialText?: string, hasFiles = false): string {

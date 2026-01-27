@@ -6,6 +6,7 @@ import {
   identifyTopicsFromMaterial,
   processUploadedFiles,
 } from '@/lib/api/questionGeneration';
+import { getSimpleTopics } from '@/lib/ai/topicIdentifier';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 60; // 1 minute for topic analysis
@@ -69,26 +70,41 @@ export async function POST(request: NextRequest) {
       'Starting topic identification'
     );
 
-    // Identify topics
-    const topics = await identifyTopicsFromMaterial({
+    // Identify topics (returns enhanced analysis)
+    const topicAnalysis = await identifyTopicsFromMaterial({
       subject,
       grade,
       materialText,
       materialFiles: files.length > 0 ? files : undefined,
     });
 
+    // Extract simple topic names for backward compatibility
+    const simpleTopics = getSimpleTopics(topicAnalysis);
+
     logger.info(
       {
-        topicCount: topics.length,
-        topics,
+        topicCount: topicAnalysis.topics.length,
+        enhancedTopics: topicAnalysis.topics.map(t => ({
+          name: t.name,
+          coverage: t.coverage,
+          difficulty: t.difficulty,
+          importance: t.importance,
+        })),
+        metadata: topicAnalysis.metadata,
       },
       'Topic identification completed successfully'
     );
 
     return NextResponse.json({
       success: true,
-      topics,
-      count: topics.length,
+      topics: simpleTopics, // Backward compatibility
+      count: simpleTopics.length,
+      // NEW: Enhanced data for clients that want it
+      enhanced: {
+        topics: topicAnalysis.topics,
+        primarySubject: topicAnalysis.primarySubject,
+        metadata: topicAnalysis.metadata,
+      },
     });
   } catch (error) {
     const isProduction = process.env.NODE_ENV === 'production';

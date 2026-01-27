@@ -7,12 +7,13 @@
 
 import { fileTypeFromBuffer } from 'file-type';
 import { generateQuestions } from '@/lib/ai/questionGenerator';
-import { identifyTopics, getSimpleTopics } from '@/lib/ai/topicIdentifier';
+import { identifyTopics, getSimpleTopics, type EnhancedTopic } from '@/lib/ai/topicIdentifier';
 import { createQuestionSet } from '@/lib/supabase/write-queries';
 import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty, QuestionSet } from '@/types';
 import { createLogger } from '@/lib/logger';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
+import { calculateDistribution, formatDistributionForPrompt } from '@/lib/utils/questionDistribution';
 
 // ============================================================================
 // Type Definitions
@@ -128,10 +129,11 @@ export async function processUploadedFiles(
 
 /**
  * Identify topics from material (shared step across quiz and flashcard generation)
+ * Returns full enhanced topic analysis for intelligent distribution
  */
 export async function identifyTopicsFromMaterial(
   request: Pick<GenerationRequest, 'subject' | 'grade' | 'materialText' | 'materialFiles'>
-): Promise<string[]> {
+): Promise<import('@/lib/ai/topicIdentifier').TopicAnalysisResult> {
   const logger = createLogger({ module: 'identifyTopicsFromMaterial' });
 
   logger.info(
@@ -156,7 +158,10 @@ export async function identifyTopicsFromMaterial(
       enhancedTopics: topicAnalysis.topics.map(t => ({
         name: t.name,
         coverage: t.coverage,
-        keywords: t.keywords.length,
+        keywordCount: t.keywords.length,
+        subtopicCount: t.subtopics.length,
+        difficulty: t.difficulty,
+        importance: t.importance,
       })),
       topicCount: topicAnalysis.topics.length,
       metadata: topicAnalysis.metadata,
@@ -164,9 +169,8 @@ export async function identifyTopicsFromMaterial(
     'Enhanced topics identified successfully'
   );
 
-  // Return simple topic names for backward compatibility
-  // TODO Phase 2: Return full enhanced topics for distribution logic
-  return getSimpleTopics(topicAnalysis);
+  // Return full enhanced data for distribution logic
+  return topicAnalysis;
 }
 
 // ============================================================================
@@ -178,10 +182,28 @@ export async function identifyTopicsFromMaterial(
  * Returns array of created quiz sets with full question data
  */
 export async function generateQuizSets(
-  request: QuizGenerationRequest
+  request: QuizGenerationRequest,
+  enhancedTopics?: EnhancedTopic[]
 ): Promise<QuestionSetResult[]> {
   const logger = createLogger({ module: 'generateQuizSets' });
   const results: QuestionSetResult[] = [];
+
+  // Calculate distribution if enhanced topics provided
+  let distribution;
+  if (enhancedTopics && enhancedTopics.length > 0) {
+    distribution = calculateDistribution(enhancedTopics, request.questionCount);
+
+    logger.info(
+      {
+        distribution: distribution.map(d => ({
+          topic: d.topic,
+          count: d.targetCount,
+          percentage: Math.round(d.coverage * 100),
+        })),
+      },
+      'Using intelligent distribution from coverage data'
+    );
+  }
 
   logger.info(
     {
@@ -189,6 +211,8 @@ export async function generateQuizSets(
       difficulties: request.difficulties,
       questionCount: request.questionCount,
       hasTopics: !!request.identifiedTopics,
+      hasEnhancedTopics: !!enhancedTopics,
+      useDistribution: !!distribution,
     },
     'Starting quiz generation for all difficulties'
   );
@@ -209,6 +233,8 @@ export async function generateQuizSets(
       mode: 'quiz',
       identifiedTopics: request.identifiedTopics,
       targetWords: request.targetWords,
+      enhancedTopics, // NEW: Pass enhanced topics
+      distribution, // NEW: Pass calculated distribution
     });
 
     if (questions.length === 0) {
@@ -292,15 +318,35 @@ export async function generateQuizSets(
  * Returns created flashcard set with full question data
  */
 export async function generateFlashcardSet(
-  request: FlashcardGenerationRequest
+  request: FlashcardGenerationRequest,
+  enhancedTopics?: EnhancedTopic[]
 ): Promise<QuestionSetResult> {
   const logger = createLogger({ module: 'generateFlashcardSet' });
+
+  // Calculate distribution if enhanced topics provided
+  let distribution;
+  if (enhancedTopics && enhancedTopics.length > 0) {
+    distribution = calculateDistribution(enhancedTopics, request.questionCount);
+
+    logger.info(
+      {
+        distribution: distribution.map(d => ({
+          topic: d.topic,
+          count: d.targetCount,
+          percentage: Math.round(d.coverage * 100),
+        })),
+      },
+      'Using intelligent distribution from coverage data'
+    );
+  }
 
   logger.info(
     {
       subject: request.subject,
       questionCount: request.questionCount,
       hasTopics: !!request.identifiedTopics,
+      hasEnhancedTopics: !!enhancedTopics,
+      useDistribution: !!distribution,
     },
     'Starting flashcard generation'
   );
@@ -318,6 +364,8 @@ export async function generateFlashcardSet(
     mode: 'flashcard',
     identifiedTopics: request.identifiedTopics,
     targetWords: request.targetWords,
+    enhancedTopics, // NEW: Pass enhanced topics
+    distribution, // NEW: Pass calculated distribution
   });
 
   if (questions.length === 0) {
