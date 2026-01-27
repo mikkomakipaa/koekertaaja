@@ -14,6 +14,7 @@ import { Subject, Difficulty, QuestionSet } from '@/types';
 import { createLogger } from '@/lib/logger';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
 import { calculateDistribution, formatDistributionForPrompt } from '@/lib/utils/questionDistribution';
+import { validateCoverage, formatCoverageReport } from '@/lib/utils/coverageValidation';
 
 // ============================================================================
 // Type Definitions
@@ -246,6 +247,44 @@ export async function generateQuizSets(
       'Questions generated successfully'
     );
 
+    // Validate coverage if distribution was used (Phase 3)
+    if (distribution) {
+      const coverageResult = validateCoverage(questions, distribution);
+
+      logger.info(
+        {
+          difficulty,
+          isAcceptable: coverageResult.isAcceptable,
+          overallDeviation: coverageResult.overallDeviation,
+          byTopic: coverageResult.coverageByTopic.map(c => ({
+            topic: c.topic,
+            expected: c.expectedCount,
+            actual: c.actualCount,
+            deviation: c.deviation,
+          })),
+        },
+        'Coverage validation for quiz set'
+      );
+
+      // Log detailed report in development
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('\n' + formatCoverageReport(coverageResult));
+      }
+
+      // Warn if coverage is poor
+      if (!coverageResult.isAcceptable) {
+        logger.warn(
+          {
+            difficulty,
+            warnings: coverageResult.warnings,
+            overallDeviation: coverageResult.overallDeviation,
+            threshold: Math.round(questions.length * 0.1),
+          },
+          'Generated questions do not meet coverage targets'
+        );
+      }
+    }
+
     // Generate unique code with collision handling
     let code = generateCode();
     let attempts = 0;
@@ -376,6 +415,42 @@ export async function generateFlashcardSet(
     { questionCount: questions.length },
     'Flashcard questions generated successfully'
   );
+
+  // Validate coverage if distribution was used (Phase 3)
+  if (distribution) {
+    const coverageResult = validateCoverage(questions, distribution);
+
+    logger.info(
+      {
+        isAcceptable: coverageResult.isAcceptable,
+        overallDeviation: coverageResult.overallDeviation,
+        byTopic: coverageResult.coverageByTopic.map(c => ({
+          topic: c.topic,
+          expected: c.expectedCount,
+          actual: c.actualCount,
+          deviation: c.deviation,
+        })),
+      },
+      'Coverage validation for flashcard set'
+    );
+
+    // Log detailed report in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('\n' + formatCoverageReport(coverageResult));
+    }
+
+    // Warn if coverage is poor
+    if (!coverageResult.isAcceptable) {
+      logger.warn(
+        {
+          warnings: coverageResult.warnings,
+          overallDeviation: coverageResult.overallDeviation,
+          threshold: Math.round(questions.length * 0.1),
+        },
+        'Generated flashcard questions do not meet coverage targets'
+      );
+    }
+  }
 
   // Generate unique code with collision handling
   let code = generateCode();
