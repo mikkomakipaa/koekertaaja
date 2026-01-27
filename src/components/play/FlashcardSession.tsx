@@ -10,17 +10,14 @@ import {
   CheckCircle,
   ClockCounterClockwise,
   Shuffle,
-  ThumbsDown,
-  Minus,
-  ThumbsUp,
   X,
   ArrowsClockwise,
+  ArrowRight,
+  ArrowLeft,
 } from '@phosphor-icons/react';
 
-type Confidence = 'hard' | 'medium' | 'easy';
 const FLIP_HINT_KEY = 'has_seen_flip_hint';
 const getReviewKey = (cardId: string) => `flashcard_reviews_${cardId}`;
-const getConfidenceKey = (questionId: string) => `flashcard_confidence_${questionId}`;
 
 interface FlashcardSessionProps {
   flashcards: Flashcard[];
@@ -42,12 +39,10 @@ export function FlashcardSession({
   const [orderedFlashcards, setOrderedFlashcards] = useState<Flashcard[]>(flashcards);
   const [currentFlashcards, setCurrentFlashcards] = useState<Flashcard[]>(flashcards);
 
-  const [cardConfidence, setCardConfidence] = useState<Record<string, Confidence>>({});
   const [reviewCounts, setReviewCounts] = useState<Record<string, number>>({});
   const [hasSeenFlipHint, setHasSeenFlipHint] = useState<boolean | null>(null);
 
   const previousIsFlippedRef = useRef(false);
-  const confidenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const totalCards = currentFlashcards.length;
   const currentFlashcard = currentFlashcards[currentIndex];
@@ -80,18 +75,6 @@ export function FlashcardSession({
     }
   }, [readStoredNumber]);
 
-  const loadConfidence = useCallback((card: Flashcard) => {
-    try {
-      const stored = localStorage.getItem(getConfidenceKey(card.questionId));
-      if (!stored) return;
-      const parsed = JSON.parse(stored) as { confidence?: Confidence } | null;
-      const confidence = parsed?.confidence;
-      if (!confidence) return;
-      setCardConfidence((prev) => ({ ...prev, [card.id]: confidence }));
-    } catch {
-      // Ignore malformed localStorage data
-    }
-  }, []);
 
   useEffect(() => {
     setOrderedFlashcards(flashcards);
@@ -102,10 +85,6 @@ export function FlashcardSession({
     setIsShuffled(false);
     setShowExitConfirm(false);
     previousIsFlippedRef.current = false;
-    if (confidenceTimeoutRef.current) {
-      clearTimeout(confidenceTimeoutRef.current);
-      confidenceTimeoutRef.current = null;
-    }
   }, [flashcards]);
 
   useEffect(() => {
@@ -120,8 +99,7 @@ export function FlashcardSession({
   useEffect(() => {
     if (!currentFlashcard) return;
     loadReviewCount(currentFlashcard.id);
-    loadConfidence(currentFlashcard);
-  }, [currentFlashcard, loadReviewCount, loadConfidence]);
+  }, [currentFlashcard, loadReviewCount]);
 
   useEffect(() => {
     if (!currentFlashcard) return;
@@ -131,13 +109,6 @@ export function FlashcardSession({
     previousIsFlippedRef.current = isFlipped;
   }, [isFlipped, currentFlashcard, incrementReviewCount]);
 
-  useEffect(() => {
-    return () => {
-      if (confidenceTimeoutRef.current) {
-        clearTimeout(confidenceTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const handleFlip = useCallback(() => {
     if (showExitConfirm) return;
@@ -168,39 +139,11 @@ export function FlashcardSession({
 
   const handlePrevious = useCallback(() => {
     if (currentIndex === 0) return;
-    if (confidenceTimeoutRef.current) {
-      clearTimeout(confidenceTimeoutRef.current);
-      confidenceTimeoutRef.current = null;
-    }
     setCurrentIndex((prev) => Math.max(0, prev - 1));
     setIsFlipped(false);
     previousIsFlippedRef.current = false;
   }, [currentIndex]);
 
-  const markConfidence = useCallback((confidence: Confidence) => {
-    if (!currentFlashcard) return;
-    setCardConfidence((prev) => ({
-      ...prev,
-      [currentFlashcard.id]: confidence,
-    }));
-
-    try {
-      const key = getConfidenceKey(currentFlashcard.questionId);
-      localStorage.setItem(
-        key,
-        JSON.stringify({ confidence, timestamp: Date.now() })
-      );
-    } catch (error) {
-      console.error('Error saving flashcard confidence:', error);
-    }
-
-    if (confidenceTimeoutRef.current) {
-      clearTimeout(confidenceTimeoutRef.current);
-    }
-    confidenceTimeoutRef.current = setTimeout(() => {
-      handleAdvance();
-    }, 300);
-  }, [currentFlashcard, handleAdvance]);
 
   const toggleShuffle = useCallback(() => {
     if (totalCards === 0) return;
@@ -296,7 +239,6 @@ export function FlashcardSession({
   }
 
   const currentReviewCount = reviewCounts[currentFlashcard.id] ?? 0;
-  const currentConfidence = cardConfidence[currentFlashcard.id];
   const showFlipHint = currentIndex === 0 && hasSeenFlipHint === false && !isFlipped;
 
   const overlay = (
@@ -418,42 +360,25 @@ export function FlashcardSession({
           overlay={overlay}
         />
 
-        {isFlipped && (
-          <div className="mt-6 space-y-3">
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400 font-medium">
-              Kuinka hyvin osasit?
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button
-                onClick={() => markConfidence('hard')}
-                type="button"
-                aria-label="En osannut"
-                className={`min-h-12 bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm hover:shadow-md ${currentConfidence === 'hard' ? 'ring-2 ring-rose-200 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''}`}
-              >
-                <ThumbsDown size={20} weight="fill" />
-                <span className="text-sm">En osannut</span>
-              </button>
-              <button
-                onClick={() => markConfidence('medium')}
-                type="button"
-                aria-label="Osittain"
-                className={`min-h-12 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm hover:shadow-md ${currentConfidence === 'medium' ? 'ring-2 ring-amber-200 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''}`}
-              >
-                <Minus size={20} weight="bold" />
-                <span className="text-sm">Osittain</span>
-              </button>
-              <button
-                onClick={() => markConfidence('easy')}
-                type="button"
-                aria-label="Osasin"
-                className={`min-h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm hover:shadow-md ${currentConfidence === 'easy' ? 'ring-2 ring-emerald-200 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''}`}
-              >
-                <ThumbsUp size={20} weight="fill" />
-                <span className="text-sm">Osasin!</span>
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Navigation buttons */}
+        <div className="mt-6 flex gap-3">
+          <Button
+            onClick={handlePrevious}
+            disabled={currentIndex === 0}
+            variant="outline"
+            className="flex-1 py-6 rounded-xl font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ArrowLeft size={20} className="mr-2" />
+            Edellinen
+          </Button>
+          <Button
+            onClick={handleAdvance}
+            className="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-6 rounded-xl font-medium text-base"
+          >
+            Seuraava
+            <ArrowRight size={20} className="ml-2" />
+          </Button>
+        </div>
 
         <div className="mt-8 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-4">
           <span className="inline-flex items-center gap-1">
