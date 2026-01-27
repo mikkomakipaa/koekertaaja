@@ -44,7 +44,7 @@ Client orchestrates calls:
 
 ## Implementation Steps
 
-### Step 1: Extract Shared Logic (2 points)
+### Step 1: Extract Shared Logic (2 points) ✅
 
 Create `src/lib/api/questionGeneration.ts` with shared utilities:
 
@@ -53,7 +53,10 @@ Create `src/lib/api/questionGeneration.ts` with shared utilities:
 - [x] `generateFlashcardSet()` - Generate flashcard set
 - [x] Type definitions for requests/responses
 
-### Step 2: Create Topic Identification Endpoint (1 point)
+**Completed:** 2026-01-27
+**Commit:** daa5cfc
+
+### Step 2: Create Topic Identification Endpoint (1 point) ✅
 
 Create `src/app/api/identify-topics/route.ts`:
 
@@ -64,7 +67,10 @@ Create `src/app/api/identify-topics/route.ts`:
 - [x] Auth check
 - [x] Logging
 
-### Step 3: Create Quiz Endpoint (2 points)
+**Completed:** 2026-01-27
+**Commit:** daa5cfc
+
+### Step 3: Create Quiz Endpoint (2 points) ✅
 
 Create `src/app/api/generate-questions/quiz/route.ts`:
 
@@ -77,7 +83,10 @@ Create `src/app/api/generate-questions/quiz/route.ts`:
 - [x] Auth check
 - [x] Logging with per-difficulty tracking
 
-### Step 4: Create Flashcard Endpoint (2 points)
+**Completed:** 2026-01-27
+**Commit:** daa5cfc
+
+### Step 4: Create Flashcard Endpoint (2 points) ✅
 
 Create `src/app/api/generate-questions/flashcard/route.ts`:
 
@@ -90,7 +99,10 @@ Create `src/app/api/generate-questions/flashcard/route.ts`:
 - [x] Auth check
 - [x] Logging
 
-### Step 5: Update Client Orchestration (1 point)
+**Completed:** 2026-01-27
+**Commit:** daa5cfc
+
+### Step 5: Update Client Orchestration (1 point) 🟡 In Progress
 
 Update `src/app/create/page.tsx`:
 

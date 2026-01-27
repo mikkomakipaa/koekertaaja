@@ -244,42 +244,91 @@ export default function CreatePage() {
         formData.append(`file_${index}`, file);
       });
 
-      // Call API
-      const response = await fetch('/api/generate-questions', {
-        method: 'POST',
-        body: formData,
-      });
+      // Track results across separate API calls
+      const results: {
+        quizSets: Array<{ code: string; name: string; difficulty: string; mode: 'quiz' | 'flashcard'; questionCount: number }>;
+        flashcardSet: { code: string; name: string; mode: 'quiz' | 'flashcard'; questionCount: number } | null;
+        errors: Array<{ mode: 'quiz' | 'flashcard'; error: string }>;
+      } = { quizSets: [], flashcardSet: null, errors: [] };
 
-      const data: QuestionGenerationResponse = await response.json();
-
-      // Handle different success scenarios
-      if (data.success) {
-        if (data.partial) {
-          // Partial success - some sets created, some failed
-          handlePartialSuccess(data);
-        } else {
-          // Full success - all sets created
-          handleFullSuccess(data);
+      // Step 1: Identify topics (shared across quiz and flashcard)
+      toast.info('Tunnistetaan aiheita materiaalista...', { duration: 2000 });
+      let topics: string[] = [];
+      try {
+        const topicsResponse = await fetch('/api/identify-topics', { method: 'POST', body: formData });
+        if (topicsResponse.ok) {
+          const topicsData = await topicsResponse.json();
+          topics = topicsData.topics || [];
+          toast.success(`Tunnistettiin ${topics.length} aihetta`, { duration: 2000 });
         }
+      } catch (error) {
+        console.warn('Topic identification failed:', error);
+        toast.warning('Aiheiden tunnistaminen epäonnistui', { duration: 2000 });
+      }
 
-        // Navigate to manage page with first created set highlighted
-        if (data.questionSets.length > 0) {
-          const firstCode = data.questionSets[0].code;
+      // Add topics to form data for subsequent requests
+      if (topics.length > 0) {
+        formData.append('identifiedTopics', JSON.stringify(topics));
+      }
 
-          if (data.partial) {
-            // Include failure info in URL for potential retry
-            const failedModes = data.failures?.map(f => f.mode).join(',');
-            router.push(`/manage?highlight=${firstCode}&partialSuccess=true&failedModes=${failedModes}`);
+      // Step 2: Generate quiz sets (if requested)
+      if (generationMode === 'quiz' || generationMode === 'both') {
+        toast.info('Luodaan visaa...', { duration: 2000 });
+        try {
+          const quizResponse = await fetch('/api/generate-questions/quiz', { method: 'POST', body: formData });
+          const quizData = await quizResponse.json();
+          if (quizData.success && quizData.questionSets) {
+            results.quizSets = quizData.questionSets;
+            toast.success(`Luotiin ${quizData.questionSets.length} visaa (${quizData.totalQuestions} kysymystä)`, { duration: 4000 });
           } else {
-            router.push(`/manage?highlight=${firstCode}`);
+            throw new Error(quizData.error || 'Visan luonti epäonnistui');
           }
-        } else {
-          // Shouldn't happen, but handle gracefully
-          setState('success');
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Visan luonti epäonnistui';
+          results.errors.push({ mode: 'quiz', error: errorMessage });
+          toast.error('Visan luonti epäonnistui', { description: errorMessage, duration: 5000 });
         }
+      }
+
+      // Step 3: Generate flashcard set (if requested)
+      if (generationMode === 'flashcard' || generationMode === 'both') {
+        toast.info('Luodaan muistikortteja...', { duration: 2000 });
+        try {
+          const flashcardResponse = await fetch('/api/generate-questions/flashcard', { method: 'POST', body: formData });
+          const flashcardData = await flashcardResponse.json();
+          if (flashcardData.success && flashcardData.questionSet) {
+            results.flashcardSet = flashcardData.questionSet;
+            toast.success(`Luotiin muistikortit (${flashcardData.questionSet.questionCount} kysymystä)`, { duration: 4000 });
+          } else {
+            throw new Error(flashcardData.error || 'Muistikorttien luonti epäonnistui');
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Muistikorttien luonti epäonnistui';
+          results.errors.push({ mode: 'flashcard', error: errorMessage });
+          toast.error('Muistikorttien luonti epäonnistui', { description: errorMessage, duration: 5000 });
+        }
+      }
+
+      // Step 4: Handle overall result
+      const allSets = [...results.quizSets, ...(results.flashcardSet ? [results.flashcardSet] : [])];
+      if (allSets.length > 0) {
+        // At least some sets created
+        const totalQuestions = allSets.reduce((sum, set) => sum + set.questionCount, 0);
+        if (results.errors.length === 0) {
+          // Full success
+          toast.success(`Luotiin ${allSets.length} kysymyssarjaa!`, { description: `Yhteensä ${totalQuestions} kysymystä`, duration: 5000 });
+        } else {
+          // Partial success
+          const failureSummary = results.errors.map(e => `${e.mode === 'flashcard' ? 'Kortit' : 'Visa'}: Epäonnistui`).join('\n');
+          toast.warning(`Luotiin ${allSets.length} sarjaa, ${results.errors.length} epäonnistui`, { description: failureSummary, duration: 8000 });
+        }
+        // Navigate to first created set
+        const firstCode = allSets[0].code;
+        router.push(`/manage?highlight=${firstCode}`);
       } else {
-        // Total failure - no sets created
-        handleTotalFailure(data);
+        // Total failure
+        const errorDetails = results.errors.map(e => `${e.mode === 'flashcard' ? 'Kortit' : 'Visa'}: ${e.error}`).join('\n');
+        toast.error('Kysymyssarjojen luonti epäonnistui', { description: errorDetails, duration: 10000 });
         setState('form');
       }
     } catch (err) {
