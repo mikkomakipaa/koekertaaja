@@ -1565,7 +1565,12 @@ export default function CreatePage() {
                             </div>
                             <div className="flex gap-2 ml-4">
                               <Button
-                                onClick={() => router.push(`/play/${set.code}`)}
+                                onClick={() => {
+                                  const openUrl = isAdmin && status !== 'published'
+                                    ? `/play/${set.code}?draft=1`
+                                    : `/play/${set.code}`;
+                                  router.push(openUrl);
+                                }}
                                 variant="outline"
                                 size="sm"
                               >

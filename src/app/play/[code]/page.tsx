@@ -107,6 +107,7 @@ export default function PlayPage() {
   const searchParams = useSearchParams();
   const code = params.code as string;
   const modeParam = searchParams.get('mode');
+  const draftParam = searchParams.get('draft') === '1';
   const isReviewMode = modeParam === 'review';
   const studyMode: StudyMode = modeParam === 'opettele' ? 'opettele' : 'pelaa';
   const isFlashcardMode = studyMode === 'opettele';
@@ -163,8 +164,37 @@ export default function PlayPage() {
       try {
         setState('loading');
 
-        const fetchByCode = async (codeValue: string) => {
-          const response = await fetch(`/api/question-sets/by-code?code=${encodeURIComponent(codeValue)}`, {
+        let adminCheckPromise: Promise<boolean> | null = null;
+        const checkAdminStatus = async (): Promise<boolean> => {
+          if (!adminCheckPromise) {
+            adminCheckPromise = (async () => {
+              try {
+                const response = await fetch('/api/question-sets/publish', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'same-origin',
+                  body: JSON.stringify({
+                    questionSetId: '00000000-0000-0000-0000-000000000000',
+                    status: 'created',
+                  }),
+                });
+                return response.status === 400 || response.status === 404;
+              } catch {
+                return false;
+              }
+            })();
+          }
+          return adminCheckPromise;
+        };
+
+        const fetchByCode = async (codeValue: string, includeDrafts: boolean) => {
+          const byCodeUrl = new URL('/api/question-sets/by-code', window.location.origin);
+          byCodeUrl.searchParams.set('code', codeValue.trim());
+          if (includeDrafts) {
+            byCodeUrl.searchParams.set('includeDrafts', '1');
+          }
+
+          const response = await fetch(byCodeUrl.toString(), {
             method: 'GET',
             credentials: 'same-origin',
           });
@@ -179,6 +209,13 @@ export default function PlayPage() {
           }
 
           if (response.status === 404) {
+            // If the set isn't published, allow admins to retry with drafts included.
+            if (!includeDrafts) {
+              const isAdminUser = await checkAdminStatus();
+              if (isAdminUser) {
+                return fetchByCode(codeValue, true);
+              }
+            }
             return null;
           }
 
@@ -193,7 +230,7 @@ export default function PlayPage() {
           const allSets = await Promise.all(
             codes.map(async (c) => {
               const trimmed = c.trim();
-              const adminSet = await fetchByCode(trimmed);
+              const adminSet = await fetchByCode(trimmed, draftParam);
               if (adminSet) {
                 return adminSet;
               }
@@ -237,7 +274,7 @@ export default function PlayPage() {
           setState('playing');
         } else {
           // Normal single question set loading
-          const adminSet = await fetchByCode(code);
+          const adminSet = await fetchByCode(code, draftParam);
           const data = adminSet || await getQuestionSetByCode(code);
 
           if (!data) {
@@ -275,7 +312,7 @@ export default function PlayPage() {
     if (code) {
       loadQuestionSet();
     }
-  }, [code, allCodes, studyMode]);
+  }, [code, allCodes, studyMode, draftParam]);
 
   // Start new session when question set loads
   useEffect(() => {

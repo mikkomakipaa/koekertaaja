@@ -9,18 +9,21 @@ export async function GET(request: Request) {
     const user = await requireAuth();
     const url = new URL(request.url);
     const code = url.searchParams.get('code')?.toUpperCase();
+    const includeDrafts = url.searchParams.get('includeDrafts') === '1';
 
     if (!code) {
       return NextResponse.json({ error: 'Code is required' }, { status: 400 });
     }
 
+    const userIsAdmin = isAdmin(user.email || '');
     const supabaseAdmin = getSupabaseAdmin();
     const setQuery = supabaseAdmin
       .from('question_sets')
       .select('*')
       .eq('code', code);
 
-    if (!isAdmin(user.email || '')) {
+    // Only allow draft access when explicitly requested by an admin.
+    if (!userIsAdmin || !includeDrafts) {
       setQuery.eq('status', 'published');
     }
 
