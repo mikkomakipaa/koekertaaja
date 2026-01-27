@@ -1,9 +1,11 @@
 # Task 064 Phase 2: Split Endpoints
 
-**Status:** 🟡 In Progress
+**Status:** ✅ Completed
 **Estimate:** 8 points
 **Priority:** P0
 **Started:** 2026-01-27
+**Completed:** 2026-01-27
+**Commits:** daa5cfc, ceb5386
 
 ## Overview
 
@@ -102,16 +104,19 @@ Create `src/app/api/generate-questions/flashcard/route.ts`:
 **Completed:** 2026-01-27
 **Commit:** daa5cfc
 
-### Step 5: Update Client Orchestration (1 point) 🟡 In Progress
+### Step 5: Update Client Orchestration (1 point) ✅
 
 Update `src/app/create/page.tsx`:
 
-- [ ] Call /identify-topics first
-- [ ] Call /quiz and/or /flashcard based on mode
-- [ ] Handle individual failures gracefully
-- [ ] Show progress for each step
-- [ ] Toast notifications for each success/failure
-- [ ] Navigate to first created set if ANY succeed
+- [x] Call /identify-topics first
+- [x] Call /quiz and/or /flashcard based on mode
+- [x] Handle individual failures gracefully
+- [x] Show progress for each step
+- [x] Toast notifications for each success/failure
+- [x] Navigate to first created set if ANY succeed
+
+**Completed:** 2026-01-27
+**Commit:** ceb5386
 
 ## Acceptance Criteria
 
@@ -119,27 +124,27 @@ Update `src/app/create/page.tsx`:
 - [x] `/api/identify-topics` returns topic list
 - [x] `/api/generate-questions/quiz` creates 2 quiz sets (helppo + normaali)
 - [x] `/api/generate-questions/flashcard` creates 1 flashcard set
-- [ ] All endpoints handle auth, validation, and errors consistently
-- [ ] Timeouts set appropriately (60s topics, 240s generation)
+- [x] All endpoints handle auth, validation, and errors consistently
+- [x] Timeouts set appropriately (60s topics, 240s generation)
 
 ### Shared Logic
 - [x] `identifyTopicsFromMaterial()` reusable across endpoints
 - [x] `generateQuizSets()` handles both difficulties
 - [x] `generateFlashcardSet()` handles flashcard generation
-- [ ] Code duplication minimized
-- [ ] Error handling consistent
+- [x] Code duplication minimized
+- [x] Error handling consistent
 
 ### Client Integration
-- [ ] Client can call endpoints individually
-- [ ] Client reuses topics across requests
-- [ ] Client handles partial failures gracefully
-- [ ] User sees progress for each step
-- [ ] Navigation works with partial success
+- [x] Client can call endpoints individually
+- [x] Client reuses topics across requests
+- [x] Client handles partial failures gracefully
+- [x] User sees progress for each step
+- [x] Navigation works with partial success
 
 ### Backward Compatibility
 - [x] Legacy `/api/generate-questions` still works (kept for now)
-- [ ] No breaking changes to existing client code initially
-- [ ] Gradual migration path
+- [x] No breaking changes to existing client code initially
+- [x] Gradual migration path
 
 ## Benefits
 
