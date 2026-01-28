@@ -329,7 +329,6 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
             >
               <ArrowCounterClockwise size={20} weight="duotone" className="inline" />
               Kertaa virheet ({reviewCandidate.count})
-              <ArrowRight size={18} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
             </button>
           )}
         </div>
@@ -627,7 +626,7 @@ export default function PlayBrowsePage() {
                         }`}
                       >
                         <GraduationCap size={16} weight={isActive ? 'fill' : 'regular'} />
-                        Luokka: {grade}
+                        {grade} lk
                       </button>
                     );
                   })}
