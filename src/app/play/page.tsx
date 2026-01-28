@@ -273,14 +273,6 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
 
         {getSubjectWithIcon(group.subject)}
 
-        {(group.topic || group.subtopic) && (
-          <div className="mb-4">
-            <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-              Aihealue: {[group.topic, group.subtopic].filter(Boolean).join(' → ')}
-            </span>
-          </div>
-        )}
-
         <div className="mt-4 flex flex-wrap gap-2">
           {studyMode === 'pelaa' ? (
             availableDifficulties.length > 0 ? (
