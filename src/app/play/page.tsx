@@ -251,8 +251,17 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
 
       <div className="ml-4">
         <div className="mb-3 flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2">
+          <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{group.name}</h3>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            {group.grade && (
+              <span
+                className={`ring-1 ring-inset ring-current/20 inline-flex flex-shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-medium ${getGradeColors(group.grade).bg} ${getGradeColors(group.grade).text}`}
+              >
+                Luokka: {group.grade}
+              </span>
+            )}
             {showNewBadge && (
               <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
                 <Sparkle size={12} weight="fill" />
@@ -260,13 +269,6 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
               </span>
             )}
           </div>
-          {group.grade && (
-            <span
-              className={`ring-1 ring-inset ring-current/20 inline-flex flex-shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-medium ${getGradeColors(group.grade).bg} ${getGradeColors(group.grade).text}`}
-            >
-              Luokka: {group.grade}
-            </span>
-          )}
         </div>
 
         {getSubjectWithIcon(group.subject)}
