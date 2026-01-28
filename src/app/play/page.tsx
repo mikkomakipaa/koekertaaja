@@ -129,14 +129,20 @@ const getSubjectConfig = (subject: string): SubjectConfig => {
   );
 };
 
-const getSubjectWithIcon = (subject: string) => {
+const getSubjectWithIcon = (subject: string, showNewBadge?: boolean) => {
   const config = getSubjectConfig(subject);
 
   return (
     <div className="mb-3 flex items-center gap-3">
       <div className={`rounded-lg p-2 ${config.color}`}>{config.icon}</div>
-      <div>
+      <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{config.label}</span>
+        {showNewBadge && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+            <Sparkle size={11} weight="fill" />
+            Uusi!
+          </span>
+        )}
       </div>
     </div>
   );
@@ -254,24 +260,16 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{group.name}</h3>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            {group.grade && (
-              <span
-                className={`ring-1 ring-inset ring-current/20 inline-flex flex-shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-medium ${getGradeColors(group.grade).bg} ${getGradeColors(group.grade).text}`}
-              >
-                Luokka: {group.grade}
-              </span>
-            )}
-            {showNewBadge && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
-                <Sparkle size={12} weight="fill" />
-                Uusi!
-              </span>
-            )}
-          </div>
+          {group.grade && (
+            <span
+              className={`ring-1 ring-inset ring-current/20 inline-flex flex-shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-medium ${getGradeColors(group.grade).bg} ${getGradeColors(group.grade).text}`}
+            >
+              Luokka: {group.grade}
+            </span>
+          )}
         </div>
 
-        {getSubjectWithIcon(group.subject)}
+        {getSubjectWithIcon(group.subject, showNewBadge)}
 
         <div className="mt-4 flex flex-wrap gap-2">
           {studyMode === 'pelaa' ? (
