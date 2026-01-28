@@ -711,8 +711,53 @@ export default function PlayPage() {
   const showKeyboardHint = currentQuestion.question_type === 'fill_blank' && !showExplanation;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 pb-safe transition-colors">
-      <div ref={topRef} className="max-w-2xl mx-auto p-4 md:p-8 pt-6">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+      <div ref={topRef} />
+      {/* Header with progress */}
+      {!isFlashcardMode && (
+        <div className="bg-gradient-to-r from-indigo-600 to-indigo-500 dark:from-indigo-700 dark:to-indigo-600 text-white sticky top-0 z-10">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            {/* Top section: Question set name + Exit button */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <GameController size={20} weight="fill" className="text-indigo-100" />
+                <div>
+                  <h2 className="text-lg font-semibold">{displayName}</h2>
+                  <p className="text-sm text-indigo-100">
+                    Kysymys {currentQuestionIndex + 1} / {selectedQuestions.length}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={handleBrowseQuestionSets}
+                variant="ghost"
+                size="sm"
+                aria-label="Lopeta harjoitus"
+                className="text-white/90 hover:text-white hover:bg-white/10"
+              >
+                <X className="w-5 h-5 mr-1" />
+                Lopeta
+              </Button>
+            </div>
+
+            {/* Progress bar + Percentage (same row) */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 bg-white/30 rounded-full h-2 overflow-hidden">
+                <div
+                  className="bg-white h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${(currentQuestionIndex / selectedQuestions.length) * 100}%` }}
+                />
+              </div>
+              <span className="text-sm text-indigo-100 font-medium whitespace-nowrap">
+                {Math.round((currentQuestionIndex / selectedQuestions.length) * 100)}% valmis
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
         {(mistakesError || sessionMistakesError) && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>{mistakesError || sessionMistakesError}</AlertDescription>
@@ -730,48 +775,6 @@ export default function PlayPage() {
             <p className="text-sm text-red-700 dark:text-red-300 mt-1">
               Vastaa oikein poistaaksesi kysymyksen virhelistalta
             </p>
-          </div>
-        )}
-
-        {!isFlashcardMode && (
-          <div className="bg-gradient-to-r from-indigo-600 to-indigo-500 dark:from-indigo-700 dark:to-indigo-600 text-white sticky top-0 z-10">
-            <div className="max-w-4xl mx-auto px-4 py-4">
-              {/* Top section: Question set name + Exit button */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <GameController size={20} weight="fill" className="text-indigo-100" />
-                  <div>
-                    <h2 className="text-lg font-semibold">{displayName}</h2>
-                    <p className="text-sm text-indigo-100">
-                      Kysymys {currentQuestionIndex + 1} / {selectedQuestions.length}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  onClick={handleBrowseQuestionSets}
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Lopeta harjoitus"
-                  className="text-white/90 hover:text-white hover:bg-white/10"
-                >
-                  <X className="w-5 h-5 mr-1" />
-                  Lopeta
-                </Button>
-              </div>
-
-              {/* Progress bar + Percentage (same row) */}
-              <div className="flex items-center gap-3">
-                <div className="flex-1 bg-white/30 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-white h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(currentQuestionIndex / selectedQuestions.length) * 100}%` }}
-                  />
-                </div>
-                <span className="text-sm text-indigo-100 font-medium whitespace-nowrap">
-                  {Math.round((currentQuestionIndex / selectedQuestions.length) * 100)}% valmis
-                </span>
-              </div>
-            </div>
           </div>
         )}
 
