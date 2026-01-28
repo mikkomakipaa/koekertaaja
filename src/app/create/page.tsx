@@ -14,6 +14,7 @@ import { GradeSelector } from '@/components/create/GradeSelector';
 import { MaterialUpload } from '@/components/create/MaterialUpload';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
 import { Difficulty, MapInputMode, MapRegion, QuestionSet } from '@/types';
+import * as Dialog from '@radix-ui/react-dialog';
 import {
   CircleNotch,
   Star,
@@ -32,7 +33,10 @@ import {
   GraduationCap,
   CheckCircle,
   Eye,
-  EyeSlash
+  EyeSlash,
+  Flag,
+  PencilSimple,
+  X
 } from '@phosphor-icons/react';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { UserMenu } from '@/components/auth/UserMenu';
@@ -73,6 +77,21 @@ interface QuestionGenerationResponse {
     succeeded: number;
     failed: number;
   };
+}
+
+interface FlaggedQuestion {
+  questionId: string;
+  questionSetId: string;
+  questionText: string;
+  questionType: string;
+  correctAnswer: any;
+  options: any;
+  questionSetName: string | null;
+  questionSetCode: string | null;
+  subject: string | null;
+  flagCount: number;
+  latestFlagAt: string | null;
+  reasonCounts: Record<'wrong_answer' | 'ambiguous' | 'typo' | 'other', number>;
 }
 
 export default function CreatePage() {
@@ -152,6 +171,18 @@ export default function CreatePage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [flaggedQuestions, setFlaggedQuestions] = useState<FlaggedQuestion[]>([]);
+  const [loadingFlags, setLoadingFlags] = useState(false);
+  const [flagLoadError, setFlagLoadError] = useState('');
+  const [editingFlag, setEditingFlag] = useState<FlaggedQuestion | null>(null);
+  const [dismissingFlagId, setDismissingFlagId] = useState<string | null>(null);
+  const [editQuestionText, setEditQuestionText] = useState('');
+  const [editCorrectAnswer, setEditCorrectAnswer] = useState('');
+  const [editOptions, setEditOptions] = useState('');
+  const [editAcceptableAnswers, setEditAcceptableAnswers] = useState('');
+  const [editTrueFalse, setEditTrueFalse] = useState<'true' | 'false'>('true');
+  const [editError, setEditError] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const [creatingMapQuestion, setCreatingMapQuestion] = useState(false);
   const [mapQuestionError, setMapQuestionError] = useState('');
@@ -193,6 +224,25 @@ export default function CreatePage() {
   const selectedMapQuestionSet = mapQuestionSetId
     ? allQuestionSets.find((set) => set.id === mapQuestionSetId)
     : null;
+
+  const formatListForEdit = (value: unknown): string => {
+    if (Array.isArray(value)) {
+      return value.map((item) => String(item)).join('\n');
+    }
+    return '';
+  };
+
+  const parseListInput = (value: string): string[] => {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    const parts = trimmed.includes('\n') ? trimmed.split('\n') : trimmed.split(',');
+    return parts.map((item) => item.trim()).filter(Boolean);
+  };
+
+  const parseJsonInput = (value: string) => {
+    if (!value.trim()) return null;
+    return JSON.parse(value);
+  };
 
   // Helper functions for creation progress
   const initializeCreationSteps = (): CreationStep[] => {
@@ -520,6 +570,267 @@ export default function CreatePage() {
     }
   };
 
+  const loadFlaggedQuestions = async () => {
+    if (!isAdmin) return;
+    setLoadingFlags(true);
+    setFlagLoadError('');
+
+    try {
+      const response = await fetch('/api/question-flags/manage', {
+        method: 'GET',
+        credentials: 'same-origin',
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = payload.error || 'Failed to load flagged questions';
+        throw new Error(errorMessage);
+      }
+
+      setFlaggedQuestions(payload.data || []);
+    } catch (error) {
+      console.error('Error loading flagged questions:', error);
+      setFlagLoadError(error instanceof Error ? error.message : 'Failed to load flagged questions');
+    } finally {
+      setLoadingFlags(false);
+    }
+  };
+
+  const openFlagEdit = (flag: FlaggedQuestion) => {
+    setEditingFlag(flag);
+    setEditError('');
+    setEditQuestionText(flag.questionText || '');
+    setEditCorrectAnswer('');
+    setEditOptions('');
+    setEditAcceptableAnswers('');
+
+    switch (flag.questionType) {
+      case 'multiple_choice': {
+        setEditCorrectAnswer(typeof flag.correctAnswer === 'string' ? flag.correctAnswer : '');
+        setEditOptions(formatListForEdit(flag.options));
+        break;
+      }
+      case 'fill_blank': {
+        setEditCorrectAnswer(typeof flag.correctAnswer === 'string' ? flag.correctAnswer : '');
+        setEditAcceptableAnswers(formatListForEdit(flag.options));
+        break;
+      }
+      case 'short_answer': {
+        setEditCorrectAnswer(typeof flag.correctAnswer === 'string' ? flag.correctAnswer : '');
+        setEditAcceptableAnswers(formatListForEdit(flag.options));
+        break;
+      }
+      case 'true_false': {
+        setEditTrueFalse(flag.correctAnswer ? 'true' : 'false');
+        break;
+      }
+      case 'matching': {
+        setEditCorrectAnswer(JSON.stringify(flag.correctAnswer ?? [], null, 2));
+        break;
+      }
+      case 'sequential': {
+        setEditCorrectAnswer(JSON.stringify(flag.correctAnswer ?? { items: [], correct_order: [] }, null, 2));
+        break;
+      }
+      case 'map': {
+        if (typeof flag.correctAnswer === 'string') {
+          setEditCorrectAnswer(flag.correctAnswer);
+        } else {
+          setEditCorrectAnswer(JSON.stringify(flag.correctAnswer ?? [], null, 2));
+        }
+        setEditOptions(flag.options ? JSON.stringify(flag.options, null, 2) : '');
+        break;
+      }
+      default: {
+        setEditCorrectAnswer(JSON.stringify(flag.correctAnswer ?? '', null, 2));
+      }
+    }
+  };
+
+  const handleSaveFlagEdit = async () => {
+    if (!editingFlag) return;
+    if (!editQuestionText.trim()) {
+      setEditError('Kysymyksen teksti ei voi olla tyhjä.');
+      return;
+    }
+
+    setSavingEdit(true);
+    setEditError('');
+    const failEdit = (message: string) => {
+      setEditError(message);
+      setSavingEdit(false);
+    };
+
+    try {
+      let payload: Record<string, any> = {
+        questionText: editQuestionText.trim(),
+      };
+
+      switch (editingFlag.questionType) {
+        case 'multiple_choice': {
+          const options = parseListInput(editOptions);
+          if (!editCorrectAnswer.trim()) {
+            failEdit('Anna oikea vastaus.');
+            return;
+          }
+          if (options.length < 2) {
+            failEdit('Anna vähintään kaksi vaihtoehtoa.');
+            return;
+          }
+          payload = {
+            ...payload,
+            correctAnswer: editCorrectAnswer.trim(),
+            options,
+          };
+          break;
+        }
+        case 'fill_blank':
+        case 'short_answer': {
+          if (!editCorrectAnswer.trim()) {
+            failEdit('Anna oikea vastaus.');
+            return;
+          }
+          const acceptableAnswers = parseListInput(editAcceptableAnswers);
+          payload = {
+            ...payload,
+            correctAnswer: editCorrectAnswer.trim(),
+            acceptableAnswers: acceptableAnswers.length > 0 ? acceptableAnswers : undefined,
+          };
+          break;
+        }
+        case 'true_false': {
+          payload = {
+            ...payload,
+            correctAnswer: editTrueFalse === 'true',
+          };
+          break;
+        }
+        case 'matching':
+        case 'sequential': {
+          if (!editCorrectAnswer.trim()) {
+            failEdit('Anna oikea vastaus JSON-muodossa.');
+            return;
+          }
+          try {
+            payload = {
+              ...payload,
+              correctAnswer: parseJsonInput(editCorrectAnswer),
+            };
+          } catch (error) {
+            failEdit('Virheellinen JSON oikeassa vastauksessa.');
+            return;
+          }
+          break;
+        }
+        case 'map': {
+          let parsedCorrectAnswer: any = editCorrectAnswer.trim();
+          if (!parsedCorrectAnswer) {
+            failEdit('Anna oikea vastaus.');
+            return;
+          }
+
+          if (parsedCorrectAnswer.startsWith('[') || parsedCorrectAnswer.startsWith('{')) {
+            try {
+              parsedCorrectAnswer = parseJsonInput(parsedCorrectAnswer);
+            } catch (error) {
+              failEdit('Virheellinen JSON oikeassa vastauksessa.');
+              return;
+            }
+          }
+
+          let parsedOptions: any = undefined;
+          if (editOptions.trim()) {
+            try {
+              parsedOptions = parseJsonInput(editOptions);
+            } catch (error) {
+              failEdit('Virheellinen JSON vaihtoehdoissa.');
+              return;
+            }
+          }
+
+          payload = {
+            ...payload,
+            correctAnswer: parsedCorrectAnswer,
+            options: parsedOptions,
+          };
+          break;
+        }
+        default: {
+          payload = {
+            ...payload,
+            correctAnswer: editCorrectAnswer.trim(),
+          };
+        }
+      }
+
+      const response = await fetch(`/api/questions/${editingFlag.questionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = result.error || 'Tallennus epäonnistui';
+        throw new Error(errorMessage);
+      }
+
+      setFlaggedQuestions((prev) =>
+        prev.map((item) =>
+          item.questionId === editingFlag.questionId
+            ? {
+                ...item,
+                questionText: payload.questionText,
+                correctAnswer: payload.correctAnswer,
+                options: payload.options ?? item.options,
+              }
+            : item
+        )
+      );
+
+      setEditingFlag(null);
+    } catch (error) {
+      console.error('Failed to save question edit:', error);
+      setEditError(error instanceof Error ? error.message : 'Tallennus epäonnistui');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDismissFlag = async (flag: FlaggedQuestion) => {
+    if (!isAdmin) return;
+    setDismissingFlagId(flag.questionId);
+    setFlagLoadError('');
+
+    try {
+      const response = await fetch('/api/question-flags/manage', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId: flag.questionId }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = payload.error || 'Ilmoituksen poistaminen epäonnistui';
+        throw new Error(errorMessage);
+      }
+
+      setFlaggedQuestions((prev) => prev.filter((item) => item.questionId !== flag.questionId));
+      if (editingFlag?.questionId === flag.questionId) {
+        setEditingFlag(null);
+      }
+      toast.success('Ilmoitukset poistettu', {
+        description: 'Tämä kysymys poistettiin ilmoituksista.',
+      });
+    } catch (error) {
+      console.error('Failed to dismiss flag:', error);
+      setFlagLoadError(error instanceof Error ? error.message : 'Ilmoituksen poistaminen epäonnistui');
+    } finally {
+      setDismissingFlagId(null);
+    }
+  };
+
 
   const checkAdminStatus = async () => {
     try {
@@ -797,6 +1108,12 @@ export default function CreatePage() {
   }, []);
 
   useEffect(() => {
+    if (isAdmin) {
+      loadFlaggedQuestions();
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
     setQuestionCount(defaultQuestionCount);
   }, [defaultQuestionCount]);
 
@@ -928,7 +1245,7 @@ export default function CreatePage() {
 
           <CardContent className="p-6">
             <Tabs defaultValue="create" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 mb-6">
+              <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} mb-6`}>
                 <TabsTrigger value="create" className="text-base">
                   <Star className="w-4 h-4 mr-2" />
                   Luo uusi
@@ -945,6 +1262,12 @@ export default function CreatePage() {
                   <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
                   Hallitse
                 </TabsTrigger>
+                {isAdmin && (
+                  <TabsTrigger value="notifications" className="text-base">
+                    <Flag weight="duotone" className="w-4 h-4 mr-2" />
+                    Ilmoitukset
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="create" className="space-y-6">
@@ -1690,6 +2013,245 @@ export default function CreatePage() {
                   </Button>
                 </div>
               </TabsContent>
+
+              {isAdmin && (
+                <TabsContent value="notifications" className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Flag weight="duotone" className="w-5 h-5 text-indigo-600" />
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        Ilmoitetut kysymykset ({flaggedQuestions.length})
+                      </h3>
+                    </div>
+                    <Button
+                      onClick={loadFlaggedQuestions}
+                      variant="outline"
+                      size="sm"
+                      disabled={loadingFlags}
+                    >
+                      Päivitä
+                    </Button>
+                  </div>
+
+                  {flagLoadError && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{flagLoadError}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  {loadingFlags ? (
+                    <div className="flex justify-center py-6">
+                      <CircleNotch weight="bold" className="w-6 h-6 animate-spin text-indigo-500 dark:text-indigo-400" />
+                    </div>
+                  ) : flaggedQuestions.length === 0 ? (
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      Ei ilmoitettuja kysymyksiä tällä hetkellä.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {flaggedQuestions.map((flag) => (
+                        <div
+                          key={flag.questionId}
+                          className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-start gap-2">
+                                <Flag weight="duotone" className="w-4 h-4 text-amber-600 mt-1" />
+                                <div>
+                                  <p className="font-semibold text-gray-900 dark:text-gray-100">
+                                    {flag.questionText}
+                                  </p>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    {flag.questionSetName ?? 'Tuntematon sarja'}
+                                    {flag.questionSetCode ? ` • Koodi ${flag.questionSetCode}` : ''}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                Ilmoituksia: {flag.flagCount} • Syyjakauma: väärä vastaus {flag.reasonCounts.wrong_answer}, epäselvä {flag.reasonCounts.ambiguous}, typo {flag.reasonCounts.typo}, muu {flag.reasonCounts.other}
+                              </div>
+                            </div>
+                            <Button
+                              onClick={() => openFlagEdit(flag)}
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                            >
+                              <PencilSimple weight="duotone" className="w-4 h-4" />
+                              Muokkaa
+                            </Button>
+                            <Button
+                              onClick={() => handleDismissFlag(flag)}
+                              variant="outline"
+                              size="sm"
+                              disabled={dismissingFlagId === flag.questionId}
+                              className="gap-2 text-gray-600 hover:text-gray-900"
+                            >
+                              {dismissingFlagId === flag.questionId ? (
+                                <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Trash weight="duotone" className="w-4 h-4" />
+                              )}
+                              Poista ilmoitukset
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              )}
+
+              <Dialog.Root open={Boolean(editingFlag)} onOpenChange={(open) => !open && setEditingFlag(null)}>
+                <Dialog.Portal>
+                  <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" />
+                  <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[94vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-4">
+                      <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        Muokkaa ilmoitettua kysymystä
+                      </Dialog.Title>
+                      <Dialog.Close asChild>
+                        <button
+                          type="button"
+                          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                          aria-label="Sulje"
+                        >
+                          <X size={18} />
+                        </button>
+                      </Dialog.Close>
+                    </div>
+
+                    {editingFlag && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                            Kysymysteksti
+                          </label>
+                          <Textarea
+                            value={editQuestionText}
+                            onChange={(event) => setEditQuestionText(event.target.value)}
+                            className="min-h-[90px]"
+                          />
+                        </div>
+
+                        {(editingFlag.questionType === 'multiple_choice' || editingFlag.questionType === 'fill_blank' || editingFlag.questionType === 'short_answer') && (
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                              Oikea vastaus
+                            </label>
+                            <Input
+                              value={editCorrectAnswer}
+                              onChange={(event) => setEditCorrectAnswer(event.target.value)}
+                            />
+                          </div>
+                        )}
+
+                        {editingFlag.questionType === 'multiple_choice' && (
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                              Vaihtoehdot (yksi per rivi tai pilkulla)
+                            </label>
+                            <Textarea
+                              value={editOptions}
+                              onChange={(event) => setEditOptions(event.target.value)}
+                              className="min-h-[90px]"
+                            />
+                          </div>
+                        )}
+
+                        {(editingFlag.questionType === 'fill_blank' || editingFlag.questionType === 'short_answer') && (
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                              Hyväksyttävät vastaukset (valinnainen, yksi per rivi)
+                            </label>
+                            <Textarea
+                              value={editAcceptableAnswers}
+                              onChange={(event) => setEditAcceptableAnswers(event.target.value)}
+                              className="min-h-[90px]"
+                            />
+                          </div>
+                        )}
+
+                        {editingFlag.questionType === 'true_false' && (
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                              Oikea vastaus
+                            </label>
+                            <select
+                              value={editTrueFalse}
+                              onChange={(event) => setEditTrueFalse(event.target.value as 'true' | 'false')}
+                              className="w-full h-10 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 text-sm text-gray-900 dark:text-gray-100"
+                            >
+                              <option value="true">Totta</option>
+                              <option value="false">Tarua</option>
+                            </select>
+                          </div>
+                        )}
+
+                        {(editingFlag.questionType === 'matching' || editingFlag.questionType === 'sequential') && (
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                              Oikea vastaus (JSON)
+                            </label>
+                            <Textarea
+                              value={editCorrectAnswer}
+                              onChange={(event) => setEditCorrectAnswer(event.target.value)}
+                              className="min-h-[140px] font-mono text-xs"
+                            />
+                          </div>
+                        )}
+
+                        {editingFlag.questionType === 'map' && (
+                          <>
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                                Oikea vastaus (teksti tai JSON)
+                              </label>
+                              <Textarea
+                                value={editCorrectAnswer}
+                                onChange={(event) => setEditCorrectAnswer(event.target.value)}
+                                className="min-h-[90px] font-mono text-xs"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                                Vaihtoehdot (JSON)
+                              </label>
+                              <Textarea
+                                value={editOptions}
+                                onChange={(event) => setEditOptions(event.target.value)}
+                                className="min-h-[120px] font-mono text-xs"
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        {editError && (
+                          <Alert variant="destructive">
+                            <AlertDescription>{editError}</AlertDescription>
+                          </Alert>
+                        )}
+
+                        <div className="flex items-center justify-end gap-2 pt-2">
+                          <Dialog.Close asChild>
+                            <Button variant="ghost" type="button">
+                              Peruuta
+                            </Button>
+                          </Dialog.Close>
+                          <Button
+                            onClick={handleSaveFlagEdit}
+                            disabled={savingEdit}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                          >
+                            {savingEdit ? 'Tallennetaan...' : 'Tallenna muutokset'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </Dialog.Content>
+                </Dialog.Portal>
+              </Dialog.Root>
             </Tabs>
           </CardContent>
         </Card>

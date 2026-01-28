@@ -9,6 +9,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MathText } from '@/components/ui/math-text';
+import { Textarea } from '@/components/ui/textarea';
 import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
 import { ProgressBar } from '@/components/play/ProgressBar';
 import { ResultsScreen } from '@/components/play/ResultsScreen';
@@ -19,7 +20,8 @@ import { useSessionProgress } from '@/hooks/useSessionProgress';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
 import { shuffleArray } from '@/lib/utils';
-import { QuestionSetWithQuestions, StudyMode, Flashcard, type QuestionType } from '@/types';
+import { QuestionSetWithQuestions, StudyMode, Flashcard, type QuestionType, type QuestionFlagReason } from '@/types';
+import * as Dialog from '@radix-ui/react-dialog';
 import {
   CircleNotch,
   ListBullets,
@@ -40,6 +42,7 @@ import {
   Smiley,
   Target,
   X,
+  Flag,
 } from '@phosphor-icons/react';
 
 type PlayState = 'loading' | 'error' | 'playing' | 'results';
@@ -101,6 +104,13 @@ const getPlaceholderHint = (questionType: QuestionType, questionText: string): s
   return baseHints[questionType];
 };
 
+const flagReasons: Array<{ value: QuestionFlagReason; label: string; description: string }> = [
+  { value: 'wrong_answer', label: 'Vastaus on väärin', description: 'Oikea vastaus ei pidä paikkaansa' },
+  { value: 'ambiguous', label: 'Kysymys on epäselvä', description: 'Useampi tulkinta mahdollinen' },
+  { value: 'typo', label: 'Kirjoitusvirhe', description: 'Selkeä virhe tekstissä' },
+  { value: 'other', label: 'Muu syy', description: 'Jokin muu ongelma' },
+];
+
 export default function PlayPage() {
   const params = useParams();
   const router = useRouter();
@@ -121,6 +131,13 @@ export default function PlayPage() {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [availableTopics, setAvailableTopics] = useState<string[]>([]);
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+  const [flagReason, setFlagReason] = useState<QuestionFlagReason | ''>('');
+  const [flagNote, setFlagNote] = useState('');
+  const [flagSubmitting, setFlagSubmitting] = useState(false);
+  const [flagFeedback, setFlagFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [flaggedQuestionIds, setFlaggedQuestionIds] = useState<string[]>([]);
   const { getMistakes, removeMistake, mistakeCount, error: mistakesError } = useReviewMistakes(code);
   const { updateProgress, clearProgress } = useSessionProgress(questionSet?.code ?? code);
 
@@ -157,6 +174,30 @@ export default function PlayPage() {
     mistakeQuestions,
     questionSet?.code
   );
+
+  useEffect(() => {
+    try {
+      const storedId = localStorage.getItem('koekertaaja_client_id');
+      if (storedId) {
+        setClientId(storedId);
+        return;
+      }
+
+      const newId = crypto.randomUUID();
+      localStorage.setItem('koekertaaja_client_id', newId);
+      setClientId(newId);
+    } catch (error) {
+      console.error('Failed to access localStorage for clientId:', error);
+      setClientId(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    setFlagFeedback(null);
+    setFlagReason('');
+    setFlagNote('');
+    setFlagDialogOpen(false);
+  }, [currentQuestion?.id]);
 
   // Load question set(s)
   useEffect(() => {
@@ -380,6 +421,60 @@ export default function PlayPage() {
         // Fallback for older browsers
         window.scrollTo(0, 0);
       }, 0);
+    }
+  };
+
+  const handleSubmitFlag = async () => {
+    if (!currentQuestion) return;
+
+    if (!clientId) {
+      setFlagFeedback({ type: 'error', message: 'Laitteen tunnistetta ei löytynyt.' });
+      return;
+    }
+
+    if (!flagReason) {
+      setFlagFeedback({ type: 'error', message: 'Valitse syy ennen lähetystä.' });
+      return;
+    }
+
+    setFlagSubmitting(true);
+    setFlagFeedback(null);
+
+    try {
+      const response = await fetch('/api/question-flags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          questionId: currentQuestion.id,
+          questionSetId: currentQuestion.question_set_id,
+          reason: flagReason,
+          note: flagNote.trim() ? flagNote.trim() : undefined,
+          clientId,
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const errorMessage = payload?.error || 'Ilmoituksen lähetys epäonnistui';
+        if (response.status === 429) {
+          setFlagFeedback({ type: 'error', message: 'Voit tehdä enintään 3 ilmoitusta 24 tunnin aikana.' });
+        } else {
+          setFlagFeedback({ type: 'error', message: errorMessage });
+        }
+        return;
+      }
+
+      setFlaggedQuestionIds((prev) =>
+        prev.includes(currentQuestion.id) ? prev : [...prev, currentQuestion.id]
+      );
+      setFlagFeedback({ type: 'success', message: 'Kiitos ilmoituksesta! Tutkimme asian.' });
+      setFlagDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to submit flag:', error);
+      setFlagFeedback({ type: 'error', message: 'Ilmoituksen lähetys epäonnistui. Yritä uudelleen.' });
+    } finally {
+      setFlagSubmitting(false);
     }
   };
 
@@ -709,6 +804,7 @@ export default function PlayPage() {
     : <Target size={14} weight="duotone" />;
   const canSubmit = !isAnswerEmpty(userAnswer);
   const showKeyboardHint = currentQuestion.question_type === 'fill_blank' && !showExplanation;
+  const hasFlaggedCurrent = flaggedQuestionIds.includes(currentQuestion.id);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
@@ -854,6 +950,7 @@ export default function PlayPage() {
                 <MathText>{currentQuestion.explanation}</MathText>
               </p>
             </div>
+
           </div>
         )}
 
@@ -887,14 +984,142 @@ export default function PlayPage() {
               {isLastQuestion ? 'Näytä tulokset →' : 'Seuraava kysymys →'}
             </Button>
           )}
-          <Button
-            onClick={handleBrowseQuestionSets}
-            variant="ghost"
-            className="w-full text-gray-600 hover:text-gray-900"
-          >
-            <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
-            Valitse eri aihealue
-          </Button>
+          <Dialog.Root open={flagDialogOpen} onOpenChange={setFlagDialogOpen}>
+            {showExplanation ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/30 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">Huomasitko virheen?</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Kysymykset ovat tekoälyn laatimia, niissä saattaa esiintyä virheitä.
+                      </p>
+                    </div>
+                    <Dialog.Trigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={hasFlaggedCurrent || !clientId}
+                        onClick={() => {
+                          setFlagFeedback(null);
+                          setFlagReason('');
+                          setFlagNote('');
+                        }}
+                        className="gap-2 text-gray-700 hover:text-gray-900"
+                      >
+                        <Flag size={16} weight="duotone" />
+                        {hasFlaggedCurrent ? 'Ilmoitettu' : 'Ilmoita virhe'}
+                      </Button>
+                    </Dialog.Trigger>
+                  </div>
+
+                  {flagFeedback?.type === 'success' && (
+                    <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-300">
+                      {flagFeedback.message}
+                    </p>
+                  )}
+                  {hasFlaggedCurrent && !flagFeedback && (
+                    <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-300">
+                      Kiitos ilmoituksesta! Tutkimme asian.
+                    </p>
+                  )}
+                </div>
+                <Button
+                  onClick={handleBrowseQuestionSets}
+                  variant="ghost"
+                  className="w-full text-gray-600 hover:text-gray-900"
+                >
+                  <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
+                  Valitse eri aihealue
+                </Button>
+              </div>
+            ) : (
+              <Button
+                onClick={handleBrowseQuestionSets}
+                variant="ghost"
+                className="w-full text-gray-600 hover:text-gray-900"
+              >
+                <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
+                Valitse eri aihealue
+              </Button>
+            )}
+            <Dialog.Portal>
+              <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" />
+              <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                  <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Ilmoita virhe kysymyksessä
+                  </Dialog.Title>
+                  <Dialog.Close asChild>
+                    <button
+                      type="button"
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      aria-label="Sulje"
+                    >
+                      <X size={18} />
+                    </button>
+                  </Dialog.Close>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Syy</p>
+                    <div className="grid gap-2">
+                      {flagReasons.map((reason) => (
+                        <button
+                          key={reason.value}
+                          type="button"
+                          onClick={() => setFlagReason(reason.value)}
+                          className={`flex items-start gap-3 rounded-lg border px-3 py-2 text-left transition-colors ${
+                            flagReason === reason.value
+                              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300'
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{reason.label}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{reason.description}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2 block">
+                      Lisätieto (valinnainen)
+                    </label>
+                    <Textarea
+                      value={flagNote}
+                      onChange={(event) => setFlagNote(event.target.value)}
+                      placeholder="Kerro lyhyesti, mikä on pielessä..."
+                      className="min-h-[90px]"
+                    />
+                  </div>
+
+                  {flagFeedback?.type === 'error' && (
+                    <p className="text-sm text-red-600 dark:text-red-300">{flagFeedback.message}</p>
+                  )}
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <Dialog.Close asChild>
+                      <Button variant="ghost" type="button">
+                        Peruuta
+                      </Button>
+                    </Dialog.Close>
+                    <Button
+                      type="button"
+                      onClick={handleSubmitFlag}
+                      disabled={flagSubmitting || !flagReason}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                    >
+                      {flagSubmitting ? 'Lähetetään...' : 'Lähetä ilmoitus'}
+                    </Button>
+                  </div>
+                </div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
         </div>
       </div>
     </div>

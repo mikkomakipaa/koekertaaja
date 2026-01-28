@@ -15,14 +15,14 @@
   · serverActions
 
   Creating an optimized production build ...
-✓ Compiled successfully in 6.9s
+✓ Compiled successfully in 6.7s
   Running TypeScript ...
   Collecting page data using 7 workers ...
-  Generating static pages using 7 workers (0/17) ...
-  Generating static pages using 7 workers (4/17) 
-  Generating static pages using 7 workers (8/17) 
-  Generating static pages using 7 workers (12/17) 
-✓ Generating static pages using 7 workers (17/17) in 139.2ms
+  Generating static pages using 7 workers (0/22) ...
+  Generating static pages using 7 workers (5/22) 
+  Generating static pages using 7 workers (10/22) 
+  Generating static pages using 7 workers (16/22) 
+✓ Generating static pages using 7 workers (22/22) in 168.7ms
   Finalizing page optimization ...
 
 Route (app)
@@ -31,13 +31,19 @@ Route (app)
 ├ ƒ /api/delete-question-set
 ├ ƒ /api/extend-question-set
 ├ ƒ /api/generate-questions
+├ ƒ /api/generate-questions/flashcard
+├ ƒ /api/generate-questions/quiz
+├ ƒ /api/identify-topics
 ├ ƒ /api/map-questions/created
 ├ ƒ /api/map-questions/submit
+├ ƒ /api/question-flags
+├ ƒ /api/question-flags/manage
 ├ ƒ /api/question-sets/by-code
 ├ ƒ /api/question-sets/created
 ├ ƒ /api/question-sets/play
 ├ ƒ /api/question-sets/publish
 ├ ƒ /api/question-sets/submit
+├ ƒ /api/questions/[id]
 ├ ○ /create
 ├ ○ /login
 ├ ○ /play

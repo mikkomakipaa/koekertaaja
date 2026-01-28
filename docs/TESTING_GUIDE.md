@@ -111,6 +111,23 @@ After creating a question set:
 
 ---
 
+### 4b. Flagging & Admin Review Test
+
+**Pupil flow (play mode):**
+- [ ] After submitting an answer, click "Ilmoita virhe"
+- [ ] Select a reason and optional note, then submit
+- [ ] Expect success confirmation and the button to disable for that question
+- [ ] Submit 3 flags total, then attempt a 4th → should show 429/limit message
+
+**Admin flow (create page):**
+- [ ] Go to http://localhost:3000/create while logged in as admin
+- [ ] Open "Hallitse" → section "Ilmoitetut kysymykset"
+- [ ] Click "Muokkaa" on a flagged question
+- [ ] Update question text / answers and save
+- [ ] Verify changes show up in play mode
+
+---
+
 ### 5. Results Screen Test
 
 After completing all 15 questions:

@@ -18,6 +18,18 @@ export type Mode = 'quiz' | 'flashcard';
 
 export type QuestionSetStatus = 'created' | 'published';
 
+export type QuestionFlagReason = 'wrong_answer' | 'ambiguous' | 'typo' | 'other';
+
+export interface QuestionFlag {
+  id: string;
+  question_id: string;
+  question_set_id: string;
+  reason: QuestionFlagReason;
+  note?: string | null;
+  client_id: string;
+  created_at: string;
+}
+
 // Base Question Interface
 export interface BaseQuestion {
   id: string;

@@ -2,6 +2,7 @@ import {
   MapQuestionEntity,
   Question,
   QuestionSet,
+  QuestionFlag,
   SequentialItem,
   isSequentialItemArray,
   isStringArray,
@@ -64,6 +65,12 @@ export interface Database {
           Record<string, unknown>;
         Update: Partial<Omit<DatabaseMapQuestion, 'id' | 'created_at'>> &
           Record<string, unknown>;
+        Relationships: [];
+      };
+      question_flags: {
+        Row: QuestionFlag & Record<string, unknown>;
+        Insert: Omit<QuestionFlag, 'id' | 'created_at'> & Record<string, unknown>;
+        Update: Partial<Omit<QuestionFlag, 'id' | 'created_at'>> & Record<string, unknown>;
         Relationships: [];
       };
     };
