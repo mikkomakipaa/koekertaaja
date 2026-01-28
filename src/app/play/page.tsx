@@ -129,20 +129,14 @@ const getSubjectConfig = (subject: string): SubjectConfig => {
   );
 };
 
-const getSubjectWithIcon = (subject: string, showNewBadge?: boolean) => {
+const getSubjectWithIcon = (subject: string) => {
   const config = getSubjectConfig(subject);
 
   return (
     <div className="mb-3 flex items-center gap-3">
       <div className={`rounded-lg p-2 ${config.color}`}>{config.icon}</div>
-      <div className="flex items-center gap-2">
+      <div>
         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{config.label}</span>
-        {showNewBadge && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
-            <Sparkle size={11} weight="fill" />
-            Uusi!
-          </span>
-        )}
       </div>
     </div>
   );
@@ -257,8 +251,14 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
 
       <div className="ml-4">
         <div className="mb-3 flex items-start justify-between gap-3">
-          <div>
+          <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{group.name}</h3>
+            {showNewBadge && (
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                <Sparkle size={9} weight="fill" />
+                Uusi
+              </span>
+            )}
           </div>
           {group.grade && (
             <span
@@ -269,7 +269,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
           )}
         </div>
 
-        {getSubjectWithIcon(group.subject, showNewBadge)}
+        {getSubjectWithIcon(group.subject)}
 
         <div className="mt-4 flex flex-wrap gap-2">
           {studyMode === 'pelaa' ? (
