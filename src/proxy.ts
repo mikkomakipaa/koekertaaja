@@ -59,7 +59,7 @@ export default function middleware(request: NextRequest) {
       process.env.NEXT_PUBLIC_APP_URL,  // Custom URL if set
     ].filter(Boolean); // Remove undefined values
 
-    const safeParseUrl = (value: string | null) => {
+    const safeParseUrl = (value: string | null | undefined) => {
       if (!value) return null;
       try {
         return new URL(value);
