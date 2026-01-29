@@ -198,24 +198,24 @@ export function AudienceTabs({
 
       <div className="mt-3 hidden md:block">
         <Tabs value={activeAudience} onValueChange={(value) => onAudienceChange(value as AudienceKey)}>
-          <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-gray-100 p-1 transition-colors duration-200 motion-reduce:transition-none dark:bg-gray-800 dark:ring-1 dark:ring-slate-700/60">
+          <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-gradient-to-b from-slate-100 to-white p-1 shadow-inner shadow-slate-200/60 ring-1 ring-slate-200/80 transition-colors duration-200 motion-reduce:transition-none dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 dark:ring-slate-700/60 dark:shadow-none">
             <TabsTrigger
               value="oppilaille"
-              className="rounded-xl border-b-2 border-transparent px-4 py-3 text-base font-semibold text-gray-700 transition-colors duration-200 motion-reduce:transition-none data-[state=active]:border-emerald-500 data-[state=active]:bg-white data-[state=active]:text-emerald-700 dark:text-gray-200 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-emerald-300"
+              className="rounded-xl border border-transparent px-4 py-3 text-base font-semibold text-slate-500 transition-all duration-200 motion-reduce:transition-none hover:bg-white/70 hover:text-slate-800 data-[state=active]:border-emerald-200 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-emerald-100 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 dark:data-[state=active]:border-emerald-700/50 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-emerald-300 dark:data-[state=active]:ring-emerald-800/40"
             >
               Oppilaille
             </TabsTrigger>
             <TabsTrigger
               value="huoltajille"
-              className="rounded-xl border-b-2 border-transparent px-4 py-3 text-base font-semibold text-gray-700 transition-colors duration-200 motion-reduce:transition-none data-[state=active]:border-emerald-500 data-[state=active]:bg-white data-[state=active]:text-emerald-700 dark:text-gray-200 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-emerald-300"
+              className="rounded-xl border border-transparent px-4 py-3 text-base font-semibold text-slate-500 transition-all duration-200 motion-reduce:transition-none hover:bg-white/70 hover:text-slate-800 data-[state=active]:border-emerald-200 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-emerald-100 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 dark:data-[state=active]:border-emerald-700/50 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-emerald-300 dark:data-[state=active]:ring-emerald-800/40"
             >
               Huoltajille
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="oppilaille" className="mt-4">
+          <TabsContent value="oppilaille" className="mt-6">
             <AudienceGrid items={pupilItems} />
           </TabsContent>
-          <TabsContent value="huoltajille" className="mt-4">
+          <TabsContent value="huoltajille" className="mt-6">
             <AudienceGrid items={guardianItems} />
           </TabsContent>
         </Tabs>
