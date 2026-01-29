@@ -59,9 +59,28 @@ export default function middleware(request: NextRequest) {
       process.env.NEXT_PUBLIC_APP_URL,  // Custom URL if set
     ].filter(Boolean); // Remove undefined values
 
+    const safeParseUrl = (value: string | null) => {
+      if (!value) return null;
+      try {
+        return new URL(value);
+      } catch {
+        return null;
+      }
+    };
+
+    const originUrl = safeParseUrl(origin);
+    const requestOrigin = `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+    const requestOriginUrl = safeParseUrl(requestOrigin);
+    const allowedHosts = allowedOrigins
+      .map((value) => safeParseUrl(value)?.host)
+      .filter(Boolean) as string[];
+    const isVercelPreview = originUrl ? originUrl.hostname.endsWith('.vercel.app') : false;
+    const isSameOrigin = originUrl && requestOriginUrl && originUrl.host === requestOriginUrl.host;
+    const isAllowedHost = originUrl ? allowedHosts.some((host) => originUrl.host === host) : false;
+
     // For same-origin requests, origin will be null - allow these
     // Only block if origin exists and is not in allowed list
-    if (origin && !allowedOrigins.includes(origin)) {
+    if (origin && !allowedOrigins.includes(origin) && !isVercelPreview && !isSameOrigin && !isAllowedHost) {
       return NextResponse.json(
         { error: 'CORS: Origin not allowed' },
         { status: 403 }
