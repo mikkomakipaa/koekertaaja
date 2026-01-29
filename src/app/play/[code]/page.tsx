@@ -138,6 +138,7 @@ export default function PlayPage() {
   const [flagSubmitting, setFlagSubmitting] = useState(false);
   const [flagFeedback, setFlagFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [flaggedQuestionIds, setFlaggedQuestionIds] = useState<string[]>([]);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const { getMistakes, removeMistake, mistakeCount, error: mistakesError } = useReviewMistakes(code);
   const { updateProgress, clearProgress } = useSessionProgress(questionSet?.code ?? code);
 
@@ -805,7 +806,6 @@ export default function PlayPage() {
   const canSubmit = !isAnswerEmpty(userAnswer);
   const showKeyboardHint = currentQuestion.question_type === 'fill_blank' && !showExplanation;
   const hasFlaggedCurrent = flaggedQuestionIds.includes(currentQuestion.id);
-
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <div ref={topRef} />
@@ -825,7 +825,7 @@ export default function PlayPage() {
                 </div>
               </div>
               <Button
-                onClick={handleBrowseQuestionSets}
+                onClick={() => setShowExitConfirm(true)}
                 variant="ghost"
                 size="sm"
                 aria-label="Lopeta harjoitus"
@@ -996,10 +996,10 @@ export default function PlayPage() {
                       </p>
                     </div>
                     <Button
-                      onClick={handleBrowseQuestionSets}
+                      onClick={() => setShowExitConfirm(true)}
                       variant="ghost"
                       size="sm"
-                      className="gap-2 text-gray-700 hover:text-gray-900"
+                      className="gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-100 dark:hover:text-white dark:hover:bg-white/10"
                     >
                       <ListBullets weight="duotone" className="w-4 h-4" />
                       Valitse
@@ -1024,9 +1024,9 @@ export default function PlayPage() {
                           setFlagReason('');
                           setFlagNote('');
                         }}
-                        className="gap-2 text-gray-700 hover:text-gray-900"
+                        className="gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-100 dark:hover:text-white dark:hover:bg-white/10"
                       >
-                        <Flag size={16} weight="duotone" />
+                        <Flag size={16} weight="duotone" className="text-gray-700 dark:text-emerald-300" />
                         {hasFlaggedCurrent ? 'Ilmoitettu' : 'Ilmoita virhe'}
                       </Button>
                     </Dialog.Trigger>
@@ -1048,9 +1048,9 @@ export default function PlayPage() {
               <Button
                 onClick={handleBrowseQuestionSets}
                 variant="ghost"
-                className="w-full text-gray-600 hover:text-gray-900"
+                className="w-full text-gray-600 hover:text-gray-900 dark:text-gray-100 dark:hover:text-white dark:hover:bg-white/10"
               >
-                <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
+                <ListBullets weight="duotone" className="w-4 h-4 mr-2 text-gray-600 dark:text-emerald-300" />
                 Valitse eri aihealue
               </Button>
             )}
@@ -1133,6 +1133,44 @@ export default function PlayPage() {
           </Dialog.Root>
         </div>
       </div>
+
+      {showExitConfirm && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+          onClick={() => setShowExitConfirm(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-sm w-full shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+              Haluatko varmasti lopettaa?
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Olet käynyt läpi {currentQuestionIndex + 1}/{selectedQuestions.length} kysymystä.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Button
+                onClick={() => setShowExitConfirm(false)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg"
+              >
+                Jatka harjoittelua
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowExitConfirm(false);
+                  handleBrowseQuestionSets();
+                }}
+                type="button"
+                variant="secondary"
+                className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-3 px-6 rounded-lg"
+              >
+                Lopeta
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
