@@ -91,6 +91,7 @@ interface FlaggedQuestion {
   subject: string | null;
   flagCount: number;
   latestFlagAt: string | null;
+  latestNote?: string | null;
   reasonCounts: Record<'wrong_answer' | 'ambiguous' | 'typo' | 'other', number>;
 }
 
@@ -2052,49 +2053,74 @@ export default function CreatePage() {
                       {flaggedQuestions.map((flag) => (
                         <div
                           key={flag.questionId}
-                          className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
+                          className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:shadow-md transition-shadow"
                         >
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                             <div className="flex-1">
-                              <div className="flex items-start gap-2">
-                                <Flag weight="duotone" className="w-4 h-4 text-amber-600 mt-1" />
-                                <div>
-                                  <p className="font-semibold text-gray-900 dark:text-gray-100">
-                                    {flag.questionText}
-                                  </p>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    {flag.questionSetName ?? 'Tuntematon sarja'}
-                                    {flag.questionSetCode ? ` • Koodi ${flag.questionSetCode}` : ''}
-                                  </p>
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 rounded-full bg-amber-100 dark:bg-amber-900/30 p-2">
+                                  <Flag weight="duotone" className="w-4 h-4 text-amber-600" />
+                                </div>
+                                <div className="space-y-2">
+                                  <div>
+                                    <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                                      {flag.questionText}
+                                    </p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                      {flag.questionSetName ?? 'Tuntematon sarja'}
+                                      {flag.questionSetCode ? ` • Koodi ${flag.questionSetCode}` : ''}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2 text-xs">
+                                    <span className="inline-flex items-center rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200 px-2.5 py-1 font-semibold">
+                                      Ilmoituksia {flag.flagCount}
+                                    </span>
+                                    <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200 px-2.5 py-1">
+                                      Väärä vastaus {flag.reasonCounts.wrong_answer}
+                                    </span>
+                                    <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200 px-2.5 py-1">
+                                      Epäselvä {flag.reasonCounts.ambiguous}
+                                    </span>
+                                    <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200 px-2.5 py-1">
+                                      Typo {flag.reasonCounts.typo}
+                                    </span>
+                                    <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200 px-2.5 py-1">
+                                      Muu {flag.reasonCounts.other}
+                                    </span>
+                                  </div>
+                                  {flag.latestNote && (
+                                    <div className="rounded-lg border border-amber-200 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
+                                      <span className="font-semibold">Huomio:</span> {flag.latestNote}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                Ilmoituksia: {flag.flagCount} • Syyjakauma: väärä vastaus {flag.reasonCounts.wrong_answer}, epäselvä {flag.reasonCounts.ambiguous}, typo {flag.reasonCounts.typo}, muu {flag.reasonCounts.other}
-                              </div>
                             </div>
-                            <Button
-                              onClick={() => openFlagEdit(flag)}
-                              variant="outline"
-                              size="sm"
-                              className="gap-2"
-                            >
-                              <PencilSimple weight="duotone" className="w-4 h-4" />
-                              Muokkaa
-                            </Button>
-                            <Button
-                              onClick={() => handleDismissFlag(flag)}
-                              variant="outline"
-                              size="sm"
-                              disabled={dismissingFlagId === flag.questionId}
-                              className="gap-2 text-gray-600 hover:text-gray-900"
-                            >
-                              {dismissingFlagId === flag.questionId ? (
-                                <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Trash weight="duotone" className="w-4 h-4" />
-                              )}
-                              Poista ilmoitukset
-                            </Button>
+                            <div className="flex flex-row gap-2 lg:flex-col lg:items-end">
+                              <Button
+                                onClick={() => openFlagEdit(flag)}
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                              >
+                                <PencilSimple weight="duotone" className="w-4 h-4" />
+                                Muokkaa
+                              </Button>
+                              <Button
+                                onClick={() => handleDismissFlag(flag)}
+                                variant="outline"
+                                size="sm"
+                                disabled={dismissingFlagId === flag.questionId}
+                                className="gap-2 text-gray-600 hover:text-gray-900"
+                              >
+                                {dismissingFlagId === flag.questionId ? (
+                                  <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Trash weight="duotone" className="w-4 h-4" />
+                                )}
+                                Poista ilmoitukset
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))}

@@ -990,6 +990,25 @@ export default function PlayPage() {
                 <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/30 p-3">
                   <div className="flex items-center justify-between gap-3">
                     <div>
+                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">Valitse eri aihealue</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Selaa muita kysymyssarjoja.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleBrowseQuestionSets}
+                      variant="ghost"
+                      size="sm"
+                      className="gap-2 text-gray-700 hover:text-gray-900"
+                    >
+                      <ListBullets weight="duotone" className="w-4 h-4" />
+                      Valitse
+                    </Button>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/30 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
                       <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">Huomasitko virheen?</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         Kysymykset ovat tekoälyn laatimia, niissä saattaa esiintyä virheitä.
@@ -1024,14 +1043,6 @@ export default function PlayPage() {
                     </p>
                   )}
                 </div>
-                <Button
-                  onClick={handleBrowseQuestionSets}
-                  variant="ghost"
-                  className="w-full text-gray-600 hover:text-gray-900"
-                >
-                  <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
-                  Valitse eri aihealue
-                </Button>
               </div>
             ) : (
               <Button

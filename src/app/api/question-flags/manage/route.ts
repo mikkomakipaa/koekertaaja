@@ -9,6 +9,7 @@ type FlagRow = {
   question_id: string;
   question_set_id: string;
   reason: 'wrong_answer' | 'ambiguous' | 'typo' | 'other';
+  note: string | null;
   created_at: string | null;
   questions: {
     id: string;
@@ -46,7 +47,7 @@ export async function GET() {
     const { data, error } = await admin
       .from('question_flags')
       .select(
-        'question_id, question_set_id, reason, created_at, questions(id, question_text, question_type, correct_answer, options), question_sets(id, name, code, subject)'
+        'question_id, question_set_id, reason, note, created_at, questions(id, question_text, question_type, correct_answer, options), question_sets(id, name, code, subject)'
       );
 
     if (error) {
@@ -84,6 +85,8 @@ export async function GET() {
           subject: questionSet?.subject ?? null,
           flagCount: 1,
           latestFlagAt: flag.created_at,
+          latestNote: flag.note || null,
+          latestNoteAt: flag.note ? flag.created_at : null,
           reasonCounts: {
             wrong_answer: flag.reason === 'wrong_answer' ? 1 : 0,
             ambiguous: flag.reason === 'ambiguous' ? 1 : 0,
@@ -98,12 +101,20 @@ export async function GET() {
       if (flag.created_at && (!existing.latestFlagAt || flag.created_at > existing.latestFlagAt)) {
         existing.latestFlagAt = flag.created_at;
       }
+      if (flag.note) {
+        if (!existing.latestNoteAt || (flag.created_at && flag.created_at > existing.latestNoteAt)) {
+          existing.latestNote = flag.note;
+          existing.latestNoteAt = flag.created_at;
+        }
+      }
       if (existing.reasonCounts && flag.reason in existing.reasonCounts) {
         existing.reasonCounts[flag.reason] += 1;
       }
     });
 
-    const results = Array.from(aggregated.values()).sort((a, b) => {
+    const results = Array.from(aggregated.values())
+      .map(({ latestNoteAt, ...rest }) => rest)
+      .sort((a, b) => {
       if (b.flagCount !== a.flagCount) return b.flagCount - a.flagCount;
       return (b.latestFlagAt || '').localeCompare(a.latestFlagAt || '');
     });
