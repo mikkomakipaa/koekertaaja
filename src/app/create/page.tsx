@@ -250,23 +250,30 @@ export default function CreatePage() {
     const steps: CreationStep[] = [
       {
         id: 'topics',
-        label: 'Tunnistetaan aiheita materiaalista',
+        label: 'Identify topics',
         status: 'pending',
       },
     ];
 
     if (generationMode === 'quiz' || generationMode === 'both') {
-      steps.push({
-        id: 'quiz',
-        label: 'Luodaan visaa',
-        status: 'pending',
-      });
+      steps.push(
+        {
+          id: 'quiz-helppo',
+          label: 'Quiz: Easy',
+          status: 'pending',
+        },
+        {
+          id: 'quiz-normaali',
+          label: 'Quiz: Normal',
+          status: 'pending',
+        }
+      );
     }
 
     if (generationMode === 'flashcard' || generationMode === 'both') {
       steps.push({
         id: 'flashcard',
-        label: 'Luodaan muistikortteja',
+        label: 'Flashcards',
         status: 'pending',
       });
     }
@@ -359,7 +366,7 @@ export default function CreatePage() {
       } = { quizSets: [], flashcardSet: null, errors: [] };
 
       // Step 1: Identify topics (shared across quiz and flashcard)
-      updateCreationStep('topics', 'in_progress', { message: 'Analysoidaan materiaalia...' });
+      updateCreationStep('topics', 'in_progress', { message: 'Analyzing material...' });
       let topics: string[] = [];
       try {
         const topicsResponse = await fetch('/api/identify-topics', { method: 'POST', body: formData });
@@ -368,12 +375,12 @@ export default function CreatePage() {
           topics = topicsData.topics || [];
           updateCreationStep('topics', 'completed', {
             count: topics.length,
-            message: `Tunnistettiin ${topics.length} aihetta`,
+            message: `Identified ${topics.length} topics`,
           });
         }
       } catch (error) {
         console.warn('Topic identification failed:', error);
-        updateCreationStep('topics', 'error', { message: 'Aiheiden tunnistaminen epäonnistui' });
+        updateCreationStep('topics', 'error', { message: 'Topic recognition failed' });
       }
 
       // Add topics to form data for subsequent requests
@@ -383,15 +390,19 @@ export default function CreatePage() {
 
       // Step 2: Generate quiz sets (if requested)
       if (generationMode === 'quiz' || generationMode === 'both') {
-        updateCreationStep('quiz', 'in_progress', { message: 'Luodaan visaa...' });
+        updateCreationStep('quiz-helppo', 'in_progress', { message: 'Generating quiz...' });
+        updateCreationStep('quiz-normaali', 'in_progress', { message: 'Generating quiz...' });
         try {
           const quizResponse = await fetch('/api/generate-questions/quiz', { method: 'POST', body: formData });
           const quizData = await quizResponse.json();
           if (quizData.success && quizData.questionSets) {
             results.quizSets = quizData.questionSets;
-            updateCreationStep('quiz', 'completed', {
-              count: quizData.totalQuestions,
-              message: `Luotiin ${quizData.questionSets.length} visaa (${quizData.totalQuestions} kysymystä)`,
+            quizData.questionSets.forEach((set: { difficulty: string; questionCount: number }) => {
+              const stepId = set.difficulty === 'helppo' ? 'quiz-helppo' : 'quiz-normaali';
+              updateCreationStep(stepId, 'completed', {
+                count: set.questionCount,
+                message: `Created ${set.questionCount} questions`,
+              });
             });
           } else {
             throw new Error(quizData.error || 'Visan luonti epäonnistui');
@@ -399,13 +410,14 @@ export default function CreatePage() {
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Visan luonti epäonnistui';
           results.errors.push({ mode: 'quiz', error: errorMessage });
-          updateCreationStep('quiz', 'error', { message: errorMessage });
+          updateCreationStep('quiz-helppo', 'error', { message: errorMessage });
+          updateCreationStep('quiz-normaali', 'error', { message: errorMessage });
         }
       }
 
       // Step 3: Generate flashcard set (if requested)
       if (generationMode === 'flashcard' || generationMode === 'both') {
-        updateCreationStep('flashcard', 'in_progress', { message: 'Luodaan muistikortteja...' });
+        updateCreationStep('flashcard', 'in_progress', { message: 'Generating flashcards...' });
         try {
           const flashcardResponse = await fetch('/api/generate-questions/flashcard', { method: 'POST', body: formData });
           const flashcardData = await flashcardResponse.json();
@@ -413,7 +425,7 @@ export default function CreatePage() {
             results.flashcardSet = flashcardData.questionSet;
             updateCreationStep('flashcard', 'completed', {
               count: flashcardData.questionSet.questionCount,
-              message: `Luotiin muistikortit (${flashcardData.questionSet.questionCount} kysymystä)`,
+              message: `Created ${flashcardData.questionSet.questionCount} cards`,
             });
           } else {
             throw new Error(flashcardData.error || 'Muistikorttien luonti epäonnistui');
@@ -1123,28 +1135,6 @@ export default function CreatePage() {
       setGrade(undefined);
     }
   }, [requiresGrade]);
-
-  // Loading screen
-  if (state === 'loading') {
-    return (
-      <AuthGuard>
-        <UserMenu />
-        <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-6">
-          <Card className="w-full max-w-2xl shadow-lg dark:bg-gray-800 dark:border-gray-700">
-            <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white rounded-t-lg">
-              <CardTitle className="text-2xl">Luodaan kysymyssarjoja</CardTitle>
-              <CardDescription className="text-white text-base">
-                Tämä kestää muutaman minuutin. Älä sulje ikkunaa.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <CreationProgressStepper steps={creationSteps} />
-            </CardContent>
-          </Card>
-        </div>
-      </AuthGuard>
-    );
-  }
 
   // Success screen
   if (state === 'success') {
@@ -2282,6 +2272,47 @@ export default function CreatePage() {
           </CardContent>
         </Card>
       </div>
+
+      {state === 'loading' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-2xl border border-slate-200/60 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+            <div className="border-b border-slate-200/70 px-6 py-5 dark:border-slate-800">
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                Creating study sets
+              </h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                This may take a few minutes. Please keep this tab open.
+              </p>
+            </div>
+            <div className="px-6 py-6">
+              {creationSteps.length > 0 ? (
+                <>
+                  <CreationProgressStepper steps={creationSteps} />
+                  {creationSteps.some((step) => step.status === 'error') && (
+                    <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-100">
+                      <div className="font-semibold">Some steps failed</div>
+                      <ul className="mt-2 space-y-1">
+                        {creationSteps
+                          .filter((step) => step.status === 'error')
+                          .map((step) => (
+                            <li key={step.id}>
+                              {step.label}: {step.metadata?.message ?? 'Failed'}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+                  <CircleNotch weight="bold" className="h-5 w-5 animate-spin text-indigo-500" />
+                  <span>Processing…</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </AuthGuard>
   );

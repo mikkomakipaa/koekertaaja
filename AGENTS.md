@@ -6,7 +6,7 @@ This file provides guidance to Agents when working with code in this repository.
 
 **If you see a request to implement something:**
 1. Check if task files exist in `todo/`.
-2. If YES: run `bash scripts/run-tasks.sh` [MODE: EXECUTION].
+2. If YES: run `bash scripts/run-tasks-codex.sh` [MODE: EXECUTION].
 3. If NO: create task files in `todo/` [MODE: PLANNING], then ask the user to run the script.
 
 **Default behavior**: Unless explicitly told otherwise, assume you are in EXECUTION mode and can make changes directly.
@@ -245,8 +245,7 @@ docs/
 - Generate 2 difficulty levels for quiz mode; optional flashcard mode.
 - Require 3-5 high-level topics and tag questions for balanced sampling.
 - Keep grade-specific distributions aligned with prompt constants.
-- Default pool size 40-400 questions; exam length 5-20 per session.
-- Flashcard distributions: English (60/30/10), Math (70/20/10), Generic (50/30/20).
+- Default pool size 40-200 questions; exam length 5-20 per session.
 
 #### Enhanced Explanations (2026-01-24)
 All AI-generated explanations include three pedagogical components in 2-3 Finnish sentences:
