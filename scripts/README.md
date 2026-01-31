@@ -6,54 +6,6 @@ This directory contains automation scripts for development and testing workflows
 
 ## Available Scripts
 
-### Task Execution
-
-#### `run-tasks.sh`
-**Purpose**: Generic task runner that delegates to Claude or Codex CLI
-
-**Usage**:
-```bash
-bash scripts/run-tasks.sh
-```
-
-**How it works**:
-1. Checks for `claude` CLI (priority 1)
-2. Falls back to `codex` CLI (priority 2)
-3. Delegates to appropriate runner script
-4. Executes tasks from `todo/` directory
-
-**Prerequisites**:
-- Claude CLI: https://claude.ai/download
-- OR Codex CLI (alternative)
-
----
-
-#### `run-tasks-claude.sh`
-**Purpose**: Execute tasks using Claude CLI
-
-**Usage**:
-```bash
-bash scripts/run-tasks-claude.sh
-```
-
-**Features**:
-- Reads task files from `todo/` directory
-- Executes tasks sequentially
-- Saves output to `results/` directory
-- Error handling and logging
-
----
-
-#### `run-tasks-codex.sh`
-**Purpose**: Execute tasks using Codex CLI (alternative to Claude)
-
-**Usage**:
-```bash
-bash scripts/run-tasks-codex.sh
-```
-
----
-
 ### Testing & Validation
 
 #### `test.sh`
@@ -160,71 +112,11 @@ ls results/
 ```
 scripts/
 ├── README.md                # This file
-├── run-tasks.sh             # Generic task runner
-├── run-tasks-claude.sh      # Claude CLI task executor
-├── run-tasks-codex.sh       # Codex CLI task executor
 ├── test.sh                  # Test suite runner
 ├── check-dev.sh             # Development checks
-└── results/                 # Output logs (gitignored)
-    ├── check-dev/
-    │   ├── type-check.log
-    │   ├── lint.log
-    │   ├── build.log
-    │   └── summary.log
-    └── task-*.log           # Task execution logs
+├── ts-node-loader.mjs       # TypeScript loader
+└── verify-backfill.sql      # SQL verification script
 ```
-
----
-
-## Task Runner Workflow
-
-### Task Planning Mode
-
-**When**: Creating implementation plan for complex features
-
-**Process**:
-1. Agent reads `DWF/AGENTS.md` for context
-2. Agent explores codebase (Glob, Grep, Read)
-3. Agent creates task files in `todo/`:
-   ```
-   todo/task-001-add-answer-matching.md
-   todo/task-002-write-tests.md
-   todo/task-003-update-docs.md
-   ```
-4. Each task file follows `todo/TEMPLATE.md` structure:
-   - **Goal**: What to accomplish
-   - **Context**: Why this task exists
-   - **Steps**: Detailed implementation steps
-   - **Files**: Which files to modify
-   - **Acceptance Criteria**: How to verify success
-
-### Task Execution Mode
-
-**When**: Implementing tasks created in planning mode
-
-**Process**:
-1. User runs: `bash scripts/run-tasks.sh`
-2. Script detects `claude` or `codex` CLI
-3. For each task file in `todo/`:
-   - Read task instructions
-   - Execute file changes
-   - Run validation (typecheck, tests)
-   - Log output to `results/`
-4. Agent marks task complete or reports errors
-
-### Task Review Mode
-
-**When**: After task execution completes
-
-**Process**:
-1. User reviews `results/` logs
-2. Run validation: `bash scripts/test.sh --coverage`
-3. Check for:
-   - Type errors
-   - Lint errors
-   - Test failures
-   - Missing tests
-4. Iterate on failed tasks
 
 ---
 
@@ -245,7 +137,6 @@ npm run test:coverage    # With coverage report
 ```bash
 bash scripts/test.sh              # All tests in sequence
 bash scripts/check-dev.sh         # All checks with logging
-bash scripts/run-tasks.sh         # Task-based development
 ```
 
 ---
@@ -282,22 +173,6 @@ bash scripts/run-tasks.sh         # Task-based development
 
 ## Troubleshooting
 
-### "Neither claude nor codex CLI found"
-
-**Solution**:
-```bash
-# Install Claude CLI
-# Visit: https://claude.ai/download
-
-# Or install Codex CLI
-# (Follow Codex installation instructions)
-
-# Verify installation
-which claude
-# or
-which codex
-```
-
 ### "npm run typecheck failed"
 
 **Solution**:
@@ -321,20 +196,6 @@ chmod +x scripts/*.sh
 bash scripts/test.sh
 ```
 
-### Task execution hangs
-
-**Solution**:
-```bash
-# Check if task file exists
-ls todo/
-
-# Check task file format (should follow TEMPLATE.md)
-cat todo/task-001-*.md
-
-# Run task manually with verbose logging
-bash -x scripts/run-tasks.sh
-```
-
 ---
 
 ## Best Practices
@@ -347,20 +208,11 @@ bash -x scripts/run-tasks.sh
 | Full pre-commit check | `bash scripts/check-dev.sh` |
 | Running tests | `bash scripts/test.sh` |
 | Running tests with coverage | `bash scripts/test.sh --coverage` |
-| Creating feature plan | Manually create `todo/` files |
-| Implementing feature | `bash scripts/run-tasks.sh` |
 | Before PR | `bash scripts/test.sh --coverage && bash scripts/check-dev.sh` |
 
-### Directory Hygiene
+### Test Report
 
 ```bash
-# Clean up results (safe, gitignored)
-rm -rf results/
-
-# Clean up todo (CAREFUL - not in git)
-# Only do this after tasks are complete
-rm -rf todo/
-
 # Regenerate test report
 bash scripts/test.sh --report
 ```
@@ -382,6 +234,6 @@ When adding new scripts:
 ---
 
 **See Also**:
-- `DWF/AGENTS.md` - Agent workflow guidance
-- `DWF/technical/TESTING_STRATEGY.md` - Testing approach
-- `todo/TEMPLATE.md` - Task file template (if exists)
+- `../README.md` - Project overview
+- `../CONTRIBUTING.md` - Contribution guidelines
+- `../docs/TESTING_GUIDE.md` - Testing documentation

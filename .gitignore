@@ -6,6 +6,14 @@
 /todo/
 .agents.md
 .claude.md
+AGENTS.md
+CLAUDE.md
+
+# Personal workflow scripts
+scripts/run-tasks.sh
+scripts/run-tasks-claude.sh
+scripts/run-tasks-codex.sh
+scripts/run-tasks-codex-improved.sh
 
 # dependencies
 /node_modules
