@@ -19,12 +19,12 @@ const InteractiveMapComponent = lazy(() =>
 function MapLoadingSkeleton({ width = 800, height = 600 }: { width?: number; height?: number }) {
   return (
     <div
-      className="flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse"
+      className="flex items-center justify-center bg-gray-50 dark:bg-gray-900 rounded-lg animate-pulse transition-colors"
       style={{ width, height }}
     >
       <div className="flex flex-col items-center gap-3">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-gray-500 dark:text-gray-400">Ladataan karttakomponenttia...</p>
+        <div className="w-12 h-12 border-4 border-indigo-600 dark:border-indigo-400 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-gray-600 dark:text-gray-400">Ladataan karttakomponenttia...</p>
       </div>
     </div>
   );

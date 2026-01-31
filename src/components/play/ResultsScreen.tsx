@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Answer } from '@/types';
 import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TopicMasteryDisplay } from '@/components/play/TopicMasteryDisplay';
+import { BadgeDisplay } from '@/components/badges/BadgeDisplay';
 import { useBadges } from '@/hooks/useBadges';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
@@ -65,7 +68,6 @@ export function ResultsScreen({
   const [personalBest, setPersonalBest] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [showAllAnswers, setShowAllAnswers] = useState(false);
-  const [showAllBadges, setShowAllBadges] = useState(false);
   const hasRecordedRef = useRef(false);
   const sessionMistakeCount = answers.filter(answer => !answer.isCorrect).length;
   const reviewMistakeCount = mistakeCount > 0 ? mistakeCount : sessionMistakeCount;
@@ -111,22 +113,27 @@ export function ResultsScreen({
   // Determine celebration level
   const getCelebration = () => {
     if (percentage === 100) return {
+      emoji: '🎉',
       icon: <Sparkle size={80} weight="fill" className="text-yellow-500" />,
       text: 'Täydelliset pisteet!'
     };
     if (percentage >= 90) return {
+      emoji: '🌟',
       icon: <Star size={80} weight="fill" className="text-yellow-500" />,
       text: 'Erinomaista!'
     };
     if (percentage >= 80) return {
+      emoji: '🎊',
       icon: <Confetti size={80} weight="duotone" className="text-purple-500" />,
       text: 'Hienoa työtä!'
     };
     if (percentage >= 60) return {
+      emoji: '👍',
       icon: <ThumbsUp size={80} weight="fill" className="text-blue-500" />,
       text: 'Hyvää työtä!'
     };
     return {
+      emoji: '💪',
       icon: <Barbell size={80} weight="bold" className="text-orange-500" />,
       text: 'Jatka harjoittelua!'
     };
@@ -216,83 +223,230 @@ export function ResultsScreen({
     };
   };
 
+  const displayPersonalBest = personalBest > 0 ? (isNewRecord ? totalPoints : personalBest) : null;
+  const unlockedBadgesCount = badges.filter(b => b.unlocked).length;
+  const newlyUnlockedBadges = badges.filter(badge => newlyUnlocked.includes(badge.id));
+
   return (
-    <div className={`min-h-screen bg-gradient-to-b ${modeColors.bg} p-4 md:p-8 transition-colors`}>
-      <div className="max-w-2xl mx-auto">
-        {/* Results Header */}
-        <div className="text-center mb-10">
-          <div className="mb-4 flex justify-center">
-            <div className={`${modeColors.iconBg} p-6 rounded-full`}>
-              {celebration.icon}
+    <div className={`min-h-screen bg-gradient-to-b ${modeColors.bg} p-4 md:p-8 pb-24 transition-colors`}>
+      <div className="max-w-5xl mx-auto">
+        {/* Hero */}
+        <div className="mb-8 rounded-3xl bg-white/80 dark:bg-gray-900/70 border border-white/60 dark:border-gray-800 p-6 md:p-8 shadow-sm">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div className={`${modeColors.iconBg} flex items-center justify-center rounded-2xl px-6 py-4`}>
+              <span className="text-5xl md:text-6xl" role="img" aria-label="celebration">
+                {celebration.emoji}
+              </span>
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                {celebration.text}
+              </h1>
+              <p className="text-lg md:text-2xl text-gray-600 dark:text-gray-400">
+                {score} / {total} oikein ({percentage}%)
+              </p>
             </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {celebration.text}
-          </h1>
-          <p className="text-2xl text-gray-600 dark:text-gray-400">
-            {score} / {total} oikein ({percentage}%)
-          </p>
         </div>
 
-        {/* Stats */}
-        <div className="flex justify-center gap-6 mb-10">
-          <div className="text-center">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pisteet</div>
-            <div className="flex items-center justify-center gap-2 text-3xl font-bold text-yellow-600 dark:text-yellow-500">
-              <DiamondsFour size={32} weight="duotone" className="text-yellow-500" />
-              {totalPoints}
+        {/* Metrics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-900/80 border border-white/70 dark:border-gray-800 p-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <DiamondsFour size={18} weight="duotone" className="text-yellow-500" />
+              Pisteprosentti
             </div>
-            {personalBest > 0 && (
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {isNewRecord ? (
-                  <span className="text-green-600 dark:text-green-400 font-semibold flex items-center justify-center gap-1">
-                    Uusi ennätys! <Confetti size={16} weight="fill" />
-                  </span>
-                ) : (
-                  <span>Ennätys: {personalBest}</span>
-                )}
+            <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">{percentage}%</div>
+          </div>
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-900/80 border border-white/70 dark:border-gray-800 p-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <Fire size={18} weight="duotone" className="text-orange-500" />
+              Paras putki
+            </div>
+            <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {bestStreak > 0 ? bestStreak : '—'}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-900/80 border border-white/70 dark:border-gray-800 p-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <Medal size={18} weight="duotone" className="text-purple-500" />
+              Uusia merkkejä
+            </div>
+            <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {newlyUnlockedBadges.length}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-900/80 border border-white/70 dark:border-gray-800 p-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <Sparkle size={18} weight="duotone" className="text-emerald-500" />
+              Henkilökohtainen ennätys
+            </div>
+            <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {displayPersonalBest ?? '—'}
+            </div>
+            {displayPersonalBest && isNewRecord && (
+              <div className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                Uusi ennätys! <Confetti size={14} weight="fill" />
               </div>
             )}
           </div>
-          {bestStreak > 0 && (
-            <div className="text-center">
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Paras putki</div>
-              <div className="flex items-center justify-center gap-2 text-3xl font-bold text-orange-600 dark:text-orange-500">
-                <Fire size={32} weight="duotone" className="text-orange-500" />
-                {bestStreak}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* All Badges Section */}
-        {badges.some(b => b.unlocked) && (
-          <div className="mb-10">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                <Medal weight="duotone" className="w-5 h-5" />
-                Saavutetut merkit ({badges.filter(b => b.unlocked).length}/{badges.length})
-              </h3>
-              <button
-                onClick={() => setShowAllBadges(!showAllBadges)}
-                className={`text-sm ${modeColors.accent} hover:opacity-80 font-medium`}
-              >
-                {showAllBadges ? 'Piilota merkit' : 'Näytä kaikki merkit'}
-              </button>
+        {/* Tabs */}
+        <Tabs defaultValue="overview" className="mb-8">
+          <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-white/80 dark:bg-gray-900/70 p-1 shadow-inner shadow-gray-200/40 dark:shadow-none border border-white/70 dark:border-gray-800">
+            <TabsTrigger value="overview" className="rounded-xl text-sm md:text-base">Yhteenveto</TabsTrigger>
+            <TabsTrigger value="answers" className="rounded-xl text-sm md:text-base">Vastaukset</TabsTrigger>
+            <TabsTrigger value="badges" className="rounded-xl text-sm md:text-base">Merkit</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="mt-6 space-y-4">
+            <div className="rounded-2xl bg-white/90 dark:bg-gray-900/80 border border-white/70 dark:border-gray-800 p-5">
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                <Target size={18} weight="duotone" className="text-indigo-500" />
+                Aiheiden hallinta
+              </div>
+              <TopicMasteryDisplay questionSetCode={questionSetCode ?? ''} className="mt-2 border-t-0 pt-0" />
             </div>
-            {showAllBadges ? (
+
+            <div className="rounded-2xl bg-white/90 dark:bg-gray-900/80 border border-white/70 dark:border-gray-800 p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <ArrowCounterClockwise size={18} weight="duotone" className="text-rose-500" />
+                  Kertaa virheet
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Löytyi {reviewMistakeCount} virhettä, joita voit harjoitella uudelleen.
+                </p>
+              </div>
+              {sessionMistakeCount > 0 && onReviewMistakes && (
+                <Button
+                  onClick={onReviewMistakes}
+                  className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-medium px-5 py-3"
+                >
+                  Kertaa virheet
+                </Button>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="answers" className="mt-6">
+            <div className="rounded-2xl bg-white/90 dark:bg-gray-900/80 border border-white/70 dark:border-gray-800 p-5">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Vastausten yhteenveto</h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowAllAnswers(false)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
+                      showAllAnswers
+                        ? 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 bg-white/80 dark:bg-gray-800/80'
+                        : `border-transparent text-white ${modeColors.button}`
+                    }`}
+                  >
+                    Vain virheet
+                  </button>
+                  <button
+                    onClick={() => setShowAllAnswers(true)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
+                      showAllAnswers
+                        ? `border-transparent text-white ${modeColors.button}`
+                        : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 bg-white/80 dark:bg-gray-800/80'
+                    }`}
+                  >
+                    Kaikki
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2 max-h-[420px] md:max-h-[520px] overflow-y-auto pr-1">
+                {answers.filter(answer => showAllAnswers || !answer.isCorrect).map((answer, index) => (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-lg border-l-4 ${
+                      answer.isCorrect
+                        ? 'bg-green-50 border-green-500'
+                        : 'bg-red-50 border-red-500'
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      {answer.isCorrect ? (
+                        <CheckCircle weight="duotone" className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <XCircle weight="duotone" className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">
+                          <MathText>{answer.questionText}</MathText>
+                        </p>
+                        {!answer.isCorrect && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            Oikea vastaus:{' '}
+                            <span className="font-semibold">
+                              {typeof answer.correctAnswer === 'object' ? (
+                                JSON.stringify(answer.correctAnswer)
+                              ) : (
+                                <MathText>{String(answer.correctAnswer)}</MathText>
+                              )}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="badges" className="mt-6 space-y-5">
+            <div className="rounded-2xl bg-white/90 dark:bg-gray-900/80 border border-white/70 dark:border-gray-800 p-5">
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                <Sparkle size={18} weight="duotone" className="text-emerald-500" />
+                Uudet merkit
+              </div>
+              {newlyUnlockedBadges.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {newlyUnlockedBadges.map(badge => {
+                    const colors = getBadgeColors(badge.id);
+                    return (
+                      <BadgeDisplay
+                        badge={badge}
+                        key={badge.id}
+                        className={`p-3 rounded-lg text-center bg-gradient-to-br ${colors.light} ${colors.dark} border-2`}
+                      >
+                        <div className="text-3xl mb-1 flex justify-center">
+                          {getBadgeIcon(badge.id)}
+                        </div>
+                        <div className={`text-xs font-medium leading-tight ${colors.text}`}>
+                          {badge.name}
+                        </div>
+                      </BadgeDisplay>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600 dark:text-gray-400">Ei uusia merkkejä tällä kertaa.</p>
+              )}
+            </div>
+
+            <div className="rounded-2xl bg-white/90 dark:bg-gray-900/80 border border-white/70 dark:border-gray-800 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <Medal weight="duotone" className="w-5 h-5" />
+                  Kaikki merkit ({unlockedBadgesCount}/{badges.length})
+                </h3>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
                 {badges.map(badge => {
                   const colors = getBadgeColors(badge.id);
                   return (
-                    <div
+                    <BadgeDisplay
+                      badge={badge}
                       key={badge.id}
                       className={`p-3 rounded-lg text-center ${
                         badge.unlocked
                           ? `bg-gradient-to-br ${colors.light} ${colors.dark} border-2`
                           : 'bg-gray-100 dark:bg-gray-800 opacity-50'
                       }`}
-                      title={badge.unlocked ? badge.name : 'Lukittu'}
                     >
                       <div className="text-3xl mb-1 flex justify-center">
                         {badge.unlocked ? getBadgeIcon(badge.id) : <LockSimple size={32} weight="fill" className="text-gray-400" />}
@@ -302,104 +456,33 @@ export function ResultsScreen({
                           {badge.name}
                         </div>
                       )}
-                    </div>
+                    </BadgeDisplay>
                   );
                 })}
               </div>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {badges.filter(b => b.unlocked).map(badge => {
-                  const colors = getBadgeColors(badge.id);
-                  return (
-                    <div
-                      key={badge.id}
-                      className={`flex items-center gap-1 px-3 py-2 bg-gradient-to-br ${colors.light} ${colors.dark} border rounded-lg`}
-                      title={badge.name}
-                    >
-                      <span className="text-xl">{getBadgeIcon(badge.id, 20)}</span>
-                      <span className={`text-xs font-medium ${colors.text}`}>{badge.name}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Answer Summary */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Vastausten yhteenveto</h3>
-            <button
-              onClick={() => setShowAllAnswers(!showAllAnswers)}
-              className={`text-sm ${modeColors.accent} hover:opacity-80 font-medium`}
-            >
-              {showAllAnswers ? 'Näytä vain virheet' : 'Näytä kaikki'}
-            </button>
-          </div>
-          <div className="space-y-2">
-            {answers.filter(answer => showAllAnswers || !answer.isCorrect).map((answer, index) => (
-              <div
-                key={index}
-                className={`p-4 rounded-lg border-l-4 ${
-                  answer.isCorrect
-                    ? 'bg-green-50 border-green-500'
-                    : 'bg-red-50 border-red-500'
-                }`}
-              >
-                <div className="flex items-start gap-2">
-                  {answer.isCorrect ? (
-                    <CheckCircle weight="duotone" className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  ) : (
-                    <XCircle weight="duotone" className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-                  )}
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">
-                      <MathText>{answer.questionText}</MathText>
-                    </p>
-                    {!answer.isCorrect && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        Oikea vastaus:{' '}
-                        <span className="font-semibold">
-                          {typeof answer.correctAnswer === 'object' ? (
-                            JSON.stringify(answer.correctAnswer)
-                          ) : (
-                            <MathText>{String(answer.correctAnswer)}</MathText>
-                          )}
-                        </span>
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          {sessionMistakeCount > 0 && onReviewMistakes && (
-            <Button
-              onClick={onReviewMistakes}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-6 rounded-xl font-medium flex items-center justify-center gap-2"
-            >
-              <ArrowCounterClockwise size={20} weight="bold" />
-              Kertaa virheet ({reviewMistakeCount})
-            </Button>
-          )}
-          <Button
-            onClick={onPlayAgain}
-            className={`flex-1 ${modeColors.button} py-6 rounded-xl font-medium`}
-          >
-            Pelaa uudelleen
-          </Button>
-          <Button
-            onClick={onBackToMenu}
-            variant="outline"
-            className="flex-1 py-6 rounded-xl font-medium"
-          >
-            Takaisin valikkoon
-          </Button>
+        <div className="sticky bottom-4 z-10">
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-900/85 border border-white/70 dark:border-gray-800 p-3 backdrop-blur">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={onPlayAgain}
+                className={`flex-1 ${modeColors.button} py-6 rounded-xl font-medium`}
+              >
+                Pelaa uudelleen
+              </Button>
+              <Button
+                onClick={onBackToMenu}
+                variant="outline"
+                className="flex-1 py-6 rounded-xl font-medium"
+              >
+                Takaisin valikkoon
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

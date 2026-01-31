@@ -22,6 +22,7 @@ interface BadgeStats {
 
 interface StoredBadgeData {
   unlockedBadges: BadgeId[];
+  unlockedAt?: Partial<Record<BadgeId, string>>;
   stats: BadgeStats;
 }
 
@@ -31,66 +32,80 @@ const BADGE_DEFINITIONS: Record<BadgeId, Omit<Badge, 'unlocked' | 'unlockedAt'>>
     name: 'Ensimmäinen yritys',
     description: 'Suorita ensimmäinen harjoituskierros',
     emoji: '🌟',
+    unlockConditions: ['Suorita ensimmäinen harjoitussessiosi'],
   },
   '5_sessions': {
     id: '5_sessions',
     name: 'Harjoittelija',
     description: 'Suorita 5 harjoituskierrosta',
     emoji: '🔥',
+    unlockConditions: ['Suorita 5 harjoitussessiota'],
   },
   '10_sessions': {
     id: '10_sessions',
     name: 'Ahkera opiskelija',
     description: 'Suorita 10 harjoituskierrosta',
     emoji: '💪',
+    unlockConditions: ['Suorita 10 harjoitussessiota'],
   },
   '25_sessions': {
     id: '25_sessions',
     name: 'Mestari',
     description: 'Suorita 25 harjoituskierrosta',
     emoji: '🎯',
+    unlockConditions: ['Suorita 25 harjoitussessiota'],
   },
   perfect_score: {
     id: 'perfect_score',
     name: 'Täydellinen',
     description: 'Saa kaikki kysymykset oikein',
     emoji: '⭐',
+    unlockConditions: ['Saa 100% pisteistä yhdessä sessiossa'],
   },
   beat_personal_best: {
     id: 'beat_personal_best',
     name: 'Huippupisteet',
     description: 'Päihitä henkilökohtainen ennätyksesi',
     emoji: '🚀',
+    unlockConditions: [
+      'Saa enemmän pisteitä kuin aiempi ennätyksesi',
+      'Vaatii vähintään 2 suoritettua sessiota',
+    ],
   },
   speed_demon: {
     id: 'speed_demon',
     name: 'Salamanopea',
     description: 'Suorita kierros alle 5 minuutissa',
     emoji: '⚡',
+    unlockConditions: ['Suorita sessio alle 5 minuutissa'],
   },
   tried_both_levels: {
     id: 'tried_both_levels',
     name: 'Monipuolinen',
     description: 'Kokeile molempia vaikeustasoja',
     emoji: '🎪',
+    unlockConditions: ['Kokeile molempia vaikeustasoja (Helppo ja Normaali)'],
   },
   streak_3: {
     id: 'streak_3',
     name: 'Putki 3',
     description: 'Vastaa 3 kysymykseen oikein peräkkäin',
     emoji: '🔥',
+    unlockConditions: ['Vastaa 3 kysymykseen oikein peräkkäin'],
   },
   streak_5: {
     id: 'streak_5',
     name: 'Putki 5',
     description: 'Vastaa 5 kysymykseen oikein peräkkäin',
     emoji: '🔥🔥',
+    unlockConditions: ['Vastaa 5 kysymykseen oikein peräkkäin'],
   },
   streak_10: {
     id: 'streak_10',
     name: 'Putki 10',
     description: 'Vastaa 10 kysymykseen oikein peräkkäin',
     emoji: '🔥🔥🔥',
+    unlockConditions: ['Vastaa 10 kysymykseen oikein peräkkäin'],
   },
 };
 
@@ -110,13 +125,14 @@ export function useBadges(questionSetCode?: string) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const data: StoredBadgeData = JSON.parse(stored);
+        const unlockedAt = data.unlockedAt ?? {};
         setStats(data.stats);
 
         // Initialize all badges
         const allBadges = Object.values(BADGE_DEFINITIONS).map(def => ({
           ...def,
           unlocked: data.unlockedBadges.includes(def.id),
-          unlockedAt: undefined,
+          unlockedAt: unlockedAt[def.id] ? new Date(unlockedAt[def.id] as string) : undefined,
         }));
 
         setBadges(allBadges);
@@ -140,9 +156,17 @@ export function useBadges(questionSetCode?: string) {
       const unlockedBadges = updatedBadges
         .filter(b => b.unlocked)
         .map(b => b.id);
+      const unlockedAt: Partial<Record<BadgeId, string>> = {};
+
+      updatedBadges.forEach((badge) => {
+        if (badge.unlocked && badge.unlockedAt) {
+          unlockedAt[badge.id] = badge.unlockedAt.toISOString();
+        }
+      });
 
       const data: StoredBadgeData = {
         unlockedBadges,
+        unlockedAt,
         stats: updatedStats,
       };
 

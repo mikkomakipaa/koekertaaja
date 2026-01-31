@@ -246,6 +246,7 @@ export interface Badge {
   name: string;
   description: string;
   emoji: string;
+  unlockConditions: string[];
   unlocked: boolean;
   unlockedAt?: Date;
 }

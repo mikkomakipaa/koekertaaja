@@ -93,14 +93,16 @@ export function QuestionRenderer({
 
     case 'map':
       return (
-        <Suspense fallback={
-          <div className="flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-gray-600 dark:text-gray-300">Ladataan karttaa...</p>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 transition-colors">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-8 h-8 border-4 border-indigo-600 dark:border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-gray-600 dark:text-gray-400">Ladataan karttaa...</p>
+              </div>
             </div>
-          </div>
-        }>
+          }
+        >
           <MapQuestion
             question={question}
             userAnswer={userAnswer}

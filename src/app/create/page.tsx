@@ -41,11 +41,12 @@ import {
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { UserMenu } from '@/components/auth/UserMenu';
 import { CreationProgressStepper } from '@/components/create/CreationProgressStepper';
+import { TestQuestionsTab } from '@/components/create/TestQuestionsTab';
 
 type CreateState = 'form' | 'loading' | 'success';
 
 type CreationStep = {
-  id: 'topics' | 'quiz' | 'flashcard';
+  id: 'topics' | 'quiz-helppo' | 'quiz-normaali' | 'flashcard';
   label: string;
   status: 'pending' | 'in_progress' | 'completed' | 'error';
   metadata?: {
@@ -1236,7 +1237,7 @@ export default function CreatePage() {
 
           <CardContent className="p-6">
             <Tabs defaultValue="create" className="w-full">
-              <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} mb-6`}>
+              <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-6' : 'grid-cols-5'} mb-6`}>
                 <TabsTrigger value="create" className="text-base">
                   <Star className="w-4 h-4 mr-2" />
                   Luo uusi
@@ -1252,11 +1253,21 @@ export default function CreatePage() {
                 <TabsTrigger value="manage" className="text-base">
                   <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
                   Hallitse
+                  <span className="ml-2 inline-flex min-w-[28px] items-center justify-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                    {allQuestionSets.length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="test-questions" className="text-base">
+                  <Eye weight="duotone" className="w-4 h-4 mr-2" />
+                  Testaa
                 </TabsTrigger>
                 {isAdmin && (
                   <TabsTrigger value="notifications" className="text-base">
                     <Flag weight="duotone" className="w-4 h-4 mr-2" />
                     Ilmoitukset
+                    <span className="ml-2 inline-flex min-w-[28px] items-center justify-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
+                      {loadingFlags ? '…' : flaggedQuestions.length}
+                    </span>
                   </TabsTrigger>
                 )}
               </TabsList>
@@ -2003,6 +2014,14 @@ export default function CreatePage() {
                     Takaisin valikkoon
                   </Button>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="test-questions" className="space-y-4">
+                <TestQuestionsTab
+                  allQuestionSets={allQuestionSets}
+                  loadingQuestionSets={loadingQuestionSets}
+                  onRefreshSets={loadQuestionSets}
+                />
               </TabsContent>
 
               {isAdmin && (

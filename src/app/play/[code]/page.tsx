@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MathText } from '@/components/ui/math-text';
 import { Textarea } from '@/components/ui/textarea';
+import { LoadingScreen } from '@/components/ui/loading';
 import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
 import { ProgressBar } from '@/components/play/ProgressBar';
 import { ResultsScreen } from '@/components/play/ResultsScreen';
@@ -23,7 +24,6 @@ import { shuffleArray } from '@/lib/utils';
 import { QuestionSetWithQuestions, StudyMode, Flashcard, type QuestionType, type QuestionFlagReason } from '@/types';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
-  CircleNotch,
   ListBullets,
   DiamondsFour,
   Fire,
@@ -560,15 +560,10 @@ export default function PlayPage() {
   // Loading screen
   if (state === 'loading') {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <CircleNotch
-            weight="bold"
-            className={`w-12 h-12 mx-auto mb-4 animate-spin ${isFlashcardMode ? 'text-teal-600' : 'text-indigo-600'}`}
-          />
-          <p className="text-lg text-gray-600">Ladataan kysymyssarjaa...</p>
-        </div>
-      </div>
+      <LoadingScreen
+        message="Ladataan kysymyssarjaa..."
+        accent={isFlashcardMode ? 'teal' : 'indigo'}
+      />
     );
   }
 
@@ -773,15 +768,10 @@ export default function PlayPage() {
     }
 
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <CircleNotch
-            weight="bold"
-            className={`w-12 h-12 mx-auto mb-4 animate-spin ${isFlashcardMode ? 'text-teal-600' : 'text-indigo-600'}`}
-          />
-          <p className="text-lg text-gray-600">Valmistellaan kysymyksiä...</p>
-        </div>
-      </div>
+      <LoadingScreen
+        message="Valmistellaan kysymyksiä..."
+        accent={isFlashcardMode ? 'teal' : 'indigo'}
+      />
     );
   }
 
