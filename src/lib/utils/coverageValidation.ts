@@ -213,21 +213,6 @@ function questionContainsKeyword(
         });
       }
       break;
-    case 'map':
-      if (typeof question.correct_answer === 'string') {
-        textParts.push(question.correct_answer);
-      } else if (Array.isArray(question.correct_answer)) {
-        textParts.push(...question.correct_answer);
-      }
-      if (question.options?.regions) {
-        question.options.regions.forEach(region => {
-          textParts.push(region.label);
-          if (region.aliases) {
-            textParts.push(...region.aliases);
-          }
-        });
-      }
-      break;
   }
 
   const searchText = textParts

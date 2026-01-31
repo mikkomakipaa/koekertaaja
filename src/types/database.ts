@@ -1,5 +1,4 @@
 import {
-  MapQuestionEntity,
   Question,
   QuestionSet,
   QuestionFlag,
@@ -59,14 +58,6 @@ export interface Database {
         Update: Partial<Omit<DatabaseQuestion, 'id' | 'created_at'>> & Record<string, unknown>;
         Relationships: [];
       };
-      map_questions: {
-        Row: DatabaseMapQuestion & Record<string, unknown>;
-        Insert: Omit<DatabaseMapQuestion, 'id' | 'created_at' | 'updated_at'> &
-          Record<string, unknown>;
-        Update: Partial<Omit<DatabaseMapQuestion, 'id' | 'created_at'>> &
-          Record<string, unknown>;
-        Relationships: [];
-      };
       question_flags: {
         Row: QuestionFlag & Record<string, unknown>;
         Insert: Omit<QuestionFlag, 'id' | 'created_at'> & Record<string, unknown>;
@@ -96,27 +87,6 @@ export interface DatabaseQuestion {
   topic?: string;
   skill?: string;
   subtopic?: string;
-}
-
-export interface DatabaseMapQuestion {
-  id: string;
-  question_set_id: string | null;
-  subject: string;
-  grade?: number | null;
-  difficulty?: string | null;
-  question: string;
-  explanation: string;
-  topic?: string | null;
-  subtopic?: string | null;
-  skill?: string | null;
-  map_asset: string;
-  input_mode: string;
-  regions: any;
-  correct_answer: any;
-  acceptable_answers?: string[] | null;
-  metadata: any;
-  created_at: string;
-  updated_at: string;
 }
 
 // Helper to convert DatabaseQuestion to typed Question
@@ -178,37 +148,7 @@ export function parseDatabaseQuestion(dbQuestion: DatabaseQuestion): Question {
         correct_order: Array.isArray(storedAnswer?.correct_order) ? storedAnswer.correct_order : [],
       };
     }
-    case 'map':
-      return {
-        ...base,
-        question_type: 'map',
-        options: dbQuestion.options as any,
-        correct_answer: dbQuestion.correct_answer as string | string[],
-      };
     default:
       throw new Error(`Unknown question type: ${dbQuestion.question_type}`);
   }
-}
-
-export function parseDatabaseMapQuestion(dbQuestion: DatabaseMapQuestion): MapQuestionEntity {
-  return {
-    id: dbQuestion.id,
-    question_set_id: dbQuestion.question_set_id ?? null,
-    subject: dbQuestion.subject,
-    grade: dbQuestion.grade ?? null,
-    difficulty: (dbQuestion.difficulty as MapQuestionEntity['difficulty']) ?? null,
-    question: dbQuestion.question,
-    explanation: dbQuestion.explanation,
-    topic: dbQuestion.topic ?? null,
-    subtopic: dbQuestion.subtopic ?? null,
-    skill: dbQuestion.skill ?? null,
-    map_asset: dbQuestion.map_asset,
-    input_mode: dbQuestion.input_mode as MapQuestionEntity['input_mode'],
-    regions: (dbQuestion.regions as MapQuestionEntity['regions']) ?? [],
-    correct_answer: dbQuestion.correct_answer as MapQuestionEntity['correct_answer'],
-    acceptable_answers: dbQuestion.acceptable_answers ?? null,
-    metadata: (dbQuestion.metadata as MapQuestionEntity['metadata']) ?? {},
-    created_at: dbQuestion.created_at,
-    updated_at: dbQuestion.updated_at,
-  };
 }

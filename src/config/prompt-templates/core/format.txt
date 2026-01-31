@@ -4,7 +4,7 @@ VASTAA VAIN JSON-TAULUKOLLA. EI MUUTA TEKSTIÄ.
 [
   {
     "question": "kysymysteksti",
-    "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching" | "sequential" | "map",
+    "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching" | "sequential",
     "topic": "aihealue",
     "subtopic": "tarkentava alateema (valinnainen)",
     "skill": "taito_tagi",
@@ -66,7 +66,7 @@ YHTEISET VAATIMUKSET:
 - Luo TASAN {{question_count}} kysymystä/korttia.
 - Käytä vain niitä kysymystyyppejä, joita tässä promptissa sallitaan.
 - Tyyppikohtaiset kentät ovat pakollisia vain vastaavissa tyypeissä.
-- "options" on monivalinnoissa taulukko ja karttakysymyksissä objekti.
+- "options" on monivalinnoissa taulukko.
 - VASTAA PELKÄLLÄ JSON-TAULUKOLLA.
 
 NUMEROIDEN JA LUKUJEN MUOTOILU (KAIKKI AINEET):

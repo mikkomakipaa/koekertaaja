@@ -7,8 +7,7 @@ export type QuestionType =
   | 'true_false'
   | 'matching'
   | 'short_answer'
-  | 'sequential'
-  | 'map';
+  | 'sequential';
 
 export type Subject = string;
 
@@ -90,47 +89,6 @@ export interface SequentialQuestion extends BaseQuestion {
   correct_order: number[];  // Correct indices [0, 2, 1, 3] representing original item positions
 }
 
-export interface MapRegion {
-  id: string;
-  label: string;
-  aliases?: string[];
-}
-
-export type MapInputMode = 'single_region' | 'multi_region' | 'text';
-
-export interface MapQuestionOptions {
-  mapAsset: string;
-  regions: MapRegion[];
-  inputMode: MapInputMode;
-}
-
-export interface MapQuestion extends BaseQuestion {
-  question_type: 'map';
-  options: MapQuestionOptions;
-  correct_answer: string | string[];
-}
-
-export interface MapQuestionEntity {
-  id: string;
-  question_set_id: string | null;
-  subject: Subject;
-  grade?: number | null;
-  difficulty?: Difficulty | null;
-  question: string;
-  explanation: string;
-  topic?: string | null;
-  subtopic?: string | null;
-  skill?: string | null;
-  map_asset: string;
-  input_mode: MapInputMode;
-  regions: MapRegion[];
-  correct_answer: string | string[];
-  acceptable_answers?: string[] | null;
-  metadata: Record<string, unknown>;
-  created_at: string;
-  updated_at?: string;
-}
-
 export function isSequentialItemArray(items: unknown): items is SequentialItem[] {
   return Array.isArray(items) && items.every(
     (item) => typeof item === 'object' && item !== null && 'text' in item
@@ -148,8 +106,7 @@ export type Question =
   | TrueFalseQuestion
   | MatchingQuestion
   | ShortAnswerQuestion
-  | SequentialQuestion
-  | MapQuestion;
+  | SequentialQuestion;
 
 // Question Set
 export interface QuestionSet {

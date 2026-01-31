@@ -54,16 +54,3 @@ test('aiQuestionSchema rejects sequential without correct_order', () => {
   const result = aiQuestionSchema.safeParse(fixture);
   assert.equal(result.success, false);
 });
-
-test('aiQuestionSchema rejects map without options', () => {
-  const { options: _options, ...fixture } = structuredClone(aiQuestionFixtures.map);
-  const result = aiQuestionSchema.safeParse(fixture);
-  assert.equal(result.success, false);
-});
-
-test('aiQuestionSchema rejects map with invalid regions', () => {
-  const fixture = structuredClone(aiQuestionFixtures.map);
-  fixture.options.regions = [{ id: '', label: '' }];
-  const result = aiQuestionSchema.safeParse(fixture);
-  assert.equal(result.success, false);
-});

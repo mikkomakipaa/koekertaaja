@@ -11,7 +11,6 @@
 - Varmista että laskut ovat oikein
 - NOUDATA TARKASTI vaikeustason kysymystyyppien jakaumaa
 - PERUSTA kysymykset annettuun materiaaliin {{grade_context_note}}
-- Map-kysymykset (type: map) sallitaan VAIN maantieteessä; muissa aineissa map-tyyppi on kielletty. Jos subject on maantiede, vähintään 1 map-kysymys on pakollinen
 
 TAGIEN EROTUS (MATEMATIIKKA):
 - Topic = matematiikan sisältöalue (esim. "Murtoluvut", "Geometria", "Yhtälöt")

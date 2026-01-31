@@ -130,10 +130,6 @@ export class PromptBuilder {
     const subjectKey = params.subject.toLowerCase();
     const subjectType = params.subjectType ?? getSubjectType(subjectKey);
     const mode = params.mode ?? 'quiz';
-    const includeGeographyMapRules = (subjectType === 'geography' || this.isGeographySubject(subjectKey)) && mode === 'quiz';
-    const geographyMapRules = includeGeographyMapRules
-      ? await this.loader.loadModule('subjects/geography-map.txt')
-      : '';
 
     const [format, topicRules, skillTagging, typeRules] = await this.loader.loadModules([
       'core/format.txt',
@@ -169,7 +165,6 @@ export class PromptBuilder {
       skillTagging,
       skillTaxonomy,
       typeRules,
-      geographyMapRules,
       curriculum,
       distributions,
       flashcardRules,
@@ -260,7 +255,6 @@ export class PromptBuilder {
       return '';
     }
 
-    const adjustedDistribution = this.applyGeographyMapDistribution(subjectKey, distribution);
     const difficultyInstructions = await this.formatDifficultyInstructions(
       subjectKey,
       subjectType,
@@ -289,7 +283,7 @@ export class PromptBuilder {
       difficultyInstructions,
       [
         header,
-        this.formatDistributionList(adjustedDistribution),
+        this.formatDistributionList(distribution),
         ...distributionNotes,
         ...extraNotes,
       ].join('\n'),
@@ -521,7 +515,7 @@ TÄRKEÄÄ:
   }
 
   private formatGeographyIntro(subject: Subject, materialType: string, questionCount: number): string {
-    return `Analysoi ${materialType} ja luo ${questionCount} maantiedon kysymystä aiheesta "${subject}". Mukaan tulee karttakysymyksiä, kun aihe sopii.`;
+    return `Analysoi ${materialType} ja luo ${questionCount} maantiedon kysymystä aiheesta "${subject}".`;
   }
 
   private formatSkillsIntro(subject: Subject, materialType: string, questionCount: number): string {
@@ -637,11 +631,6 @@ TÄRKEÄÄ:
     return subjectMap[normalized] ?? null;
   }
 
-  private isGeographySubject(subjectKey: string): boolean {
-    const normalized = this.normalizeSubjectKey(subjectKey) ?? subjectKey.toLowerCase();
-    return normalized === 'geography';
-  }
-
   private isHistorySubject(subjectKey: string): boolean {
     const normalized = this.normalizeSubjectKey(subjectKey) ?? subjectKey.toLowerCase();
     return normalized === 'history';
@@ -659,17 +648,6 @@ TÄRKEÄÄ:
    */
   private isRuleBasedSubject(subject: string, topic?: string): boolean {
     return isRuleBasedSubjectUtil(subject, topic);
-  }
-
-  private applyGeographyMapDistribution(
-    subjectKey: string,
-    distribution: DistributionMap
-  ): DistributionMap {
-    if (!this.isGeographySubject(subjectKey)) {
-      return distribution;
-    }
-
-    return { map: 100 };
   }
 
   private async loadDistributionFile(): Promise<DistributionFile> {

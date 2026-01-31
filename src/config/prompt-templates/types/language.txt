@@ -10,7 +10,6 @@
 - Luo TÄSMÄLLEEN {{question_count}} kysymystä
 - NOUDATA TARKASTI vaikeustason kysymystyyppien jakaumaa
 - PERUSTA kysymykset annettuun materiaaliin {{grade_context_note}}
-- Map-kysymykset (type: map) sallitaan VAIN maantieteessä; muissa aineissa map-tyyppi on kielletty. Jos subject on maantiede, vähintään 1 map-kysymys on pakollinen
 {{language_subject_note}}
 
 TAGIEN EROTUS (KIELI):

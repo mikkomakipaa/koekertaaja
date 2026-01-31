@@ -3,14 +3,13 @@ import { test } from 'node:test';
 import { evaluateQuestionAnswer } from '../src/lib/questions/answer-evaluation';
 import type {
   FillBlankQuestion,
-  MapQuestion,
   MatchingQuestion,
   MultipleChoiceQuestion,
   SequentialQuestion,
   ShortAnswerQuestion,
   TrueFalseQuestion,
 } from '../src/types/questions';
-import { aiQuestionFixtures, baseMapQuestion } from './fixtures/question-types';
+import { aiQuestionFixtures } from './fixtures/question-types';
 
 const baseQuestionFields = {
   id: 'question-1',
@@ -110,33 +109,4 @@ test('evaluateQuestionAnswer handles sequential', () => {
 
   assert.equal(evaluateQuestionAnswer(question, [0, 1, 2]).isCorrect, true);
   assert.equal(evaluateQuestionAnswer(question, [2, 1, 0]).isCorrect, false);
-});
-
-test('evaluateQuestionAnswer handles map single_region answers', () => {
-  const question: MapQuestion = { ...baseMapQuestion };
-
-  assert.equal(evaluateQuestionAnswer(question, 'uusimaa').isCorrect, true);
-  assert.equal(evaluateQuestionAnswer(question, 'pirkanmaa').isCorrect, false);
-});
-
-test('evaluateQuestionAnswer handles map multi_region answers', () => {
-  const question: MapQuestion = {
-    ...baseMapQuestion,
-    options: { ...baseMapQuestion.options, inputMode: 'multi_region' },
-    correct_answer: ['uusimaa', 'pirkanmaa'],
-  };
-
-  assert.equal(evaluateQuestionAnswer(question, ['pirkanmaa', 'uusimaa']).isCorrect, true);
-  assert.equal(evaluateQuestionAnswer(question, ['uusimaa']).isCorrect, false);
-});
-
-test('evaluateQuestionAnswer handles map text answers with aliases', () => {
-  const question: MapQuestion = {
-    ...baseMapQuestion,
-    options: { ...baseMapQuestion.options, inputMode: 'text' },
-    correct_answer: 'uusimaa',
-  };
-
-  assert.equal(evaluateQuestionAnswer(question, 'Uudenmaan maakunta').isCorrect, true);
-  assert.equal(evaluateQuestionAnswer(question, 'Pirkanmaa').isCorrect, false);
 });

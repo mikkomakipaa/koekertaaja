@@ -66,18 +66,6 @@ const sequentialItemSchema = z.object({
     .optional(),
 });
 
-const mapRegionSchema = z.object({
-  id: z.string().min(1, 'Region id must not be empty').max(100, 'Region id must be 100 characters or less'),
-  label: z.string().min(1, 'Region label must not be empty').max(200, 'Region label must be 200 characters or less'),
-  aliases: z.array(z.string().min(1, 'Alias must not be empty').max(200, 'Alias must be 200 characters or less')).optional(),
-});
-
-const mapOptionsSchema = z.object({
-  mapAsset: z.string().min(1, 'Map asset is required').max(500, 'Map asset must be 500 characters or less'),
-  regions: z.array(mapRegionSchema).min(1, 'Map questions must include at least 1 region'),
-  inputMode: z.enum(['single_region', 'multi_region', 'text']),
-});
-
 export const aiQuestionSchema = z.object({
   question: z
     .string()
@@ -90,7 +78,6 @@ export const aiQuestionSchema = z.object({
     'matching',
     'short_answer',
     'sequential',
-    'map',
   ]),
   topic: z
     .string()
@@ -106,10 +93,7 @@ export const aiQuestionSchema = z.object({
     .regex(/^[a-z_]+$/, 'Skill must be snake_case')
     .max(100, 'Skill must be 100 characters or less')
     .optional(),
-  options: z.union([
-    z.array(z.string()).min(2, 'Multiple choice questions must have at least 2 options'),
-    mapOptionsSchema,
-  ]).optional(),
+  options: z.array(z.string()).min(2, 'Multiple choice questions must have at least 2 options').optional(),
   correct_answer: z.union([
     z.string(),
     z.boolean(),
@@ -184,39 +168,6 @@ export const aiQuestionSchema = z.object({
           message: 'Sequential correct_order contains invalid indices',
           path: ['correct_order'],
         });
-      }
-    }
-  }
-
-  if (data.type === 'map') {
-    if (!data.options || Array.isArray(data.options)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Map questions must include map configuration options',
-        path: ['options'],
-      });
-    } else {
-      const inputMode = (data.options as { inputMode?: string }).inputMode;
-      if (inputMode === 'multi_region') {
-        if (
-          !Array.isArray(data.correct_answer)
-          || data.correct_answer.length === 0
-          || !data.correct_answer.every((answer) => typeof answer === 'string')
-        ) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'Map questions with multi_region inputMode must have an array of region ids as correct_answer',
-            path: ['correct_answer'],
-          });
-        }
-      } else {
-        if (typeof data.correct_answer !== 'string') {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'Map questions with single_region or text inputMode must have a string correct_answer',
-            path: ['correct_answer'],
-          });
-        }
       }
     }
   }

@@ -11,7 +11,6 @@
 - Luo TÄSMÄLLEEN {{question_count}} kysymystä
 - Perusta kysymykset annettuun materiaaliin {{grade_context_note}}
 - NOUDATA TARKASTI vaikeustason kysymystyyppien jakaumaa
-- Map-kysymykset (type: map) sallitaan VAIN maantieteessä; muissa aineissa map-tyyppi on kielletty. Jos subject on maantiede, vähintään 1 map-kysymys on pakollinen
 
 SKILL TAGGING (PAKOLLINEN):
 - Jokaisessa kysymyksessä TÄYTYY olla "skill" kenttä

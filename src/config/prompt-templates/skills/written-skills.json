@@ -24,16 +24,5 @@
     "relationships",
     "conclusions",
     "inference"
-  ],
-  "geography_map": [
-    "map_reading",
-    "nordic_countries",
-    "eu_member_states",
-    "capital_cities",
-    "border_countries",
-    "continents",
-    "oceans",
-    "climate_zones",
-    "finnish_regions"
   ]
 }

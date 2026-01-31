@@ -177,25 +177,6 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         normalizedCorrectAnswer = parsed.data.correctAnswer;
         break;
       }
-      case 'map': {
-        const schema = z.object({
-          correctAnswer: z.union([z.string().min(1), z.array(z.string().min(1))]),
-          options: z.any().optional(),
-        });
-        const parsed = schema.safeParse({ correctAnswer, options });
-        if (!parsed.success) {
-          const errors = parsed.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`);
-          return NextResponse.json(
-            { error: 'Validation failed', details: errors },
-            { status: 400 }
-          );
-        }
-        normalizedCorrectAnswer = parsed.data.correctAnswer;
-        if (parsed.data.options !== undefined) {
-          normalizedOptions = parsed.data.options;
-        }
-        break;
-      }
       default: {
         logger.warn({ questionType }, 'Unsupported question type');
         return NextResponse.json(

@@ -1,6 +1,6 @@
 import type { AIQuestion } from '../../src/lib/validation/schemas';
 import type { DatabaseQuestion } from '../../src/types/database';
-import type { MapQuestion, QuestionType } from '../../src/types/questions';
+import type { QuestionType } from '../../src/types/questions';
 
 export const aiQuestionFixtures = {
   multiple_choice: {
@@ -53,21 +53,6 @@ export const aiQuestionFixtures = {
     correct_order: [0, 1, 2],
     correct_answer: [],
     explanation: 'Tapahtumat järjestetään vanhimmasta uusimpaan.',
-  },
-  map: {
-    question: 'Valitse kartasta Suomen maakunta, jossa Helsinki sijaitsee.',
-    type: 'map',
-    topic: 'Suomen maakunnat',
-    options: {
-      mapAsset: '/maps/finland/finland_counties_v1.png',
-      inputMode: 'single_region',
-      regions: [
-        { id: 'uusimaa', label: 'Uusimaa', aliases: ['Uudenmaan maakunta'] },
-        { id: 'pirkanmaa', label: 'Pirkanmaa' },
-      ],
-    },
-    correct_answer: 'uusimaa',
-    explanation: 'Helsinki sijaitsee Uudenmaan maakunnassa.',
   },
 } satisfies Record<QuestionType, AIQuestion>;
 
@@ -148,44 +133,4 @@ export const dbQuestionFixtures = {
     created_at: '2024-01-01T00:00:00.000Z',
     topic: 'Historia',
   },
-  map: {
-    id: 'db-map-1',
-    question_set_id: 'set-1',
-    question_text: 'Missa maakunnassa Helsinki sijaitsee?',
-    question_type: 'map',
-    correct_answer: 'uusimaa',
-    options: {
-      mapAsset: '/maps/finland/finland_counties_v1.png',
-      inputMode: 'single_region',
-      regions: [
-        { id: 'uusimaa', label: 'Uusimaa', aliases: ['Uudenmaan maakunta'] },
-        { id: 'pirkanmaa', label: 'Pirkanmaa' },
-      ],
-    },
-    explanation: 'Helsinki sijaitsee Uudenmaan maakunnassa.',
-    order_index: 6,
-    created_at: '2024-01-01T00:00:00.000Z',
-    topic: 'Suomen maakunnat',
-  },
 } satisfies Record<QuestionType, DatabaseQuestion>;
-
-export const baseMapAIQuestion = aiQuestionFixtures.map;
-
-export const baseMapQuestion: MapQuestion = {
-  id: 'map-q-1',
-  question_set_id: 'set-1',
-  question_text: 'Missa maakunnassa Helsinki sijaitsee?',
-  question_type: 'map',
-  explanation: 'Helsinki sijaitsee Uudenmaan maakunnassa.',
-  order_index: 0,
-  options: {
-    mapAsset: '/maps/finland/finland_counties_v1.png',
-    inputMode: 'single_region',
-    regions: [
-      { id: 'uusimaa', label: 'Uusimaa', aliases: ['Uudenmaan maakunta'] },
-      { id: 'pirkanmaa', label: 'Pirkanmaa' },
-    ],
-  },
-  correct_answer: 'uusimaa',
-  topic: 'Suomen maakunnat',
-};

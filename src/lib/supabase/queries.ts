@@ -4,8 +4,8 @@
  */
 
 import { supabase } from './client';
-import { MapQuestionEntity, QuestionSet, QuestionSetWithQuestions } from '@/types';
-import { parseDatabaseMapQuestion, parseDatabaseQuestion } from '@/types/database';
+import { QuestionSet, QuestionSetWithQuestions } from '@/types';
+import { parseDatabaseQuestion } from '@/types/database';
 
 /**
  * Get a question set by its code
@@ -179,41 +179,4 @@ export async function getCreatedQuestionSets(limit = 50): Promise<QuestionSet[]>
   }
 
   return (data || []) as QuestionSet[];
-}
-
-/**
- * Get a map question by ID
- */
-export async function getMapQuestionById(id: string): Promise<MapQuestionEntity | null> {
-  const { data, error } = await supabase
-    .from('map_questions')
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  if (error || !data) {
-    return null;
-  }
-
-  return parseDatabaseMapQuestion(data as any);
-}
-
-/**
- * Get map questions for a question set
- */
-export async function getMapQuestionsByQuestionSetId(
-  questionSetId: string
-): Promise<MapQuestionEntity[]> {
-  const { data, error } = await supabase
-    .from('map_questions')
-    .select('*')
-    .eq('question_set_id', questionSetId)
-    .order('created_at', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching map questions:', error);
-    return [];
-  }
-
-  return (data || []).map((row: any) => parseDatabaseMapQuestion(row));
 }

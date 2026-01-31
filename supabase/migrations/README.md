@@ -202,6 +202,50 @@ FROM question_sets
 WHERE code = 'YOUR_CODE';
 ```
 
+### 20250131_add_skill_to_questions.sql
+Adds `skill` column to questions table for skill-based tagging and analytics.
+
+### 20250207_add_subject_type_and_question_subtopic.sql
+Adds `subject_type` to question_sets and `subtopic` to questions for enhanced categorization.
+
+### 20260119_add_exam_length.sql
+Adds `exam_length` column to question_sets to track the number of questions per exam session.
+
+### 20260128_add_question_flags.sql
+Adds question flagging system for quality control and user feedback.
+
+This migration:
+1. **Adds flags column** to `questions` table (JSONB array)
+2. **Stores flag metadata**: flag type, timestamp, reporter info
+3. **Enables admin moderation** workflow for reported questions
+
+### 20260203_add_map_questions_table.sql
+**[DEPRECATED - Removed in 20260204]** Created experimental map_questions table for interactive geography questions.
+
+This migration was part of an experimental map-based question feature that was later removed to simplify product focus.
+
+### 20260204_drop_map_questions_table.sql
+Removes the experimental map questions feature and all associated database objects.
+
+This migration:
+1. **Drops indexes** for map_questions table
+   - `idx_map_questions_question_set_id`
+   - `idx_map_questions_subject`
+   - `idx_map_questions_created_at`
+2. **Drops trigger** `update_map_questions_updated_at`
+3. **Drops RLS policy** "Enable read access for all users"
+4. **Drops table** `map_questions`
+
+**Why this was removed:**
+- Simplified product focus on core quiz and flashcard functionality
+- Map feature added complexity without sufficient user adoption
+- Maintenance burden outweighed benefits
+- Streamlined codebase and database schema
+
+**Data safety:**
+- Foreign key references were SET NULL, so no orphaned data remains
+- Migration is safe to run on databases with or without existing map data
+
 ## Running Migrations
 
 If you're using Supabase CLI:

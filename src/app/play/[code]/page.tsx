@@ -37,7 +37,6 @@ import {
   Shuffle,
   ChatText,
   ListNumbers,
-  MapPin,
   Article,
   Smiley,
   Target,
@@ -73,10 +72,6 @@ const getQuestionTypeInfo = (type: QuestionType): { label: string; icon: ReactNo
       label: 'Järjestä oikein',
       icon: <ListNumbers size={14} weight="duotone" />,
     },
-    map: {
-      label: 'Kartta',
-      icon: <MapPin size={14} weight="duotone" />,
-    },
   };
 
   return typeMap[type] ?? {
@@ -93,7 +88,6 @@ const getPlaceholderHint = (questionType: QuestionType, questionText: string): s
     true_false: 'Valitse totta tai tarua',
     matching: 'Yhdistä oikeat parit',
     sequential: 'Järjestä kohteet oikeaan järjestykseen',
-    map: 'Valitse alue kartalta tai kirjoita vastaus',
   };
 
   const lowerText = questionText.toLowerCase();

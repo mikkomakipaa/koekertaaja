@@ -401,47 +401,89 @@
     "quiz": {
       "4": {
         "helppo": {
-          "map": 100
+          "multiple_choice": 55,
+          "true_false": 25,
+          "fill_blank": 10,
+          "sequential": 10
         },
         "normaali": {
-          "map": 100
+          "multiple_choice": 45,
+          "fill_blank": 20,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5,
+          "matching": 5
         },
         "vaikea": {
-          "map": 100
+          "short_answer": 35,
+          "multiple_choice": 30,
+          "fill_blank": 20,
+          "matching": 10,
+          "true_false": 5
         }
       },
       "5": {
         "helppo": {
-          "map": 100
+          "multiple_choice": 55,
+          "true_false": 25,
+          "fill_blank": 10,
+          "sequential": 10
         },
         "normaali": {
-          "map": 100
+          "multiple_choice": 45,
+          "fill_blank": 20,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5,
+          "matching": 5
         },
         "vaikea": {
-          "map": 100
+          "short_answer": 35,
+          "multiple_choice": 30,
+          "fill_blank": 20,
+          "matching": 10,
+          "true_false": 5
         }
       },
       "6": {
         "helppo": {
-          "map": 100
+          "multiple_choice": 55,
+          "true_false": 25,
+          "fill_blank": 10,
+          "sequential": 10
         },
         "normaali": {
-          "map": 100
+          "multiple_choice": 45,
+          "fill_blank": 20,
+          "true_false": 15,
+          "sequential": 10,
+          "short_answer": 5,
+          "matching": 5
         },
         "vaikea": {
-          "map": 100
+          "short_answer": 35,
+          "multiple_choice": 30,
+          "fill_blank": 20,
+          "matching": 10,
+          "true_false": 5
         }
       }
     },
     "flashcard": {
       "4": {
-        "map": 100
+        "fill_blank": 50,
+        "short_answer": 30,
+        "matching": 20
       },
       "5": {
-        "map": 100
+        "fill_blank": 50,
+        "short_answer": 30,
+        "matching": 20
       },
       "6": {
-        "map": 100
+        "fill_blank": 50,
+        "short_answer": 30,
+        "matching": 20
       }
     }
   }

@@ -8,15 +8,12 @@
 
 import { getSupabaseAdmin } from './admin';
 import {
-  MapQuestionEntity,
   Question,
   QuestionSet,
   SequentialItem,
   isSequentialItemArray,
   isStringArray,
 } from '@/types';
-import { parseDatabaseMapQuestion } from '@/types/database';
-import { Database } from '@/types/database';
 
 /**
  * Create a new question set with questions
@@ -113,12 +110,6 @@ export async function createQuestionSet(
           options: null,
         };
       }
-      case 'map':
-        return {
-          ...baseQuestion,
-          correct_answer: (q as any).correct_answer,
-          options: (q as any).options,
-        };
       default:
         console.error('Unknown question type:', q.question_type, {
           question_text: q.question_text?.substring(0, 50),
@@ -279,114 +270,6 @@ export async function deleteQuestionSet(questionSetId: string): Promise<boolean>
       console.error('Question set ID:', questionSetId);
     }
 
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Create a new map question
- * Uses admin client to bypass RLS for server-side writes
- */
-export async function createMapQuestion(
-  mapQuestion: Omit<MapQuestionEntity, 'id' | 'created_at' | 'updated_at'>
-): Promise<MapQuestionEntity | null> {
-  const supabaseAdmin = getSupabaseAdmin();
-
-  const { data, error } = await supabaseAdmin
-    .from('map_questions')
-    .insert(mapQuestion as any)
-    .select()
-    .single();
-
-  if (error || !data) {
-    console.error('Error creating map question:', {
-      code: error?.code,
-      message: error?.message,
-      details: error?.details,
-      hint: error?.hint,
-    });
-    return null;
-  }
-
-  return parseDatabaseMapQuestion(data as any);
-}
-
-/**
- * Get a map question by ID (admin client)
- */
-export async function getMapQuestionByIdAdmin(id: string): Promise<MapQuestionEntity | null> {
-  const supabaseAdmin = getSupabaseAdmin();
-
-  const { data, error } = await supabaseAdmin
-    .from('map_questions')
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  if (error || !data) {
-    return null;
-  }
-
-  return parseDatabaseMapQuestion(data as any);
-}
-
-/**
- * Update a map question
- */
-export async function updateMapQuestion(
-  id: string,
-  updates: Partial<Omit<MapQuestionEntity, 'id' | 'created_at' | 'updated_at'>>
-): Promise<MapQuestionEntity | null> {
-  const supabaseAdmin = getSupabaseAdmin();
-  const updatePayload: Database['public']['Tables']['map_questions']['Update'] = {
-    ...updates,
-  };
-  const mapQuestions = supabaseAdmin.from<
-    'map_questions',
-    Database['public']['Tables']['map_questions']
-  >('map_questions');
-
-  const { data, error } = await mapQuestions
-    .update(updatePayload)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error || !data) {
-    console.error('Error updating map question:', {
-      code: error?.code,
-      message: error?.message,
-      details: error?.details,
-      hint: error?.hint,
-      mapQuestionId: id,
-    });
-    return null;
-  }
-
-  return parseDatabaseMapQuestion(data as any);
-}
-
-/**
- * Delete a map question
- */
-export async function deleteMapQuestion(id: string): Promise<boolean> {
-  const supabaseAdmin = getSupabaseAdmin();
-
-  const { error } = await supabaseAdmin
-    .from('map_questions')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error('Error deleting map question:', {
-      code: error?.code,
-      message: error?.message,
-      details: error?.details,
-      hint: error?.hint,
-      mapQuestionId: id,
-    });
     return false;
   }
 

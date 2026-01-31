@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -euo pipefail
+shopt -s nullglob
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -11,13 +12,18 @@ RAW_RESULT_DIR="$RESULT_DIR/raw"
 mkdir -p "$RESULT_DIR"
 mkdir -p "$RAW_RESULT_DIR"
 
+if ! command -v codex >/dev/null 2>&1; then
+  echo "Codex CLI not found in PATH. Install it or update PATH."
+  exit 1
+fi
+
 if [ ! -d "$TASK_DIR" ]; then
   echo "Task directory '$TASK_DIR' not found."
   exit 1
 fi
 
-tasks=$(ls "$TASK_DIR"/task-*.md 2>/dev/null | sort || true)
-if [ -z "$tasks" ]; then
+tasks=("$TASK_DIR"/task-*.md)
+if [ ${#tasks[@]} -eq 0 ]; then
   echo "No task files found in '$TASK_DIR'."
   exit 0
 fi
@@ -51,7 +57,8 @@ ASSUMPTIONS/BLOCKERS:
 INSTRUCTIONS
 )
 
-for task in $tasks; do
+did_login=0
+for task in "${tasks[@]}"; do
   filename=$(basename "$task")
   result_path="$RESULT_DIR/$filename"
   raw_result_path="$RAW_RESULT_DIR/$filename"
@@ -75,11 +82,15 @@ for task in $tasks; do
   exit_code=$?
 
   if [ $exit_code -ne 0 ]; then
-    if tr -d '\000' < "$raw_result_path" | grep -Eqi "not logged in|unauthorized|login required"; then
-      echo "Codex requires login; starting device authentication..."
-      codex login --device-auth
-      run_codex > "$raw_result_path" 2>&1
-      exit_code=$?
+    if [ $did_login -eq 0 ] && tr -d '\000' < "$raw_result_path" | grep -Eqi "not logged in|unauthorized|login required|permission denied|operation not permitted|failed to create session|failed to initialize rollout recorder|session files"; then
+      echo "Codex requires login; starting interactive login..."
+      if codex login; then
+        did_login=1
+        run_codex > "$raw_result_path" 2>&1
+        exit_code=$?
+      else
+        echo "Codex login failed; skipping retry."
+      fi
     fi
   fi
 

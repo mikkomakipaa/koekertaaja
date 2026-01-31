@@ -12,7 +12,6 @@
 - Perusta kysymykset annettuun materiaaliin {{grade_context_note}}
 - Pyri noudattamaan vaikeustason kysymystyyppien jakaumaa, mutta valitse jokaiselle kysymykselle sisällön perusteella sopivin tyyppi
 - Valitse jokaiselle kysymykselle MATERIAALIN mukaan paras kysymystyyppi
-- Map-kysymykset (type: map) sallitaan VAIN maantieteessä; muissa aineissa map-tyyppi on kielletty. Jos subject on maantiede, vähintään 1 map-kysymys on pakollinen
 
 TAGIEN EROTUS (KIRJOITETUT AINEET):
 - Topic = sisältöalue (esim. "Suomen itsenäistyminen", "Solubiologia")

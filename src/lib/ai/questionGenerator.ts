@@ -361,51 +361,11 @@ export async function generateQuestions(
   const validQuestions: any[] = [];
   const invalidQuestions: Array<{ index: number; errors: any[]; question: any }> = [];
   const excludedFlashcardTypes: Array<{ index: number; type: string; question: any }> = [];
-  const excludedSubjectMapTypes: Array<{ index: number; question: any }> = [];
-  const excludedGeographyNonMapTypes: Array<{ index: number; type: string | undefined; question: any }> = [];
   const excludedRuleBasedFormat: Array<{ index: number; reason: string; question: any }> = [];
   const normalizedSubject = subject.trim().toLowerCase();
-  const isGeographySubject = subjectType === 'geography' || normalizedSubject === 'geography' || normalizedSubject === 'maantiede';
 
   // Validate each question individually
   parsedQuestions.forEach((question, index) => {
-    if (isGeographySubject && question.type !== 'map') {
-      excludedGeographyNonMapTypes.push({
-        index,
-        type: question.type,
-        question: {
-          questionPreview: question.question?.substring(0, 50),
-        },
-      });
-      logger.warn(
-        {
-          questionIndex: index,
-          subject,
-          subjectType,
-          questionType: question.type,
-        },
-        'Excluded non-map question for geography subject'
-      );
-      return;
-    }
-
-    if (!isGeographySubject && question.type === 'map') {
-      excludedSubjectMapTypes.push({
-        index,
-        question: {
-          questionPreview: question.question?.substring(0, 50),
-        },
-      });
-      logger.warn(
-        {
-          questionIndex: index,
-          subject,
-        },
-        'Excluded map question for non-geography subject'
-      );
-      return;
-    }
-
     // CRITICAL: Flashcard mode must exclude passive recognition question types
     if (mode === 'flashcard') {
       const invalidFlashcardTypes = ['multiple_choice', 'true_false', 'sequential'];
@@ -489,19 +449,6 @@ export async function generateQuestions(
     }
   });
 
-  if (excludedGeographyNonMapTypes.length > 0) {
-    logger.error(
-      {
-        excludedCount: excludedGeographyNonMapTypes.length,
-        subject,
-        subjectType,
-        excludedTypes: excludedGeographyNonMapTypes.map(({ type }) => type),
-      },
-      'Geography output contains non-map question types'
-    );
-    throw new Error('Geography questions must all be map questions. Please try again.');
-  }
-
   // Log excluded flashcard types
   if (excludedFlashcardTypes.length > 0) {
     logger.warn(
@@ -525,16 +472,6 @@ export async function generateQuestions(
         reasons: excludedRuleBasedFormat.map(({ reason }) => reason),
       },
       'Excluded invalid rule-based flashcard format (calculation questions instead of rule teaching)'
-    );
-  }
-
-  if (excludedSubjectMapTypes.length > 0) {
-    logger.warn(
-      {
-        excludedCount: excludedSubjectMapTypes.length,
-        subject,
-      },
-      'Excluded map questions for non-geography subject'
     );
   }
 
@@ -738,21 +675,6 @@ export async function generateQuestions(
       'AI generated more questions than requested - trimming to requested count'
     );
     parsedQuestions = parsedQuestions.slice(0, questionCount);
-  }
-
-  if (isGeographySubject) {
-    const mapQuestionCount = parsedQuestions.filter(question => question.type === 'map').length;
-    if (mapQuestionCount === 0) {
-      logger.warn(
-        {
-          subject,
-          subjectType,
-          questionCount,
-          validatedQuestionCount: parsedQuestions.length,
-        },
-        'Geography output contains zero map questions'
-      );
-    }
   }
 
   logger.info(

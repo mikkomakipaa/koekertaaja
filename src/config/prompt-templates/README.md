@@ -17,14 +17,3 @@ This directory contains AI prompt templates for question generation.
 
 ## Variable Substitution
 Variables are provided by PromptBuilder and substituted by PromptLoader.
-
-## Map Questions (Geography-Specific)
-
-Map questions are ONLY available for geography quiz generation. The AI automatically:
-- Loads `subjects/geography-map.txt` when generating geography quiz questions
-- Enforces 100% map questions for geography (no other question types allowed)
-- Uses available maps: `world-110m`, `europe-50m`, `finland-regions-10m`
-- Enforces geography-only constraint (other subjects cannot use map questions)
-
-**Note:** Geography distributions are map-only in `core/grade-distributions.json`,
-and `PromptBuilder.ts` safeguards this via `applyGeographyMapDistribution()`.

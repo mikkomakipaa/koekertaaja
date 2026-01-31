@@ -112,14 +112,10 @@ Koekertaaja is an interactive exam preparation application that helps students p
 
 1. Go to your Supabase project
 2. Open SQL Editor
-3. Run all migration files in order from `supabase/migrations/`:
-   - `20250103_initial_schema.sql` - Creates tables
-   - `20250104_add_check_constraints.sql` - Adds validation
-   - `20250105_update_difficulty_constraint.sql` - Updates difficulty levels
-   - `20250106_fix_empty_options.sql` - Fixes data integrity
-   - `20250130_add_mode_column.sql` - Adds quiz/flashcard distinction
-   - `20250130_add_delete_policies.sql` - Adds RLS policies
-   - `20250130_add_topic_to_questions.sql` - Enables topic-balanced selection
+3. Run all migration files in order from `supabase/migrations/`
+   - See `supabase/migrations/README.md` for detailed documentation
+   - Migrations create tables, indexes, RLS policies, and data integrity constraints
+   - Run migrations in chronological order (sorted by filename date)
 4. This creates all required tables, indexes, and security policies
 
 ### Step 4: Start the Application
@@ -257,35 +253,6 @@ See the LICENSE file for details.
 - [shadcn/ui](https://ui.shadcn.com/) - UI components
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [Phosphor Icons](https://phosphoricons.com/) - Icon system
-
-## 🗺️ Map Data Sources
-
-Interactive map questions use geographic data from the following sources:
-
-### Natural Earth Data
-- **License**: [CC0 1.0 (Public Domain)](https://creativecommons.org/publicdomain/zero/1.0/)
-- **Source**: [naturalearthdata.com](https://www.naturalearthdata.com/)
-- **Usage**: World, Europe, and Finland country boundaries
-- **Attribution**: Not required, but we credit them: "Made with Natural Earth"
-
-Natural Earth provides free, public domain map datasets at multiple scales. All map files are derived from Natural Earth v5.1.0 data.
-
-### TopoJSON World Atlas
-- **License**: [ISC License](https://opensource.org/licenses/ISC) (permissive)
-- **Source**: [github.com/topojson/world-atlas](https://github.com/topojson/world-atlas)
-- **Copyright**: Mike Bostock
-- **Usage**: Pre-optimized TopoJSON world maps
-- **Attribution**: Not required, but we credit them
-
-TopoJSON World Atlas provides web-optimized geographic data in TopoJSON format for efficient map rendering.
-
-### License Compliance
-All map data used in Koekertaaja is from **public domain or permissive open-source licenses**:
-- ✅ Free for educational and commercial use
-- ✅ No attribution legally required (but we provide it anyway)
-- ✅ Fully documented in [`/public/maps/LICENSES.md`](public/maps/LICENSES.md)
-
-For full license details and data processing information, see the [Map Data Licenses](public/maps/LICENSES.md) documentation.
 
 ---
 

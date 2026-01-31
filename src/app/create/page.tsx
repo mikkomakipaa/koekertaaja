@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { GradeSelector } from '@/components/create/GradeSelector';
 import { MaterialUpload } from '@/components/create/MaterialUpload';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
-import { Difficulty, MapInputMode, MapRegion, QuestionSet } from '@/types';
+import { Difficulty, QuestionSet } from '@/types';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   CircleNotch,
@@ -186,28 +186,9 @@ export default function CreatePage() {
   const [editError, setEditError] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const [creatingMapQuestion, setCreatingMapQuestion] = useState(false);
-  const [mapQuestionError, setMapQuestionError] = useState('');
-
   // Extend existing set state
   const [selectedSetToExtend, setSelectedSetToExtend] = useState<string>('');
   const [questionsToAdd, setQuestionsToAdd] = useState(20);
-
-  // Map question form state
-  const [mapQuestionSetId, setMapQuestionSetId] = useState('');
-  const [mapQuestionSubject, setMapQuestionSubject] = useState('Maantieto');
-  const [mapQuestionGrade, setMapQuestionGrade] = useState<number | ''>('');
-  const [mapQuestionDifficulty, setMapQuestionDifficulty] = useState<Difficulty | ''>('');
-  const [mapQuestionText, setMapQuestionText] = useState('');
-  const [mapQuestionExplanation, setMapQuestionExplanation] = useState('');
-  const [mapQuestionTopic, setMapQuestionTopic] = useState('');
-  const [mapQuestionSubtopic, setMapQuestionSubtopic] = useState('');
-  const [mapQuestionSkill, setMapQuestionSkill] = useState('');
-  const [mapQuestionMapAsset, setMapQuestionMapAsset] = useState('');
-  const [mapQuestionInputMode, setMapQuestionInputMode] = useState<MapInputMode>('single_region');
-  const [mapQuestionRegions, setMapQuestionRegions] = useState('');
-  const [mapQuestionCorrectAnswer, setMapQuestionCorrectAnswer] = useState('');
-  const [mapQuestionAcceptableAnswers, setMapQuestionAcceptableAnswers] = useState('');
 
   const minQuestionCount = defaultQuestionCounts.min;
   const maxQuestionCount = defaultQuestionCounts.max;
@@ -223,9 +204,6 @@ export default function CreatePage() {
   const hasSubjectType = Boolean(subjectType);
   const hasRequiredGrade = !requiresGrade || Boolean(grade);
   const hasMaterials = materialText.trim().length > 0 || uploadedFiles.length > 0;
-  const selectedMapQuestionSet = mapQuestionSetId
-    ? allQuestionSets.find((set) => set.id === mapQuestionSetId)
-    : null;
 
   const formatListForEdit = (value: unknown): string => {
     if (Array.isArray(value)) {
@@ -865,133 +843,6 @@ export default function CreatePage() {
     }
   };
 
-  const parseMapRegions = (rawInput: string): MapRegion[] => {
-    return rawInput
-      .split('\n')
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .map((line) => {
-        const [idRaw, labelRaw, aliasesRaw] = line.split(',').map((part) => part.trim());
-        if (!idRaw || !labelRaw) {
-          return null;
-        }
-        const aliases = aliasesRaw
-          ? aliasesRaw.split('|').map((alias) => alias.trim()).filter(Boolean)
-          : undefined;
-        return aliases && aliases.length > 0
-          ? { id: idRaw, label: labelRaw, aliases }
-          : { id: idRaw, label: labelRaw };
-      })
-      .filter((region): region is MapRegion => Boolean(region));
-  };
-
-  const handleCreateMapQuestion = async () => {
-    if (!mapQuestionText.trim()) {
-      setMapQuestionError('Anna karttakysymyksen teksti!');
-      return;
-    }
-
-    if (!mapQuestionExplanation.trim()) {
-      setMapQuestionError('Anna selitys karttakysymykselle!');
-      return;
-    }
-
-    if (!mapQuestionMapAsset.trim()) {
-      setMapQuestionError('Anna karttakuvan polku tai URL!');
-      return;
-    }
-
-    const regions = parseMapRegions(mapQuestionRegions);
-    if (regions.length === 0) {
-      setMapQuestionError('Syötä vähintään yksi alue muodossa "id, nimi, alias1|alias2".');
-      return;
-    }
-
-    const correctAnswer = mapQuestionInputMode === 'multi_region'
-      ? mapQuestionCorrectAnswer
-          .split(',')
-          .map((item) => item.trim())
-          .filter(Boolean)
-      : mapQuestionCorrectAnswer.trim();
-
-    if (mapQuestionInputMode === 'multi_region' && (!Array.isArray(correctAnswer) || correctAnswer.length === 0)) {
-      setMapQuestionError('Anna vähintään yksi oikea alue (pilkulla erotettuna).');
-      return;
-    }
-
-    if (mapQuestionInputMode !== 'multi_region' && typeof correctAnswer === 'string' && !correctAnswer) {
-      setMapQuestionError('Anna oikea vastaus.');
-      return;
-    }
-
-    const selectedSet = mapQuestionSetId
-      ? allQuestionSets.find((set) => set.id === mapQuestionSetId)
-      : null;
-    const subjectValue = selectedSet?.subject || mapQuestionSubject.trim();
-
-    if (!subjectValue) {
-      setMapQuestionError('Anna aine karttakysymykselle.');
-      return;
-    }
-
-    const acceptableAnswers = mapQuestionAcceptableAnswers
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    setMapQuestionError('');
-    setCreatingMapQuestion(true);
-
-    try {
-      const response = await fetch('/api/map-questions/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          questionSetId: mapQuestionSetId || null,
-          subject: subjectValue,
-          grade: selectedSet?.grade ?? (mapQuestionGrade === '' ? null : Number(mapQuestionGrade)),
-          difficulty: selectedSet?.difficulty ?? (mapQuestionDifficulty || null),
-          question: mapQuestionText.trim(),
-          explanation: mapQuestionExplanation.trim(),
-          topic: mapQuestionTopic.trim() || undefined,
-          subtopic: mapQuestionSubtopic.trim() || undefined,
-          skill: mapQuestionSkill.trim() || undefined,
-          mapAsset: mapQuestionMapAsset.trim(),
-          inputMode: mapQuestionInputMode,
-          regions,
-          correctAnswer,
-          acceptableAnswers: acceptableAnswers.length > 0 ? acceptableAnswers : undefined,
-          metadata: {},
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errorMsg = data.error || 'Karttakysymyksen luonti epäonnistui';
-        const errorDetails = data.details ? `\n\n${data.details}` : '';
-        throw new Error(errorMsg + errorDetails);
-      }
-
-      setMapQuestionText('');
-      setMapQuestionExplanation('');
-      setMapQuestionTopic('');
-      setMapQuestionSubtopic('');
-      setMapQuestionSkill('');
-      setMapQuestionMapAsset('');
-      setMapQuestionRegions('');
-      setMapQuestionCorrectAnswer('');
-      setMapQuestionAcceptableAnswers('');
-
-    } catch (error) {
-      console.error('Error creating map question:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Karttakysymyksen luonti epäonnistui';
-      setMapQuestionError(errorMessage);
-    } finally {
-      setCreatingMapQuestion(false);
-    }
-  };
-
   const handlePublishToggle = async (questionSetId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'published' ? 'created' : 'published';
     const action = newStatus === 'published' ? 'julkaista' : 'piilottaa';
@@ -1237,7 +1088,7 @@ export default function CreatePage() {
 
           <CardContent className="p-6">
             <Tabs defaultValue="create" className="w-full">
-              <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-6' : 'grid-cols-5'} mb-6`}>
+              <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} mb-6`}>
                 <TabsTrigger value="create" className="text-base">
                   <Star className="w-4 h-4 mr-2" />
                   Luo uusi
@@ -1245,10 +1096,6 @@ export default function CreatePage() {
                 <TabsTrigger value="extend" className="text-base">
                   <Plus className="w-4 h-4 mr-2" />
                   Laajenna
-                </TabsTrigger>
-                <TabsTrigger value="map-question" className="text-base">
-                  <Compass className="w-4 h-4 mr-2" />
-                  Karttakysymys
                 </TabsTrigger>
                 <TabsTrigger value="manage" className="text-base">
                   <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
@@ -1643,225 +1490,6 @@ export default function CreatePage() {
                   >
                     Lisää kysymyksiä
                   </Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="map-question" className="space-y-6">
-                <div className="rounded-lg border border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Luo karttakysymys</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Luo yksittäinen karttakysymys ja liitä se halutessa kysymyssarjaan.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                        Liitä kysymyssarjaan (valinnainen)
-                      </label>
-                      <select
-                        value={mapQuestionSetId}
-                        onChange={(e) => setMapQuestionSetId(e.target.value)}
-                        className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600"
-                      >
-                        <option value="">-- Ei sarjaa (standalone) --</option>
-                        {allQuestionSets.map((set) => (
-                          <option key={set.id} value={set.id}>
-                            {set.name} ({set.mode === 'flashcard' ? 'Kortit' : set.difficulty})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {selectedMapQuestionSet ? (
-                      <div className="rounded-lg border border-blue-200 dark:border-blue-700 bg-white/70 dark:bg-gray-800/70 p-3 text-sm text-blue-900 dark:text-blue-200">
-                        <p><strong>Nimi:</strong> {selectedMapQuestionSet.name}</p>
-                        <p><strong>Aine:</strong> {selectedMapQuestionSet.subject}</p>
-                        {selectedMapQuestionSet.grade && <p><strong>Luokka:</strong> {selectedMapQuestionSet.grade}</p>}
-                        <p><strong>Vaikeus:</strong> {selectedMapQuestionSet.difficulty}</p>
-                      </div>
-                    ) : (
-                      <div className="grid gap-3 md:grid-cols-3">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                            Aine
-                          </label>
-                          <Input
-                            value={mapQuestionSubject}
-                            onChange={(e) => setMapQuestionSubject(e.target.value)}
-                            placeholder="Maantieto"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                            Luokka (valinnainen)
-                          </label>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={13}
-                            value={mapQuestionGrade}
-                            onChange={(e) => setMapQuestionGrade(e.target.value === '' ? '' : Number(e.target.value))}
-                            placeholder="6"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                            Vaikeus (valinnainen)
-                          </label>
-                          <select
-                            value={mapQuestionDifficulty}
-                            onChange={(e) => setMapQuestionDifficulty(e.target.value as Difficulty | '')}
-                            className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600"
-                          >
-                            <option value="">-- Valitse --</option>
-                            <option value="helppo">Helppo</option>
-                            <option value="normaali">Normaali</option>
-                          </select>
-                        </div>
-                      </div>
-                    )}
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                        Kysymys
-                      </label>
-                      <Input
-                        value={mapQuestionText}
-                        onChange={(e) => setMapQuestionText(e.target.value)}
-                        placeholder="Esim. Valitse kartalta Uusimaa."
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                        Selitys
-                      </label>
-                      <Textarea
-                        value={mapQuestionExplanation}
-                        onChange={(e) => setMapQuestionExplanation(e.target.value)}
-                        placeholder="Selitä lyhyesti miksi vastaus on oikea."
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                          Kartta-asset (polku tai URL)
-                        </label>
-                        <Input
-                          value={mapQuestionMapAsset}
-                          onChange={(e) => setMapQuestionMapAsset(e.target.value)}
-                          placeholder="/maps/topojson/finland_counties_v1.topojson"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                          Vastaustapa
-                        </label>
-                        <select
-                          value={mapQuestionInputMode}
-                          onChange={(e) => setMapQuestionInputMode(e.target.value as MapInputMode)}
-                          className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600"
-                        >
-                          <option value="single_region">Yksi alue</option>
-                          <option value="multi_region">Useita alueita</option>
-                          <option value="text">Teksti</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                          Aihe (valinnainen)
-                        </label>
-                        <Input
-                          value={mapQuestionTopic}
-                          onChange={(e) => setMapQuestionTopic(e.target.value)}
-                          placeholder="Esim. Suomen maakunnat"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                          Alateema (valinnainen)
-                        </label>
-                        <Input
-                          value={mapQuestionSubtopic}
-                          onChange={(e) => setMapQuestionSubtopic(e.target.value)}
-                          placeholder="Esim. Länsi-Suomi"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                        Taitotunniste (valinnainen)
-                      </label>
-                      <Input
-                        value={mapQuestionSkill}
-                        onChange={(e) => setMapQuestionSkill(e.target.value)}
-                        placeholder="maakunnat"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                        Alueet (rivi per alue, muodossa: id, nimi, alias1|alias2)
-                      </label>
-                      <Textarea
-                        value={mapQuestionRegions}
-                        onChange={(e) => setMapQuestionRegions(e.target.value)}
-                        placeholder="uusimaa, Uusimaa, Uusimaa|Uusimaa maakunta"
-                        rows={4}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                        Oikea vastaus{mapQuestionInputMode === 'multi_region' ? ' (pilkulla eroteltu)' : ''}
-                      </label>
-                      <Input
-                        value={mapQuestionCorrectAnswer}
-                        onChange={(e) => setMapQuestionCorrectAnswer(e.target.value)}
-                        placeholder={mapQuestionInputMode === 'multi_region' ? 'uusimaa, varsinais-suomi' : 'uusimaa'}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                        Hyväksyttävät vastaukset (valinnainen, pilkulla eroteltu)
-                      </label>
-                      <Input
-                        value={mapQuestionAcceptableAnswers}
-                        onChange={(e) => setMapQuestionAcceptableAnswers(e.target.value)}
-                        placeholder="Uusimaa, Uudenmaan maakunta"
-                      />
-                    </div>
-
-                    {mapQuestionError && (
-                      <Alert variant="destructive">
-                        <AlertDescription>{mapQuestionError}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    <div className="flex justify-end">
-                      <Button
-                        onClick={handleCreateMapQuestion}
-                        disabled={creatingMapQuestion}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                      >
-                        {creatingMapQuestion ? (
-                          <CircleNotch weight="bold" className="w-4 h-4 mr-2 animate-spin" />
-                        ) : null}
-                        Luo karttakysymys
-                      </Button>
-                    </div>
-                  </div>
                 </div>
               </TabsContent>
 
