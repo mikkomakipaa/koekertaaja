@@ -39,6 +39,10 @@
 │  🔒 Authentication Check                                             │
 │     └─ requireAuth() - Supabase session validation                  │
 │                                                                       │
+│  ⏱️ Rate Limiting                                                     │
+│     └─ 5 requests/hour per user (IP + session)                       │
+│     └─ Returns 429 + Retry-After + X-RateLimit-* headers             │
+│                                                                       │
 │  ✅ Input Validation                                                 │
 │     └─ Zod schema: createQuestionSetSchema                          │
 │     └─ File validation: type, size (2MB/file, 2 files max)          │

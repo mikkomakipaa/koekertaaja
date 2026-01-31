@@ -762,9 +762,13 @@ export async function generateQuestions(
 
       default:
         // Log unknown type and default to multiple choice
-        console.warn(`Unknown question type: ${q.type}, defaulting to multiple_choice`, {
-          questionText: q.question?.substring(0, 50),
-        });
+        logger.warn(
+          {
+            questionType: q.type,
+            questionPreview: q.question?.substring(0, 50),
+          },
+          'Unknown question type, defaulting to multiple_choice'
+        );
         return {
           ...base,
           question_type: 'multiple_choice' as const,

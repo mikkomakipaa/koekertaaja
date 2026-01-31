@@ -38,6 +38,13 @@ export interface RateLimitResult {
   reset: number;
 }
 
+export interface RateLimitIdentity {
+  ip: string;
+  userId?: string;
+  clientId?: string;
+  prefix?: string;
+}
+
 /**
  * Check if a request should be rate limited
  * @param identifier - Unique identifier (e.g., IP address)
@@ -85,6 +92,38 @@ export function checkRateLimit(
     remaining: 0,
     reset: entry.resetTime,
   };
+}
+
+/**
+ * Build a stable rate limit key from IP and session/client identifier
+ */
+export function buildRateLimitKey(identity: RateLimitIdentity): string {
+  const sessionPart = identity.userId ?? identity.clientId ?? 'anonymous';
+  const prefix = identity.prefix ?? 'global';
+  return `${prefix}:${identity.ip}:${sessionPart}`;
+}
+
+/**
+ * Build headers for rate limit responses
+ */
+export function createRateLimitHeaders(
+  result: RateLimitResult,
+  retryAfterSeconds?: number
+): Headers {
+  const headers = new Headers();
+  headers.set('X-RateLimit-Limit', String(result.limit));
+  headers.set('X-RateLimit-Remaining', String(result.remaining));
+  if (retryAfterSeconds !== undefined) {
+    headers.set('Retry-After', String(retryAfterSeconds));
+  }
+  return headers;
+}
+
+/**
+ * Reset rate limit store (tests only)
+ */
+export function resetRateLimitStore() {
+  rateLimitStore.clear();
 }
 
 /**

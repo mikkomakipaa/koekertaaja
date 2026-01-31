@@ -246,6 +246,58 @@ This migration:
 - Foreign key references were SET NULL, so no orphaned data remains
 - Migration is safe to run on databases with or without existing map data
 
+### 20260131_fix_questions_rls_policy.sql
+Restricts public SELECT access on `questions` to only those belonging to published question sets.
+
+This migration:
+1. Drops the old unrestricted SELECT policy on `questions`
+2. Adds a new policy that checks the parent `question_sets.status = 'published'`
+3. Keeps service-role access unaffected (service role bypasses RLS)
+
+**Why this is needed:**
+- Prevents draft/unpublished questions from being exposed publicly
+- Aligns question visibility with question set publishing workflow
+
+**Testing the migration:**
+```sql
+-- Create a draft question set and question
+INSERT INTO question_sets (code, name, subject, difficulty, mode, question_count, status)
+VALUES ('ZZZZZZ', 'Draft Set', 'Test', 'normaali', 'quiz', 1, 'created');
+
+INSERT INTO questions (question_set_id, question_text, question_type, correct_answer, explanation, order_index)
+SELECT id, 'Draft question?', 'multiple_choice', 'a', 'Test explanation', 0
+FROM question_sets WHERE code = 'ZZZZZZ';
+
+-- As anon: should return 0 rows
+SELECT * FROM questions WHERE question_set_id IN (SELECT id FROM question_sets WHERE code = 'ZZZZZZ');
+
+-- Publish and verify visibility
+UPDATE question_sets SET status = 'published' WHERE code = 'ZZZZZZ';
+SELECT * FROM questions WHERE question_set_id IN (SELECT id FROM question_sets WHERE code = 'ZZZZZZ');
+```
+
+### 20260131_add_question_flags_policies.sql
+Adds explicit RLS policies for `question_flags`.
+
+This migration:
+1. Allows anonymous INSERT for flag submission
+2. Denies SELECT for non-service-role clients
+3. Denies DELETE for non-service-role clients
+
+**Why this is needed:**
+- Makes the intended access model explicit and stable
+- Keeps moderation access restricted to service role/admin tooling
+
+**Testing the migration:**
+```sql
+-- As anon: INSERT should succeed, SELECT/DELETE should fail
+INSERT INTO question_flags (question_id, question_set_id, reason, client_id)
+VALUES ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'other', 'client-test');
+
+SELECT * FROM question_flags LIMIT 1; -- should be denied
+DELETE FROM question_flags WHERE client_id = 'client-test'; -- should be denied
+```
+
 ## Running Migrations
 
 If you're using Supabase CLI:

@@ -2,6 +2,7 @@ import { createServerClient as createSSRServerClient } from '@supabase/ssr';
 import { Database } from '@/types/database';
 import { cookies } from 'next/headers';
 import { isAdmin } from '@/lib/auth/admin';
+import { getServerEnv } from '@/lib/env';
 
 /**
  * Create a Supabase client for server-side authentication
@@ -10,8 +11,9 @@ import { isAdmin } from '@/lib/auth/admin';
 export async function createServerClient() {
   const cookieStore = await cookies();
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const env = getServerEnv();
+  const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   return createSSRServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {

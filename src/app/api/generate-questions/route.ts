@@ -9,6 +9,12 @@ import { Subject, Difficulty } from '@/types';
 import { createQuestionSetSchema } from '@/lib/validation/schemas';
 import { createLogger } from '@/lib/logger';
 import { requireAuth } from '@/lib/supabase/server-auth';
+import {
+  checkRateLimit,
+  getClientIp,
+  buildRateLimitKey,
+  createRateLimitHeaders,
+} from '@/lib/ratelimit';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 300; // 5 minutes timeout for AI generation
@@ -21,19 +27,58 @@ export const maxDuration = 300; // 5 minutes timeout for AI generation
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
   const logger = createLogger({ requestId, route: '/api/generate-questions' });
+  let baseHeaders: Headers | undefined;
 
   logger.info({ method: 'POST' }, 'Request received');
 
   try {
+    const clientIp = getClientIp(request.headers);
+    const clientId = request.headers.get('x-client-id') || request.headers.get('x-clientid') || undefined;
+    let userId: string | undefined;
+
     // Verify authentication
     try {
-      await requireAuth();
+      const user = await requireAuth();
+      userId = user.id;
       logger.info('Authentication successful');
     } catch (authError) {
       logger.warn('Authentication failed');
-      return NextResponse.json(
+    }
+
+    const rateLimitKey = buildRateLimitKey({
+      ip: clientIp,
+      userId,
+      clientId,
+      prefix: 'generate-questions',
+    });
+    const rateLimitResult = checkRateLimit(rateLimitKey, {
+      limit: 5,
+      windowMs: 60 * 60 * 1000,
+    });
+    baseHeaders = createRateLimitHeaders(rateLimitResult);
+    const respond = (body: unknown, status = 200, headers?: Headers) =>
+      NextResponse.json(body, { status, headers: headers ?? baseHeaders });
+
+    if (!rateLimitResult.success) {
+      const retryAfterSeconds = Math.max(
+        0,
+        Math.ceil((rateLimitResult.reset - Date.now()) / 1000)
+      );
+      const headers = createRateLimitHeaders(rateLimitResult, retryAfterSeconds);
+      return respond(
+        {
+          error: 'Rate limit exceeded. Please try again later.',
+          retryAfterSeconds,
+        },
+        429,
+        headers
+      );
+    }
+
+    if (!userId) {
+      return respond(
         { error: 'Unauthorized. Please log in to create question sets.' },
-        { status: 401 }
+        401
       );
     }
 
@@ -62,9 +107,9 @@ export async function POST(request: NextRequest) {
 
     // Validate generation mode
     if (!['quiz', 'flashcard', 'both'].includes(generationMode)) {
-      return NextResponse.json(
+      return respond(
         { error: 'Invalid generation mode. Must be "quiz", "flashcard", or "both"' },
-        { status: 400 }
+        400
       );
     }
 
@@ -72,9 +117,9 @@ export async function POST(request: NextRequest) {
     const validationResult = createQuestionSetSchema.safeParse(rawData);
     if (!validationResult.success) {
       const errors = validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`);
-      return NextResponse.json(
+      return respond(
         { error: 'Validation failed', details: errors },
-        { status: 400 }
+        400
       );
     }
 
@@ -112,12 +157,12 @@ export async function POST(request: NextRequest) {
 
     // Validate file count
     if (fileEntries.length > MAX_FILES) {
-      return NextResponse.json(
+      return respond(
         {
           error: `Maximum ${MAX_FILES} file allowed. This limit ensures requests stay under the 5MB total size limit.`,
           details: 'For larger uploads, consider splitting materials or using text input instead of files.'
         },
-        { status: 400 }
+        400
       );
     }
 
@@ -132,12 +177,12 @@ export async function POST(request: NextRequest) {
     // Vercel Hobby tier has 5MB request limit
     const MAX_TOTAL_SIZE = 5 * 1024 * 1024; // 5MB
     if (totalSize > MAX_TOTAL_SIZE) {
-      return NextResponse.json(
+      return respond(
         {
           error: `Total request size (${Math.round(totalSize / 1024 / 1024 * 10) / 10}MB) exceeds the 5MB limit.`,
           details: 'Please reduce file sizes, use fewer files, or shorten the text material.'
         },
-        { status: 413 }
+        413
       );
     }
 
@@ -145,9 +190,9 @@ export async function POST(request: NextRequest) {
       if (value instanceof File) {
         // Validate file size
         if (value.size > MAX_FILE_SIZE) {
-          return NextResponse.json(
+          return respond(
             { error: `File "${value.name}" exceeds 5MB limit. Please use a smaller file.` },
-            { status: 400 }
+            400
           );
         }
 
@@ -162,11 +207,11 @@ export async function POST(request: NextRequest) {
         const isTextFile = value.type.startsWith('text/') && !detectedType;
 
         if (!isTextFile && (!detectedType || !ALLOWED_MIME_TYPES.includes(detectedType.mime))) {
-          return NextResponse.json(
+          return respond(
             {
               error: `File "${value.name}" has invalid type. Allowed: PDF, images (JPEG, PNG, GIF, WebP), or text files.`,
             },
-            { status: 400 }
+            400
           );
         }
 
@@ -181,9 +226,9 @@ export async function POST(request: NextRequest) {
 
     // Validate that we have some material
     if (!materialText && files.length === 0) {
-      return NextResponse.json(
+      return respond(
         { error: 'Please provide material (text or files)' },
-        { status: 400 }
+        400
       );
     }
 
@@ -515,7 +560,7 @@ export async function POST(request: NextRequest) {
       'Request completed'
     );
 
-    return NextResponse.json(response, { status: httpStatus });
+    return respond(response, httpStatus);
   } catch (error) {
     const isProduction = process.env.NODE_ENV === 'production';
 
@@ -537,7 +582,7 @@ export async function POST(request: NextRequest) {
           ? error.message
           : 'Internal server error',
       },
-      { status: 500 }
+      { status: 500, headers: baseHeaders ?? new Headers() }
     );
   }
 }

@@ -42,6 +42,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { UserMenu } from '@/components/auth/UserMenu';
 import { CreationProgressStepper } from '@/components/create/CreationProgressStepper';
 import { TestQuestionsTab } from '@/components/create/TestQuestionsTab';
+import { createLogger } from '@/lib/logger';
 
 type CreateState = 'form' | 'loading' | 'success';
 
@@ -95,6 +96,8 @@ interface FlaggedQuestion {
   latestNote?: string | null;
   reasonCounts: Record<'wrong_answer' | 'ambiguous' | 'typo' | 'other', number>;
 }
+
+const logger = createLogger({ module: 'create.page' });
 
 export default function CreatePage() {
   const router = useRouter();
@@ -358,7 +361,7 @@ export default function CreatePage() {
           });
         }
       } catch (error) {
-        console.warn('Topic identification failed:', error);
+        logger.warn({ error }, 'Topic identification failed');
         updateCreationStep('topics', 'error', { message: 'Topic recognition failed' });
       }
 
@@ -438,7 +441,7 @@ export default function CreatePage() {
         setState('form');
       }
     } catch (err) {
-      console.error('Error generating questions:', err);
+      logger.error({ error: err }, 'Error generating questions');
       const errorMessage = err instanceof Error ? err.message : 'Kysymysten luonti epäonnistui';
       toast.error('Yhteysongelma', {
         description: errorMessage,
@@ -458,10 +461,13 @@ export default function CreatePage() {
     });
 
     // Log for analytics
-    console.log('Question generation: full success', {
-      setsCreated: questionSets.length,
-      totalQuestions,
-    });
+    logger.info(
+      {
+        setsCreated: questionSets.length,
+        totalQuestions,
+      },
+      'Question generation: full success'
+    );
   };
 
   /**
@@ -498,11 +504,14 @@ export default function CreatePage() {
     );
 
     // Log for analytics
-    console.warn('Question generation: partial success', {
-      succeeded: stats?.succeeded,
-      failed: stats?.failed,
-      failures: failures?.map(f => ({ mode: f.mode, difficulty: f.difficulty, errorType: f.errorType })),
-    });
+    logger.warn(
+      {
+        succeeded: stats?.succeeded,
+        failed: stats?.failed,
+        failures: failures?.map(f => ({ mode: f.mode, difficulty: f.difficulty, errorType: f.errorType })),
+      },
+      'Question generation: partial success'
+    );
   };
 
   /**
@@ -526,10 +535,10 @@ export default function CreatePage() {
     });
 
     // Log for debugging
-    console.error('Question generation: total failure', {
-      message,
-      failures,
-    });
+    logger.error(
+      { message, failures },
+      'Question generation: total failure'
+    );
   };
 
   const handleBackToMenu = () => {
@@ -556,7 +565,7 @@ export default function CreatePage() {
 
       setAllQuestionSets(payload.data || []);
     } catch (error) {
-      console.error('Error loading question sets:', error);
+      logger.error({ error }, 'Error loading question sets');
     } finally {
       setLoadingQuestionSets(false);
     }
@@ -581,7 +590,7 @@ export default function CreatePage() {
 
       setFlaggedQuestions(payload.data || []);
     } catch (error) {
-      console.error('Error loading flagged questions:', error);
+      logger.error({ error }, 'Error loading flagged questions');
       setFlagLoadError(error instanceof Error ? error.message : 'Failed to load flagged questions');
     } finally {
       setLoadingFlags(false);
@@ -783,7 +792,7 @@ export default function CreatePage() {
 
       setEditingFlag(null);
     } catch (error) {
-      console.error('Failed to save question edit:', error);
+      logger.error({ error }, 'Failed to save question edit');
       setEditError(error instanceof Error ? error.message : 'Tallennus epäonnistui');
     } finally {
       setSavingEdit(false);
@@ -816,7 +825,7 @@ export default function CreatePage() {
         description: 'Tämä kysymys poistettiin ilmoituksista.',
       });
     } catch (error) {
-      console.error('Failed to dismiss flag:', error);
+      logger.error({ error }, 'Failed to dismiss flag');
       setFlagLoadError(error instanceof Error ? error.message : 'Ilmoituksen poistaminen epäonnistui');
     } finally {
       setDismissingFlagId(null);
@@ -838,7 +847,7 @@ export default function CreatePage() {
       // If we get 400 or 404, user is admin (validation or not found error)
       setIsAdmin(response.status === 400 || response.status === 404);
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      logger.error({ error }, 'Error checking admin status');
       setIsAdmin(false);
     }
   };
@@ -869,7 +878,7 @@ export default function CreatePage() {
       // Refresh the list to show updated status
       await loadQuestionSets();
     } catch (error) {
-      console.error('Error updating question set status:', error);
+      logger.error({ error }, 'Error updating question set status');
       const errorMessage = error instanceof Error ? error.message : 'Kysymyssarjan tilan päivitys epäonnistui';
       alert(`Virhe: ${errorMessage}`);
     } finally {
@@ -903,7 +912,7 @@ export default function CreatePage() {
       // Refresh the list
       await loadQuestionSets();
     } catch (error) {
-      console.error('Error deleting question set:', error);
+      logger.error({ error }, 'Error deleting question set');
       const errorMessage = error instanceof Error ? error.message : 'Kysymyssarjan poistaminen epäonnistui';
       alert(`Virhe: ${errorMessage}`);
     } finally {
@@ -959,7 +968,7 @@ export default function CreatePage() {
       setTotalQuestionsCreated(data.questionsAdded || 0);
       setState('success');
     } catch (err) {
-      console.error('Error extending question set:', err);
+      logger.error({ error: err }, 'Error extending question set');
       const errorMessage = err instanceof Error ? err.message : 'Kysymysten lisääminen epäonnistui';
       setError(errorMessage);
       setState('form');

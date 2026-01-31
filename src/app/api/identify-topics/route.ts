@@ -7,6 +7,12 @@ import {
   processUploadedFiles,
 } from '@/lib/api/questionGeneration';
 import { getSimpleTopics } from '@/lib/ai/topicIdentifier';
+import {
+  checkRateLimit,
+  getClientIp,
+  buildRateLimitKey,
+  createRateLimitHeaders,
+} from '@/lib/ratelimit';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 60; // 1 minute for topic analysis
@@ -14,19 +20,58 @@ export const maxDuration = 60; // 1 minute for topic analysis
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
   const logger = createLogger({ requestId, route: '/api/identify-topics' });
+  let baseHeaders: Headers | undefined;
 
   logger.info({ method: 'POST' }, 'Topic identification request received');
 
   try {
+    const clientIp = getClientIp(request.headers);
+    const clientId = request.headers.get('x-client-id') || request.headers.get('x-clientid') || undefined;
+    let userId: string | undefined;
+
     // Verify authentication
     try {
-      await requireAuth();
+      const user = await requireAuth();
+      userId = user.id;
       logger.info('Authentication successful');
     } catch (authError) {
       logger.warn('Authentication failed');
-      return NextResponse.json(
+    }
+
+    const rateLimitKey = buildRateLimitKey({
+      ip: clientIp,
+      userId,
+      clientId,
+      prefix: 'identify-topics',
+    });
+    const rateLimitResult = checkRateLimit(rateLimitKey, {
+      limit: 10,
+      windowMs: 60 * 60 * 1000,
+    });
+    baseHeaders = createRateLimitHeaders(rateLimitResult);
+    const respond = (body: unknown, status = 200, headers?: Headers) =>
+      NextResponse.json(body, { status, headers: headers ?? baseHeaders });
+
+    if (!rateLimitResult.success) {
+      const retryAfterSeconds = Math.max(
+        0,
+        Math.ceil((rateLimitResult.reset - Date.now()) / 1000)
+      );
+      const headers = createRateLimitHeaders(rateLimitResult, retryAfterSeconds);
+      return respond(
+        {
+          error: 'Rate limit exceeded. Please try again later.',
+          retryAfterSeconds,
+        },
+        429,
+        headers
+      );
+    }
+
+    if (!userId) {
+      return respond(
         { error: 'Unauthorized. Please log in to identify topics.' },
-        { status: 401 }
+        401
       );
     }
 
@@ -40,23 +85,23 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!subject) {
-      return NextResponse.json(
+      return respond(
         { error: 'Subject is required' },
-        { status: 400 }
+        400
       );
     }
 
     // Process uploaded files
     const { files, error: fileError } = await processUploadedFiles(formData);
     if (fileError) {
-      return NextResponse.json({ error: fileError }, { status: 400 });
+      return respond({ error: fileError }, 400);
     }
 
     // Validate that we have some material
     if (!materialText && files.length === 0) {
-      return NextResponse.json(
+      return respond(
         { error: 'Please provide material (text or files) for topic identification' },
-        { status: 400 }
+        400
       );
     }
 
@@ -95,7 +140,7 @@ export async function POST(request: NextRequest) {
       'Topic identification completed successfully'
     );
 
-    return NextResponse.json({
+    return respond({
       success: true,
       topics: simpleTopics, // Backward compatibility
       count: simpleTopics.length,
@@ -127,7 +172,7 @@ export async function POST(request: NextRequest) {
           ? error.message
           : 'Internal server error',
       },
-      { status: 500 }
+      { status: 500, headers: baseHeaders ?? new Headers() }
     );
   }
 }

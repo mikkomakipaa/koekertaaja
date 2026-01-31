@@ -286,6 +286,8 @@ export interface Answer {
 ### POST /api/generate-questions
 Server-side endpoint to call Anthropic API securely.
 
+**Rate limiting:** 5 requests/hour per user (IP + session). Returns `429` with `Retry-After`, `X-RateLimit-Limit`, and `X-RateLimit-Remaining` headers when exceeded.
+
 **Request:**
 ```typescript
 {
@@ -299,6 +301,11 @@ Server-side endpoint to call Anthropic API securely.
   };
 }
 ```
+
+### POST /api/identify-topics
+Lightweight endpoint to extract topics prior to generation.
+
+**Rate limiting:** 10 requests/hour per user (IP + session). Returns `429` with `Retry-After`, `X-RateLimit-Limit`, and `X-RateLimit-Remaining` headers when exceeded.
 
 **Response:**
 ```typescript

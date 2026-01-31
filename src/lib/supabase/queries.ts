@@ -6,6 +6,9 @@
 import { supabase } from './client';
 import { QuestionSet, QuestionSetWithQuestions } from '@/types';
 import { parseDatabaseQuestion } from '@/types/database';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger({ module: 'supabase.queries' });
 
 /**
  * Get a question set by its code
@@ -56,7 +59,7 @@ export async function getRecentQuestionSets(limit = 10): Promise<QuestionSet[]> 
     .limit(limit);
 
   if (error) {
-    console.error('Error fetching recent question sets:', error);
+    logger.error({ error }, 'Error fetching recent question sets');
     return [];
   }
 
@@ -80,7 +83,7 @@ export async function getQuestionSetsBySubject(
     .limit(limit);
 
   if (error) {
-    console.error('Error fetching question sets by subject:', error);
+    logger.error({ error, subject }, 'Error fetching question sets by subject');
     return [];
   }
 
@@ -99,7 +102,7 @@ export async function getAllQuestionSets(): Promise<QuestionSet[]> {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching all question sets:', error);
+    logger.error({ error }, 'Error fetching all question sets');
     return [];
   }
 
@@ -116,7 +119,7 @@ export async function getAllQuestionSetsForManage(): Promise<QuestionSet[]> {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching question sets for manage:', error);
+    logger.error({ error }, 'Error fetching question sets for manage');
     return [];
   }
 
@@ -134,7 +137,7 @@ export async function getQuestionSetTopics(questionSetId: string): Promise<strin
     .not('topic', 'is', null);
 
   if (error) {
-    console.error('Error fetching topics:', error);
+    logger.error({ error, questionSetId }, 'Error fetching topics');
     return [];
   }
 
@@ -174,7 +177,7 @@ export async function getCreatedQuestionSets(limit = 50): Promise<QuestionSet[]>
     .limit(limit);
 
   if (error) {
-    console.error('Error fetching created question sets:', error);
+    logger.error({ error }, 'Error fetching created question sets');
     return [];
   }
 

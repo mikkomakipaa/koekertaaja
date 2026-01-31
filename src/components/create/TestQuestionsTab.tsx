@@ -6,6 +6,7 @@ import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
 import { Button } from '@/components/ui/button';
 import * as Dialog from '@radix-ui/react-dialog';
 import { cn } from '@/lib/utils';
+import { createLogger } from '@/lib/logger';
 import {
   CircleNotch,
   Eye,
@@ -24,6 +25,8 @@ interface TestQuestionsTabProps {
   loadingQuestionSets: boolean;
   onRefreshSets: () => Promise<void>;
 }
+
+const logger = createLogger({ module: 'TestQuestionsTab' });
 
 export function TestQuestionsTab({
   allQuestionSets,
@@ -66,7 +69,7 @@ export function TestQuestionsTab({
       const data = await response.json();
       setQuestions(data.data.questions || []);
     } catch (error) {
-      console.error('Error loading questions:', error);
+      logger.error({ error }, 'Error loading questions');
       setQuestions([]);
     } finally {
       setLoadingQuestions(false);

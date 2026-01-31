@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { createLogger } from '@/lib/logger';
 
 export interface TopicMasteryStats {
   correct: number;
@@ -14,6 +15,7 @@ export interface TopicMasteryRecord {
 }
 
 const STORAGE_EVENT = 'topic-mastery-updated';
+const logger = createLogger({ module: 'useTopicMastery' });
 
 const getStorage = (): Storage | null => {
   if (typeof window !== 'undefined' && window.localStorage) {
@@ -52,7 +54,7 @@ export const readTopicMasteryFromStorage = (questionSetCode?: string): Record<st
 
     return sanitized;
   } catch (error) {
-    console.warn('Unable to read topic mastery from storage', error);
+    logger.warn({ error }, 'Unable to read topic mastery from storage');
     return {};
   }
 };
@@ -74,7 +76,7 @@ export const writeTopicMasteryToStorage = (
     }
     return true;
   } catch (error) {
-    console.warn('Unable to persist topic mastery to storage', error);
+    logger.warn({ error }, 'Unable to persist topic mastery to storage');
     return false;
   }
 };
@@ -93,7 +95,7 @@ export const clearTopicMasteryFromStorage = (questionSetCode?: string): boolean 
     }
     return true;
   } catch (error) {
-    console.warn('Unable to clear topic mastery from storage', error);
+    logger.warn({ error }, 'Unable to clear topic mastery from storage');
     return false;
   }
 };

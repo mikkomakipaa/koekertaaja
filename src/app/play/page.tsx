@@ -10,6 +10,7 @@ import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { QuestionSet, Difficulty, StudyMode } from '@/types';
 import { readMistakesFromStorage } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
+import { createLogger } from '@/lib/logger';
 import {
   GlobeHemisphereWest,
   MathOperations,
@@ -51,6 +52,8 @@ interface SubjectConfig {
   label: string;
   color: string;
 }
+
+const logger = createLogger({ module: 'play.page' });
 
 const difficultyLabels: Record<string, string> = {
   helppo: 'Helppo',
@@ -415,7 +418,7 @@ export default function PlayBrowsePage() {
         setGroupedSets(groupedArray);
         setState('loaded');
       } catch (err) {
-        console.error('Error loading question sets:', err);
+        logger.error({ error: err }, 'Error loading question sets');
         setError('Kysymyssarjojen lataaminen epäonnistui');
         setState('error');
       }

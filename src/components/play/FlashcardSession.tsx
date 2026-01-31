@@ -5,6 +5,7 @@ import { Flashcard } from '@/types';
 import { shuffleArray } from '@/lib/utils';
 import { FlashcardCard } from './FlashcardCard';
 import { Button } from '@/components/ui/button';
+import { createLogger } from '@/lib/logger';
 import {
   Book,
   CheckCircle,
@@ -18,6 +19,7 @@ import {
 
 const FLIP_HINT_KEY = 'has_seen_flip_hint';
 const getReviewKey = (cardId: string) => `flashcard_reviews_${cardId}`;
+const logger = createLogger({ module: 'FlashcardSession' });
 
 interface FlashcardSessionProps {
   flashcards: Flashcard[];
@@ -71,7 +73,7 @@ export function FlashcardSession({
       localStorage.setItem(key, String(nextCount));
       setReviewCounts((prev) => ({ ...prev, [cardId]: nextCount }));
     } catch (error) {
-      console.error('Error incrementing flashcard review count:', error);
+      logger.error({ error }, 'Error incrementing flashcard review count');
     }
   }, [readStoredNumber]);
 
@@ -119,7 +121,7 @@ export function FlashcardSession({
         try {
           localStorage.setItem(FLIP_HINT_KEY, 'true');
         } catch (error) {
-          console.error('Error saving flip hint state:', error);
+          logger.error({ error }, 'Error saving flip hint state');
         }
       }
       return next;

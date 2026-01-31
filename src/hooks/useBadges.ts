@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createLogger } from '@/lib/logger';
 import { Badge, BadgeId } from '@/types';
 import {
   Sparkle,
@@ -12,6 +13,7 @@ import {
 } from '@phosphor-icons/react';
 
 const STORAGE_KEY = 'koekertaaja_badges';
+const logger = createLogger({ module: 'useBadges' });
 
 interface BadgeStats {
   totalSessions: number;
@@ -146,7 +148,7 @@ export function useBadges(questionSetCode?: string) {
         setBadges(allBadges);
       }
     } catch (error) {
-      console.error('Error loading badges:', error);
+      logger.error({ error }, 'Error loading badges');
     }
   }, []);
 
@@ -172,7 +174,7 @@ export function useBadges(questionSetCode?: string) {
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (error) {
-      console.error('Error saving badges:', error);
+      logger.error({ error }, 'Error saving badges');
     }
   }, []);
 

@@ -4,10 +4,12 @@ import { shuffleArray } from '@/lib/utils';
 import { evaluateQuestionAnswer } from '@/lib/questions/answer-evaluation';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 import { useTopicMastery } from '@/hooks/useTopicMastery';
+import { createLogger } from '@/lib/logger';
 
 const DEFAULT_QUESTIONS_PER_SESSION = 15;
 const POINTS_PER_CORRECT = 10;
 const STREAK_BONUS = 5;
+const logger = createLogger({ module: 'useGameSession' });
 
 export function useGameSession(
   allQuestions: Question[],
@@ -123,10 +125,13 @@ export function useGameSession(
         acc[key] = (acc[key] ?? 0) + 1;
         return acc;
       }, {});
-      console.info('Session skill distribution', {
-        skillCoverage: Number((skillCoverage * 100).toFixed(1)),
-        skillDistribution,
-      });
+      logger.debug(
+        {
+          skillCoverage: Number((skillCoverage * 100).toFixed(1)),
+          skillDistribution,
+        },
+        'Session skill distribution'
+      );
     }
 
     setSelectedQuestions(selectedQuestions);

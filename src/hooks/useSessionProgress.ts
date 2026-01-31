@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createLogger } from '@/lib/logger';
 
 export interface SessionProgress {
   answered: number;
@@ -7,6 +8,7 @@ export interface SessionProgress {
 }
 
 const buildKey = (questionSetCode: string) => `session_progress_${questionSetCode}`;
+const logger = createLogger({ module: 'useSessionProgress' });
 
 export function useSessionProgress(questionSetCode?: string) {
   const [progress, setProgress] = useState<SessionProgress | null>(null);
@@ -40,7 +42,7 @@ export function useSessionProgress(questionSetCode?: string) {
         setProgress(null);
       }
     } catch (error) {
-      console.error('Error reading session progress:', error);
+      logger.error({ error }, 'Error reading session progress');
       setProgress(null);
     }
   }, [storageKey]);
@@ -57,7 +59,7 @@ export function useSessionProgress(questionSetCode?: string) {
         localStorage.setItem(storageKey, JSON.stringify({ answered: safeAnswered, total }));
         setProgress(data);
       } catch (error) {
-        console.error('Error updating session progress:', error);
+        logger.error({ error }, 'Error updating session progress');
       }
     },
     [storageKey]
@@ -70,7 +72,7 @@ export function useSessionProgress(questionSetCode?: string) {
       localStorage.removeItem(storageKey);
       setProgress(null);
     } catch (error) {
-      console.error('Error clearing session progress:', error);
+      logger.error({ error }, 'Error clearing session progress');
     }
   }, [storageKey]);
 

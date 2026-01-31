@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createLogger } from '@/lib/logger';
 
 export interface MistakeRecord {
   questionId: string;
@@ -9,6 +10,7 @@ export interface MistakeRecord {
 }
 
 const STORAGE_EVENT = 'mistakes-updated';
+const logger = createLogger({ module: 'useReviewMistakes' });
 
 const getStorage = (): Storage | null => {
   if (typeof window !== 'undefined' && window.localStorage) {
@@ -36,7 +38,7 @@ export const readMistakesFromStorage = (questionSetCode?: string): MistakeRecord
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? (parsed as MistakeRecord[]) : [];
   } catch (error) {
-    console.warn('Unable to read review mistakes from storage', error);
+    logger.warn({ error }, 'Unable to read review mistakes from storage');
     return [];
   }
 };
@@ -55,7 +57,7 @@ export const writeMistakesToStorage = (questionSetCode: string | undefined, mist
     }
     return true;
   } catch (error) {
-    console.warn('Unable to persist review mistakes to storage', error);
+    logger.warn({ error }, 'Unable to persist review mistakes to storage');
     return false;
   }
 };

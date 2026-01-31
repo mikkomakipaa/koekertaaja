@@ -1,10 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createLogger } from '@/lib/logger';
+import { getServerEnv } from '@/lib/env';
 
 const logger = createLogger({ module: 'anthropic' });
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: getServerEnv().ANTHROPIC_API_KEY,
   timeout: 290000, // ~4.8 minutes to align with 5 minute route maxDuration
   maxRetries: 2, // Retry failed requests twice
 });

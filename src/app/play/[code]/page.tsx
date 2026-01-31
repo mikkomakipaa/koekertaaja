@@ -22,6 +22,7 @@ import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
 import { shuffleArray } from '@/lib/utils';
 import { QuestionSetWithQuestions, StudyMode, Flashcard, type QuestionType, type QuestionFlagReason } from '@/types';
+import { createLogger } from '@/lib/logger';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   ListBullets,
@@ -45,6 +46,8 @@ import {
 } from '@phosphor-icons/react';
 
 type PlayState = 'loading' | 'error' | 'playing' | 'results';
+
+const logger = createLogger({ module: 'play.by-code' });
 
 const getQuestionTypeInfo = (type: QuestionType): { label: string; icon: ReactNode } => {
   const typeMap: Record<QuestionType, { label: string; icon: ReactNode }> = {
@@ -182,7 +185,7 @@ export default function PlayPage() {
       localStorage.setItem('koekertaaja_client_id', newId);
       setClientId(newId);
     } catch (error) {
-      console.error('Failed to access localStorage for clientId:', error);
+      logger.warn({ error }, 'Failed to access localStorage for clientId');
       setClientId(null);
     }
   }, []);
@@ -339,7 +342,7 @@ export default function PlayPage() {
           setState('playing');
         }
       } catch (err) {
-        console.error('Error loading question set:', err);
+        logger.error({ error: err }, 'Error loading question set');
         setError('Kysymyssarjan lataaminen epäonnistui');
         setState('error');
       }
@@ -466,7 +469,7 @@ export default function PlayPage() {
       setFlagFeedback({ type: 'success', message: 'Kiitos ilmoituksesta! Tutkimme asian.' });
       setFlagDialogOpen(false);
     } catch (error) {
-      console.error('Failed to submit flag:', error);
+      logger.error({ error }, 'Failed to submit flag');
       setFlagFeedback({ type: 'error', message: 'Ilmoituksen lähetys epäonnistui. Yritä uudelleen.' });
     } finally {
       setFlagSubmitting(false);

@@ -272,7 +272,10 @@ export async function generateQuizSets(
 
       // Log detailed report in development
       if (process.env.NODE_ENV !== 'production') {
-        console.log('\n' + formatCoverageReport(coverageResult));
+        logger.debug(
+          { report: formatCoverageReport(coverageResult) },
+          'Coverage validation report'
+        );
       }
 
       // Warn if coverage is poor
@@ -456,8 +459,8 @@ export async function generateFlashcardSet(
   );
 
   // Validate coverage if distribution was used (Phase 3)
-  if (distribution) {
-    const coverageResult = validateCoverage(questions, distribution);
+    if (distribution) {
+      const coverageResult = validateCoverage(questions, distribution);
 
     logger.info(
       {
@@ -473,10 +476,13 @@ export async function generateFlashcardSet(
       'Coverage validation for flashcard set'
     );
 
-    // Log detailed report in development
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('\n' + formatCoverageReport(coverageResult));
-    }
+      // Log detailed report in development
+      if (process.env.NODE_ENV !== 'production') {
+        logger.debug(
+          { report: formatCoverageReport(coverageResult) },
+          'Coverage validation report'
+        );
+      }
 
     // Warn if coverage is poor
     if (!coverageResult.isAcceptable) {

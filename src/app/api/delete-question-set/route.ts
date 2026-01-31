@@ -8,16 +8,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteQuestionSet } from '@/lib/supabase/write-queries';
 import { requireAuth } from '@/lib/supabase/server-auth';
+import { createLogger } from '@/lib/logger';
+import crypto from 'crypto';
 
 export async function DELETE(request: NextRequest) {
+  const requestId = crypto.randomUUID();
+  const logger = createLogger({ requestId, route: '/api/delete-question-set' });
+
   try {
     // Verify authentication
     let user;
     try {
       user = await requireAuth();
-      console.log('User authenticated:', user.id);
+      logger.info({ userId: user.id }, 'User authenticated');
     } catch (authError) {
-      console.error('Authentication failed:', authError);
+      logger.warn({ error: authError instanceof Error ? authError.message : authError }, 'Authentication failed');
       return NextResponse.json(
         { error: 'Unauthorized. Please log in to delete question sets.' },
         { status: 401 }
@@ -29,7 +34,7 @@ export async function DELETE(request: NextRequest) {
 
     // Validate input
     if (!questionSetId) {
-      console.error('Missing question set ID in request');
+      logger.warn('Missing question set ID in request');
       return NextResponse.json(
         { error: 'Question set ID is required' },
         { status: 400 }
@@ -38,30 +43,33 @@ export async function DELETE(request: NextRequest) {
 
     // Validate environment variables
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error('SUPABASE_SERVICE_ROLE_KEY is not set');
+      logger.error('SUPABASE_SERVICE_ROLE_KEY is not set');
       return NextResponse.json(
         { error: 'Server configuration error: Missing service role key' },
         { status: 500 }
       );
     }
 
-    console.log('Attempting to delete question set:', questionSetId);
+    logger.info({ questionSetId }, 'Attempting to delete question set');
 
     // Delete the question set
     const success = await deleteQuestionSet(questionSetId);
 
     if (!success) {
-      console.error('Failed to delete question set:', questionSetId);
+      logger.error({ questionSetId }, 'Failed to delete question set');
       return NextResponse.json(
         { error: 'Failed to delete question set. Check server logs for details.' },
         { status: 500 }
       );
     }
 
-    console.log('Successfully deleted question set:', questionSetId);
+    logger.info({ questionSetId }, 'Successfully deleted question set');
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in delete-question-set API:', error);
+    logger.error(
+      { error: error instanceof Error ? error.message : error, stack: error instanceof Error ? error.stack : undefined },
+      'Error in delete-question-set API'
+    );
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json(
       { error: errorMessage },

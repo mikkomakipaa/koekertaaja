@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createLogger } from '@/lib/logger';
 
 export interface LastScore {
   score: number;
@@ -9,6 +10,7 @@ export interface LastScore {
 }
 
 const buildKey = (questionSetCode: string) => `last_score_${questionSetCode}`;
+const logger = createLogger({ module: 'useLastScore' });
 
 export function useLastScore(questionSetCode?: string) {
   const [lastScore, setLastScore] = useState<LastScore | null>(null);
@@ -55,7 +57,7 @@ export function useLastScore(questionSetCode?: string) {
         setLastScore(null);
       }
     } catch (error) {
-      console.error('Error reading last score:', error);
+      logger.error({ error }, 'Error reading last score');
       setLastScore(null);
     }
   }, [storageKey]);
@@ -77,7 +79,7 @@ export function useLastScore(questionSetCode?: string) {
         localStorage.setItem(storageKey, JSON.stringify(data));
         setLastScore(data);
       } catch (error) {
-        console.error('Error saving last score:', error);
+        logger.error({ error }, 'Error saving last score');
       }
     },
     [storageKey]
@@ -90,7 +92,7 @@ export function useLastScore(questionSetCode?: string) {
       localStorage.removeItem(storageKey);
       setLastScore(null);
     } catch (error) {
-      console.error('Error clearing last score:', error);
+      logger.error({ error }, 'Error clearing last score');
     }
   }, [storageKey]);
 
