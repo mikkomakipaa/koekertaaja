@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/supabase/server-auth';
+import { createServerClient, verifyAuth } from '@/lib/supabase/server-auth';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { isAdmin } from '@/lib/auth/admin';
 import { parseDatabaseQuestion } from '@/types/database';
 
 export async function GET(request: Request) {
   try {
-    const user = await requireAuth();
+    const user = await verifyAuth();
     const url = new URL(request.url);
     const code = url.searchParams.get('code')?.toUpperCase();
     const includeDrafts = url.searchParams.get('includeDrafts') === '1';
@@ -15,9 +15,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Code is required' }, { status: 400 });
     }
 
-    const userIsAdmin = isAdmin(user.email || '');
-    const supabaseAdmin = getSupabaseAdmin();
-    const setQuery = supabaseAdmin
+    const userIsAdmin = user ? isAdmin(user.email || '') : false;
+    const supabase = userIsAdmin ? getSupabaseAdmin() : await createServerClient();
+    const setQuery = supabase
       .from('question_sets')
       .select('*')
       .eq('code', code);
@@ -36,7 +36,9 @@ export async function GET(request: Request) {
       );
     }
 
-    const { data: dbQuestions, error: questionsError } = await supabaseAdmin
+    const questionsClient =
+      userIsAdmin && includeDrafts ? getSupabaseAdmin() : supabase;
+    const { data: dbQuestions, error: questionsError } = await questionsClient
       .from('questions')
       .select('*')
       .eq('question_set_id', (questionSet as any).id)
