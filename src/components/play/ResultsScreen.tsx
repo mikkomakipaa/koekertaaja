@@ -113,28 +113,23 @@ export function ResultsScreen({
   // Determine celebration level
   const getCelebration = () => {
     if (percentage === 100) return {
-      emoji: '🎉',
-      icon: <Sparkle size={80} weight="fill" className="text-yellow-500" />,
+      icon: <Star size={48} weight="fill" className="text-yellow-500" />,
       text: 'Täydelliset pisteet!'
     };
     if (percentage >= 90) return {
-      emoji: '🌟',
-      icon: <Star size={80} weight="fill" className="text-yellow-500" />,
+      icon: <Rocket size={48} weight="duotone" className="text-purple-500" />,
       text: 'Erinomaista!'
     };
     if (percentage >= 80) return {
-      emoji: '🎊',
-      icon: <Confetti size={80} weight="duotone" className="text-purple-500" />,
+      icon: <Fire size={48} weight="fill" className="text-orange-500" />,
       text: 'Hienoa työtä!'
     };
     if (percentage >= 60) return {
-      emoji: '👍',
-      icon: <ThumbsUp size={80} weight="fill" className="text-blue-500" />,
+      icon: <Target size={48} weight="duotone" className="text-blue-500" />,
       text: 'Hyvää työtä!'
     };
     return {
-      emoji: '💪',
-      icon: <Barbell size={80} weight="bold" className="text-orange-500" />,
+      icon: <Barbell size={48} weight="bold" className="text-orange-500" />,
       text: 'Jatka harjoittelua!'
     };
   };
@@ -231,18 +226,16 @@ export function ResultsScreen({
     <div className={`min-h-screen bg-gradient-to-b ${modeColors.bg} p-4 md:p-8 pb-24 transition-colors`}>
       <div className="max-w-5xl mx-auto">
         {/* Hero */}
-        <div className="mb-8 rounded-3xl bg-white/80 dark:bg-gray-900/70 border border-white/60 dark:border-gray-800 p-6 md:p-8 shadow-sm">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <div className={`${modeColors.iconBg} flex items-center justify-center rounded-2xl px-6 py-4`}>
-              <span className="text-5xl md:text-6xl" role="img" aria-label="celebration">
-                {celebration.emoji}
-              </span>
+        <div className="mb-6 rounded-2xl bg-white/80 dark:bg-gray-900/70 border border-white/60 dark:border-gray-800 p-5 md:p-6 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className={`${modeColors.iconBg} flex items-center justify-center rounded-xl p-3 flex-shrink-0`}>
+              {celebration.icon}
             </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
                 {celebration.text}
               </h1>
-              <p className="text-lg md:text-2xl text-gray-600 dark:text-gray-400">
+              <p className="text-base md:text-lg text-gray-600 dark:text-gray-400">
                 {score} / {total} oikein ({percentage}%)
               </p>
             </div>
@@ -250,7 +243,7 @@ export function ResultsScreen({
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <div className="rounded-2xl bg-white/90 dark:bg-gray-900/80 border border-white/70 dark:border-gray-800 p-4">
             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
               <DiamondsFour size={18} weight="duotone" className="text-yellow-500" />
@@ -293,7 +286,7 @@ export function ResultsScreen({
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="overview" className="mb-8">
+        <Tabs defaultValue="overview" className="mb-6">
           <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-white/80 dark:bg-gray-900/70 p-1 shadow-inner shadow-gray-200/40 dark:shadow-none border border-white/70 dark:border-gray-800">
             <TabsTrigger value="overview" className="rounded-xl text-sm md:text-base">Yhteenveto</TabsTrigger>
             <TabsTrigger value="answers" className="rounded-xl text-sm md:text-base">Vastaukset</TabsTrigger>

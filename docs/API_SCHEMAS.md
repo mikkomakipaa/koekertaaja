@@ -6,12 +6,11 @@ This document provides API-compatible schemas for integrating question generatio
 
 1. [Question Schema (JSON Schema)](#question-schema-json-schema)
 2. [Question Type Contracts (AI Output)](#question-type-contracts-ai-output)
-3. [Map Question Entity Schema](#map-question-entity-schema)
-4. [Question Set Schema](#question-set-schema)
-5. [API Endpoint Schema](#api-endpoint-schema)
-6. [Admin API - Publish/Unpublish](#admin-api---publishunpublish)
-7. [Example Payloads](#example-payloads)
-8. [OpenAPI Specification](#openapi-specification)
+3. [Question Set Schema](#question-set-schema)
+4. [API Endpoint Schema](#api-endpoint-schema)
+5. [Admin API - Publish/Unpublish](#admin-api---publishunpublish)
+6. [Example Payloads](#example-payloads)
+7. [OpenAPI Specification](#openapi-specification)
 
 ---
 
@@ -39,8 +38,7 @@ This document provides API-compatible schemas for integrating question generatio
         "true_false",
         "matching",
         "short_answer",
-        "sequential",
-        "map"
+        "sequential"
       ],
       "description": "Question type"
     },
@@ -77,38 +75,10 @@ This document provides API-compatible schemas for integrating question generatio
       "description": "Why this answer is correct"
     },
     "options": {
-      "description": "Multiple choice options (string array) or map configuration options (object)",
-      "anyOf": [
-        {
-          "type": "array",
-          "items": { "type": "string" },
-          "minItems": 2
-        },
-        {
-          "type": "object",
-          "required": ["mapAsset", "regions", "inputMode"],
-          "properties": {
-            "mapAsset": { "type": "string", "minLength": 1, "maxLength": 500 },
-            "regions": {
-              "type": "array",
-              "minItems": 1,
-              "items": {
-                "type": "object",
-                "required": ["id", "label"],
-                "properties": {
-                  "id": { "type": "string", "minLength": 1, "maxLength": 100 },
-                  "label": { "type": "string", "minLength": 1, "maxLength": 200 },
-                  "aliases": {
-                    "type": "array",
-                    "items": { "type": "string", "minLength": 1, "maxLength": 200 }
-                  }
-                }
-              }
-            },
-            "inputMode": { "type": "string", "enum": ["single_region", "multi_region", "text"] }
-          }
-        }
-      ]
+      "description": "Multiple choice options (string array)",
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 2
     },
     "acceptable_answers": {
       "type": "array",
@@ -312,147 +282,6 @@ Example:
 }
 ```
 
-### map
-
-Required fields:
-- `options`: object with `mapAsset`, `regions`, `inputMode`
-- `correct_answer`:
-  - `single_region`: string region id
-  - `multi_region`: string[] of region ids
-  - `text`: string (region id or label)
-
-Optional:
-- `acceptable_answers`: string[] (used for text answers)
-
-Example:
-```json
-{
-  "question": "Valitse Pohjanmaa kartalta.",
-  "type": "map",
-  "topic": "Suomen maakunnat",
-  "options": {
-    "mapAsset": "/maps/finland-provinces.json",
-    "inputMode": "single_region",
-    "regions": [
-      { "id": "pohjanmaa", "label": "Pohjanmaa", "aliases": ["Österbotten"] },
-      { "id": "uusimaa", "label": "Uusimaa" }
-    ]
-  },
-  "correct_answer": "pohjanmaa",
-  "explanation": "Pohjanmaa sijaitsee Suomen länsirannikolla."
-}
-```
-
----
-
-## Map Question Entity Schema
-
-Map questions are stored as a dedicated entity (`map_questions`) instead of the generic `questions` table. A map question may optionally belong to a `question_set` when created from a larger set, but it can also stand alone for map-only experiences.
-
-### Relationship to question_sets
-
-- `map_questions.question_set_id` is nullable.
-- When provided, the map question is grouped under that question set for publishing and share-code access.
-- When `null`, the map question exists independently (intended for future map-only flows).
-
-### Proposed Table Schema (map_questions)
-
-```sql
-create table map_questions (
-  id uuid primary key default gen_random_uuid(),
-  question_set_id uuid references question_sets(id) on delete set null,
-  subject text not null default 'Maantieto',
-  grade smallint,
-  difficulty text,
-  question text not null,
-  explanation text not null,
-  topic text,
-  subtopic text,
-  skill text,
-  map_asset text not null,
-  input_mode text not null,
-  regions jsonb not null,
-  correct_answer jsonb not null,
-  acceptable_answers text[],
-  metadata jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-```
-
-### Map Question Entity (JSON Schema)
-
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "required": [
-    "question",
-    "explanation",
-    "mapAsset",
-    "inputMode",
-    "regions",
-    "correctAnswer"
-  ],
-  "properties": {
-    "questionSetId": {
-      "type": ["string", "null"],
-      "description": "Optional question_set foreign key"
-    },
-    "subject": {
-      "type": "string",
-      "description": "Geography-only (Finnish: Maantieto)"
-    },
-    "grade": { "type": "integer", "minimum": 1, "maximum": 13 },
-    "difficulty": { "type": "string", "enum": ["helppo", "normaali"] },
-    "question": { "type": "string", "minLength": 5, "maxLength": 1000 },
-    "explanation": { "type": "string", "minLength": 10, "maxLength": 2000 },
-    "topic": { "type": "string", "maxLength": 100 },
-    "subtopic": { "type": "string", "maxLength": 100 },
-    "skill": { "type": "string", "pattern": "^[a-z_]+$", "maxLength": 100 },
-    "mapAsset": {
-      "type": "string",
-      "description": "Public asset path (/maps/...) or absolute URL"
-    },
-    "inputMode": {
-      "type": "string",
-      "enum": ["single_region", "multi_region", "text"],
-      "description": "single_region=select one region, multi_region=select many, text=typed answer"
-    },
-    "regions": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "required": ["id", "label"],
-        "properties": {
-          "id": { "type": "string" },
-          "label": { "type": "string" },
-          "aliases": { "type": "array", "items": { "type": "string" } }
-        }
-      }
-    },
-    "correctAnswer": {
-      "oneOf": [
-        { "type": "string" },
-        { "type": "array", "items": { "type": "string" } }
-      ],
-      "description": "Region id(s) or text answer based on inputMode"
-    },
-    "acceptableAnswers": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "metadata": {
-      "type": "object",
-      "description": "Additional map config (hints, accessibility, validation)"
-    }
-  }
-}
-```
-
----
-
 ## Question Set Schema
 
 ### Question Set Metadata
@@ -578,71 +407,6 @@ Submit generated questions to Koekertaaja from external workflow.
 }
 ```
 
-### POST /api/map-questions/submit
-
-Create a standalone map question (stored in `map_questions`). Optionally attach it to a `question_set` using `questionSetId`.
-
-**Request Body:**
-
-```json
-{
-  "questionSetId": "uuid (optional)",
-  "subject": "Maantieto",
-  "grade": 6,
-  "difficulty": "normaali",
-  "question": "string",
-  "explanation": "string",
-  "topic": "string (optional)",
-  "subtopic": "string (optional)",
-  "skill": "string (optional)",
-  "mapAsset": "/maps/... or https://...",
-  "inputMode": "single_region|multi_region|text",
-  "regions": [{ "id": "string", "label": "string", "aliases": ["string"] }],
-  "correctAnswer": "string|array",
-  "acceptableAnswers": ["string"] (optional),
-  "metadata": {
-    "hints": { "showLabels": false },
-    "accessibility": { "fallbackToText": true },
-    "validation": { "maxSelections": 3 }
-  }
-}
-```
-
-**Response (Success - 200):**
-
-```json
-{
-  "success": true,
-  "mapQuestion": {
-    "id": "uuid",
-    "question_set_id": "uuid|null",
-    "subject": "Maantieto",
-    "grade": 6,
-    "difficulty": "normaali",
-    "question": "string",
-    "explanation": "string",
-    "map_asset": "/maps/finland/finland_counties_v1.png",
-    "input_mode": "single_region",
-    "regions": [{ "id": "uusimaa", "label": "Uusimaa" }],
-    "correct_answer": "uusimaa",
-    "acceptable_answers": ["Uusimaa"],
-    "metadata": {},
-    "created_at": "2025-12-10T12:00:00Z"
-  }
-}
-```
-
-**Response (Error - 400/500):**
-
-```json
-{
-  "error": "Error message",
-  "details": ["Validation error 1", "Validation error 2"]
-}
-```
-
----
-
 ## Admin API - Publish/Unpublish
 
 ### PATCH /api/question-sets/publish
@@ -751,39 +515,6 @@ curl -X PATCH https://your-domain.com/api/question-sets/publish \
 ---
 
 ## Example Payloads
-
-### Map Questions (Geography Only)
-
-Map questions are only allowed for the Geography subject (Finnish: Maantieto). They are stored in the dedicated `map_questions` entity and can be optionally linked to a `question_set` using `questionSetId`.
-
-Use `POST /api/map-questions/submit` for creation. Map questions are not accepted in `/api/question-sets/submit`.
-
-**Asset references**
-- Preferred: public assets in `public/maps/` and referenced as `/maps/...`
-- Allowed: absolute URLs for externally hosted assets
-- Naming: `public/maps/{region}/{map_slug}_v{number}.png` (example: `public/maps/finland/finland_counties_v1.png`)
-
-**Answer format**
-- `inputMode: "single_region"` -> `correctAnswer` is a single region id string
-- `inputMode: "multi_region"` -> `correctAnswer` is an array of region id strings
-- `inputMode: "text"` -> `correctAnswer` is a string (typed answer)
-
-```json
-{
-  "questionSetId": "uuid (optional)",
-  "topic": "Suomen maakunnat",
-  "question": "Valitse kartasta Suomen maakunta, jossa Helsinki sijaitsee.",
-  "explanation": "Helsinki sijaitsee Uudenmaan maakunnassa.",
-  "mapAsset": "/maps/finland/finland_counties_v1.png",
-  "inputMode": "single_region",
-  "regions": [
-    { "id": "uusimaa", "label": "Uusimaa", "aliases": ["Uusimaa", "Uudenmaan maakunta"] },
-    { "id": "varsinais_suomi", "label": "Varsinais-Suomi" },
-    { "id": "paijat_hame", "label": "Päijät-Häme" }
-  ],
-  "correctAnswer": "uusimaa"
-}
-```
 
 ### Example 1: Multiple Choice Question (Math)
 

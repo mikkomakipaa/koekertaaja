@@ -16,7 +16,6 @@ import {
   Shuffle,
   ChatText,
   ListNumbers,
-  MapPin,
   ListBullets,
 } from '@phosphor-icons/react';
 
@@ -49,7 +48,6 @@ export function TestQuestionsTab({
     { value: 'matching', label: 'Yhdistä', icon: <Shuffle size={14} weight="duotone" /> },
     { value: 'short_answer', label: 'Lyhyt', icon: <ChatText size={14} weight="duotone" /> },
     { value: 'sequential', label: 'Järjestä', icon: <ListNumbers size={14} weight="duotone" /> },
-    { value: 'map', label: 'Kartta', icon: <MapPin size={14} weight="duotone" /> },
   ];
 
   // Load questions for selected set
@@ -115,7 +113,6 @@ export function TestQuestionsTab({
       matching: { label: 'Yhdistä parit', icon: <Shuffle size={14} weight="duotone" /> },
       short_answer: { label: 'Lyhyt vastaus', icon: <ChatText size={14} weight="duotone" /> },
       sequential: { label: 'Järjestä oikein', icon: <ListNumbers size={14} weight="duotone" /> },
-      map: { label: 'Kartta', icon: <MapPin size={14} weight="duotone" /> },
     };
     return typeMap[type];
   };
