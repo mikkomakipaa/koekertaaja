@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ModeToggle } from '@/components/play/ModeToggle';
+import { CollapsibleSearch } from '@/components/ui/collapsible-search';
+import { SearchSuggestions } from '@/components/ui/search-suggestions';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { QuestionSet, Difficulty, StudyMode } from '@/types';
 import { readMistakesFromStorage } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
+import { useRecentSearches } from '@/hooks/useRecentSearches';
+import { useScrollDetection } from '@/hooks/useScrollDetection';
 import { createLogger } from '@/lib/logger';
 import {
   GlobeHemisphereWest,
@@ -21,7 +25,10 @@ import {
   CirclesFour,
   Sparkle,
   BookOpenText,
+  GameController,
   Book,
+  BookOpen,
+  ArrowLeft,
   ArrowCounterClockwise,
   ArrowRight,
   ListNumbers,
@@ -357,6 +364,12 @@ export default function PlayBrowsePage() {
   const [studyMode, setStudyMode] = useState<StudyMode>('pelaa');
   const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const suggestionsBlurTimeout = useRef<number | null>(null);
+  const gradeScrollRef = useRef<HTMLDivElement | null>(null);
+  const { recentSearches, addRecentSearch, clearRecentSearches } = useRecentSearches();
+  const scrolled = useScrollDetection();
 
   useEffect(() => {
     const loadQuestionSets = async () => {
@@ -432,6 +445,84 @@ export default function PlayBrowsePage() {
       (a, b) => a - b
     );
   }, [groupedSets]);
+
+  const popularSearches = useMemo(() => ['Matematiikka', 'Englanti', 'Suomi', 'Historia', 'Biologia'], []);
+
+  const suggestionPool = useMemo(() => {
+    const pool = new Set<string>();
+    groupedSets.forEach((group) => {
+      const subjectLabel = getSubjectConfig(group.subject).label;
+      [group.name, group.topic, group.subtopic, subjectLabel].forEach((item) => {
+        if (item && item.trim().length > 0) {
+          pool.add(item.trim());
+        }
+      });
+    });
+    return Array.from(pool);
+  }, [groupedSets]);
+
+  const liveSuggestions = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return [];
+    return suggestionPool
+      .filter((item) => item.toLowerCase().includes(query))
+      .slice(0, 5);
+  }, [searchQuery, suggestionPool]);
+
+  const handleSuggestionSelect = (value: string) => {
+    setSearchQuery(value);
+    addRecentSearch(value);
+    setSuggestionsOpen(false);
+  };
+
+  const handleSearchFocus = () => {
+    if (suggestionsBlurTimeout.current) {
+      window.clearTimeout(suggestionsBlurTimeout.current);
+      suggestionsBlurTimeout.current = null;
+    }
+    setSuggestionsOpen(true);
+  };
+
+  const handleSearchBlur = () => {
+    if (suggestionsBlurTimeout.current) {
+      window.clearTimeout(suggestionsBlurTimeout.current);
+    }
+    suggestionsBlurTimeout.current = window.setTimeout(() => {
+      setSuggestionsOpen(false);
+    }, 140);
+    if (searchQuery.trim()) {
+      addRecentSearch(searchQuery);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (suggestionsBlurTimeout.current) {
+        window.clearTimeout(suggestionsBlurTimeout.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!searchOpen) {
+      setSuggestionsOpen(false);
+    }
+  }, [searchOpen]);
+
+  const gradeButtonBase =
+    'flex min-h-11 flex-shrink-0 items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold shadow-sm transition-all duration-150 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white active:scale-95 active:shadow-sm dark:shadow-md dark:hover:shadow-lg dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900';
+
+  const handleGradeScrollKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!gradeScrollRef.current) return;
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      gradeScrollRef.current.scrollBy({ left: 140, behavior: 'smooth' });
+    }
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      gradeScrollRef.current.scrollBy({ left: -140, behavior: 'smooth' });
+    }
+  };
 
   const filteredSets = useMemo(() => {
     return groupedSets.filter((group) => {
@@ -510,10 +601,144 @@ export default function PlayBrowsePage() {
 
   return (
     <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
-      <ModeToggle currentMode={studyMode} onModeChange={setStudyMode} />
+      <div className="hidden sm:block">
+        <ModeToggle
+          currentMode={studyMode}
+          onModeChange={setStudyMode}
+          className={scrolled ? 'shadow-[0_1px_3px_rgba(0,0,0,0.08)]' : ''}
+        />
+      </div>
+
+      <div
+        className={`sm:hidden sticky top-0 z-10 border-b border-gray-200 bg-white/90 backdrop-blur-sm transition-shadow duration-150 dark:border-gray-700 dark:bg-gray-900/90 ${
+          scrolled ? 'shadow-[0_1px_3px_rgba(0,0,0,0.08)]' : ''
+        }`}
+      >
+        <div className="mx-auto max-w-4xl px-3 pt-3">
+          <div className="flex gap-3">
+            <button
+              onClick={() => setStudyMode('pelaa')}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-150 ${
+                studyMode === 'pelaa'
+                  ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+              }`}
+              aria-current={studyMode === 'pelaa' ? 'page' : undefined}
+            >
+              <GameController size={18} weight={studyMode === 'pelaa' ? 'fill' : 'regular'} />
+              Pelaa
+            </button>
+            <button
+              onClick={() => setStudyMode('opettele')}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-150 ${
+                studyMode === 'opettele'
+                  ? 'bg-teal-600 text-white shadow-md ring-2 ring-teal-400'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+              }`}
+              aria-current={studyMode === 'opettele' ? 'page' : undefined}
+            >
+              <Book size={18} weight={studyMode === 'opettele' ? 'fill' : 'regular'} />
+              Opettele
+            </button>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-4xl px-3 pt-2">
+          <div className="flex min-h-12 items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <BookOpen size={20} weight="duotone" className="text-indigo-600 dark:text-indigo-400" />
+              <span className="truncate text-lg font-semibold leading-none text-gray-900 dark:text-gray-100">Valitse aihealue</span>
+            </div>
+            {!searchOpen && (
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+                aria-label="Avaa haku"
+              >
+                <MagnifyingGlass size={20} weight="duotone" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => router.push('/')}
+              className="flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+              aria-label="Takaisin valikkoon"
+            >
+              <ArrowLeft size={18} weight="bold" />
+            </button>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-4xl px-3 pb-3 pt-2">
+          {searchOpen ? (
+            <div className="relative">
+              <CollapsibleSearch
+                placeholder="Etsi aihealuetta, ainetta tai aihetta..."
+                value={searchQuery}
+                onChange={setSearchQuery}
+                isOpen={searchOpen}
+                onToggle={setSearchOpen}
+                onClose={() => setSuggestionsOpen(false)}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
+              />
+              <SearchSuggestions
+                isOpen={searchOpen && suggestionsOpen}
+                query={searchQuery}
+                popular={popularSearches}
+                recent={recentSearches}
+                suggestions={liveSuggestions}
+                onSelect={handleSuggestionSelect}
+                onClearRecent={clearRecentSearches}
+              />
+            </div>
+          ) : (
+            availableGrades.length > 0 && (
+              <div
+                ref={gradeScrollRef}
+                className="flex gap-2 overflow-x-auto px-3 scroll-px-3 no-scrollbar focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
+                onKeyDown={handleGradeScrollKeyDown}
+                tabIndex={0}
+                aria-label="Luokkasuodattimet"
+              >
+                <button
+                  onClick={() => setSelectedGrade(null)}
+                  className={`${gradeButtonBase} ${
+                    selectedGrade === null
+                      ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400 dark:bg-indigo-500 dark:ring-indigo-300'
+                      : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <ListNumbers size={16} weight={selectedGrade === null ? 'fill' : 'regular'} />
+                  Kaikki
+                </button>
+                {availableGrades.map((grade) => {
+                  const colors = getGradeColors(grade);
+                  const isActive = selectedGrade === grade;
+                  return (
+                    <button
+                      key={grade}
+                      onClick={() => setSelectedGrade(grade)}
+                      className={`${gradeButtonBase} ${
+                        isActive
+                          ? `${colors.bg} ${colors.text} shadow-md ring-2 ring-current/40 dark:shadow-lg`
+                          : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <GraduationCap size={16} weight={isActive ? 'fill' : 'regular'} />
+                      {grade} lk
+                    </button>
+                  );
+                })}
+              </div>
+            )
+          )}
+        </div>
+      </div>
 
       <div className="mx-auto max-w-4xl p-6 md:p-12">
-        <div className="mb-6">
+        <div className="mb-6 hidden sm:block">
           <div className="mb-2 flex items-center gap-2">
             <BookOpenText size={28} weight="duotone" className="text-indigo-600 dark:text-indigo-400" />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Valitse aihealue</h1>
@@ -567,7 +792,7 @@ export default function PlayBrowsePage() {
 
         {groupedSets.length > 0 && (
           <>
-            <div className="mb-6">
+            <div className="mb-6 hidden sm:block">
               <div className="relative">
                 <MagnifyingGlass
                   size={20}
@@ -579,6 +804,14 @@ export default function PlayBrowsePage() {
                   placeholder="Etsi aihealuetta, ainetta tai aihetta..."
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
+                  onFocus={handleSearchFocus}
+                  onBlur={handleSearchBlur}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && searchQuery.trim()) {
+                      addRecentSearch(searchQuery);
+                      setSuggestionsOpen(false);
+                    }
+                  }}
                   className="w-full rounded-lg border border-gray-200 bg-white py-3 pl-10 pr-10 text-base placeholder:text-gray-400 transition-shadow focus:border-transparent focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800 dark:placeholder:text-gray-500 dark:focus:ring-purple-400"
                 />
                 {searchQuery && (
@@ -590,15 +823,24 @@ export default function PlayBrowsePage() {
                     <X size={20} weight="bold" />
                   </button>
                 )}
+                <SearchSuggestions
+                  isOpen={suggestionsOpen}
+                  query={searchQuery}
+                  popular={popularSearches}
+                  recent={recentSearches}
+                  suggestions={liveSuggestions}
+                  onSelect={handleSuggestionSelect}
+                  onClearRecent={clearRecentSearches}
+                />
               </div>
             </div>
 
             {availableGrades.length > 0 && (
-              <div className="mb-6">
+              <div className="mb-6 hidden sm:block">
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setSelectedGrade(null)}
-                    className={`flex min-h-11 items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold shadow-sm transition-all duration-150 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white active:scale-95 active:shadow-sm dark:shadow-md dark:hover:shadow-lg dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900 ${
+                    className={`${gradeButtonBase} ${
                       selectedGrade === null
                         ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400 dark:bg-indigo-500 dark:shadow-lg dark:ring-indigo-300'
                         : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
@@ -614,7 +856,7 @@ export default function PlayBrowsePage() {
                       <button
                         key={grade}
                         onClick={() => setSelectedGrade(grade)}
-                        className={`flex min-h-11 items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold shadow-sm transition-all duration-150 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white active:scale-95 active:shadow-sm dark:shadow-md dark:hover:shadow-lg dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900 ${
+                        className={`${gradeButtonBase} ${
                           isActive
                             ? `${colors.bg} ${colors.text} shadow-md ring-2 ring-current/40 dark:shadow-lg`
                             : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'

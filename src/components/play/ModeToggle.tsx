@@ -2,15 +2,22 @@
 
 import { StudyMode } from '@/types';
 import { GameController, Book } from '@phosphor-icons/react';
+import { cn } from '@/lib/utils';
 
 interface ModeToggleProps {
   currentMode: StudyMode;
   onModeChange: (mode: StudyMode) => void;
+  className?: string;
 }
 
-export function ModeToggle({ currentMode, onModeChange }: ModeToggleProps) {
+export function ModeToggle({ currentMode, onModeChange, className }: ModeToggleProps) {
   return (
-    <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
+    <div
+      className={cn(
+        'bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 transition-shadow duration-150',
+        className
+      )}
+    >
       <div className="max-w-4xl mx-auto px-4 py-4">
         <div className="flex gap-2">
           <button
