@@ -136,6 +136,7 @@ export default function PlayPage() {
   const [flagFeedback, setFlagFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [flaggedQuestionIds, setFlaggedQuestionIds] = useState<string[]>([]);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const lastModeRef = useRef<string | null>(null);
   const { getMistakes, removeMistake, mistakeCount, error: mistakesError } = useReviewMistakes(code);
   const { updateProgress, clearProgress } = useSessionProgress(questionSet?.code ?? code);
 
@@ -196,6 +197,36 @@ export default function PlayPage() {
     setFlagNote('');
     setFlagDialogOpen(false);
   }, [currentQuestion?.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const shouldBlockBack = state === 'playing' && !isReviewMode;
+    if (!shouldBlockBack) return;
+
+    const pushGuardState = () => {
+      window.history.pushState({ koekertaajaGuard: true }, '', window.location.href);
+    };
+
+    pushGuardState();
+
+    const handlePopState = () => {
+      setShowExitConfirm(true);
+      pushGuardState();
+    };
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [state, isReviewMode]);
 
   // Load question set(s)
   useEffect(() => {
@@ -365,6 +396,18 @@ export default function PlayPage() {
       setSessionStartTime(Date.now());
     }
   }, [questionSet, state, selectedQuestions.length, startNewSession, isReviewMode, mistakeQuestions.length]);
+
+  useEffect(() => {
+    if (!questionSet) return;
+    if (modeParam === lastModeRef.current) return;
+    lastModeRef.current = modeParam;
+
+    if (isReviewMode) {
+      setState('playing');
+      startNewSession();
+      setSessionStartTime(Date.now());
+    }
+  }, [modeParam, isReviewMode, questionSet, startNewSession]);
 
   useEffect(() => {
     if (!isReviewMode || !questionSet) return;
