@@ -58,7 +58,8 @@ export function CollapsibleSearch({
   return (
     <div
       className={cn(
-        'collapsible-search-fade flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-900 shadow-sm transition-opacity duration-150 ease-[cubic-bezier(0.25,1,0.5,1)] dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100',
+        // Padding matches desktop search input (py-3).
+        'collapsible-search-fade flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-3 text-gray-900 shadow-sm transition-opacity duration-150 ease-[cubic-bezier(0.25,1,0.5,1)] dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100',
         className
       )}
     >

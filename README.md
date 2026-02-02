@@ -203,27 +203,39 @@ npm start
 
 ## 🎨 Design System
 
-Koekertaaja uses a cohesive, child-friendly design system:
+Koekertaaja follows a **crafted minimalism** design philosophy with mobile-first, approachable UI.
 
-### Color Palette
-- **Primary**: Purple (#a855f7) - App theme and CTAs
-- **Points**: Amber (#f59e0b) - Gem/diamond icons
-- **Streaks**: Orange (#f97316) - Fire icons
-- **Success**: Green (#22c55e) - Correct answers
-- **Error**: Red (#ef4444) - Wrong answers
-- **Info**: Blue (#3b82f6) - Information and explanations
+### Design Principles
+- **4px Grid System**: All spacing, padding, and borders follow a consistent 4px grid
+- **Mode-Specific Colors**: Indigo (Quiz), Teal (Study), Rose (Review)
+- **Typography Scale**: 6-level hierarchy (Display → h1-h4 → Body → Caption)
+- **Hover-Based Shadows**: Clean, flat base state with shadow feedback on interaction
+- **48px Touch Targets**: All interactive elements meet WCAG 2.1 AA standards
+- **Phosphor Icons**: Consistent icon library throughout the app
 
-### Badge Categories
-- **Purple**: Practice/Milestone badges (session counts)
-- **Gold/Yellow**: Performance badges (perfect scores, personal bests)
-- **Blue/Cyan**: Speed badges (fast completion)
-- **Green/Emerald**: Exploration badges (trying different levels)
-- **Orange/Red**: Streak badges (consecutive correct answers)
+### Component System
+```tsx
+Cards:    rounded-xl (12px) + p-5 padding
+Buttons:  rounded-lg (8px) + min-h-11 + gradient backgrounds
+Inputs:   rounded-lg (8px) + focus-visible:ring-2
+Modals:   rounded-xl + shadow-xl + backdrop-blur
+```
+
+### Color Modes
+- **Quiz Mode**: Indigo gradients, focused and trustworthy
+- **Study Mode**: Teal gradients, growth-oriented and calm
+- **Review Mode**: Rose gradients, attention to corrections
 
 ### Dark Mode
+- Parallel design (not inverted)
+- Borders: `gray-200 / gray-700 dark`
+- Shadows less prominent, borders do heavy lifting
 - Automatic system preference detection
-- Optimized color schemes for both modes
-- Smooth transitions between modes
+
+### Documentation
+📖 **Full Guidelines**: [`docs/DESIGN_GUIDELINES.md`](docs/DESIGN_GUIDELINES.md)
+⚡ **Quick Reference**: [`docs/DESIGN_QUICK_REFERENCE.md`](docs/DESIGN_QUICK_REFERENCE.md)
+🔧 **Implementation Tasks**: `todo/task-100-*.md` through `task-107-*.md`
 
 ## 🔐 Security
 

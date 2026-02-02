@@ -25,6 +25,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@/design-tokens": [
+        "./src/lib/design-tokens"
       ]
     }
   },

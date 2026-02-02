@@ -3,12 +3,16 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ModeToggle } from '@/components/play/ModeToggle';
 import { CollapsibleSearch } from '@/components/ui/collapsible-search';
 import { SearchSuggestions } from '@/components/ui/search-suggestions';
+import { cn } from '@/lib/utils';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
+import { getGradeColors } from '@/lib/utils/grade-colors';
 import { QuestionSet, Difficulty, StudyMode } from '@/types';
 import { readMistakesFromStorage } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
@@ -162,24 +166,7 @@ const hasFlashcards = (sets: QuestionSet[]) => {
   return sets.some((set) => set.mode === 'flashcard');
 };
 
-const getGradeColors = (grade: number) => {
-  const gradeColorMap: Record<number, { bg: string; text: string }> = {
-    1: { bg: 'bg-pink-100 dark:bg-pink-900/30', text: 'text-pink-800 dark:text-pink-200' },
-    2: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-200' },
-    3: { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-800 dark:text-orange-200' },
-    4: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-800 dark:text-amber-200' },
-    5: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-200' },
-    6: { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-800 dark:text-emerald-200' },
-    7: { bg: 'bg-cyan-100 dark:bg-cyan-900/30', text: 'text-cyan-800 dark:text-cyan-200' },
-    8: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-800 dark:text-blue-200' },
-    9: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-800 dark:text-purple-200' },
-  };
-
-  return gradeColorMap[grade] ?? {
-    bg: 'bg-gray-100 dark:bg-gray-900/30',
-    text: 'text-gray-800 dark:text-gray-200',
-  };
-};
+// Grade colors now imported from centralized design tokens
 
 const isNewQuestionSet = (createdAt?: string): boolean => {
   if (!createdAt) return false;
@@ -246,7 +233,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
   })();
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+    <Card variant="interactive" padding="standard" className="relative overflow-hidden">
       <div
         className={`absolute left-0 top-0 h-full w-1 ${
           availableDifficulties.length > 0 && groupHasFlashcards
@@ -261,21 +248,23 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
 
       <div className="ml-4">
         <div className="mb-3 flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{group.name}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{group.name}</h3>
             {showNewBadge && (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+              <Badge variant="gradient" semantic="new" size="xs">
                 <Sparkle size={9} weight="fill" />
                 Uusi
-              </span>
+              </Badge>
             )}
           </div>
           {group.grade && (
-            <span
-              className={`ring-1 ring-inset ring-current/20 inline-flex flex-shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-medium ${getGradeColors(group.grade).bg} ${getGradeColors(group.grade).text}`}
+            <Badge
+              semantic="grade"
+              size="md"
+              className={cn(getGradeColors(group.grade).bg, getGradeColors(group.grade).text)}
             >
               Luokka: {group.grade}
-            </span>
+            </Badge>
           )}
         </div>
 
@@ -290,48 +279,55 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                 const icon = difficultyIcons[difficulty];
 
                 return (
-                  <button
+                  <Button
                     key={difficulty}
                     onClick={() => set && router.push(`/play/${set.code}?mode=${studyMode}`)}
-                    className={`${colors.bg} ${colors.hover} ${colors.text} ${colors.focus} ${colors.shadow} active:scale-95 active:shadow-sm flex min-h-11 items-center gap-1.5 rounded-lg px-4 py-3.5 text-sm font-semibold shadow-md transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900`}
+                    mode={difficulty === 'helppo' ? 'neutral' : 'quiz'}
+                    variant="primary"
+                    size="default"
+                    className={cn(colors.bg, colors.hover, colors.text, colors.focus, colors.shadow)}
                     aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
                   >
                     <span className={colors.icon}>{icon}</span>
                     {difficultyLabels[difficulty]}
-                  </button>
+                  </Button>
                 );
               })
             ) : (
               <p className="text-sm text-gray-500 dark:text-gray-400">Ei pelimuotoa saatavilla</p>
             )
           ) : groupHasFlashcards ? (
-            <button
+            <Button
               onClick={() => {
                 const flashcardSet = group.sets.find((s) => s.mode === 'flashcard');
                 if (flashcardSet) {
                   router.push(`/play/${flashcardSet.code}?mode=opettele`);
                 }
               }}
-              className="active:scale-95 active:shadow-sm flex min-h-11 items-center gap-2 rounded-lg bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 dark:from-teal-600 dark:to-teal-700 dark:hover:from-teal-700 dark:hover:to-teal-800 px-6 py-3.5 text-sm font-semibold text-white shadow-md shadow-teal-500/30 dark:shadow-teal-600/30 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-teal-300 dark:focus-visible:ring-offset-gray-900 group"
+              mode="study"
+              variant="primary"
+              className="group shadow-teal-500/30 dark:shadow-teal-600/30"
               aria-label="Opettele korttien avulla"
             >
               <Book size={20} weight="duotone" />
               Opettele
               <ArrowRight size={18} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
-            </button>
+            </Button>
           ) : (
             <p className="text-sm text-gray-500 dark:text-gray-400">Ei kortteja saatavilla</p>
           )}
 
           {studyMode === 'pelaa' && reviewCandidate && (
-            <button
+            <Button
               onClick={() => router.push(`/play/${reviewCandidate.set.code}?mode=review`)}
-              className="active:scale-95 active:shadow-sm flex min-h-11 items-center gap-1.5 rounded-lg bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 dark:from-rose-600 dark:to-rose-700 dark:hover:from-rose-700 dark:hover:to-rose-800 px-4 py-3.5 text-sm font-semibold text-white shadow-md shadow-rose-500/30 dark:shadow-rose-600/30 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-rose-300 dark:focus-visible:ring-offset-gray-900 group"
+              mode="review"
+              variant="primary"
+              className="shadow-rose-500/30 dark:shadow-rose-600/30"
               aria-label="Kertaa virheet"
             >
               <ArrowCounterClockwise size={20} weight="duotone" className="inline" />
               Kertaa virheet ({reviewCandidate.count})
-            </button>
+            </Button>
           )}
         </div>
 
@@ -351,7 +347,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
         )}
 
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -510,7 +506,7 @@ export default function PlayBrowsePage() {
   }, [searchOpen]);
 
   const gradeButtonBase =
-    'flex min-h-11 flex-shrink-0 items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold shadow-sm transition-all duration-150 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white active:scale-95 active:shadow-sm dark:shadow-md dark:hover:shadow-lg dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900';
+    'flex min-h-10 flex-shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-150 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white active:scale-95 active:shadow-sm dark:shadow-md dark:hover:shadow-lg dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900';
 
   const handleGradeScrollKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!gradeScrollRef.current) return;
@@ -581,17 +577,14 @@ export default function PlayBrowsePage() {
 
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800"
-              >
+              <Card key={i} variant="standard" padding="standard">
                 <Skeleton className="mb-3 h-6 w-3/4" />
                 <Skeleton className="mb-4 h-4 w-1/2" />
                 <div className="flex gap-2">
                   <Skeleton className="h-12 w-28 rounded-lg" />
                   <Skeleton className="h-12 w-28 rounded-lg" />
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </div>
@@ -647,7 +640,7 @@ export default function PlayBrowsePage() {
           <div className="flex min-h-12 items-center gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <BookOpen size={20} weight="duotone" className="text-indigo-600 dark:text-indigo-400" />
-              <span className="truncate text-lg font-semibold leading-none text-gray-900 dark:text-gray-100">Valitse aihealue</span>
+              <span className="truncate text-lg font-bold leading-none text-gray-900 dark:text-gray-100">Valitse aihealue</span>
             </div>
             {!searchOpen && (
               <button
@@ -697,7 +690,7 @@ export default function PlayBrowsePage() {
             availableGrades.length > 0 && (
               <div
                 ref={gradeScrollRef}
-                className="flex gap-2 overflow-x-auto px-3 scroll-px-3 no-scrollbar focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
+                className="flex gap-2 overflow-x-auto overflow-y-visible px-3 py-1 scroll-px-3 no-scrollbar focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
                 onKeyDown={handleGradeScrollKeyDown}
                 tabIndex={0}
                 aria-label="Luokkasuodattimet"
@@ -707,7 +700,7 @@ export default function PlayBrowsePage() {
                   className={`${gradeButtonBase} ${
                     selectedGrade === null
                       ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400 dark:bg-indigo-500 dark:ring-indigo-300'
-                      : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
+                      : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
                   }`}
                 >
                   <ListNumbers size={16} weight={selectedGrade === null ? 'fill' : 'regular'} />
@@ -723,7 +716,7 @@ export default function PlayBrowsePage() {
                       className={`${gradeButtonBase} ${
                         isActive
                           ? `${colors.bg} ${colors.text} shadow-md ring-2 ring-current/40 dark:shadow-lg`
-                          : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
+                          : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
                       }`}
                     >
                       <GraduationCap size={16} weight={isActive ? 'fill' : 'regular'} />
@@ -741,7 +734,7 @@ export default function PlayBrowsePage() {
         <div className="mb-6 hidden sm:block">
           <div className="mb-2 flex items-center gap-2">
             <BookOpenText size={28} weight="duotone" className="text-indigo-600 dark:text-indigo-400" />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Valitse aihealue</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 md:text-3xl">Valitse aihealue</h1>
           </div>
           <div className="mt-2">
             <Button
@@ -766,14 +759,17 @@ export default function PlayBrowsePage() {
               <div className="mb-6 flex justify-center">
                 <Books size={80} weight="duotone" className="text-purple-500 dark:text-purple-400" />
               </div>
-              <h2 className="mb-3 text-2xl font-bold text-gray-900 dark:text-gray-100">Ei vielä harjoituksia</h2>
-              <p className="mb-8 text-lg text-gray-600 dark:text-gray-400">
+              <h2 className="mb-3 text-2xl font-bold text-gray-900 dark:text-gray-100 md:text-3xl">Ei vielä harjoituksia</h2>
+              <p className="mb-8 text-base text-gray-600 dark:text-gray-400 md:text-lg">
                 Luo ensimmäinen kysymyssarja aloittaaksesi harjoittelun
               </p>
               <div className="flex flex-col justify-center gap-3 sm:flex-row">
                 <Button
                   onClick={() => router.push('/create')}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-8 py-6 text-lg font-semibold text-white hover:bg-purple-700"
+                  mode="quiz"
+                  variant="primary"
+                  size="lg"
+                  className="px-8 text-base"
                 >
                   <Sparkle size={20} weight="fill" />
                   Luo kysymyssarja
@@ -781,7 +777,7 @@ export default function PlayBrowsePage() {
                 <Button
                   onClick={() => router.push('/')}
                   variant="outline"
-                  className="rounded-xl px-8 py-6 text-lg font-semibold"
+                  className="rounded-lg px-8 py-3 text-base font-semibold"
                 >
                   Takaisin valikkoon
                 </Button>
@@ -812,7 +808,7 @@ export default function PlayBrowsePage() {
                       setSuggestionsOpen(false);
                     }
                   }}
-                  className="w-full rounded-lg border border-gray-200 bg-white py-3 pl-10 pr-10 text-base placeholder:text-gray-400 transition-shadow focus:border-transparent focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800 dark:placeholder:text-gray-500 dark:focus:ring-purple-400"
+                  className="w-full rounded-lg border border-gray-200 bg-white py-3 pl-10 pr-10 text-sm placeholder:text-gray-400 transition-shadow focus:border-transparent focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800 dark:placeholder:text-gray-500 dark:focus:ring-purple-400 md:text-base"
                 />
                 {searchQuery && (
                   <button
@@ -843,7 +839,7 @@ export default function PlayBrowsePage() {
                     className={`${gradeButtonBase} ${
                       selectedGrade === null
                         ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400 dark:bg-indigo-500 dark:shadow-lg dark:ring-indigo-300'
-                        : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
+                        : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
                     }`}
                   >
                     <ListNumbers size={16} weight={selectedGrade === null ? 'fill' : 'regular'} />
@@ -859,7 +855,7 @@ export default function PlayBrowsePage() {
                         className={`${gradeButtonBase} ${
                           isActive
                             ? `${colors.bg} ${colors.text} shadow-md ring-2 ring-current/40 dark:shadow-lg`
-                            : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
+                            : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
                         }`}
                       >
                         <GraduationCap size={16} weight={isActive ? 'fill' : 'regular'} />
@@ -876,8 +872,8 @@ export default function PlayBrowsePage() {
                 <div className="mb-6 flex justify-center">
                   <MagnifyingGlass size={64} weight="duotone" className="text-gray-400 dark:text-gray-600" />
                 </div>
-                <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-gray-100">Ei tuloksia</h3>
-                <p className="mb-6 text-gray-600 dark:text-gray-400">
+                <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-gray-100 md:text-2xl">Ei tuloksia</h3>
+                <p className="mb-6 text-sm text-gray-600 dark:text-gray-400 md:text-base">
                   {searchQuery
                     ? `Hakusanalla "${searchQuery}" ei löytynyt kysymyssarjoja`
                     : selectedGrade

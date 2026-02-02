@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } fro
 export const dynamic = 'force-dynamic';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MathText } from '@/components/ui/math-text';
 import { Textarea } from '@/components/ui/textarea';
@@ -848,7 +849,7 @@ export default function PlayPage() {
               <div className="flex items-center gap-2">
                 <GameController size={20} weight="fill" className="text-indigo-100" />
                 <div>
-                  <h2 className="text-lg font-semibold">{displayName}</h2>
+                  <h2 className="text-base font-semibold md:text-lg">{displayName}</h2>
                   <p className="text-sm text-indigo-100">
                     Kysymys {currentQuestionIndex + 1} / {selectedQuestions.length}
                   </p>
@@ -905,36 +906,38 @@ export default function PlayPage() {
         )}
 
         {/* Question Card */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-8 mb-6 transition-colors">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4 md:mb-6">
-            <MathText>{currentQuestion.question_text}</MathText>
-          </h2>
+        <Card variant="elevated" padding="responsive" className="mb-6 transition-colors shadow-sm">
+          <CardContent>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 md:mb-6">
+              <MathText>{currentQuestion.question_text}</MathText>
+            </h2>
 
-          <QuestionRenderer
-            question={currentQuestion}
-            userAnswer={userAnswer}
-            showExplanation={showExplanation}
-            onAnswerChange={setUserAnswer}
-            placeholderHint={placeholderHint}
-          />
+            <QuestionRenderer
+              question={currentQuestion}
+              userAnswer={userAnswer}
+              showExplanation={showExplanation}
+              onAnswerChange={setUserAnswer}
+              placeholderHint={placeholderHint}
+            />
 
-          {showKeyboardHint && (
-            <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 text-center flex items-center justify-center gap-4">
-              <div className="flex items-center gap-1">
-                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono text-xs">
-                  Enter
-                </kbd>
-                <span>lähettää vastauksen</span>
+            {showKeyboardHint && (
+              <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 text-center flex items-center justify-center gap-4">
+                <div className="flex items-center gap-1">
+                  <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700 font-mono text-xs">
+                    Enter
+                  </kbd>
+                  <span>lähettää vastauksen</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700 font-mono text-xs">
+                    Esc
+                  </kbd>
+                  <span>tyhjentää</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono text-xs">
-                  Esc
-                </kbd>
-                <span>tyhjentää</span>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Feedback */}
         {showExplanation && (
@@ -991,7 +994,9 @@ export default function PlayPage() {
               <Button
                 onClick={handleSubmitAnswer}
                 disabled={!canSubmit}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-xl font-medium shadow-sm hover:shadow-md transition-all"
+                mode="quiz"
+                variant="primary"
+                className="flex-1"
               >
                 Tarkista vastaus
               </Button>
@@ -1000,7 +1005,7 @@ export default function PlayPage() {
                 type="button"
                 variant="secondary"
                 aria-label="Ohita kysymys"
-                className="px-6 py-6 rounded-xl bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+                className="flex-1"
               >
                 <ArrowRight size={20} weight="bold" />
                 <span className="hidden sm:inline">Ohita</span>
@@ -1009,7 +1014,9 @@ export default function PlayPage() {
           ) : (
             <Button
               onClick={handleNextQuestion}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-xl font-medium"
+              mode="quiz"
+              variant="primary"
+              className="w-full"
             >
               {isLastQuestion ? 'Näytä tulokset →' : 'Seuraava kysymys →'}
             </Button>
@@ -1017,7 +1024,7 @@ export default function PlayPage() {
           <Dialog.Root open={flagDialogOpen} onOpenChange={setFlagDialogOpen}>
             {showExplanation ? (
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/30 p-3">
+                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/30 p-3 transition-shadow duration-150 hover:shadow-md">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">Valitse eri aihealue</p>
@@ -1036,7 +1043,7 @@ export default function PlayPage() {
                     </Button>
                   </div>
                 </div>
-                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/30 p-3">
+                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/30 p-3 transition-shadow duration-150 hover:shadow-md">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">Huomasitko virheen?</p>
@@ -1144,7 +1151,7 @@ export default function PlayPage() {
 
                   <div className="flex items-center justify-end gap-2 pt-2">
                     <Dialog.Close asChild>
-                      <Button variant="ghost" type="button">
+                      <Button variant="secondary" type="button">
                         Peruuta
                       </Button>
                     </Dialog.Close>
@@ -1152,7 +1159,8 @@ export default function PlayPage() {
                       type="button"
                       onClick={handleSubmitFlag}
                       disabled={flagSubmitting || !flagReason}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                      mode="quiz"
+                      variant="primary"
                     >
                       {flagSubmitting ? 'Lähetetään...' : 'Lähetä ilmoitus'}
                     </Button>
@@ -1173,16 +1181,17 @@ export default function PlayPage() {
             className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-sm w-full shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 md:text-2xl">
               Haluatko varmasti lopettaa?
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 md:text-base">
               Olet käynyt läpi {currentQuestionIndex + 1}/{selectedQuestions.length} kysymystä.
             </p>
             <div className="flex flex-col gap-3">
               <Button
                 onClick={() => setShowExitConfirm(false)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg"
+                variant="secondary"
+                className="w-full"
               >
                 Jatka harjoittelua
               </Button>
@@ -1192,8 +1201,8 @@ export default function PlayPage() {
                   handleBrowseQuestionSets();
                 }}
                 type="button"
-                variant="secondary"
-                className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-3 px-6 rounded-lg"
+                variant="destructive"
+                className="w-full"
               >
                 Lopeta
               </Button>

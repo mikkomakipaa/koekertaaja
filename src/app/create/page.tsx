@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -13,6 +14,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { GradeSelector } from '@/components/create/GradeSelector';
 import { MaterialUpload } from '@/components/create/MaterialUpload';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
+import { getGradeBadgeClasses } from '@/lib/utils/grade-colors';
+import { cn } from '@/lib/utils';
 import { Difficulty, QuestionSet } from '@/types';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
@@ -1013,45 +1016,49 @@ export default function CreatePage() {
       <AuthGuard>
         <UserMenu />
         <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 flex items-center justify-center transition-colors">
-        <Card className="max-w-3xl shadow-2xl dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white rounded-t-lg">
+        <Card className="max-w-3xl rounded-xl shadow-2xl dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white rounded-t-xl">
             <CardTitle className="text-3xl flex items-center gap-2">
               <CheckCircle weight="duotone" className="w-8 h-8" />
               Kysymyssarjat luotu onnistuneesti!
             </CardTitle>
-            <CardDescription className="text-white text-lg font-medium">
+            <CardDescription className="text-white text-base md:text-lg font-medium">
               Luotiin {questionSetsCreated.length} kysymyssarjaa ({totalQuestionsCreated} kysymystä yhteensä)
             </CardDescription>
           </CardHeader>
 
           <CardContent className="p-6 space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">Luodut kysymyssarjat:</h3>
+              <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">Luodut kysymyssarjat:</h3>
               <div className="space-y-2">
                 {questionSetsCreated.map((set, index) => (
-                  <div
+                  <Card
                     key={index}
-                    className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
+                    variant="standard"
+                    padding="compact"
+                    className="transition-shadow duration-150 hover:shadow-md"
                   >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-gray-100">
-                          {set.mode === 'flashcard'
-                            ? `${set.name} - ${modeLabels[set.mode]}`
-                            : difficultyLabels[set.difficulty] || set.difficulty}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {set.questionCount} kysymystä
-                        </p>
+                    <CardContent>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-gray-100">
+                            {set.mode === 'flashcard'
+                              ? `${set.name} - ${modeLabels[set.mode]}`
+                              : difficultyLabels[set.difficulty] || set.difficulty}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {set.questionCount} kysymystä
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Koodi:</p>
+                          <code className="px-3 py-1 bg-gray-100 dark:bg-gray-600 rounded font-mono text-lg font-bold text-gray-900 dark:text-gray-100">
+                            {set.code}
+                          </code>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Koodi:</p>
-                        <code className="px-3 py-1 bg-gray-100 dark:bg-gray-600 rounded font-mono text-lg font-bold text-gray-900 dark:text-gray-100">
-                          {set.code}
-                        </code>
-                      </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -1059,14 +1066,16 @@ export default function CreatePage() {
             <div className="flex gap-3 pt-4">
               <Button
                 onClick={handleBrowseSets}
-                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-6 rounded-xl text-lg font-semibold"
+                mode="neutral"
+                variant="primary"
+                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
               >
                 Selaa kysymyssarjoja
               </Button>
               <Button
                 onClick={handleBackToMenu}
-                variant="outline"
-                className="flex-1 py-6 rounded-xl text-lg font-semibold"
+                variant="secondary"
+                className="flex-1"
               >
                 Takaisin valikkoon
               </Button>
@@ -1084,13 +1093,13 @@ export default function CreatePage() {
       <UserMenu />
       <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 transition-colors">
       <div className="max-w-3xl mx-auto">
-        <Card className="shadow-lg dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white rounded-t-lg">
-            <CardTitle className="text-3xl flex items-center gap-2 text-white">
+        <Card className="rounded-xl shadow-lg dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white rounded-t-xl">
+            <CardTitle className="text-2xl md:text-3xl font-bold flex items-center gap-2 text-white">
               <Star className="w-8 h-8" />
               Kysymyssarjat
             </CardTitle>
-            <CardDescription className="text-white text-lg font-medium">
+            <CardDescription className="text-white text-base md:text-lg font-medium">
               Luo uusia kysymyssarjoja tai hallitse olemassa olevia
             </CardDescription>
           </CardHeader>
@@ -1109,9 +1118,9 @@ export default function CreatePage() {
                 <TabsTrigger value="manage" className="text-base">
                   <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
                   Hallitse
-                  <span className="ml-2 inline-flex min-w-[28px] items-center justify-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                  <Badge variant="count" size="xs" className="ml-2">
                     {allQuestionSets.length}
-                  </span>
+                  </Badge>
                 </TabsTrigger>
                 <TabsTrigger value="test-questions" className="text-base">
                   <Eye weight="duotone" className="w-4 h-4 mr-2" />
@@ -1121,16 +1130,20 @@ export default function CreatePage() {
                   <TabsTrigger value="notifications" className="text-base">
                     <Flag weight="duotone" className="w-4 h-4 mr-2" />
                     Ilmoitukset
-                    <span className="ml-2 inline-flex min-w-[28px] items-center justify-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
+                    <Badge
+                      variant="count"
+                      size="xs"
+                      className="ml-2 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
+                    >
                       {loadingFlags ? '…' : flaggedQuestions.length}
-                    </span>
+                    </Badge>
                   </TabsTrigger>
                 )}
               </TabsList>
 
               <TabsContent value="create" className="space-y-6">
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">
+              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                 <span className="inline-flex items-center gap-2">
                   <Tag weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   Kysymyssarjan nimi
@@ -1141,12 +1154,12 @@ export default function CreatePage() {
                 value={questionSetName}
                 onChange={(e) => setQuestionSetName(e.target.value)}
                 placeholder="Esim. Englanti 7. luokka - Kappale 3"
-                className="text-lg"
+                className="text-base"
               />
             </div>
 
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">
+              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                 <span className="inline-flex items-center gap-2">
                   <BookOpenText weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   Aine
@@ -1158,7 +1171,7 @@ export default function CreatePage() {
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Esim. Maantieto, Biologia, Matematiikka"
-                  className="text-lg"
+                  className="text-base"
                 />
                 <div>
                   <label className="block text-base font-semibold mb-2 text-gray-900 dark:text-gray-100">
@@ -1170,7 +1183,7 @@ export default function CreatePage() {
                   <select
                     value={subjectType}
                     onChange={(e) => setSubjectType(e.target.value as SubjectType | '')}
-                    className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600"
+                    className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
                   >
                     <option value="">-- Valitse tyyppi --</option>
                     {subjectTypeOptions.map((option) => (
@@ -1188,7 +1201,7 @@ export default function CreatePage() {
             </div>
 
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">
+              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                 <span className="inline-flex items-center gap-2">
                   <Tag weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   Aihe
@@ -1199,12 +1212,12 @@ export default function CreatePage() {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="Esim. Suomen maakunnat"
-                className="text-lg"
+                className="text-base"
               />
             </div>
 
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">
+              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                 <span className="inline-flex items-center gap-2">
                   <Tag weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   Alateema
@@ -1215,7 +1228,7 @@ export default function CreatePage() {
                 value={subtopic}
                 onChange={(e) => setSubtopic(e.target.value)}
                 placeholder="Esim. Länsi-Suomi"
-                className="text-lg"
+                className="text-base"
               />
             </div>
 
@@ -1229,7 +1242,7 @@ export default function CreatePage() {
 
             {/* Generation Mode Selector */}
             <div className="border-2 border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-5">
-              <label className="block text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">
+              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                 <span className="inline-flex items-center gap-2">
                   <ClipboardText weight="duotone" className="w-5 h-5 text-indigo-700 dark:text-indigo-300" />
                   Mitä haluat luoda?
@@ -1303,7 +1316,7 @@ export default function CreatePage() {
             </div>
 
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">
+              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                 <span className="inline-flex items-center gap-2">
                   <ChartBar weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   Sarjan pituus (kysymystä per sarja)
@@ -1330,7 +1343,7 @@ export default function CreatePage() {
             </div>
 
             <div>
-              <label className="block text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">
+              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                 <span className="inline-flex items-center gap-2">
                   <ListNumbers weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   Materiaalista luotavien kysymysten määrä
@@ -1366,7 +1379,7 @@ export default function CreatePage() {
             {/* Target Words Input (Language subjects only) */}
             {subjectType === 'language' && (
               <div>
-                <label className="block text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">
+                <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                   <span className="inline-flex items-center gap-2">
                     <BookOpenText weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                     Pakolliset sanat (valinnainen)
@@ -1392,12 +1405,14 @@ export default function CreatePage() {
             )}
 
             <div className="flex gap-3 pt-4">
-              <Button onClick={() => router.push('/')} variant="outline" className="flex-1">
+              <Button onClick={() => router.push('/')} variant="secondary" className="flex-1">
                 Peruuta
               </Button>
               <Button
                 onClick={handleSubmit}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                mode="quiz"
+                variant="primary"
+                className="flex-1"
                 disabled={!questionSetName.trim() || !hasSubject || !hasSubjectType || !hasRequiredGrade || !hasMaterials}
               >
                 Luo kysymyssarjat
@@ -1407,7 +1422,7 @@ export default function CreatePage() {
 
               <TabsContent value="extend" className="space-y-6">
                 <div>
-                  <label className="block text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">
+                  <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                     <span className="inline-flex items-center gap-2">
                       <Package weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                       Valitse laajennettava kysymyssarja
@@ -1416,7 +1431,7 @@ export default function CreatePage() {
                   <select
                     value={selectedSetToExtend}
                     onChange={(e) => setSelectedSetToExtend(e.target.value)}
-                    className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600"
+                    className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
                   >
                     <option value="">-- Valitse kysymyssarja --</option>
                     {allQuestionSets.map((set) => (
@@ -1441,7 +1456,18 @@ export default function CreatePage() {
                           <p><strong>Aine:</strong> {selectedSet.subject}</p>
                           <p><strong>Nykyinen määrä:</strong> {selectedSet.question_count} kysymystä</p>
                           <p><strong>Tyyppi:</strong> {selectedSet.mode === 'flashcard' ? 'Kortit' : `Koe (${selectedSet.difficulty})`}</p>
-                          {selectedSet.grade && <p><strong>Luokka:</strong> {selectedSet.grade}</p>}
+                          {selectedSet.grade && (
+                            <p className="flex items-center gap-2">
+                              <strong>Luokka:</strong>
+                              <Badge
+                                semantic="grade"
+                                size="sm"
+                                className={cn(getGradeBadgeClasses(selectedSet.grade))}
+                              >
+                                {selectedSet.grade}
+                              </Badge>
+                            </p>
+                          )}
                         </div>
                       );
                     })()}
@@ -1449,7 +1475,7 @@ export default function CreatePage() {
                 )}
 
                 <div>
-                  <label className="block text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">
+                  <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                     <span className="inline-flex items-center gap-2">
                       <PlusCircle weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                       Lisättävien kysymysten määrä
@@ -1489,11 +1515,13 @@ export default function CreatePage() {
                 )}
 
                 <div className="flex gap-3 pt-4">
-                  <Button onClick={() => router.push('/')} variant="outline" className="flex-1">
+                  <Button onClick={() => router.push('/')} variant="secondary" className="flex-1">
                     Peruuta
                   </Button>
                   <Button
                     onClick={handleExtendSet}
+                    mode="neutral"
+                    variant="primary"
                     className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                     disabled={!selectedSetToExtend || (!materialText.trim() && uploadedFiles.length === 0)}
                   >
@@ -1509,13 +1537,13 @@ export default function CreatePage() {
                   </div>
                 ) : allQuestionSets.length === 0 ? (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                    <p className="text-lg">Ei kysymyssarjoja.</p>
+                    <p className="text-base">Ei kysymyssarjoja.</p>
                     <p className="text-sm mt-2">Luo uusi kysymyssarja tai korttisarja "Luo uusi" -välilehdeltä.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                         Kysymyssarjat ({allQuestionSets.length})
                       </h3>
                       <Button
@@ -1530,124 +1558,135 @@ export default function CreatePage() {
                     {allQuestionSets.map((set) => {
                       const status = set.status ?? 'created';
                       return (
-                        <div
+                        <Card
                           key={set.id}
-                          className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
+                          variant="standard"
+                          padding="compact"
+                          className="transition-shadow duration-150 hover:shadow-md"
                         >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{set.name}</h4>
-                                <span
-                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                                    status === 'published'
-                                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                      : 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300'
-                                  }`}
-                                >
-                                  {status === 'published' ? (
-                                    <>
-                                      <Eye weight="fill" className="w-3 h-3" />
-                                      Julkaistu
-                                    </>
-                                  ) : (
-                                    <>
-                                      <EyeSlash weight="fill" className="w-3 h-3" />
-                                      Luonnos
-                                    </>
-                                  )}
-                                </span>
-                              </div>
-                              <div className="flex gap-3 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                <span className="inline-flex items-center gap-1">
-                                  <BookOpenText weight="duotone" className="w-4 h-4" />
-                                  {set.subject}
-                                </span>
-                                {set.grade && (
-                                  <span className="inline-flex items-center gap-1">
-                                    <GraduationCap weight="duotone" className="w-4 h-4" />
-                                    Luokka {set.grade}
+                          <CardContent>
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100">{set.name}</h4>
+                                  <span
+                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                                      status === 'published'
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300'
+                                    }`}
+                                  >
+                                    {status === 'published' ? (
+                                      <>
+                                        <Eye weight="fill" className="w-3 h-3" />
+                                        Julkaistu
+                                      </>
+                                    ) : (
+                                      <>
+                                        <EyeSlash weight="fill" className="w-3 h-3" />
+                                        Luonnos
+                                      </>
+                                    )}
                                   </span>
+                                </div>
+                                <div className="flex gap-3 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                  <span className="inline-flex items-center gap-1">
+                                    <BookOpenText weight="duotone" className="w-4 h-4" />
+                                    {set.subject}
+                                  </span>
+                                  {set.grade && (
+                                    <Badge
+                                      semantic="grade"
+                                      size="sm"
+                                      className={cn(getGradeBadgeClasses(set.grade))}
+                                    >
+                                      <GraduationCap weight="duotone" className="w-3 h-3" />
+                                      Luokka {set.grade}
+                                    </Badge>
+                                  )}
+                                  <span className="inline-flex items-center gap-1">
+                                    <ChartBar weight="duotone" className="w-4 h-4" />
+                                    {set.difficulty}
+                                  </span>
+                                </div>
+                                <div className="flex gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                  <span>{set.question_count} kysymystä</span>
+                                  <span>•</span>
+                                  <span>
+                                    Koodi:{' '}
+                                    <code className="font-mono font-bold text-gray-900 dark:text-gray-100">{set.code}</code>
+                                  </span>
+                                </div>
+                                {set.created_at && (
+                                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                    Luotu: {new Date(set.created_at).toLocaleDateString('fi-FI')}
+                                  </p>
                                 )}
-                                <span className="inline-flex items-center gap-1">
-                                  <ChartBar weight="duotone" className="w-4 h-4" />
-                                  {set.difficulty}
-                                </span>
                               </div>
-                              <div className="flex gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                <span>{set.question_count} kysymystä</span>
-                                <span>•</span>
-                                <span>Koodi: <code className="font-mono font-bold text-gray-900 dark:text-gray-100">{set.code}</code></span>
-                              </div>
-                              {set.created_at && (
-                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                  Luotu: {new Date(set.created_at).toLocaleDateString('fi-FI')}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex gap-2 ml-4">
-                              <Button
-                                onClick={() => {
-                                  const openUrl = isAdmin && status !== 'published'
-                                    ? `/play/${set.code}?draft=1`
-                                    : `/play/${set.code}`;
-                                  router.push(openUrl);
-                                }}
-                                variant="outline"
-                                size="sm"
-                              >
-                                Avaa
-                              </Button>
-                              {isAdmin && (
+                              <div className="flex gap-2 ml-4">
                                 <Button
-                                  onClick={() => handlePublishToggle(set.id, status)}
-                                  variant={status === 'published' ? 'outline' : 'default'}
+                                  onClick={() => {
+                                    const openUrl = isAdmin && status !== 'published'
+                                      ? `/play/${set.code}?draft=1`
+                                      : `/play/${set.code}`;
+                                    router.push(openUrl);
+                                  }}
+                                  variant="outline"
                                   size="sm"
-                                  disabled={publishingId === set.id}
-                                  aria-label={status === 'published' ? 'Piilota kysymyssarja' : 'Julkaise kysymyssarja'}
-                                  className={`gap-2 ${status === 'published' ? '' : 'bg-green-600 hover:bg-green-700 text-white'}`}
                                 >
-                                  {publishingId === set.id ? (
-                                    <>
-                                      <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
-                                      Päivitetään
-                                    </>
-                                  ) : status === 'published' ? (
-                                    <>
-                                      <EyeSlash weight="duotone" className="w-4 h-4" />
-                                      Piilota
-                                    </>
+                                  Avaa
+                                </Button>
+                                {isAdmin && (
+                                  <Button
+                                    onClick={() => handlePublishToggle(set.id, status)}
+                                    variant={status === 'published' ? 'outline' : 'default'}
+                                    size="sm"
+                                    disabled={publishingId === set.id}
+                                    aria-label={status === 'published' ? 'Piilota kysymyssarja' : 'Julkaise kysymyssarja'}
+                                    className={`gap-2 ${status === 'published' ? '' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+                                  >
+                                    {publishingId === set.id ? (
+                                      <>
+                                        <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
+                                        Päivitetään
+                                      </>
+                                    ) : status === 'published' ? (
+                                      <>
+                                        <EyeSlash weight="duotone" className="w-4 h-4" />
+                                        Piilota
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Eye weight="duotone" className="w-4 h-4" />
+                                        Julkaise
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                                <Button
+                                  onClick={() => handleDeleteQuestionSet(set.id)}
+                                  variant="destructive"
+                                  size="sm"
+                                  disabled={deletingId === set.id}
+                                  aria-label="Poista kysymyssarja"
+                                >
+                                  {deletingId === set.id ? (
+                                    <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
                                   ) : (
-                                    <>
-                                      <Eye weight="duotone" className="w-4 h-4" />
-                                      Julkaise
-                                    </>
+                                    <Trash weight="duotone" className="w-4 h-4" />
                                   )}
                                 </Button>
-                              )}
-                              <Button
-                                onClick={() => handleDeleteQuestionSet(set.id)}
-                                variant="destructive"
-                                size="sm"
-                                disabled={deletingId === set.id}
-                                aria-label="Poista kysymyssarja"
-                              >
-                                {deletingId === set.id ? (
-                                  <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <Trash weight="duotone" className="w-4 h-4" />
-                                )}
-                              </Button>
+                              </div>
                             </div>
-                          </div>
-                        </div>
+                          </CardContent>
+                        </Card>
                       );
                     })}
                   </div>
                 )}
 
                 <div className="pt-4">
-                  <Button onClick={() => router.push('/')} variant="outline" className="w-full">
+                  <Button onClick={() => router.push('/')} variant="secondary" className="w-full">
                     Takaisin valikkoon
                   </Button>
                 </div>
@@ -1697,78 +1736,76 @@ export default function CreatePage() {
                   ) : (
                     <div className="space-y-3">
                       {flaggedQuestions.map((flag) => (
-                        <div
+                        <Card
                           key={flag.questionId}
-                          className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:shadow-md transition-shadow"
+                          variant="standard"
+                          padding="compact"
+                          className="transition-shadow duration-150 hover:shadow-md"
                         >
-                          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-start gap-3">
-                                <div className="mt-1 rounded-full bg-amber-100 dark:bg-amber-900/30 p-2">
-                                  <Flag weight="duotone" className="w-4 h-4 text-amber-600" />
-                                </div>
-                                <div className="space-y-2">
-                                  <div>
-                                    <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                                      {flag.questionText}
-                                    </p>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                      {flag.questionSetName ?? 'Tuntematon sarja'}
-                                      {flag.questionSetCode ? ` • Koodi ${flag.questionSetCode}` : ''}
-                                    </p>
+                          <CardContent>
+                            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-start gap-3">
+                                  <div className="mt-1 rounded-full bg-amber-100 dark:bg-amber-900/30 p-2">
+                                    <Flag weight="duotone" className="w-4 h-4 text-amber-600" />
                                   </div>
-                                  <div className="flex flex-wrap gap-2 text-xs">
-                                    <span className="inline-flex items-center rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200 px-2.5 py-1 font-semibold">
-                                      Ilmoituksia {flag.flagCount}
-                                    </span>
-                                    <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200 px-2.5 py-1">
-                                      Väärä vastaus {flag.reasonCounts.wrong_answer}
-                                    </span>
-                                    <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200 px-2.5 py-1">
-                                      Epäselvä {flag.reasonCounts.ambiguous}
-                                    </span>
-                                    <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200 px-2.5 py-1">
-                                      Typo {flag.reasonCounts.typo}
-                                    </span>
-                                    <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200 px-2.5 py-1">
-                                      Muu {flag.reasonCounts.other}
-                                    </span>
-                                  </div>
-                                  {flag.latestNote && (
-                                    <div className="rounded-lg border border-amber-200 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
-                                      <span className="font-semibold">Huomio:</span> {flag.latestNote}
+                                  <div className="space-y-2">
+                                    <div>
+                                      <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                                        {flag.questionText}
+                                      </p>
+                                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                        {flag.questionSetName ?? 'Tuntematon sarja'}
+                                        {flag.questionSetCode ? ` • Koodi ${flag.questionSetCode}` : ''}
+                                      </p>
                                     </div>
-                                  )}
+                                    <div className="flex flex-wrap gap-2 text-xs">
+                                      <Badge semantic="info" size="sm">
+                                        Ilmoituksia {flag.flagCount}
+                                      </Badge>
+                                      <Badge size="sm">
+                                        Väärä vastaus {flag.reasonCounts.wrong_answer}
+                                      </Badge>
+                                      <Badge size="sm">Epäselvä {flag.reasonCounts.ambiguous}</Badge>
+                                      <Badge size="sm">Typo {flag.reasonCounts.typo}</Badge>
+                                      <Badge size="sm">Muu {flag.reasonCounts.other}</Badge>
+                                    </div>
+                                    {flag.latestNote && (
+                                      <div className="rounded-lg border border-amber-200 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
+                                        <span className="font-semibold">Huomio:</span> {flag.latestNote}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
+                              <div className="flex flex-row gap-2 lg:flex-col lg:items-end">
+                                <Button
+                                  onClick={() => openFlagEdit(flag)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-2"
+                                >
+                                  <PencilSimple weight="duotone" className="w-4 h-4" />
+                                  Muokkaa
+                                </Button>
+                                <Button
+                                  onClick={() => handleDismissFlag(flag)}
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={dismissingFlagId === flag.questionId}
+                                  className="gap-2 text-gray-600 hover:text-gray-900"
+                                >
+                                  {dismissingFlagId === flag.questionId ? (
+                                    <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Trash weight="duotone" className="w-4 h-4" />
+                                  )}
+                                  Poista ilmoitukset
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex flex-row gap-2 lg:flex-col lg:items-end">
-                              <Button
-                                onClick={() => openFlagEdit(flag)}
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
-                              >
-                                <PencilSimple weight="duotone" className="w-4 h-4" />
-                                Muokkaa
-                              </Button>
-                              <Button
-                                onClick={() => handleDismissFlag(flag)}
-                                variant="outline"
-                                size="sm"
-                                disabled={dismissingFlagId === flag.questionId}
-                                className="gap-2 text-gray-600 hover:text-gray-900"
-                              >
-                                {dismissingFlagId === flag.questionId ? (
-                                  <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <Trash weight="duotone" className="w-4 h-4" />
-                                )}
-                                Poista ilmoitukset
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
+                          </CardContent>
+                        </Card>
                       ))}
                     </div>
                   )}
@@ -1853,7 +1890,7 @@ export default function CreatePage() {
                             <select
                               value={editTrueFalse}
                               onChange={(event) => setEditTrueFalse(event.target.value as 'true' | 'false')}
-                              className="w-full h-10 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 text-sm text-gray-900 dark:text-gray-100"
+                              className="w-full h-10 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm text-gray-900 dark:text-gray-100"
                             >
                               <option value="true">Totta</option>
                               <option value="false">Tarua</option>
@@ -1907,14 +1944,15 @@ export default function CreatePage() {
 
                         <div className="flex items-center justify-end gap-2 pt-2">
                           <Dialog.Close asChild>
-                            <Button variant="ghost" type="button">
+                            <Button variant="secondary" type="button">
                               Peruuta
                             </Button>
                           </Dialog.Close>
                           <Button
                             onClick={handleSaveFlagEdit}
                             disabled={savingEdit}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                            mode="quiz"
+                            variant="primary"
                           >
                             {savingEdit ? 'Tallennetaan...' : 'Tallenna muutokset'}
                           </Button>
@@ -1931,7 +1969,7 @@ export default function CreatePage() {
 
       {state === 'loading' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl border border-slate-200/60 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+          <div className="w-full max-w-2xl rounded-xl border border-slate-200/60 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
             <div className="border-b border-slate-200/70 px-6 py-5 dark:border-slate-800">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
                 Creating study sets
