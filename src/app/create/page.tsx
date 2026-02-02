@@ -1461,7 +1461,7 @@ export default function CreatePage() {
                               <strong>Luokka:</strong>
                               <Badge
                                 semantic="grade"
-                                size="sm"
+                                size="xs"
                                 className={cn(getGradeBadgeClasses(selectedSet.grade))}
                               >
                                 {selectedSet.grade}
@@ -1597,7 +1597,7 @@ export default function CreatePage() {
                                   {set.grade && (
                                     <Badge
                                       semantic="grade"
-                                      size="sm"
+                                      size="xs"
                                       className={cn(getGradeBadgeClasses(set.grade))}
                                     >
                                       <GraduationCap weight="duotone" className="w-3 h-3" />

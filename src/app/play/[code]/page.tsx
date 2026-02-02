@@ -992,23 +992,22 @@ export default function PlayPage() {
           {!showExplanation ? (
             <div className="flex gap-3">
               <Button
-                onClick={handleSubmitAnswer}
-                disabled={!canSubmit}
-                mode="quiz"
-                variant="primary"
-                className="flex-1"
-              >
-                Tarkista vastaus
-              </Button>
-              <Button
                 onClick={handleSkipQuestion}
                 type="button"
                 variant="secondary"
                 aria-label="Ohita kysymys"
-                className="flex-1"
+                className="flex-[0.3]"
               >
-                <ArrowRight size={20} weight="bold" />
-                <span className="hidden sm:inline">Ohita</span>
+                Ohita
+              </Button>
+              <Button
+                onClick={handleSubmitAnswer}
+                disabled={!canSubmit}
+                mode="quiz"
+                variant="primary"
+                className="flex-[0.7]"
+              >
+                Tarkista vastaus
               </Button>
             </div>
           ) : (

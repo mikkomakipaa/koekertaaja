@@ -260,7 +260,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
           {group.grade && (
             <Badge
               semantic="grade"
-              size="md"
+              size="xs"
               className={cn(getGradeColors(group.grade).bg, getGradeColors(group.grade).text)}
             >
               Luokka: {group.grade}
