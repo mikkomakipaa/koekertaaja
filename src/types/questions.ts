@@ -7,7 +7,8 @@ export type QuestionType =
   | 'true_false'
   | 'matching'
   | 'short_answer'
-  | 'sequential';
+  | 'sequential'
+  | 'flashcard';
 
 export type Subject = string;
 
@@ -37,10 +38,13 @@ export interface BaseQuestion {
   question_type: QuestionType;
   explanation: string;
   image_url?: string;
+  image_reference?: string;
+  requires_visual?: boolean;
   order_index: number;
   topic?: string;  // High-level topic (e.g., "Grammar", "Vocabulary", "Reading")
   skill?: string;  // Specific skill tag (snake_case)
   subtopic?: string;  // Optional finer-grained subtopic within a topic
+  concept_id?: string; // Optional curriculum concept identifier for dependency ordering
 }
 
 // Specific Question Types
@@ -89,6 +93,11 @@ export interface SequentialQuestion extends BaseQuestion {
   correct_order: number[];  // Correct indices [0, 2, 1, 3] representing original item positions
 }
 
+export interface FlashcardQuestion extends BaseQuestion {
+  question_type: 'flashcard';
+  correct_answer: string;
+}
+
 export function isSequentialItemArray(items: unknown): items is SequentialItem[] {
   return Array.isArray(items) && items.every(
     (item) => typeof item === 'object' && item !== null && 'text' in item
@@ -106,7 +115,8 @@ export type Question =
   | TrueFalseQuestion
   | MatchingQuestion
   | ShortAnswerQuestion
-  | SequentialQuestion;
+  | SequentialQuestion
+  | FlashcardQuestion;
 
 // Question Set
 export interface QuestionSet {
@@ -182,6 +192,7 @@ export interface Answer {
   explanation: string;
   pointsEarned?: number;
   streakAtAnswer?: number;
+  matchType?: 'exact' | 'numerical' | 'unit_conversion' | 'expression' | 'semantic' | 'none';
 }
 
 // Badge System

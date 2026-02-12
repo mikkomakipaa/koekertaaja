@@ -1,0 +1,350 @@
+TOPIC vs. SUBTOPIC vs. SKILL HIERARCHY
+
+=== THREE-LEVEL SYSTEM ===
+
+LEVEL 1 - TOPIC (Required):
+- WHAT content area is being tested
+- Use topics from material analysis (identified by topic identification step)
+- Content-based, not skill-based
+- Examples: "Geometry", "Daily Routines", "World War II", "Photosynthesis"
+
+LEVEL 2 - SUBTOPIC (Optional):
+- MORE SPECIFIC content refinement
+- Narrows down the topic
+- Still content-based, not skill-based
+- Examples:
+  * topic="Geometry" -> subtopic="Rectangle areas"
+  * topic="Daily Routines" -> subtopic="School activities"
+  * topic="World War II" -> subtopic="Pearl Harbor"
+
+LEVEL 3 - SKILL (Required):
+- HOW / WHAT COGNITIVE OPERATION is being tested
+- What mental process does the student use to answer?
+- Skill-based, not content-based
+- Examples: "multiplication", "verb_tenses", "recall", "cause_effect"
+
+=== KEY PRINCIPLE ===
+
+TOPIC/SUBTOPIC = Content (nouns, concepts, themes)
+SKILL = Ability (verbs, operations, cognitive processes)
+
+Ask yourself: "What is this question ABOUT?" -> Topic
+Ask yourself: "What does the student DO to answer?" -> Skill
+
+=== DECISION FLOWCHART ===
+
+Step 1: TOPIC - What content area from material analysis?
+-> Use one of the identified topics from topic identification step
+-> Example: Material about geometry -> topic = "Pinta-alat"
+
+Step 2: SUBTOPIC (optional) - Can I be more specific?
+-> If the topic is broad and this question focuses on one part, add subtopic
+-> Example: topic="Pinta-alat" -> subtopic="Suorakulmio"
+-> If topic is already specific, skip subtopic
+
+Step 3: SKILL - What does the student DO?
+-> Look at the question type and what operation is required
+-> Use the skill selection guide below
+
+=== SKILL SELECTION GUIDE BY OPERATION ===
+
+1. STUDENT MUST CALCULATE/COMPUTE:
+   Math operations: multiplication, division, addition, subtraction
+   Applied math: area_calculation, volume_calculation, percentage_calculation
+   Physics/Chemistry: formula_application
+
+2. STUDENT MUST RECALL FACT:
+   Skills: recall, factual_knowledge, memorization
+   Use when: Question asks "What is...", "Who was...", "When did..."
+
+3. STUDENT MUST UNDERSTAND CONCEPT:
+   Skills: comprehension, conceptual_understanding, interpretation
+   Use when: Question asks "What does... mean?", "Explain the concept..."
+
+4. STUDENT MUST APPLY RULE/GRAMMAR:
+   Language: verb_tenses, grammar_application, sentence_structure
+   Math: formula_application, rule_application
+   Use when: Question asks "Complete with correct form...", "Apply the rule..."
+
+5. STUDENT MUST ANALYZE/EXPLAIN WHY:
+   Skills: cause_effect, analysis, critical_thinking, comparison
+   Use when: Question asks "Why...", "Compare...", "Analyze..."
+
+6. STUDENT MUST CREATE/PRODUCE:
+   Skills: writing, composition, creative_expression, problem_solving
+   Use when: Question asks "Write a paragraph...", "Create a solution..."
+
+7. STUDENT MUST IDENTIFY/CLASSIFY:
+   Skills: identification, classification, pattern_recognition, categorization
+   Use when: Question asks "Which type...", "Classify...", "Identify the pattern..."
+
+=== LANGUAGE SUBJECTS: SPECIAL CASE ===
+
+Language questions can have grammar concepts as TOPIC:
+
+Grammar-focused material:
+- topic: "Present Simple" (grammar concept from material)
+- subtopic: "Third person singular" (specific grammar point)
+- skill: "verb_tenses" (the skill being tested)
+
+Theme-focused material:
+- topic: "School Life" (thematic content from material)
+- subtopic: "Daily schedule" (specific theme)
+- skill: "verb_tenses" (the skill being tested)
+
+Both are correct. It depends on what the material is ABOUT:
+- Grammar textbook chapter on tenses -> topic IS the grammar concept
+- Thematic unit about school -> topic IS the theme, skill tests grammar
+
+=== EXAMPLES BY SUBJECT TYPE ===
+
+--- MATHEMATICS ---
+
+Example 1:
+Question: "Calculate: 5 x 8"
+- topic: "Kertotaulu" (from material analysis)
+- subtopic: null (optional, could be "5:n kertotaulu")
+- skill: "multiplication"
+Reasoning: About multiplication table (content), tests multiplication (operation)
+
+Example 2:
+Question: "What is the area of a rectangle with sides 4m and 6m?"
+- topic: "Pinta-alat" (from material analysis)
+- subtopic: "Suorakulmio" (specific shape)
+- skill: "area_calculation" (NOT multiplication, because context is area)
+Reasoning: About areas (content), tests area calculation (operation)
+
+Example 3:
+Question: "Miten lasketaan suorakulmion pinta-ala?" (rule-based flashcard)
+- topic: "Pinta-alat" (from material analysis)
+- subtopic: "Suorakulmio"
+- skill: "formula_recall" (NOT area_calculation, because asking for the formula)
+Reasoning: About areas, tests knowledge of the formula
+
+Example 4:
+Question: "Laske: 75 % luvusta 200"
+- topic: "Prosentit"
+- subtopic: "Perusprosenttilaskut"
+- skill: "percentage_calculation"
+Reasoning: About percentages (content), tests percentage calculation (operation)
+
+Example 5:
+Question: "Pyorista 8.764 lahin kymmenesosaan"
+- topic: "Desimaaliluvut"
+- subtopic: "Pyoristaminen"
+- skill: "number_rounding"
+Reasoning: About decimals, tests rounding operation
+
+--- LANGUAGE (English/Finnish) ---
+
+Example 6:
+Question: "Complete: I ___ to school every day. (go)"
+- topic: "Daily Routines" (from material analysis - thematic unit)
+- subtopic: "School activities"
+- skill: "verb_tenses" (testing present simple conjugation)
+Reasoning: About daily routines (content), tests verb tense knowledge (skill)
+
+Example 7:
+Question: "Miten muodostetaan present simple?" (grammar-focused material)
+- topic: "Present Simple" (from material analysis - grammar chapter)
+- subtopic: "Muodostus" (formation rules)
+- skill: "grammar_knowledge" (asking about rule, not applying it)
+Reasoning: About present simple (content), tests grammar knowledge (skill)
+
+Example 8:
+Question: "What is 'cat' in Finnish?"
+- topic: "Animals" (from material analysis - vocabulary theme)
+- subtopic: "Pets"
+- skill: "word_meaning" (translation/vocabulary)
+Reasoning: About animals (content), tests vocabulary knowledge (skill)
+
+Example 9:
+Question: "Jarjesta sanat oikeaan jarjestykseen: often / I / football / play"
+- topic: "Daily Routines"
+- subtopic: "Harrastukset"
+- skill: "sentence_structure"
+Reasoning: About routines/hobbies (content), tests word order operation
+
+Example 10:
+Question: "Mika on sanan 'big' vastakohta?"
+- topic: "Adjectives"
+- subtopic: "Opposites"
+- skill: "synonyms_antonyms"
+Reasoning: About adjectives, tests vocabulary relation skill
+
+--- HISTORY / SOCIAL STUDIES ---
+
+Example 11:
+Question: "When did Finland gain independence?"
+- topic: "Finnish Independence" (from material analysis)
+- subtopic: null
+- skill: "recall" (factual date recall)
+Reasoning: About independence (content), tests date recall (skill)
+
+Example 12:
+Question: "Why did the Roman Empire fall?"
+- topic: "Ancient Rome" (from material analysis)
+- subtopic: "Fall of Rome"
+- skill: "cause_effect" (analyzing causes)
+Reasoning: About Rome (content), tests causal analysis (skill)
+
+Example 13:
+Question: "Order these events: A) WWI B) WWII C) Cold War D) Fall of Berlin Wall"
+- topic: "20th Century History" (from material analysis)
+- subtopic: "Major events"
+- skill: "chronological_ordering" (sequencing)
+Reasoning: About 20th century (content), tests chronological understanding (skill)
+
+Example 14:
+Question: "Vertaa teollistumista Suomessa ja Britanniassa"
+- topic: "Industrial Revolution"
+- subtopic: "Country comparisons"
+- skill: "comparison"
+Reasoning: About industrialization content, tests compare/contrast operation
+
+--- SCIENCE ---
+
+Example 15:
+Question: "What is photosynthesis?"
+- topic: "Photosynthesis" (from material analysis)
+- subtopic: null
+- skill: "comprehension" (definition/understanding)
+Reasoning: About photosynthesis (content), tests conceptual understanding (skill)
+
+Example 16:
+Question: "Label the parts of a plant cell"
+- topic: "Plant Cells" (from material analysis)
+- subtopic: "Cell structure"
+- skill: "identification" (identifying parts)
+Reasoning: About cells (content), tests identification skill
+
+Example 17:
+Question: "Mita tapahtuu, jos kasvi ei saa valoa?"
+- topic: "Photosynthesis"
+- subtopic: "Requirements"
+- skill: "prediction"
+Reasoning: About photosynthesis requirements, tests inference/prediction operation
+
+--- GEOGRAPHY ---
+
+Example 18:
+Question: "What is the capital of Finland?"
+- topic: "Nordic Countries" (from material analysis)
+- subtopic: "Finland"
+- skill: "recall" (factual recall)
+Reasoning: About Nordic countries (content), tests factual recall (skill)
+
+Example 19:
+Question: "Match countries with capitals: Finland-?, Sweden-?, Norway-?"
+- topic: "Nordic Countries" (from material analysis)
+- subtopic: "Capitals"
+- skill: "matching_pairs" (pairing related items)
+Reasoning: About Nordic countries (content), tests matching skill
+
+Example 20:
+Question: "Miksi Golfvirta vaikuttaa Pohjois-Euroopan ilmastoon?"
+- topic: "European Climate"
+- subtopic: "Ocean currents"
+- skill: "cause_effect"
+Reasoning: About climate systems, tests causal reasoning
+
+--- SKILLS / ARTS / PRACTICAL SUBJECTS ---
+
+Example 21:
+Question: "Tunnista kuvasta oikea vasaran kayttotapa"
+- topic: "Tyokalujen turvallinen kaytto"
+- subtopic: "Vasara"
+- skill: "recognition"
+Reasoning: About tool use content, tests recognizing correct technique
+
+Example 22:
+Question: "Miten lampoverryttely tehdaan ennen liikuntatuntia?"
+- topic: "Liikuntaharjoittelu"
+- subtopic: "Warm-up"
+- skill: "warm_up"
+Reasoning: About PE practice routines, tests procedural recall/application
+
+=== COMMON MISTAKES TO AVOID ===
+
+X WRONG: Using skill as topic
+Question: "Calculate 5 x 8"
+- topic: "multiplication" <- WRONG (this is a skill)
+- skill: "calculation" <- WRONG (too vague)
+CORRECT:
+- topic: "Kertotaulu" (content area)
+- skill: "multiplication" (operation)
+
+X WRONG: Using topic as skill
+Question: "What is the capital of Finland?"
+- topic: "Geography"
+- skill: "Finland" <- WRONG (this is content)
+CORRECT:
+- topic: "Nordic Countries" (content area)
+- skill: "recall" (operation)
+
+X WRONG: Too general skill
+Question: "Complete: I ___ to school."
+- skill: "grammar" <- WRONG (too vague)
+CORRECT:
+- skill: "verb_tenses" (specific grammar skill)
+
+X WRONG: Too general topic
+Question: "Calculate rectangle area"
+- topic: "Math" <- WRONG (too broad)
+CORRECT:
+- topic: "Pinta-alat" (specific math area)
+
+X WRONG: Mixing content and skill in topic
+Question: "Order water cycle steps"
+- topic: "Sequencing" <- WRONG (this is skill)
+- skill: "water_cycle" <- WRONG (this is content)
+CORRECT:
+- topic: "Water Cycle" (content)
+- skill: "sequential_ordering" (operation)
+
+=== VALIDATION CHECKLIST ===
+
+For each question, verify:
+
+1. Topic is CONTENT-based (noun/concept)
+   - Answers: "What is this question about?"
+   - Should match one of the identified topics from material analysis
+
+2. Skill is OPERATION-based (verb/ability)
+   - Answers: "What does the student DO to answer this?"
+   - Should match skill taxonomy for the subject type
+
+3. Subtopic (if used) is MORE SPECIFIC content
+   - Narrows the topic
+   - Still content-based (not skill)
+
+4. Topic + Skill combination makes sense
+   - Bad: topic="multiplication", skill="geometry"
+   - Good: topic="Geometry", skill="area_calculation"
+
+5. No duplication between topic and skill
+   - Bad: topic="Verb Tenses", skill="verb_tenses"
+   - Good: topic="Present Simple", skill="verb_tenses"
+
+=== QUICK REFERENCE TABLE ===
+
+| Question Type | Topic (Content) | Subtopic | Skill (Operation) |
+|---------------|-----------------|----------|-------------------|
+| Math calculation | "Pinta-alat" | "Suorakulmio" | "area_calculation" |
+| Math formula | "Pinta-alat" | "Suorakulmio" | "formula_recall" |
+| Grammar fill-in | "Daily Routines" | "School" | "verb_tenses" |
+| Grammar rule | "Present Simple" | "Formation" | "grammar_knowledge" |
+| Vocabulary | "Animals" | "Pets" | "word_meaning" |
+| History date | "Independence" | null | "recall" |
+| History why | "Ancient Rome" | "Fall" | "cause_effect" |
+| Timeline order | "20th Century" | null | "chronological_ordering" |
+| Definition | "Photosynthesis" | null | "comprehension" |
+| Matching | "Nordic Countries" | "Capitals" | "matching_pairs" |
+
+=== WHEN IN DOUBT ===
+
+1. Look at identified topics from material analysis -> Use as topic
+2. Ask "What does student DO?" -> That's the skill
+3. If topic is broad, add subtopic to narrow it down
+4. Check skill taxonomy file for your subject type
+5. Verify: Topic = noun (content), Skill = verb (operation)

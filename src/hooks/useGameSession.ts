@@ -15,6 +15,7 @@ export function useGameSession(
   allQuestions: Question[],
   questionsPerSession = DEFAULT_QUESTIONS_PER_SESSION,
   grade?: number,
+  subject?: string,
   reviewMode = false,
   mistakeQuestions?: Question[],
   questionSetCode?: string
@@ -151,10 +152,11 @@ export function useGameSession(
     }
 
     const currentQuestion = selectedQuestions[currentQuestionIndex];
-    const { isCorrect, correctAnswer } = evaluateQuestionAnswer(
+    const { isCorrect, correctAnswer, matchType } = evaluateQuestionAnswer(
       currentQuestion,
       userAnswer,
-      grade
+      grade,
+      subject
     );
 
     let pointsEarned = 0;
@@ -209,8 +211,20 @@ export function useGameSession(
         explanation: currentQuestion.explanation,
         pointsEarned,
         streakAtAnswer: newStreak,
+        matchType,
       },
     ]);
+
+    if (isCorrect && matchType && matchType !== 'exact' && matchType !== 'none') {
+      logger.debug(
+        {
+          questionId: currentQuestion.id,
+          questionType: currentQuestion.question_type,
+          matchType,
+        },
+        'Answer accepted via smart validation'
+      );
+    }
 
     setShowExplanation(true);
   }, [
@@ -220,6 +234,7 @@ export function useGameSession(
     currentStreak,
     bestStreak,
     grade,
+    subject,
     reviewMode,
     addMistake,
     removeMistake,
@@ -231,7 +246,7 @@ export function useGameSession(
     const currentQuestion = selectedQuestions[currentQuestionIndex];
     if (!currentQuestion) return;
 
-    const { correctAnswer } = evaluateQuestionAnswer(currentQuestion, '', grade);
+    const { correctAnswer } = evaluateQuestionAnswer(currentQuestion, '', grade, subject);
 
     // Skipping always resets the streak
     setCurrentStreak(0);
@@ -267,6 +282,7 @@ export function useGameSession(
     selectedQuestions,
     currentQuestionIndex,
     grade,
+    subject,
     reviewMode,
     addMistake,
     updateMastery,

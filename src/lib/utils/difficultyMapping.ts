@@ -85,6 +85,7 @@ function formatQuestionTypeFinnish(type: QuestionType): string {
     matching: 'Paritus',
     short_answer: 'Avoin vastaus',
     sequential: 'Järjestys',
+    flashcard: 'Flashcard',
   };
   return labels[type] || type;
 }

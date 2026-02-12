@@ -1,0 +1,361 @@
+COMPLETE FINNISH NUMBER FORMATTING SPECIFICATION
+
+This guide covers ALL number formatting for Finnish educational context.
+Follow these rules strictly to ensure consistency across all questions.
+
+=== BASIC RULES (Already Established) ===
+
+1. DECIMAL SEPARATOR: ALWAYS comma (,)
+   ✅ "15,25"  "0,5"  "3,14159"  "99,9"
+   ❌ "15.25"  "0.5"  "3.14159" (English/international format)
+
+2. LIST SEPARATOR: Semicolon + space (; )
+   ✅ "5; 10; 15; 20"  "1,5; 2,3; 4,7"
+   ❌ "5, 10, 15, 20" (ambiguous with decimal comma)
+   ❌ "5;10;15;20" (no spaces, hard to read)
+
+=== THOUSANDS SEPARATOR ===
+
+3. THOUSANDS: Narrow non-breaking space (U+202F) OR regular space
+
+   For numbers >= 10 000: Use space separator
+   ✅ "10 000"  "1 000 000"  "15 250,50"
+   ❌ "10000" (hard to read)
+   ❌ "10,000" (English format, conflicts with decimal comma)
+   ❌ "10.000" (German format, conflicts with decimal comma)
+
+   For numbers 1000-9999: Space is optional but recommended
+   ✅ "5 000" (recommended)
+   ✅ "5000" (acceptable)
+   ❌ "5,000" (never use comma)
+
+   Group digits in threes from right to left:
+   ✅ "1 234 567,89" (groups: 1|234|567,89)
+   ❌ "12 34 567,89" (wrong grouping)
+
+   Educational context: Use space for clarity
+   ✅ "Väestö: 5 500 000" (easy to read)
+   ✅ "Laske: 1 000 + 2 500" (clear)
+
+=== NEGATIVE NUMBERS ===
+
+4. NEGATIVE SIGN: Use minus sign (−, U+2212) OR hyphen-minus (-)
+
+   Preferred: Minus sign (−)
+   ✅ "−5"  "−15,25"  "−1 000"
+
+   Acceptable: Hyphen-minus (-)
+   ✅ "-5"  "-15,25"  "-1000"
+
+   Always attach to number (no space):
+   ✅ "−5"
+   ❌ "− 5" (space between)
+
+   In ranges or subtraction, use minus with spaces:
+   ✅ "5 − 3 = 2" (subtraction)
+   ✅ "lämpötila −5 °C" (temperature)
+   ❌ "5−3=2" (no spaces, hard to read)
+
+=== FRACTIONS ===
+
+5. FRACTIONS: Inline slash (/) OR Unicode fractions
+
+   Simple fractions: Use Unicode if available
+   ✅ "½"  "¼"  "¾"  (preferred for common fractions)
+   ✅ "1/2"  "1/4"  "3/4" (acceptable alternative)
+
+   Complex fractions: Use slash
+   ✅ "3/8"  "5/16"  "7/12"
+   ❌ "3 / 8" (no spaces around slash in fractions)
+
+   Mixed numbers: Space between whole and fraction
+   ✅ "2 ½" or "2 1/2"
+   ❌ "2½" (no space, hard to read)
+
+   Text form (when emphasizing reading):
+   ✅ "yksi kahdesosa"  "kolme neljäsosaa"
+
+   Decimal form often preferred in answers:
+   ✅ "0,5" (instead of ½) for calculations
+   ✅ "0,75" (instead of ¾) for measurements
+
+=== UNITS AND SPACING ===
+
+6. SI UNITS: Always space between number and unit
+
+   Length, mass, volume:
+   ✅ "15 cm"  "20 kg"  "500 ml"  "1 000 m"
+   ❌ "15cm"  "20kg"  "500ml" (no space)
+
+   Area and volume units:
+   ✅ "25 m²"  "15 cm²"  "1 000 cm³"
+   ❌ "25m²"  "15cm²" (no space)
+
+   Time units:
+   ✅ "10 s"  "5 min"  "2 h"
+   ❌ "10s"  "5min"  "2h"
+
+   Special case - degrees of angle:
+   ✅ "45°"  "90°"  "180°" (no space before degree symbol)
+   ❌ "45 °" (space not used for angles)
+
+=== TEMPERATURE ===
+
+7. TEMPERATURE: Space before degree symbol + unit
+
+   Celsius (standard in Finland):
+   ✅ "20 °C"  "100 °C"  "−5 °C"
+   ❌ "20°C"  "20° C"  "20 C" (missing space or symbol)
+
+   Kelvin (used in physics):
+   ✅ "273 K" (no degree symbol for Kelvin)
+   ❌ "273°K" (incorrect)
+
+   In ranges:
+   ✅ "−10 °C to 25 °C"
+   ✅ "lämpötila-alue −10...25 °C"
+
+=== PERCENTAGES ===
+
+8. PERCENTAGES: NO space before percent sign
+
+   Standard format:
+   ✅ "15%"  "99,5%"  "0,25%"  "100%"
+   ❌ "15 %"  "99,5 %" (space not used in Finnish)
+
+   In sentences:
+   ✅ "Osuus on 25% kokonaismäärästä"
+   ✅ "Kasvoi 5,5 prosenttia" (written out)
+
+=== SCIENTIFIC NOTATION ===
+
+9. SCIENTIFIC NOTATION: Use multiplication sign (×) and superscript
+
+   Preferred format:
+   ✅ "1,5 × 10³"  "6,022 × 10²³"  "3 × 10⁸"
+
+   Alternative (middle dot):
+   ✅ "1,5 · 10³" (acceptable)
+
+   Avoid E-notation in educational context:
+   ❌ "1,5E3"  "1.5e23" (programming notation, not educational)
+
+   Large numbers: Scientific notation for clarity
+   ✅ "Valonopeus: 3 × 10⁸ m/s"
+   ✅ "Avogadron luku: 6,022 × 10²³"
+
+   Superscripts to use:
+   ⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻
+
+=== RANGES AND INTERVALS ===
+
+10. RANGES: Use en-dash (–, U+2013) with spaces OR ellipsis (...)
+
+    Standard range (recommended):
+    ✅ "5–10"  "1–100"  "−5–15"
+    ✅ "5 – 10" (with spaces, more readable)
+
+    Avoid hyphen for ranges:
+    ❌ "5-10" (ambiguous, looks like subtraction)
+
+    Ellipsis notation (common in Finnish):
+    ✅ "5...10"  "1...100"  "−5...25"
+
+    With units:
+    ✅ "10–15 cm"  "20–25 kg"
+    ✅ "10...15 cm" (ellipsis alternative)
+
+    Temperature ranges:
+    ✅ "−10–25 °C"
+    ✅ "−10...25 °C"
+
+=== COORDINATES AND POINTS ===
+
+11. COORDINATES: Use parentheses with semicolon separator
+
+    2D coordinates:
+    ✅ "(5; 3)"  "(−2; 7)"  "(0; 0)"
+    ❌ "(5, 3)" (comma conflicts with decimal separator)
+
+    3D coordinates:
+    ✅ "(5; 3; 8)"  "(−1; 0; 4)"
+
+    On number line / graph:
+    ✅ "piste A = (5; 3)"
+    ✅ "origo = (0; 0)"
+
+=== CURRENCY (EUROS) ===
+
+12. CURRENCY: Number + space + € symbol
+
+    Standard format:
+    ✅ "15 €"  "99,50 €"  "1 000 €"
+    ❌ "€15"  "15€"  "EUR 15" (not standard in Finnish context)
+
+    In sentences:
+    ✅ "Hinta on 25,50 €"
+    ✅ "Maksoi 1 500 euroa" (written out)
+
+    Cents alone:
+    ✅ "50 c" (rare, usually use 0,50 €)
+
+=== MATHEMATICAL OPERATORS ===
+
+13. OPERATORS: Space around operators for readability
+
+    Basic arithmetic:
+    ✅ "5 + 3"  "10 − 4"  "6 × 7"  "20 ÷ 5"
+    ❌ "5+3"  "10-4"  "6×7" (no spaces, cramped)
+
+    Equals sign:
+    ✅ "5 + 3 = 8"
+    ❌ "5+3=8" (no spaces)
+
+    Multiplication signs:
+    ✅ "5 × 3" (cross, preferred)
+    ✅ "5 · 3" (middle dot, acceptable)
+    ❌ "5 * 3" (asterisk, programming notation)
+
+    Division:
+    ✅ "20 ÷ 5" (division sign)
+    ✅ "20 / 5" (slash, acceptable)
+    ✅ "20:5" (colon, acceptable in Finnish)
+
+    Inline fractions vs. division:
+    ✅ "1/2" (fraction, no spaces)
+    ✅ "10 / 5" (division, with spaces)
+
+=== EXPONENTS AND POWERS ===
+
+14. EXPONENTS: Use superscript numbers
+
+    Powers:
+    ✅ "2³"  "10⁶"  "x²"  "5⁴"
+    ❌ "2^3"  "10^6" (programming notation)
+
+    Area and volume:
+    ✅ "m²"  "cm³"  "km²"
+    ❌ "m2"  "cm3" (not superscript)
+
+    Special: Square root
+    ✅ "√16 = 4"
+    ✅ "²√16 = 4" (if root index needed)
+
+=== TIME FORMAT ===
+
+15. TIME: Use colon (:) separator, 24-hour format
+
+    Hours and minutes:
+    ✅ "14:30"  "09:15"  "23:45"
+    ❌ "14.30"  "2:30 PM" (not Finnish format)
+
+    With seconds:
+    ✅ "14:30:45"
+
+    Duration:
+    ✅ "2 h 30 min"  "1 h 15 min"
+    ✅ "2,5 h" (decimal hours)
+
+=== ANGLES ===
+
+16. ANGLES: Degree symbol without space
+
+    Degrees:
+    ✅ "45°"  "90°"  "180°"  "360°"
+    ❌ "45 °" (no space for angles, unlike temperature)
+
+    With direction:
+    ✅ "kulma α = 45°"
+    ✅ "käännös 90° myötäpäivään"
+
+=== PHONE NUMBERS (if needed) ===
+
+17. PHONE NUMBERS: Group with spaces
+
+    Finnish mobile:
+    ✅ "040 123 4567"
+    ❌ "0401234567" (hard to read)
+
+    International:
+    ✅ "+358 40 123 4567"
+
+=== ABBREVIATIONS ===
+
+18. LARGE NUMBER ABBREVIATIONS (optional, use carefully)
+
+    In informal context:
+    ✅ "5 milj." (5 miljoonaa)
+    ✅ "2 mrd." (2 miljardia)
+
+    Better: Write out or use scientific notation
+    ✅ "5 000 000" or "5 × 10⁶"
+
+=== SUMMARY QUICK REFERENCE ===
+
+| Context | Format | Example | Wrong Example |
+|---------|--------|---------|---------------|
+| Decimal | comma | "15,25" | "15.25" |
+| Thousands | space | "1 000" | "1,000" |
+| List | semicolon+space | "5; 10; 15" | "5, 10, 15" |
+| Negative | minus/hyphen | "−5" or "-5" | "- 5" |
+| Fraction | slash or Unicode | "½" or "1/2" | "1 / 2" |
+| Unit | space | "15 cm" | "15cm" |
+| Temperature | space + °C | "20 °C" | "20°C" |
+| Angle | no space + ° | "45°" | "45 °" |
+| Percentage | no space + % | "15%" | "15 %" |
+| Range | en-dash/ellipsis | "5–10" or "5...10" | "5-10" |
+| Coordinates | parentheses+semicolon | "(5; 3)" | "(5, 3)" |
+| Currency | number+space+€ | "15 €" | "€15" |
+| Operators | spaces | "5 + 3 = 8" | "5+3=8" |
+| Time | colon | "14:30" | "14.30" |
+| Scientific | × and superscript | "1,5 × 10³" | "1.5E3" |
+
+=== EXAMPLES IN CONTEXT ===
+
+Mathematics question:
+✅ "Laske suorakulmion pinta-ala, kun sivut ovat 4,5 cm ja 6,2 cm."
+✅ "Vastaus: 27,9 cm²"
+
+Physics question:
+✅ "Valonopeus on 3 × 10⁸ m/s. Kuinka pitkä matka on 1 valovuosi?"
+
+Temperature question:
+✅ "Vesi jäätyy 0 °C:ssa ja kiehuu 100 °C:ssa."
+
+List question:
+✅ "Järjestä luvut suuruusjärjestykseen: 2,71; 2,70; 2,17; 3,14"
+
+Coordinate question:
+✅ "Piirrä pisteet (5; 3) ja (−2; 7) koordinaatistoon."
+
+Currency question:
+✅ "Ostin kirjan 15,50 € ja kynän 2,50 €. Paljonko maksoin yhteensä?"
+
+Range question:
+✅ "Lämpötila vaihteli −5 °C ja 10 °C välillä."
+✅ "Lämpötila-alue: −5...10 °C"
+
+=== SPECIAL EDUCATIONAL CONSIDERATIONS ===
+
+1. CONSISTENCY: Use same format throughout a question set
+   - Don't mix "1 000" and "1000" in same set
+   - Choose en-dash OR ellipsis for ranges, use consistently
+
+2. READABILITY: Prioritize clarity for students
+   - Use spaces in large numbers (easier to read)
+   - Use × for multiplication (clearer than ·)
+   - Use full degree symbol (°C not just C)
+
+3. AGE-APPROPRIATE: Simplify for younger grades
+   - Grade 4: Avoid scientific notation, use "5 000 000"
+   - Grade 5-6: Can introduce "5 × 10⁶"
+
+4. FINNISH CONTEXT: Follow Finnish conventions
+   - Comma for decimals (international may use period)
+   - Space + € (not €15 or EUR)
+   - 24-hour clock (not AM/PM)
+
+5. AVOID AMBIGUITY: When in doubt, add clarity
+   - Use "20 °C" not "20° C" or "20C"
+   - Use "(5; 3)" not "(5,3)" for coordinates
+   - Use "5...10" not "5-10" for ranges

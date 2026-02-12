@@ -213,6 +213,9 @@ function questionContainsKeyword(
         });
       }
       break;
+    case 'flashcard':
+      textParts.push(question.correct_answer);
+      break;
   }
 
   const searchText = textParts

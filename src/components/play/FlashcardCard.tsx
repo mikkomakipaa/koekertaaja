@@ -9,10 +9,19 @@ interface FlashcardCardProps {
   flashcard: Flashcard;
   isFlipped: boolean;
   onFlip: () => void;
+  onShowAnswer: () => void;
+  onShowQuestion: () => void;
   overlay?: ReactNode;
 }
 
-export function FlashcardCard({ flashcard, isFlipped, onFlip, overlay }: FlashcardCardProps) {
+export function FlashcardCard({
+  flashcard,
+  isFlipped,
+  onFlip,
+  onShowAnswer,
+  onShowQuestion,
+  overlay,
+}: FlashcardCardProps) {
   return (
     <div className="w-full max-w-2xl mx-auto perspective-1000">
       <div
@@ -57,10 +66,20 @@ export function FlashcardCard({ flashcard, isFlipped, onFlip, overlay }: Flashca
             <div className="text-xl md:text-2xl font-medium text-gray-900 dark:text-gray-100">
               <MathText>{flashcard.front}</MathText>
             </div>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onShowAnswer();
+              }}
+              className="mt-4 inline-flex items-center justify-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
+            >
+              Näytä vastaus
+            </button>
           </div>
         </div>
 
-        {/* Back Side - Explanation Only */}
+        {/* Back Side - Answer and explanation */}
         <div
           className={`
             absolute inset-0 backface-hidden rotate-y-180
@@ -78,12 +97,29 @@ export function FlashcardCard({ flashcard, isFlipped, onFlip, overlay }: Flashca
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {/* Explanation */}
+            {flashcard.back.answer && (
+              <div className="mb-3 text-xl font-semibold text-gray-900 dark:text-gray-100 whitespace-pre-line">
+                <MathText>{flashcard.back.answer}</MathText>
+              </div>
+            )}
             {flashcard.back.explanation && (
-              <div className="text-lg text-gray-900 dark:text-gray-100 whitespace-pre-line leading-relaxed">
+              <div className="border-t border-teal-200 pt-3 text-base text-gray-800 dark:border-teal-700 dark:text-gray-200 whitespace-pre-line leading-relaxed">
                 <MathText>{flashcard.back.explanation}</MathText>
               </div>
             )}
+          </div>
+
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onShowQuestion();
+              }}
+              className="inline-flex items-center justify-center rounded-lg border border-teal-500 px-4 py-2 text-sm font-semibold text-teal-700 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-900/20"
+            >
+              Näytä kysymys
+            </button>
           </div>
         </div>
       </div>

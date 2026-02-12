@@ -1,81 +1,54 @@
-JSON-VASTAUSMUOTO - NOUDATA TARKASTI
-VASTAA VAIN JSON-TAULUKOLLA. EI MUUTA TEKSTIÄ.
+JSON-VASTAUSMUOTO (PAKOLLINEN)
+- Palauta vain JSON-taulukko.
+- Ei markdownia, ei selitystekstiä JSON:n ulkopuolelle.
+- Ei trailing comma -merkintää.
 
+JSON-SKEEMA (KENTTÄTASON SOPIMUS):
 [
   {
     "question": "kysymysteksti",
-    "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching" | "sequential",
+    "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching" | "sequential" | "flashcard",
     "topic": "aihealue",
-    "subtopic": "tarkentava alateema (valinnainen)",
-    "skill": "taito_tagi",
+    "subtopic": "valinnainen alateema",
+    "skill": "snake_case_taito",
     "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"],
     "pairs": [{"left": "vasen", "right": "oikea"}],
-    "items": ["kohta1", "kohta2", "kohta3", "kohta4"],
-    "correct_order": [0, 2, 1, 3],
+    "items": ["vaihe 1", "vaihe 2", "vaihe 3", "vaihe 4"],
+    "correct_order": [0, 1, 2, 3],
     "correct_answer": "oikea vastaus",
-    "acceptable_answers": ["vaihtoehtoinen vastaus"],
-    "explanation": "Kirjoita henkilökohtainen selitys suoraan oppilaalle (sinä-muodossa) 2-3 lauseessa: 1) MIKSI tämä vastaus on oikea, 2) Mitä virhettä saatat helposti tehdä, 3) Mihin tämä liittyy"
+    "answer": "flashcard-tilan ydinvastaus",
+    "acceptable_answers": ["vaihtoehtoinen hyväksyttävä vastaus"],
+    "explanation": "2-3 lauseen henkilökohtainen selitys (sinä-muoto)"
   }
 ]
 
-SEQUENTIAL-items formaatit (BACKWARD COMPATIBLE):
+PAKOLLISET YHTEISET SÄÄNNÖT:
+- Jokaisessa rivissä on topic ja skill (ei tyhjä).
+- Luo tasan {{question_count}} riviä.
+- Flashcard-tilassa käytä aina type = "flashcard".
+- Käytä vain sallittuja type-arvoja.
 
-Timeline-muoto (year-kentän kanssa):
-{
-  "question": "Järjestä tapahtumat aikajärjestykseen:",
-  "type": "sequential",
-  "topic": "Historia",
-  "skill": "sequences",
-  "items": [
-    {"text": "Tapahtuma 1 kuvaus", "year": 1917},
-    {"text": "Tapahtuma 2 kuvaus", "year": 1939},
-    {"text": "Tapahtuma 3 kuvaus", "year": 1952},
-    {"text": "Tapahtuma 4 kuvaus", "year": 1995}
-  ],
-  "correct_order": [0, 1, 2, 3],
-  "explanation": "Selitys kronologisesta järjestyksestä"
-}
+TYYPPIKOHTAINEN MINIMISOPIMUS:
+- multiple_choice: options on pakollinen ja sisältää tasan 4 vaihtoehtoa.
+- true_false: correct_answer on boolean (true/false).
+- fill_blank: correct_answer on pakollinen; acceptable_answers suositeltu.
+- short_answer: correct_answer on pakollinen; acceptable_answers suositeltu.
+- matching: pairs on pakollinen ja sisältää vähintään 4 paria.
+- sequential: items + correct_order pakolliset.
+- sequential timeline: items voi olla [{"text":"...","year":2020}] tai ["..."];
+  käytä year vain aidossa aikajärjestyksessä.
 
-Tavallinen muoto (ilman year-kenttää):
-{
-  "question": "Järjestä vaiheet oikeaan järjestykseen:",
-  "type": "sequential",
-  "topic": "Tiede",
-  "skill": "sequences",
-  "items": [
-    "Vaihe 1 kuvaus",
-    "Vaihe 2 kuvaus",
-    "Vaihe 3 kuvaus",
-    "Vaihe 4 kuvaus"
-  ],
-  "correct_order": [0, 1, 2, 3],
-  "explanation": "Selitys prosessin vaiheista"
-}
+SELITYSTYYLI (INTENT-KRIITTINEN):
+- Kirjoita selitys suoraan oppilaalle (sinä-muoto).
+- Selitys sisältää: miksi oikein, tyypillinen kompastuskohta, lyhyt yhteys/esimerkki.
 
-SELITYSTEN TYYLI - TÄRKEÄÄ:
-- Kirjoita kaikki selitykset SUORAAN oppilaalle henkilökohtaisessa muodossa (sinä)
-- OIKEIN: "Kun desimaaliosat ovat samat, ne kumoavat toisensa. Huomaa, miten voit yksinkertaistaa: riittää laskea 84-36=48. Saatat helposti unohtaa tämän oikotien."
-- VÄÄRIN: "Oppilaat eivät huomaa usein..." tai "Tämä opettaa..."
-- Käytä sanoja: "Huomaa että...", "Muista että...", "Voit ajatella...", "Saatat helposti..."
-- ÄLÄ käytä: "Oppilaat usein...", "Tämä opettaa...", "Yleinen virhe on..."
+NUMEROMUOTOILU (SUOMI):
+- Desimaalierotin: pilkku (esim. 15,25).
+- Lukusarjat: puolipiste + välilyönti (esim. 5; 10; 15).
+- Tuhaterotin: välilyönti (esim. 1 000).
+- Katso täydet säännöt: finnish-number-formatting.txt
 
-YHTEISET VAATIMUKSET:
-- PAKOLLINEN: Jokaisessa kysymyksessä/kortissa TÄYTYY olla "topic"-kenttä (ei tyhjä).
-- PAKOLLINEN: Jokaisessa kysymyksessä/kortissa TÄYTYY olla "skill"-kenttä.
-- VAPAAEHTOINEN: "subtopic" on valinnainen tarkennus, käytä vain jos hyödyllinen.
-- Luo TASAN {{question_count}} kysymystä/korttia.
-- Käytä vain niitä kysymystyyppejä, joita tässä promptissa sallitaan.
-- Tyyppikohtaiset kentät ovat pakollisia vain vastaavissa tyypeissä.
-- "options" on monivalinnoissa taulukko.
-- VASTAA PELKÄLLÄ JSON-TAULUKOLLA.
-
-NUMEROIDEN JA LUKUJEN MUOTOILU (KAIKKI AINEET):
-- Desimaalierottimena AINA pilkku (,): "15,25" (EI pistettä 15.25)
-- Lukusarjojen erottimena AINA puolipiste JA VÄLILYÖNTI (; ): "luvut 5; 10; 15; 20"
-- PAKOLLINEN: Puolipisteen jälkeen TÄYTYY olla välilyönti luettavuuden vuoksi
-- VÄÄRIN: "luvut 5,10,15,20" tai "luvut 5;10;15;20" (ei välilyöntejä)
-- OIKEIN: "luvut 5; 10; 15; 20" (puolipiste + välilyönti)
-- Esimerkkejä: "2,71; 2,70; 2,17" tai "Laske summa luvuista 3,5; 4,2; 1,8"
-- Koskee kaikkia aineita: matematiikka, fysiikka, kemia, maantiede, ym.
-
-KYSYMYKSET ILMAN "topic"-KENTTÄÄ HYLÄTÄÄN AUTOMAATTISESTI.
+VARMISTUS ENNEN VASTAUSTA:
+- topic-kenttä puuttuu -> korjaa.
+- JSON ei validi -> korjaa.
+- Jos jokin kenttä ei sovellu typeen, jätä se pois.

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { QuestionSet, Question, QuestionType } from '@/types';
 import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
+import { VisualQuestionPreview } from '@/components/questions/VisualQuestionPreview';
 import { Button } from '@/components/ui/button';
 import * as Dialog from '@radix-ui/react-dialog';
 import { cn } from '@/lib/utils';
@@ -18,7 +19,10 @@ import {
   ChatText,
   ListNumbers,
   ListBullets,
+  Article,
 } from '@phosphor-icons/react';
+import { ConceptDependencyIndicator } from '@/components/create/ConceptDependencyIndicator';
+import { DependencyGraphVisualization } from '@/components/create/DependencyGraphVisualization';
 
 interface TestQuestionsTabProps {
   allQuestionSets: QuestionSet[];
@@ -41,6 +45,9 @@ export function TestQuestionsTab({
   const [testingQuestion, setTestingQuestion] = useState<Question | null>(null);
   const [userAnswer, setUserAnswer] = useState<any>(null);
   const [showExplanation, setShowExplanation] = useState(false);
+  const selectedQuestionSet = selectedQuestionSetId
+    ? allQuestionSets.find((set) => set.id === selectedQuestionSetId) ?? null
+    : null;
 
   // Type filters configuration
   const typeFilters: Array<{ value: QuestionType | 'all'; label: string; icon: React.ReactElement }> = [
@@ -116,6 +123,7 @@ export function TestQuestionsTab({
       matching: { label: 'Yhdistä parit', icon: <Shuffle size={14} weight="duotone" /> },
       short_answer: { label: 'Lyhyt vastaus', icon: <ChatText size={14} weight="duotone" /> },
       sequential: { label: 'Järjestä oikein', icon: <ListNumbers size={14} weight="duotone" /> },
+      flashcard: { label: 'Flashcard', icon: <Article size={14} weight="duotone" /> },
     };
     return typeMap[type];
   };
@@ -200,6 +208,13 @@ export function TestQuestionsTab({
       {/* Question Cards */}
       {selectedQuestionSetId && !loadingQuestions && questions.length > 0 && (
         <div className="space-y-3">
+          {selectedQuestionSet && (
+            <DependencyGraphVisualization
+              subject={selectedQuestionSet.subject}
+              grade={selectedQuestionSet.grade}
+              questions={questions}
+            />
+          )}
           {getFilteredQuestions().map((question, index) => {
             const typeInfo = getQuestionTypeInfo(question.question_type);
             return (
@@ -221,6 +236,15 @@ export function TestQuestionsTab({
                         <span className="text-xs text-gray-400 dark:text-gray-500">
                           • {question.topic}
                         </span>
+                      )}
+                      {selectedQuestionSet && (
+                        <ConceptDependencyIndicator
+                          subject={selectedQuestionSet.subject}
+                          question={question}
+                        />
+                      )}
+                      {(question.requires_visual || question.image_reference) && (
+                        <span className="text-xs text-indigo-600 dark:text-indigo-400">Kuva</span>
                       )}
                     </div>
                     <p className="text-sm text-gray-900 dark:text-gray-100 truncate">
@@ -287,6 +311,13 @@ export function TestQuestionsTab({
                   </div>
 
                   {/* Question Renderer */}
+                  {(testingQuestion.requires_visual || testingQuestion.image_reference) && (
+                    <VisualQuestionPreview
+                      imageUrl={testingQuestion.image_url}
+                      altText="Kysymyksen visuaali"
+                      className="mb-4"
+                    />
+                  )}
                   <QuestionRenderer
                     question={testingQuestion}
                     userAnswer={userAnswer}

@@ -1,0 +1,110 @@
+{
+  "grade_4": {
+    "community_basics": {
+      "id": "community_basics",
+      "label": "Yhteisön peruskäsitteet",
+      "prerequisites": [],
+      "enables": ["rules_and_responsibilities", "local_services"]
+    },
+    "rules_and_responsibilities": {
+      "id": "rules_and_responsibilities",
+      "label": "Säännöt ja vastuut",
+      "prerequisites": ["community_basics"],
+      "enables": ["citizenship_basics"]
+    },
+    "local_services": {
+      "id": "local_services",
+      "label": "Kunnan palvelut",
+      "prerequisites": ["community_basics"],
+      "enables": ["public_sector_private_sector"]
+    }
+  },
+  "grade_5": {
+    "citizenship_basics": {
+      "id": "citizenship_basics",
+      "label": "Kansalaisuuden perusteet",
+      "prerequisites": ["rules_and_responsibilities"],
+      "enables": ["democracy_basics", "rights_and_duties"]
+    },
+    "democracy_basics": {
+      "id": "democracy_basics",
+      "label": "Demokratian perusteet",
+      "prerequisites": ["citizenship_basics"],
+      "enables": ["elections", "decision_making"]
+    },
+    "rights_and_duties": {
+      "id": "rights_and_duties",
+      "label": "Oikeudet ja velvollisuudet",
+      "prerequisites": ["citizenship_basics"],
+      "enables": ["laws_and_justice"]
+    },
+    "money_basics": {
+      "id": "money_basics",
+      "label": "Rahan käyttö arjessa",
+      "prerequisites": [],
+      "enables": ["household_budget", "consumer_choices"]
+    },
+    "household_budget": {
+      "id": "household_budget",
+      "label": "Kotitalouden budjetti",
+      "prerequisites": ["money_basics"],
+      "enables": ["tax_basics"]
+    }
+  },
+  "grade_6": {
+    "elections": {
+      "id": "elections",
+      "label": "Vaalit",
+      "prerequisites": ["democracy_basics"],
+      "enables": ["parliament_government"]
+    },
+    "parliament_government": {
+      "id": "parliament_government",
+      "label": "Eduskunta ja hallitus",
+      "prerequisites": ["elections", "decision_making"],
+      "enables": ["lawmaking_process", "eu_membership"]
+    },
+    "laws_and_justice": {
+      "id": "laws_and_justice",
+      "label": "Lait ja oikeus",
+      "prerequisites": ["rights_and_duties"],
+      "enables": ["lawmaking_process"]
+    },
+    "tax_basics": {
+      "id": "tax_basics",
+      "label": "Verotuksen perusteet",
+      "prerequisites": ["household_budget", "public_sector_private_sector"],
+      "enables": ["welfare_state"]
+    },
+    "eu_formation": {
+      "id": "eu_formation",
+      "label": "Euroopan unionin synty",
+      "prerequisites": ["parliament_government"],
+      "enables": ["eu_membership", "eu_expansion"]
+    },
+    "eu_membership": {
+      "id": "eu_membership",
+      "label": "Suomi EU:ssa",
+      "prerequisites": ["eu_formation", "parliament_government"],
+      "enables": ["eu_expansion"]
+    },
+    "eu_expansion": {
+      "id": "eu_expansion",
+      "label": "EU:n laajentuminen",
+      "prerequisites": ["eu_formation", "eu_membership"],
+      "enables": ["eu_decision_making"]
+    },
+    "public_sector_private_sector": {
+      "id": "public_sector_private_sector",
+      "label": "Julkinen ja yksityinen sektori",
+      "prerequisites": ["local_services"],
+      "enables": ["tax_basics"]
+    },
+    "decision_making": {
+      "id": "decision_making",
+      "label": "Päätöksenteko kunnassa ja valtiossa",
+      "prerequisites": ["democracy_basics"],
+      "enables": ["parliament_government"]
+    }
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "7": {
+    "description": "Kemia, luokka 7: Aineen rakenne ja aineiden ominaisuudet",
+    "topics": [
+      "Aineen kolme olomuotoa (kiinteä, neste, kaasu)",
+      "Atomi ja molekyyli",
+      "Alkuaineet ja yhdisteet",
+      "Kemiallinen merkki ja kaava",
+      "Seokset (homogeeniset ja heterogeeniset)",
+      "Liuokset ja liukoisuus",
+      "Hapot ja emäkset (perusteet)",
+      "pH-asteikko",
+      "Kemian laboratorioturvallisuus",
+      "Jaksollinen järjestelmä (perusteet)"
+    ],
+    "learning_objectives": [
+      "Ymmärtää aineen olomuotojen erot",
+      "Osaa erottaa alkuaineet ja yhdisteet",
+      "Tunnistaa yleisimpiä kemiallisia merkkejä",
+      "Ymmärtää seoksen ja yhdisteen eron",
+      "Osaa mitata pH:ta ja tulkita tuloksia",
+      "Tietää laboratorioturvallisuuden perusteet",
+      "Tunnistaa jaksollisen järjestelmän pääryhmät"
+    ],
+    "formulas": [
+      "H₂O (vesi)",
+      "O₂ (happi)",
+      "CO₂ (hiilidioksidi)",
+      "NaCl (suola)",
+      "H₂SO₄ (rikkihappo)",
+      "HCl (suolahappo)",
+      "NaOH (natriumhydroksidi)"
+    ],
+    "key_concepts": [
+      "atomi",
+      "molekyyli",
+      "alkuaine",
+      "yhdiste",
+      "seos",
+      "liuos",
+      "happo",
+      "emäs",
+      "pH",
+      "kemiallinen kaava"
+    ],
+    "context": "Seitsemännellä luokalla kemian opetus aloitetaan aineen rakenteen ja ominaisuuksien tutkimisella. Oppilaat oppivat ymmärtämään aineen rakennetta ja tunnistamaan yksinkertaisia kemian merkintätapoja."
+  },
+  "8": {
+    "description": "Kemia, luokka 8: Kemialliset reaktiot ja yhtälöt",
+    "topics": [
+      "Kemiallinen reaktio (lähtöaineet ja tuotteet)",
+      "Reaktioyhtälön kirjoittaminen",
+      "Reaktioyhtälön tasapainottaminen",
+      "Palaminen ja hapettuminen",
+      "Metallien ja happojen reaktiot",
+      "Neutralointi (happo + emäs → suola + vesi)",
+      "Atomin rakenne (protonit, neutronit, elektronit)",
+      "Jaksollinen järjestelmä (ryhmät ja jaksot)",
+      "Kemiallinen sidos (ioni- ja kovalenttinen)",
+      "Energian muutokset reaktioissa (ekso-/endoterminen)"
+    ],
+    "learning_objectives": [
+      "Osaa kirjoittaa yksinkertaisia reaktioyhtälöitä",
+      "Osaa tasapainottaa reaktioyhtälöitä",
+      "Ymmärtää palamisen kemiallisen prosessin",
+      "Osaa selittää atomin rakenteen",
+      "Tunnistaa jaksollisen järjestelmän ryhmät",
+      "Ymmärtää ionisidoksen ja kovalenttisen sidoksen eron",
+      "Osaa tunnistaa eksotermisiä ja endotermisiä reaktioita"
+    ],
+    "formulas": [
+      "2H₂ + O₂ → 2H₂O (vedyn palaminen)",
+      "C + O₂ → CO₂ (hiilen palaminen)",
+      "CH₄ + 2O₂ → CO₂ + 2H₂O (metaanin palaminen)",
+      "Zn + 2HCl → ZnCl₂ + H₂ (metalli + happo)",
+      "HCl + NaOH → NaCl + H₂O (neutralointi)",
+      "2Na + Cl₂ → 2NaCl (natriumkloridin muodostus)"
+    ],
+    "key_concepts": [
+      "reaktioyhtälö",
+      "tasapainottaminen",
+      "palaminen",
+      "hapettuminen",
+      "neutralointi",
+      "protoni",
+      "neutroni",
+      "elektroni",
+      "kemiallinen sidos",
+      "eksoterminen",
+      "endoterminen"
+    ],
+    "context": "Kahdeksannella luokalla kemiassa syvennytään kemiallisiin reaktioihin ja niiden merkintätapoihin. Oppilaat oppivat kirjoittamaan ja tasapainottamaan reaktioyhtälöitä sekä ymmärtämään atomin rakenteen."
+  },
+  "9": {
+    "description": "Kemia, luokka 9: Orgaaninen kemia ja kemian sovellukset",
+    "topics": [
+      "Hiili ja orgaaniset yhdisteet",
+      "Hiilivedyt (alkaanit, alkeenit, alkyynit)",
+      "Funktionaaliset ryhmät (alkoholit, karboksyylihapot)",
+      "Polymeerit ja muovit",
+      "Biokemia (hiilihydraatit, proteiinit, rasvat)",
+      "Hapetus-pelkistysreaktiot",
+      "Sähkökemia ja paristot",
+      "Kemia ja ympäristö (ilmansaasteet, kasvihuoneilmiö)",
+      "Energianlähteet ja polttoaineet",
+      "Kemian merkitys yhteiskunnassa"
+    ],
+    "learning_objectives": [
+      "Ymmärtää orgaanisen kemian perusteet",
+      "Tunnistaa hiilivetyjen rakenteita",
+      "Osaa nimetä yksinkertaisia orgaanisia yhdisteitä",
+      "Ymmärtää polymeerien merkityksen",
+      "Tietää biokemian pääryhmät",
+      "Osaa selittää hapetus-pelkistysreaktioita",
+      "Ymmärtää paristojen toimintaperiaatteen",
+      "Osaa arvioida kemian ympäristövaikutuksia"
+    ],
+    "formulas": [
+      "CH₄ (metaani)",
+      "C₂H₆ (etaani)",
+      "C₂H₅OH (etanoli)",
+      "CH₃COOH (etikkahappo)",
+      "C₆H₁₂O₆ (glukoosi)",
+      "(C₂H₄)ₙ (polyeteeni)",
+      "2H₂O → 2H₂ + O₂ (veden elektrolyysi)"
+    ],
+    "key_concepts": [
+      "orgaaninen kemia",
+      "hiiliyhdiste",
+      "alkaani",
+      "alkeeni",
+      "alkoholi",
+      "karboksyylihappo",
+      "polymeeri",
+      "hapetus",
+      "pelkistys",
+      "sähkökemia",
+      "kestävä kehitys"
+    ],
+    "context": "Yhdeksännellä luokalla kemiassa tutustutaan orgaaniseen kemiaan ja kemian sovelluksiin yhteiskunnassa. Oppilaat oppivat ymmärtämään kemian roolin ympäristökysymyksissä ja teknologiassa."
+  }
+}

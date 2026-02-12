@@ -1,8 +1,57 @@
-import { generateWithClaude, MessageContent } from './anthropic';
+import * as providerRouter from './providerRouter';
+import type { AIMessageContent, AIProvider } from './providerTypes';
 import { Subject, Difficulty } from '@/types';
 import { createLogger } from '@/lib/logger';
+import { selectModelForTask } from './modelSelector';
 
 const logger = createLogger({ module: 'topicIdentifier' });
+
+const TOPIC_FI_REPLACEMENTS: Array<[RegExp, string]> = [
+  [/\bpractical communication\b/gi, 'käytännön viestintä'],
+  [/\bmodal\s+verbit\b/gi, 'modaaliverbit'],
+  [/\bmodal verbs?\b/gi, 'modaaliverbit'],
+  [/\benglish\b/gi, 'englanti'],
+  [/\bculture\b/gi, 'kulttuuri'],
+  [/\breading comprehension\b/gi, 'luetun ymmärtäminen'],
+  [/\blistening comprehension\b/gi, 'kuullun ymmärtäminen'],
+  [/\bsentence structure\b/gi, 'lauseen rakenne'],
+  [/\bpresent simple\b/gi, 'preesens'],
+  [/\bpast simple\b/gi, 'imperfekti'],
+  [/\bpresent perfect\b/gi, 'perfekti'],
+  [/\bparts of speech\b/gi, 'sanaluokat'],
+  [/\bword order\b/gi, 'sanajärjestys'],
+  [/\bverb tenses\b/gi, 'aikamuodot'],
+  [/\bprepositions\b/gi, 'prepositiot'],
+  [/\bpronouns\b/gi, 'pronominit'],
+  [/\badjectives\b/gi, 'adjektiivit'],
+  [/\bnouns\b/gi, 'substantiivit'],
+  [/\badverbs\b/gi, 'adverbit'],
+  [/\barticles\b/gi, 'artikkelit'],
+  [/\bconjunctions\b/gi, 'konjunktiot'],
+  [/\bvocabulary\b/gi, 'sanasto'],
+  [/\bgrammar\b/gi, 'kielioppi'],
+  [/\bverbs\b/gi, 'verbit'],
+  [/\bverb\b/gi, 'verbi'],
+  [/\btenses\b/gi, 'aikamuodot'],
+  [/\bwriting\b/gi, 'kirjoittaminen'],
+  [/\bspeaking\b/gi, 'puhuminen'],
+  [/\blistening\b/gi, 'kuuntelu'],
+  [/\breading\b/gi, 'lukeminen'],
+  [/\band\b/gi, 'ja'],
+  [/\s*&\s*/g, ' ja '],
+];
+
+function normalizeTopicToFinnish(input: string): string {
+  let normalized = input.trim();
+  for (const [pattern, replacement] of TOPIC_FI_REPLACEMENTS) {
+    normalized = normalized.replace(pattern, replacement);
+  }
+  normalized = normalized
+    .replace(/\s+ja\s+ja\s+/gi, ' ja ')
+    .replace(/\benglanti\s+aikamuodot\b/gi, 'englannin aikamuodot');
+  normalized = normalized.replace(/\s+/g, ' ').trim();
+  return normalized || input;
+}
 
 export interface IdentifyTopicsParams {
   subject: Subject;
@@ -13,6 +62,11 @@ export interface IdentifyTopicsParams {
     name: string;
     data: string; // base64
   }>;
+  targetProvider?: AIProvider;
+}
+
+interface IdentifyTopicsDeps {
+  generateWithAI?: typeof providerRouter.generateWithAI;
 }
 
 /**
@@ -35,6 +89,7 @@ export interface TopicAnalysisMetadata {
   estimatedDifficulty: Difficulty; // Overall material difficulty
   completeness: number;            // 0.85 (85% coverage)
   materialType?: 'textbook' | 'worksheet' | 'notes' | 'mixed';
+  recommendedQuestionPoolSize?: number;
 }
 
 /**
@@ -61,12 +116,13 @@ export function getSimpleTopics(result: TopicAnalysisResult): string[] {
  * The identified topics are then used for balanced question generation.
  */
 export async function identifyTopics(
-  params: IdentifyTopicsParams
+  params: IdentifyTopicsParams,
+  deps: IdentifyTopicsDeps = {}
 ): Promise<TopicAnalysisResult> {
-  const { subject, grade, materialText, materialFiles } = params;
+  const { subject, grade, materialText, materialFiles, targetProvider } = params;
 
   // Build message content
-  const messageContent: MessageContent[] = [];
+  const messageContent: AIMessageContent[] = [];
 
   // Add uploaded files
   if (materialFiles && materialFiles.length > 0) {
@@ -93,28 +149,20 @@ export async function identifyTopics(
     }
   }
 
-  // Construct enhanced topic identification prompt
-  const prompt = `Analysoi seuraava ${subject}-aiheen oppimateriaali ${grade ? `(luokka ${grade})` : ''} ja tunnista 3-5 korkeantason aihealuetta TÄYDELLISINE metatietoineen.
-
-${materialText ? `MATERIAALI:\n${materialText}\n\n` : ''}
-
-TEHTÄVÄ:
-Tunnista materiaalist 3-5 KORKEANTASON aihealuetta ja anna jokaiselle:
-1. Coverage: Kuinka suuren osan materiaalista aihealue kattaa (desimaaliluku 0-1)
-2. Difficulty: helppo tai normaali
-3. Keywords: 3-5 keskeistä käsitettä tälle aihealueelle
-4. Subtopics: 2-4 aliaihealuetta
-5. Importance: high, medium tai low (oppimistavoitteiden kannalta)
-
-JSON VASTAUSMUOTO:
-{
+  // Provider-neutral compact prompt.
+  // Intent-critical constraints: 3-5 topics, Finnish naming, coverage sum 1.0, strict JSON-only output.
+  const promptSections = [
+    `Analysoi ${subject}-oppimateriaali ${grade ? `(luokka ${grade})` : ''}.`,
+    materialText ? `MATERIAALI:\n${materialText}` : '',
+    'PALAUTA VAIN YKSI JSON-OBJEKTI. Ei markdownia, ei selitystä JSON:n ulkopuolella.',
+    `{
   "topics": [
     {
-      "name": "Aihealue nimi (1-3 sanaa)",
-      "coverage": 0.4,
+      "name": "Aihealue nimi suomeksi",
+      "coverage": 0.34,
       "difficulty": "helppo",
-      "keywords": ["avainsana1", "avainsana2", "avainsana3"],
-      "subtopics": ["Aliaihealue 1", "Aliaihealue 2"],
+      "keywords": ["k1", "k2", "k3"],
+      "subtopics": ["ala-aihe 1", "ala-aihe 2"],
       "importance": "high"
     }
   ],
@@ -124,88 +172,28 @@ JSON VASTAUSMUOTO:
     "completeness": 0.85,
     "materialType": "textbook"
   }
-}
-
-COVERAGE OHJEET:
-- TÄRKEÄÄ: Kaikkien aihealueiden coverage-arvojen SUMMA pitää olla 1.0 (eli 100%)
-- Jos Geometria kattaa 45% materiaalista → coverage: 0.45
-- Jos Laskutoimitukset 35% → coverage: 0.35
-- Jos Luvut 20% → coverage: 0.20
-- Summa: 0.45 + 0.35 + 0.20 = 1.0 ✓
-- Isoimman aihealueen coverage oltava vähintään 0.25
-- Pienimmän aihealueen coverage oltava vähintään 0.15
-
-DIFFICULTY OHJEET:
-- helppo: Perusasiat, tunnistaminen, yksinkertaiset käsitteet
-- normaali: Soveltaminen, ymmärtäminen, monimutkaisemmat ongelmat
-
-KEYWORDS OHJEET:
-- 3-5 konkreettista käsitettä per aihealue
-- Käytä SPESIFISIÄ termejä, ei yleiskäsitteitä
-- HYVÄ: "pinta-ala", "suorakulmio", "piiri", "kolmio"
-- HUONO: "geometria", "matemaattiset käsitteet"
-- Englanninkielisissä aineissa käytä englantia keywords-kentässä
-
-SUBTOPICS OHJEET:
-- 2-4 aliaihealuetta per pääaihealue
-- Tarkempi jaottelu kuin pääaihealue
-- HYVÄ: Geometria → ["Pinta-alat", "Piiri ja kehä", "Kolmiot"]
-- HUONO: Geometria → ["Matematiikka", "Laskut"]
-
-IMPORTANCE OHJEET:
-- high: Keskeinen oppimistavoite, paljon materiaalia, kriittinen ymmärrys
-- medium: Tärkeä mutta ei pääfokus, tukee muita aihealueita
-- low: Sivujuonne, lisätieto, vähän materiaalia
-
-METADATA OHJEET:
-- totalConcepts: Montako erillistä käsitettä materiaalissa (arvio 5-20)
-- estimatedDifficulty: Yleinen vaikeustaso koko materiaalille
-- completeness: 0.0-1.0, kuinka kattavasti materiaali käsittelee aihetta
-- materialType: "textbook" (oppikirja), "worksheet" (tehtäviä), "notes" (muistiinpanot), "mixed"
-
-ESIMERKKEJÄ:
-
-Matematiikka (Geometria):
-{
-  "topics": [
-    {
-      "name": "Pinta-alat",
-      "coverage": 0.45,
-      "difficulty": "normaali",
-      "keywords": ["suorakulmio", "kolmio", "ympyrä", "pinta-ala"],
-      "subtopics": ["Suorakulmion pinta-ala", "Kolmion pinta-ala", "Ympyrän pinta-ala"],
-      "importance": "high"
-    },
-    {
-      "name": "Piiri ja kehä",
-      "coverage": 0.35,
-      "difficulty": "helppo",
-      "keywords": ["piiri", "kehä", "sivujen summa"],
-      "subtopics": ["Monikulmion piiri", "Ympyrän kehä"],
-      "importance": "high"
-    },
-    {
-      "name": "Tilavuudet",
-      "coverage": 0.20,
-      "difficulty": "normaali",
-      "keywords": ["kuutio", "tilavuus", "särmä"],
-      "subtopics": ["Kuution tilavuus", "Suorakulmaisen särmiön tilavuus"],
-      "importance": "medium"
-    }
-  ],
-  "metadata": {
-    "totalConcepts": 12,
-    "estimatedDifficulty": "normaali",
-    "completeness": 0.90,
-    "materialType": "textbook"
-  }
-}
-
-TÄRKEÄÄ:
-- Vastaa PELKÄLLÄ JSON-objektilla
-- Älä lisää selityksiä tai muuta tekstiä
-- Varmista että coverage-arvot summautuvat 1.0:ksi
-- Anna 3-5 aihealuetta (ei vähemmän, ei enemmän)`;
+}`,
+    [
+      'SÄÄNNÖT:',
+      '- Luo 3-5 korkeantason aihealuetta.',
+      '- coverage on 0..1 ja topicien summa = 1.0 (sallittu pyöristysvirhe).',
+      '- Suurin coverage >= 0.25, pienin >= 0.15.',
+      '- difficulty vain: "helppo" | "normaali".',
+      '- keywords: 3-5 konkreettista käsitettä per topic.',
+      '- subtopics: 2-4 aliaihetta per topic.',
+      '- importance vain: "high" | "medium" | "low".',
+      '- metadata.materialType vain: "textbook" | "worksheet" | "notes" | "mixed".',
+      '- name- ja subtopics-arvot suomeksi.',
+    ].join('\n'),
+    [
+      'OUTPUT-GUARD:',
+      '- Älä palauta tyhjää topics-listaa.',
+      '- Älä lisää tekstiä JSON:n ulkopuolelle.',
+      '- Jos olet epävarma, palauta silti validi JSON annetulla skeemalla.',
+      '- Älä käytä trailing comma -merkintää.',
+    ].join('\n'),
+  ];
+  const prompt = promptSections.filter(Boolean).join('\n\n');
 
   messageContent.push({
     type: 'text',
@@ -223,7 +211,33 @@ TÄRKEÄÄ:
   );
 
   // Call AI with larger token limit for enhanced response
-  const response = await generateWithClaude(messageContent, 2000);
+  const selection = selectModelForTask('topic_identification', { targetProvider });
+  const aiCallStartedAt = Date.now();
+  logger.info(
+    {
+      provider: selection.provider,
+      model: selection.model,
+      maxTokens: 3000,
+      messageCount: messageContent.length,
+    },
+    'Calling AI for topic identification'
+  );
+  const generateWithAI = deps.generateWithAI ?? providerRouter.generateWithAI;
+  const response = await generateWithAI(messageContent, {
+    provider: selection.provider,
+    model: selection.model,
+    maxTokens: 3000,
+  });
+  logger.info(
+    {
+      provider: selection.provider,
+      model: selection.model,
+      inputTokens: response.usage?.input_tokens,
+      outputTokens: response.usage?.output_tokens,
+      latencyMs: Date.now() - aiCallStartedAt,
+    },
+    'AI response received for topic identification'
+  );
 
   // Parse JSON response
   const cleanContent = response.content.replace(/```json|```/g, '').trim();
@@ -399,11 +413,11 @@ TÄRKEÄÄ:
 
   // Build enhanced result
   const enhancedTopics: EnhancedTopic[] = result.topics.map(t => ({
-    name: t.name,
+    name: normalizeTopicToFinnish(t.name),
     coverage: t.coverage,
     difficulty: t.difficulty as Difficulty,
     keywords: t.keywords,
-    subtopics: t.subtopics,
+    subtopics: t.subtopics.map(normalizeTopicToFinnish),
     importance: t.importance as 'high' | 'medium' | 'low',
   }));
 

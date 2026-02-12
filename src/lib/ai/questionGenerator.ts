@@ -7,29 +7,37 @@
  *
  * Components:
  * - PromptLoader: Loads prompt modules and substitutes variables
- * - PromptBuilder: Assembles prompts from modular templates
+ * - PromptBuilder: Assembles provider-neutral contract prompts from modular templates
  *
  * Template structure:
- * - core/ (format, topic tagging, flashcard rules, distributions)
+ * - core/ (format, topic tagging, flashcard rules, guidance)
  * - types/ (language, math, written, skills, concepts)
  * - subjects/ (curriculum JSON per subject)
  *
  * Metadata:
  * - /src/config/prompt-templates/metadata/*.json (difficulty instructions)
  *
+ * Intent-critical constraints (JSON contract, topic/skill coverage, Finnish pedagogy)
+ * are centralized under /src/config/prompt-templates/core/.
  * For template editing, see /Prompt-separation-plan.md
  */
 import { Question, Subject, Difficulty, SequentialItem, isSequentialItemArray, isStringArray } from '@/types';
-import { generateWithClaude, MessageContent } from './anthropic';
+import * as providerRouter from './providerRouter';
+import type { AIMessageContent } from './providerTypes';
+import type { AIProvider } from './providerTypes';
 import { shuffleArray } from '@/lib/utils';
 import { aiQuestionSchema } from '@/lib/validation/schemas';
 import { createLogger } from '@/lib/logger';
-import { PromptBuilder } from '@/lib/prompts/PromptBuilder';
+import { buildVisualQuestionPrompt, PromptBuilder } from '@/lib/prompts/PromptBuilder';
 import { PromptLoader } from '@/lib/prompts/PromptLoader';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
 import { isRuleBasedSubject, validateRuleBasedQuestion } from '@/lib/utils/subjectClassification';
+import { dependencyResolver } from '@/lib/utils/dependencyGraph';
+import { extractMaterialWithVisuals, parseImageReference, type ExtractedVisual } from '@/lib/utils/visualExtraction';
+import { selectModelForTask } from './modelSelector';
 
 const logger = createLogger({ module: 'questionGenerator' });
+const VISUAL_QUESTION_SUPPORT_ENABLED = false;
 
 const normalizeSequentialItems = (items: unknown): SequentialItem[] => {
   if (isSequentialItemArray(items)) {
@@ -167,6 +175,46 @@ const validateTargetWordCoverage = (
   };
 };
 
+const validateQuestionVariety = (
+  questions: Array<{ type?: string }>
+): {
+  valid: boolean;
+  warnings: string[];
+  typeCounts: Record<string, number>;
+} => {
+  if (questions.length === 0) {
+    return { valid: true, warnings: [], typeCounts: {} };
+  }
+
+  const typeCounts = questions.reduce<Record<string, number>>((acc, question) => {
+    const type = question.type ?? 'unknown';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
+
+  const total = questions.length;
+  const warnings: string[] = [];
+
+  Object.entries(typeCounts).forEach(([type, count]) => {
+    const percentage = (count / total) * 100;
+    if (percentage > 80) {
+      warnings.push(
+        `${Math.round(percentage)}% kysymyksistä on tyyppiä "${type}" - harkitse monipuolisempaa yhdistelmää`
+      );
+    }
+  });
+
+  if (Object.keys(typeCounts).length === 1 && total > 5) {
+    warnings.push('Kaikki kysymykset ovat samaa tyyppiä - lisää monipuolisuutta.');
+  }
+
+  return {
+    valid: warnings.length === 0,
+    warnings,
+    typeCounts,
+  };
+};
+
 export interface GenerateQuestionsParams {
   subject: Subject;
   subjectType?: SubjectType;
@@ -186,13 +234,127 @@ export interface GenerateQuestionsParams {
   targetWords?: string[]; // Target vocabulary words that must be included
   enhancedTopics?: import('@/lib/ai/topicIdentifier').EnhancedTopic[]; // Enhanced topics with coverage/keywords (Phase 2)
   distribution?: import('@/lib/utils/questionDistribution').TopicDistribution[]; // Calculated distribution (Phase 2)
+  contentType?: 'vocabulary' | 'grammar' | 'mixed';
+  visuals?: ExtractedVisual[];
+  targetProvider?: AIProvider;
+}
+
+interface GenerateQuestionsDeps {
+  generateWithAI?: typeof providerRouter.generateWithAI;
+}
+
+function toAnswerString(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return '';
+}
+
+function normalizeQuestionType(rawType: unknown, mode: 'quiz' | 'flashcard'): string | undefined {
+  if (mode === 'flashcard') {
+    return 'flashcard';
+  }
+  if (typeof rawType !== 'string') {
+    return undefined;
+  }
+
+  const normalized = rawType.trim().toLowerCase().replace(/[\s-]/g, '_');
+  const typeMap: Record<string, string> = {
+    mcq: 'multiple_choice',
+    multiple_choice_question: 'multiple_choice',
+    multiplechoice: 'multiple_choice',
+    multiple_choice: 'multiple_choice',
+    fill_in_the_blank: 'fill_blank',
+    fill_blank: 'fill_blank',
+    truefalse: 'true_false',
+    true_false: 'true_false',
+    shortanswer: 'short_answer',
+    short_answer: 'short_answer',
+    matching: 'matching',
+    sequential: 'sequential',
+    flashcard: 'flashcard',
+  };
+
+  return typeMap[normalized] ?? normalized;
+}
+
+function normalizeAIQuestionShape(
+  rawQuestion: any,
+  context: {
+    mode: 'quiz' | 'flashcard';
+    fallbackTopic?: string;
+    fallbackSubtopic?: string;
+    index: number;
+  }
+) {
+  if (!rawQuestion || typeof rawQuestion !== 'object') {
+    return rawQuestion;
+  }
+
+  const question = { ...rawQuestion };
+
+  if (typeof question.question !== 'string') {
+    question.question = question.question_text ?? question.prompt ?? question.front ?? question.title;
+  }
+
+  const normalizedType = normalizeQuestionType(
+    question.type ?? question.question_type ?? question.kind,
+    context.mode
+  );
+  if (normalizedType) {
+    question.type = normalizedType;
+  }
+
+  if (question.correct_answer === undefined || question.correct_answer === null || question.correct_answer === '') {
+    question.correct_answer =
+      question.correctAnswer ??
+      question.answer ??
+      question.correct ??
+      question.expected_answer ??
+      question.expectedAnswer;
+  }
+
+  if (!question.acceptable_answers && Array.isArray(question.acceptableAnswers)) {
+    question.acceptable_answers = question.acceptableAnswers;
+  }
+
+  if (!question.options && Array.isArray(question.choices)) {
+    question.options = question.choices;
+  }
+
+  if (!question.explanation && typeof question.rationale === 'string') {
+    question.explanation = question.rationale;
+  }
+  if (!question.explanation || String(question.explanation).trim().length < 10) {
+    const fallbackAnswer =
+      typeof question.correct_answer === 'string'
+        ? question.correct_answer
+        : Array.isArray(question.correct_answer)
+          ? question.correct_answer.join(', ')
+          : String(question.correct_answer ?? '');
+    question.explanation = `Oikea vastaus on ${fallbackAnswer || 'annettu vastaus'}.`;
+  }
+
+  if (typeof question.topic !== 'string' || question.topic.trim().length === 0) {
+    question.topic = context.fallbackTopic || 'Yleinen';
+  }
+
+  if ((typeof question.subtopic !== 'string' || question.subtopic.trim().length === 0) && context.fallbackSubtopic) {
+    question.subtopic = context.fallbackSubtopic;
+  }
+
+  if (context.mode === 'flashcard') {
+    question.type = 'flashcard';
+  }
+
+  return question;
 }
 
 /**
  * Generate questions using AI
  */
 export async function generateQuestions(
-  params: GenerateQuestionsParams
+  params: GenerateQuestionsParams,
+  deps: GenerateQuestionsDeps = {}
 ): Promise<Question[]> {
   const {
     subject,
@@ -209,7 +371,28 @@ export async function generateQuestions(
     targetWords,
     enhancedTopics,
     distribution,
+    contentType,
+    visuals,
+    targetProvider,
   } = params;
+
+  const extractedMaterial = visuals
+    ? {
+      text: materialText ?? '',
+      visuals,
+      metadata: {
+        hasVisuals: visuals.length > 0,
+        visualCount: visuals.length,
+        imageFileCount: visuals.length,
+        pdfFileCount: 0,
+      },
+    }
+    : await extractMaterialWithVisuals({
+      materialText,
+      materialFiles,
+      maxVisuals: 8,
+    });
+  const effectiveVisuals = VISUAL_QUESTION_SUPPORT_ENABLED ? extractedMaterial.visuals : [];
 
   logger.info(
     {
@@ -224,12 +407,13 @@ export async function generateQuestions(
       hasEnhancedTopics: !!enhancedTopics,
       enhancedTopicCount: enhancedTopics?.length,
       hasDistribution: !!distribution,
+      visualCount: effectiveVisuals.length,
     },
     'Starting question generation'
   );
 
   // Build message content
-  const messageContent: MessageContent[] = [];
+  const messageContent: AIMessageContent[] = [];
 
   // Add uploaded files
   if (materialFiles && materialFiles.length > 0) {
@@ -287,7 +471,16 @@ export async function generateQuestions(
       targetWords,
       enhancedTopics,
       distribution,
+      contentType,
     });
+
+    const visualPrompt = buildVisualQuestionPrompt({
+      visuals: effectiveVisuals,
+      questionCount,
+    });
+    if (visualPrompt) {
+      prompt = `${prompt}\n\n${visualPrompt}`;
+    }
 
     logger.info(
       {
@@ -316,24 +509,89 @@ export async function generateQuestions(
     text: prompt,
   });
 
+  const hasVisuals = effectiveVisuals.length > 0;
+  const modelTask = hasVisuals ? 'visual_questions' : mode === 'flashcard' ? 'flashcard_creation' : 'question_generation';
+  const selectedModel = selectModelForTask(modelTask, {
+    hasVisuals,
+    isConceptual: contentType === 'grammar' || contentType === 'mixed',
+    subject,
+    targetProvider,
+  });
+  const aiCallStartedAt = Date.now();
+  logger.info(
+    {
+      provider: selectedModel.provider,
+      model: selectedModel.model,
+      modelTask,
+      messageCount: messageContent.length,
+    },
+    'Calling AI for question generation'
+  );
+
   // Call AI
-  const response = await generateWithClaude(messageContent);
+  const generateWithAI = deps.generateWithAI ?? providerRouter.generateWithAI;
+  let response = await generateWithAI(messageContent, {
+    provider: selectedModel.provider,
+    model: selectedModel.model,
+  });
+  logger.info(
+    {
+      provider: selectedModel.provider,
+      model: selectedModel.model,
+      inputTokens: response.usage?.input_tokens,
+      outputTokens: response.usage?.output_tokens,
+      latencyMs: Date.now() - aiCallStartedAt,
+    },
+    'AI response received for question generation'
+  );
 
   // Parse JSON response
-  const cleanContent = response.content.replace(/```json|```/g, '').trim();
+  let cleanContent = response.content.replace(/```json|```/g, '').trim();
+
+  // GPT-5-mini can occasionally return an empty list for large quiz payloads.
+  // Retry once with a stronger model before failing.
+  if (
+    mode === 'quiz' &&
+    selectedModel.provider === 'openai' &&
+    (cleanContent === '[]' || cleanContent.length < 3)
+  ) {
+    logger.warn(
+      { model: selectedModel.model, contentLength: cleanContent.length },
+      'OpenAI returned empty/near-empty quiz payload - retrying once with gpt-5.1'
+    );
+    response = await generateWithAI(messageContent, {
+      provider: 'openai',
+      model: 'gpt-5.1',
+      maxTokens: 16000,
+    });
+    cleanContent = response.content.replace(/```json|```/g, '').trim();
+  }
 
   let parsedQuestions: any[];
   try {
-    parsedQuestions = JSON.parse(cleanContent);
-    logger.info(
-      { questionCount: parsedQuestions.length },
-      'Successfully parsed AI response'
-    );
+    const parsedResponse = JSON.parse(cleanContent);
+    if (Array.isArray(parsedResponse)) {
+      parsedQuestions = parsedResponse;
+    } else if (parsedResponse && Array.isArray((parsedResponse as { questions?: unknown[] }).questions)) {
+      parsedQuestions = (parsedResponse as { questions: unknown[] }).questions as any[];
+      logger.warn('AI returned wrapped response object - using "questions" array');
+    } else {
+      throw new Error('AI response JSON is not an array');
+    }
+    logger.info({ questionCount: parsedQuestions.length }, 'Successfully parsed AI response');
   } catch (error) {
     const sanitizedContent = sanitizeJsonString(cleanContent);
 
     try {
-      parsedQuestions = JSON.parse(sanitizedContent);
+      const parsedResponse = JSON.parse(sanitizedContent);
+      if (Array.isArray(parsedResponse)) {
+        parsedQuestions = parsedResponse;
+      } else if (parsedResponse && Array.isArray((parsedResponse as { questions?: unknown[] }).questions)) {
+        parsedQuestions = (parsedResponse as { questions: unknown[] }).questions as any[];
+        logger.warn('AI returned wrapped response object after sanitizing - using "questions" array');
+      } else {
+        throw new Error('AI response JSON is not an array');
+      }
       logger.warn(
         {
           error: error instanceof Error ? error.message : String(error),
@@ -365,11 +623,16 @@ export async function generateQuestions(
   const normalizedSubject = subject.trim().toLowerCase();
 
   // Validate each question individually
-  parsedQuestions.forEach((question, index) => {
+  parsedQuestions.forEach((rawQuestion, index) => {
+    const question = normalizeAIQuestionShape(rawQuestion, {
+      mode,
+      fallbackTopic: topic ?? identifiedTopics?.[index % Math.max(identifiedTopics?.length || 1, 1)],
+      fallbackSubtopic: subtopic,
+      index,
+    });
     // CRITICAL: Flashcard mode must exclude passive recognition question types
     if (mode === 'flashcard') {
-      const invalidFlashcardTypes = ['multiple_choice', 'true_false', 'sequential'];
-      if (invalidFlashcardTypes.includes(question.type)) {
+      if (question.type && question.type !== 'flashcard') {
         excludedFlashcardTypes.push({
           index,
           type: question.type,
@@ -385,11 +648,36 @@ export async function generateQuestions(
           },
           'Excluded invalid question type for flashcard mode - AI generated passive recognition type'
         );
-        return; // Skip this question
+        return;
+      }
+
+      // Accept prompt format using "answer" while normalizing to internal schema.
+      if (typeof question.answer === 'string' && !question.correct_answer) {
+        question.correct_answer = question.answer;
+      }
+      question.type = 'flashcard';
+
+      // Flashcards should be direct Q&A, not fill-in-the-blank prompts.
+      if (typeof question.question === 'string' && question.question.includes('___')) {
+        excludedFlashcardTypes.push({
+          index,
+          type: 'fill_blank_pattern',
+          question: {
+            questionPreview: question.question.substring(0, 50),
+          },
+        });
+        logger.warn(
+          {
+            questionIndex: index,
+            questionPreview: question.question.substring(0, 50),
+          },
+          'Excluded invalid flashcard format containing blank placeholder'
+        );
+        return;
       }
 
       // CRITICAL: Validate rule-based format for applicable subjects
-      const isRuleBased = isRuleBasedSubject(normalizedSubject, topic);
+      const isRuleBased = isRuleBasedSubject(normalizedSubject, topic, contentType);
       if (isRuleBased) {
         const validation = validateRuleBasedQuestion(
           question,
@@ -457,7 +745,7 @@ export async function generateQuestions(
         mode,
         excludedTypes: excludedFlashcardTypes.map(({ type }) => type),
       },
-      'Excluded invalid question types for flashcard mode (multiple_choice, true_false, sequential not allowed)'
+      'Excluded invalid flashcard formats/types'
     );
   }
 
@@ -595,7 +883,8 @@ export async function generateQuestions(
   // Fail only if we don't have enough valid questions
   // For flashcard mode, be more lenient since we actively filter out question types
   // For rule-based flashcards, be even more lenient (may only have 5-10 rules in material)
-  const isRuleBasedFlashcard = mode === 'flashcard' && isRuleBasedSubject(subject, topic);
+  const isRuleBasedFlashcard =
+    mode === 'flashcard' && isRuleBasedSubject(subject, topic, contentType);
 
   let minRequiredQuestions: number;
   let thresholdDescription: string;
@@ -677,6 +966,28 @@ export async function generateQuestions(
     parsedQuestions = parsedQuestions.slice(0, questionCount);
   }
 
+  if (mode !== 'flashcard') {
+    const varietyCheck = validateQuestionVariety(parsedQuestions);
+    logger.info(
+      {
+        questionCount: parsedQuestions.length,
+        typeCounts: varietyCheck.typeCounts,
+        hasWarnings: varietyCheck.warnings.length > 0,
+      },
+      'Question type variety report'
+    );
+
+    if (!varietyCheck.valid) {
+      logger.warn(
+        {
+          warnings: varietyCheck.warnings,
+          typeCounts: varietyCheck.typeCounts,
+        },
+        'Question type variety warnings'
+      );
+    }
+  }
+
   logger.info(
     {
       validatedQuestionCount: validQuestions.length,
@@ -688,18 +999,38 @@ export async function generateQuestions(
 
   // Validate and transform questions
   const questions: Question[] = parsedQuestions.map((q, index) => {
+    const imageReference = VISUAL_QUESTION_SUPPORT_ENABLED && typeof q.image_reference === 'string'
+      ? q.image_reference
+      : undefined;
+    const imageIndex = parseImageReference(imageReference);
+    const requiresVisual = VISUAL_QUESTION_SUPPORT_ENABLED && Boolean(q.requires_visual ?? imageIndex !== null);
+
     const base = {
       id: '', // Will be set by database
       question_set_id: '', // Will be set by database
       question_text: q.question,
       explanation: q.explanation || '',
       order_index: index,
+      image_reference: imageReference,
+      requires_visual: requiresVisual,
       topic: q.topic,  // High-level topic for stratified sampling
       skill: q.skill,
       subtopic: q.subtopic,
+      concept_id: dependencyResolver.extractConceptIdFromQuestion(subject, {
+        concept_id: q.concept_id,
+        subtopic: q.subtopic,
+        skill: q.skill,
+        topic: q.topic,
+      }) ?? undefined,
     };
 
     switch (q.type) {
+      case 'flashcard':
+        return {
+          ...base,
+          question_type: 'flashcard' as const,
+          correct_answer: toAnswerString(q.correct_answer ?? q.answer),
+        };
       case 'multiple_choice':
         // Shuffle options to prevent pattern memorization
         // Note: Validation ensures options exist and have at least 2 items
@@ -708,14 +1039,14 @@ export async function generateQuestions(
           ...base,
           question_type: 'multiple_choice' as const,
           options: shuffledOptions,
-          correct_answer: q.correct_answer,
+          correct_answer: toAnswerString(q.correct_answer ?? q.answer),
         };
 
       case 'fill_blank':
         return {
           ...base,
           question_type: 'fill_blank' as const,
-          correct_answer: q.correct_answer,
+          correct_answer: toAnswerString(q.correct_answer ?? q.answer),
           acceptable_answers: q.acceptable_answers,
         };
 
@@ -747,7 +1078,7 @@ export async function generateQuestions(
         return {
           ...base,
           question_type: 'short_answer' as const,
-          correct_answer: q.correct_answer,
+          correct_answer: toAnswerString(q.correct_answer ?? q.answer),
           max_length: q.max_length,
         };
 
@@ -761,6 +1092,15 @@ export async function generateQuestions(
         };
 
       default:
+        // In flashcard mode we still force canonical flashcard shape.
+        if (mode === 'flashcard') {
+          return {
+            ...base,
+            question_type: 'flashcard' as const,
+            correct_answer: q.correct_answer || '',
+          };
+        }
+
         // Log unknown type and default to multiple choice
         logger.warn(
           {

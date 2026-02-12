@@ -7,9 +7,12 @@ import {
   identifyTopicsFromMaterial,
   processUploadedFiles,
   generateFlashcardSet,
+  type FlashcardDiagnostics,
   FlashcardGenerationRequest,
 } from '@/lib/api/questionGeneration';
 import { getSimpleTopics } from '@/lib/ai/topicIdentifier';
+import { analyzeMaterialCapacity, validateQuestionCount } from '@/lib/utils/materialAnalysis';
+import { parseRequestedProvider, validateRequestedProvider } from '@/lib/api/modelSelection';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 240; // 4 minutes for flashcard generation
@@ -22,8 +25,10 @@ export async function POST(request: NextRequest) {
 
   try {
     // Verify authentication
+    let userId = '';
     try {
-      await requireAuth();
+      const user = await requireAuth();
+      userId = user.id;
       logger.info('Authentication successful');
     } catch (authError) {
       logger.warn('Authentication failed');
@@ -34,6 +39,11 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
+    const contentType = (formData.get('contentType') as string | null) || 'vocabulary';
+    const bypassCapacityCheckRaw = (formData.get('bypassCapacityCheck') as string | null)?.toLowerCase();
+    const bypassCapacityCheck = bypassCapacityCheckRaw === 'true' || bypassCapacityCheckRaw === '1';
+    const capacityCheckOnlyRaw = (formData.get('capacityCheckOnly') as string | null)?.toLowerCase();
+    const capacityCheckOnly = capacityCheckOnlyRaw === 'true' || capacityCheckOnlyRaw === '1';
 
     // Extract form data
     const targetWordsRaw = formData.get('targetWords') as string | null;
@@ -45,6 +55,13 @@ export async function POST(request: NextRequest) {
     const identifiedTopics = identifiedTopicsRaw
       ? JSON.parse(identifiedTopicsRaw)
       : undefined;
+    const targetProvider = parseRequestedProvider(formData.get('provider'));
+    if (targetProvider) {
+      const modelValidationError = validateRequestedProvider(targetProvider);
+      if (modelValidationError) {
+        return NextResponse.json({ error: modelValidationError }, { status: 400 });
+      }
+    }
 
     const rawData = {
       subject: formData.get('subject') as string,
@@ -57,6 +74,7 @@ export async function POST(request: NextRequest) {
       materialText: (formData.get('materialText') as string | null) || undefined,
       subjectType: (formData.get('subjectType') as string | null) || undefined,
       targetWords,
+      contentType,
     };
 
     // Validate input with Zod schema
@@ -80,6 +98,7 @@ export async function POST(request: NextRequest) {
       subtopic,
       materialText,
       targetWords: validatedTargetWords,
+      contentType: validatedContentType,
     } = validationResult.data;
 
     // Process uploaded files
@@ -96,6 +115,86 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (materialText && materialText.length < 200 && files.length === 0) {
+      logger.warn(
+        { materialLength: materialText.length },
+        'Material text is very short for flashcard generation'
+      );
+
+      return NextResponse.json(
+        {
+          error: 'Materiaali on liian lyhyt muistikorttien luomiseen',
+          details: `Materiaali sisältää vain ${materialText.length} merkkiä. Suosittelemme vähintään 200 merkkiä tai PDF/kuva-tiedoston lisäämistä.`,
+          suggestions: [
+            'Lisää enemmän materiaalitekstiä',
+            'Lataa PDF tai kuva-tiedosto',
+            'Varmista että materiaali sisältää opetettavia sääntöjä tai konsepteja',
+          ],
+        },
+        { status: 400 }
+      );
+    }
+
+    // Grammar flashcards need explicit rule explanations in material.
+    if (validatedContentType === 'grammar') {
+      if (materialText && materialText.length < 300 && files.length === 0) {
+        return NextResponse.json(
+          {
+            error: 'Kielioppimuistikortit vaativat vähintään 300 merkkiä materiaalia',
+            details: `Materiaali sisältää vain ${materialText.length} merkkiä. Lisää sääntöjen selityksiä tai lataa PDF/kuva-tiedosto.`,
+            suggestions: [
+              'Lisää kielioppisääntöjen selityksiä materiaaliin',
+              'Varmista että materiaali sisältää "Miten muodostetaan..." tai "Mikä on..." -muotoisia selityksiä',
+              'Lataa PDF tai kuva-tiedosto jossa on sääntöjen selityksiä',
+              'Jos materiaali sisältää vain sanoja, valitse "Sanasto" sisällön tyyppinä',
+            ],
+          },
+          { status: 400 }
+        );
+      }
+
+      if (materialText) {
+        const hasRuleIndicators =
+          /\b(miten\s+muodostetaan|mikä\s+on|miten\s+käytetään|milloin\s+käytetään|kuinka|how\s+to|how\s+do\s+you|when\s+do\s+you\s+use|what\s+is|rule|sääntö|kaava|formula|kielioppi|grammar|verbi|verb|aikamuoto|tense|preesens|imperfekti|perfekti|partisiippi|taivutus|conjugation)\b/i.test(
+            materialText
+          );
+
+        // Do not hard-block generation based on heuristic keyword checks.
+        // Some valid grammar materials describe rules without the exact trigger phrases.
+        if (!hasRuleIndicators && files.length === 0) {
+          logger.warn(
+            { materialLength: materialText.length, contentType: validatedContentType },
+            'Grammar flashcard material lacks explicit rule indicators - continuing generation'
+          );
+        }
+      }
+    }
+
+    // Material sufficiency analysis before generation.
+    if (materialText && !bypassCapacityCheck) {
+      const capacity = analyzeMaterialCapacity(materialText);
+      const questionCountValidation = validateQuestionCount(questionCount, capacity);
+
+      if (questionCountValidation.status === 'risky' || questionCountValidation.status === 'excessive') {
+        return NextResponse.json({
+          warningRequired: true,
+          capacity,
+          validation: questionCountValidation,
+          message: `Materiaali tukee optimaalisesti ${capacity.optimalQuestionCount} kysymystä, mutta pyysit ${questionCount}.`,
+        });
+      }
+
+      if (capacityCheckOnly) {
+        return NextResponse.json({
+          warningRequired: false,
+          capacity,
+          validation: questionCountValidation,
+        });
+      }
+    } else if (capacityCheckOnly) {
+      return NextResponse.json({ warningRequired: false });
+    }
+
     logger.info(
       {
         subject,
@@ -103,6 +202,10 @@ export async function POST(request: NextRequest) {
         hasTopics: !!identifiedTopics,
         hasText: !!materialText,
         fileCount: files.length,
+        contentType: validatedContentType,
+        bypassCapacityCheck,
+        capacityCheckOnly,
+        provider: targetProvider ?? 'anthropic',
       },
       'Starting flashcard generation'
     );
@@ -118,6 +221,7 @@ export async function POST(request: NextRequest) {
         grade,
         materialText,
         materialFiles: files.length > 0 ? files : undefined,
+        targetProvider,
       });
       topics = getSimpleTopics(topicAnalysis);
     } else {
@@ -141,6 +245,8 @@ export async function POST(request: NextRequest) {
       materialFiles: files.length > 0 ? files : undefined,
       targetWords: validatedTargetWords,
       identifiedTopics: topics,
+      contentType: validatedContentType,
+      targetProvider,
     };
 
     // Pass enhanced topics if available (Phase 2)
@@ -166,28 +272,44 @@ export async function POST(request: NextRequest) {
         questionCount: flashcardSet.questionSet.question_count,
       },
     });
-  } catch (error) {
-    const isProduction = process.env.NODE_ENV === 'production';
+  } catch (err) {
+    logger.error({ error: err }, 'Error generating flashcards');
 
-    // Log full error server-side
-    logger.error(
-      {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: isProduction ? undefined : error instanceof Error ? error.stack : undefined,
-      },
-      'Flashcard generation failed'
-    );
+    const errorMessage = err instanceof Error ? err.message : 'Muistikorttien luonti epäonnistui';
+    const diagnostics =
+      err && typeof err === 'object' && 'diagnostics' in err
+        ? (err as { diagnostics?: FlashcardDiagnostics }).diagnostics
+        : undefined;
 
-    // Return sanitized error to client
-    return NextResponse.json(
-      {
-        error: isProduction
-          ? 'Failed to generate flashcard questions. Please try again later.'
-          : error instanceof Error
-          ? error.message
-          : 'Internal server error',
-      },
-      { status: 500 }
-    );
+    const errorResponse: {
+      success: boolean;
+      error: string;
+      diagnostics?: {
+        materialLength: number;
+        hasGrammarKeywords: boolean;
+        isGrammarSubject: boolean;
+        topicProvided: boolean;
+        suggestedTopic?: string;
+      };
+      suggestions?: string[];
+    } = {
+      success: false,
+      error: errorMessage,
+    };
+
+    if (diagnostics) {
+      errorResponse.diagnostics = {
+        materialLength: diagnostics.materialLength,
+        hasGrammarKeywords: diagnostics.hasGrammarKeywords,
+        isGrammarSubject: diagnostics.isGrammarSubject,
+        topicProvided: diagnostics.topicProvided,
+        suggestedTopic: diagnostics.suggestedTopic,
+      };
+      errorResponse.suggestions = diagnostics.suggestions;
+    }
+
+    const statusCode = errorMessage.includes('Materiaali on liian lyhyt') ? 400 : 500;
+
+    return NextResponse.json(errorResponse, { status: statusCode });
   }
 }

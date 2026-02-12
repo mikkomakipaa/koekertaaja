@@ -1,0 +1,116 @@
+{
+  "grade_4": {
+    "basic_arithmetic": {
+      "id": "basic_arithmetic",
+      "label": "Peruslaskutoimitukset",
+      "prerequisites": [],
+      "enables": ["word_problems", "fractions_intro", "measurement_basics"]
+    },
+    "word_problems": {
+      "id": "word_problems",
+      "label": "Sanalliset tehtävät",
+      "prerequisites": ["basic_arithmetic"],
+      "enables": ["multi_step_problems"]
+    },
+    "fractions_intro": {
+      "id": "fractions_intro",
+      "label": "Murtoluvut (peruskäsite)",
+      "prerequisites": ["basic_arithmetic"],
+      "enables": ["fraction_operations", "decimals"]
+    },
+    "fraction_operations": {
+      "id": "fraction_operations",
+      "label": "Murtolukujen laskutoimitukset",
+      "prerequisites": ["fractions_intro"],
+      "enables": ["percentages", "ratios"]
+    },
+    "decimals": {
+      "id": "decimals",
+      "label": "Desimaaliluvut",
+      "prerequisites": ["fractions_intro"],
+      "enables": ["percentages", "measurement"]
+    },
+    "measurement_basics": {
+      "id": "measurement_basics",
+      "label": "Mittayksiköt ja mittaaminen",
+      "prerequisites": ["basic_arithmetic"],
+      "enables": ["measurement", "area_perimeter"]
+    }
+  },
+  "grade_5": {
+    "measurement": {
+      "id": "measurement",
+      "label": "Pituus, massa ja tilavuus",
+      "prerequisites": ["measurement_basics", "decimals"],
+      "enables": ["area_perimeter", "unit_conversions"]
+    },
+    "negative_numbers": {
+      "id": "negative_numbers",
+      "label": "Negatiiviset luvut",
+      "prerequisites": ["basic_arithmetic"],
+      "enables": ["number_line_extended"]
+    },
+    "area_perimeter": {
+      "id": "area_perimeter",
+      "label": "Pinta-ala ja ympärysmitta",
+      "prerequisites": ["measurement", "basic_arithmetic"],
+      "enables": ["volume", "geometric_calculations"]
+    },
+    "unit_conversions": {
+      "id": "unit_conversions",
+      "label": "Yksikkömuunnokset",
+      "prerequisites": ["measurement", "decimals"],
+      "enables": ["speed_basics"]
+    },
+    "angles": {
+      "id": "angles",
+      "label": "Kulmat",
+      "prerequisites": ["basic_arithmetic"],
+      "enables": ["triangles", "right_triangles"]
+    },
+    "triangles": {
+      "id": "triangles",
+      "label": "Kolmiot",
+      "prerequisites": ["angles"],
+      "enables": ["right_triangles"]
+    }
+  },
+  "grade_6": {
+    "percentages": {
+      "id": "percentages",
+      "label": "Prosenttilaskenta",
+      "prerequisites": ["fraction_operations", "decimals"],
+      "enables": ["interest_calculation", "statistics_intro"]
+    },
+    "ratios": {
+      "id": "ratios",
+      "label": "Suhteet ja verrannot",
+      "prerequisites": ["fraction_operations"],
+      "enables": ["scale_problems", "proportional_reasoning"]
+    },
+    "square_root": {
+      "id": "square_root",
+      "label": "Neliöjuuri",
+      "prerequisites": ["basic_arithmetic"],
+      "enables": ["pythagorean_theorem"]
+    },
+    "right_triangles": {
+      "id": "right_triangles",
+      "label": "Suorakulmainen kolmio",
+      "prerequisites": ["angles", "triangles"],
+      "enables": ["pythagorean_theorem", "trigonometry_intro"]
+    },
+    "pythagorean_theorem": {
+      "id": "pythagorean_theorem",
+      "label": "Pythagoraan lause",
+      "prerequisites": ["right_triangles", "square_root"],
+      "enables": ["distance_formula", "geometric_proofs"]
+    },
+    "statistics_intro": {
+      "id": "statistics_intro",
+      "label": "Tilastot (keskiarvo, mediaani)",
+      "prerequisites": ["percentages"],
+      "enables": ["data_interpretation"]
+    }
+  }
+}

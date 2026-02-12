@@ -3,8 +3,8 @@
  *
  * This test verifies that:
  * 1. Flashcard mode loads the flashcard-rules.txt module
- * 2. Flashcard mode uses flashcard distributions (not quiz distributions)
- * 3. Flashcard distributions exclude passive recognition types
+ * 2. Prompt enforces single flashcard Q&A format
+ * 3. Flashcard mode uses type "flashcard"
  */
 
 import { describe, it, before } from 'node:test';
@@ -33,8 +33,8 @@ describe('Flashcard Template Selection', () => {
 
     // Verify flashcard-specific rules are present
     assert(prompt.includes('FLASHCARD-MOODIN SÄÄNNÖT'));
-    assert(prompt.includes('Flashcardit mittaavat aktiivista muistamista'));
-    assert(prompt.includes('fill_blank, short_answer, matching'));
+    assert(prompt.includes('Käytä VAIN tyyppiä: flashcard'));
+    assert(prompt.includes('KIELIAINEIDEN FLASHCARD-LISÄSÄÄNNÖT'));
   });
 
   it('should NOT load flashcard-rules.txt for quiz mode', async () => {
@@ -48,10 +48,9 @@ describe('Flashcard Template Selection', () => {
 
     // Verify flashcard-specific rules are NOT present
     assert(!prompt.includes('FLASHCARD-MOODIN SÄÄNNÖT'));
-    assert(!prompt.includes('Flashcardit mittaavat aktiivista muistamista'));
   });
 
-  it('should use flashcard distributions for flashcard mode', async () => {
+  it('should use single flashcard guidance for flashcard mode', async () => {
     const prompt = await builder.assemblePrompt({
       subject: 'English' as Subject,
       difficulty: 'normaali' as Difficulty,
@@ -60,29 +59,12 @@ describe('Flashcard Template Selection', () => {
       mode: 'flashcard',
     });
 
-    // Verify flashcard distribution header
-    assert(prompt.includes('KORTTITYYPPIEN JAKAUMA'), 'Missing flashcard distribution header');
-
-    // Verify only allowed flashcard types are included
-    // (fill_blank, short_answer, matching)
-    assert(prompt.match(/60% fill_blank/), `Expected 60% fill_blank in: ${prompt.substring(0, 500)}`);
-    assert(prompt.match(/30% short_answer/), 'Expected 30% short_answer');
-    assert(prompt.match(/10% matching/), 'Expected 10% matching');
-
-    // NOTE: The type templates (language.txt, math.txt, etc.) currently include
-    // quiz-mode question type instructions (MULTIPLE_CHOICE, TRUE_FALSE, SEQUENTIAL).
-    // This is EXPECTED behavior - the templates are shared between quiz and flashcard modes.
-    // The flashcard-rules.txt overrides these with flashcard-specific constraints.
-    //
-    // What matters is that:
-    // 1. Flashcard rules are present
-    // 2. Flashcard distributions (not quiz distributions) are used
-    // 3. The AI generator filters out invalid types at runtime (questionGenerator.ts:221-241)
-    //
-    // Future improvement: Split type templates into quiz-specific and mode-agnostic sections
+    // Verify guidance header and single flashcard type
+    assert(prompt.includes('FLASHCARD-MUOTO (PERINTEINEN KYSYMYS-VASTAUS)'), 'Missing flashcard guidance header');
+    assert(prompt.includes('Käytä kaikissa korteissa samaa tyyppiä: flashcard.'));
   });
 
-  it('should use quiz distributions for quiz mode', async () => {
+  it('should use quiz type guidance for quiz mode', async () => {
     const prompt = await builder.assemblePrompt({
       subject: 'English' as Subject,
       difficulty: 'normaali' as Difficulty,
@@ -91,11 +73,11 @@ describe('Flashcard Template Selection', () => {
       mode: 'quiz',
     });
 
-    // Verify quiz distribution header
-    assert(prompt.includes('KYSYMYSTYYPPIEN JAKAUMA'));
+    // Verify quiz guidance header
+    assert(prompt.includes('KYSYMYSTYYPPIEN VALINTAOHJE'));
 
-    // Verify quiz types are included (may include multiple_choice, true_false, etc.)
-    assert(prompt.match(/(multiple_choice|true_false|fill_blank)/i));
+    // Verify quiz guidance includes type suggestions
+    assert(prompt.match(/(multiple_choice|true_false|fill_blank|sequential)/i));
   });
 
   it('should handle math flashcards correctly', async () => {
@@ -110,10 +92,9 @@ describe('Flashcard Template Selection', () => {
     // Verify flashcard rules are present
     assert(prompt.includes('FLASHCARD-MOODIN SÄÄNNÖT'));
 
-    // Verify math flashcard distribution (70% fill_blank, 20% matching, 10% short_answer)
-    assert(prompt.match(/70% fill_blank/));
-    assert(prompt.match(/20% matching/));
-    assert(prompt.match(/10% short_answer/));
+    // Verify math flashcards use single Q&A guidance
+    assert(prompt.includes('FLASHCARD-MUOTO (PERINTEINEN KYSYMYS-VASTAUS)'));
+    assert(prompt.includes('Käytä kaikissa korteissa samaa tyyppiä: flashcard.'));
   });
 
   it('should handle written subject flashcards correctly', async () => {
@@ -127,10 +108,10 @@ describe('Flashcard Template Selection', () => {
 
     // Verify flashcard rules are present
     assert(prompt.includes('FLASHCARD-MOODIN SÄÄNNÖT'));
+    assert(!prompt.includes('KIELIAINEIDEN FLASHCARD-LISÄSÄÄNNÖT'));
 
-    // Verify written flashcard distribution (50% fill_blank, 30% short_answer, 20% matching)
-    assert(prompt.match(/50% fill_blank/));
-    assert(prompt.match(/30% short_answer/));
-    assert(prompt.match(/20% matching/));
+    // Verify written flashcards use single Q&A guidance
+    assert(prompt.includes('FLASHCARD-MUOTO (PERINTEINEN KYSYMYS-VASTAUS)'));
+    assert(prompt.includes('Käytä kaikissa korteissa samaa tyyppiä: flashcard.'));
   });
 });

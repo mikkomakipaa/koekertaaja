@@ -13,6 +13,7 @@ import { MathText } from '@/components/ui/math-text';
 import { Textarea } from '@/components/ui/textarea';
 import { LoadingScreen } from '@/components/ui/loading';
 import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
+import { VisualQuestionPreview } from '@/components/questions/VisualQuestionPreview';
 import { ProgressBar } from '@/components/play/ProgressBar';
 import { ResultsScreen } from '@/components/play/ResultsScreen';
 import { FlashcardSession } from '@/components/play/FlashcardSession';
@@ -76,6 +77,10 @@ const getQuestionTypeInfo = (type: QuestionType): { label: string; icon: ReactNo
       label: 'Järjestä oikein',
       icon: <ListNumbers size={14} weight="duotone" />,
     },
+    flashcard: {
+      label: 'Flashcard',
+      icon: <Book size={14} weight="duotone" />,
+    },
   };
 
   return typeMap[type] ?? {
@@ -92,6 +97,7 @@ const getPlaceholderHint = (questionType: QuestionType, questionText: string): s
     true_false: 'Valitse totta tai tarua',
     matching: 'Yhdistä oikeat parit',
     sequential: 'Järjestä kohteet oikeaan järjestykseen',
+    flashcard: 'Näytä vastaus ja arvioi muistaminen',
   };
 
   const lowerText = questionText.toLowerCase();
@@ -170,6 +176,7 @@ export default function PlayPage() {
     questionSet?.questions || [],
     questionSet?.exam_length ?? 15,
     questionSet?.grade, // pass grade for age-appropriate answer checking
+    questionSet?.subject,
     isReviewMode,
     mistakeQuestions,
     questionSet?.code
@@ -908,6 +915,12 @@ export default function PlayPage() {
         {/* Question Card */}
         <Card variant="elevated" padding="responsive" className="mb-6 transition-colors shadow-sm">
           <CardContent>
+            {(currentQuestion.requires_visual || currentQuestion.image_reference) && (
+              <VisualQuestionPreview
+                imageUrl={currentQuestion.image_url}
+                altText={`Visuaali kysymykseen ${currentQuestionIndex + 1}`}
+              />
+            )}
             <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 md:mb-6">
               <MathText>{currentQuestion.question_text}</MathText>
             </h2>

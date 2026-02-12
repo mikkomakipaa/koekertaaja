@@ -126,6 +126,18 @@ After creating a question set:
 - [ ] Update question text / answers and save
 - [ ] Verify changes show up in play mode
 
+### 4c. Concept Dependency Validation (Admin)
+
+**Admin flow (create page):**
+- [ ] Go to http://localhost:3000/create while logged in as admin
+- [ ] Open "Hallitse" -> "Testaa kysymyksiä"
+- [ ] Select a generated set for `math`, `finnish`, `chemistry`, `physics`, or `society`
+- [ ] Verify dependency alert is visible above the question list
+- [ ] Verify each question card shows a dependency badge:
+  - `Perustava konsepti` for foundational concepts
+  - `Vaatii` + prerequisite IDs for dependent concepts
+- [ ] If violations are shown, confirm questions are still playable and ordering is corrected after re-generation
+
 ---
 
 ### 5. Results Screen Test
@@ -258,6 +270,35 @@ Open browser DevTools (F12) and check Console tab:
 - Landing page: <1 second
 - Create page: <1 second
 - Play page: 1-2 seconds (loading from database)
+
+---
+
+## Provider Evaluation Dry-Run (Dev + Staging)
+
+Use this when validating Anthropic vs OpenAI without changing production baseline behavior.
+
+1. Enable dual-provider flags in the target environment:
+   - `AI_ENABLE_OPENAI=true`
+   - `AI_PROVIDER_SHADOW_MODE=true`
+   - `AI_PROVIDER_CANARY_PERCENT=0`
+2. Run the regression fixture checks:
+   ```bash
+   npm test -- tests/fixtures/provider-quality-regression.test.ts
+   npm test -- tests/prompt-regression-evaluation.test.ts
+   ```
+3. Execute shadow dry-run for each task type (`topic_identification`, `flashcard_creation`, `question_generation`, `visual_questions`).
+4. Record and compare:
+   - JSON validity
+   - Finnish grade-level clarity
+   - latency p95
+   - token cost per successful output
+   - retry rate
+5. Evaluate go/no-go using `docs/PROVIDER_EVALUATION_AND_ROLLOUT.md`.
+
+The rollout must keep Claude as baseline unless all hard gates pass.
+
+For prompt-specific gates and rollback thresholds, use:
+- `docs/PROMPT_REGRESSION_EVALUATION_2026-02-12.md`
 
 ---
 

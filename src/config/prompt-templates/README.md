@@ -17,3 +17,8 @@ This directory contains AI prompt templates for question generation.
 
 ## Variable Substitution
 Variables are provided by PromptBuilder and substituted by PromptLoader.
+
+## Intent-Critical Contracts
+- Keep output contracts provider-neutral and deterministic (JSON-only where required).
+- Do not remove required fields (`topic`, `skill`, schema fields used by validators).
+- Preserve pedagogical intent: grade-appropriate difficulty, curriculum alignment, meaningful explanations.

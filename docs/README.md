@@ -9,6 +9,9 @@ This folder contains comprehensive documentation for the Exam Prepper project.
 - **[MVP_COMPLETE.md](MVP_COMPLETE.md)** - MVP completion status and feature checklist
 - **[NEXT_STEPS.md](NEXT_STEPS.md)** - Future roadmap and planned features
 - **[SETUP_STATUS.md](SETUP_STATUS.md)** - Project setup and configuration status
+- **[CONCEPT_DEPENDENCY_ADMIN_GUIDE.md](CONCEPT_DEPENDENCY_ADMIN_GUIDE.md)** - Concept taxonomy and prerequisite graph maintenance
+- **[PROVIDER_EVALUATION_AND_ROLLOUT.md](PROVIDER_EVALUATION_AND_ROLLOUT.md)** - Anthropic vs OpenAI evaluation matrix, rollout gates, and rollback playbook
+- **[PROMPT_REGRESSION_EVALUATION_2026-02-12.md](PROMPT_REGRESSION_EVALUATION_2026-02-12.md)** - Prompt regression dataset results, pass/fail recommendation, and rollback triggers
 
 ### Deployment & Testing
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment overview

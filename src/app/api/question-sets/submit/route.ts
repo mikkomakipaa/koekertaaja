@@ -90,9 +90,7 @@ export async function POST(request: NextRequest) {
 
     // CRITICAL: Validate flashcard mode restrictions
     if (mode === 'flashcard') {
-      const invalidTypes = questions.filter(q =>
-        ['multiple_choice', 'true_false', 'sequential'].includes(q.type)
-      );
+      const invalidTypes = questions.filter(q => q.type !== 'flashcard');
 
       if (invalidTypes.length > 0) {
         logger.warn(
@@ -104,10 +102,10 @@ export async function POST(request: NextRequest) {
         );
         return NextResponse.json(
           {
-            error: `Flashcard mode cannot include multiple_choice, true_false, or sequential questions (found ${invalidTypes.length} invalid questions)`,
+            error: `Flashcard mode accepts only type="flashcard" (found ${invalidTypes.length} invalid questions)`,
             details: [
-              'Flashcard mode is optimized for active recall and memorization.',
-              'Use fill_blank, short_answer, or matching questions instead.',
+              'Flashcard mode uses a single traditional Q&A format.',
+              'Set each question type to "flashcard".',
             ],
           },
           { status: 400 }
@@ -156,7 +154,7 @@ export async function POST(request: NextRequest) {
       topic: q.topic,
       subtopic: q.subtopic,
       skill: q.skill,
-      correct_answer: q.correct_answer,
+      correct_answer: q.correct_answer ?? q.answer,
       options: q.options,
       pairs: q.pairs,
       items: q.items,

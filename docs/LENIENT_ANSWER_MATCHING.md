@@ -22,6 +22,24 @@ The app uses **age-appropriate lenient answer matching** for short answer and fi
    - Calculates similarity using edit distance
    - Uses grade-specific thresholds
 
+### Smart Validation Layers
+
+In addition to fuzzy matching, the validator now supports semantic equivalence checks:
+
+1. **Numerical equivalence**
+   - `1/2`, `0.5`, `0,5`, and `50%` are treated as equivalent.
+2. **Unit conversion**
+   - Length: `mm`, `cm`, `m`, `km`
+   - Mass: `mg`, `g`, `kg`, `t`
+   - Time: `s`, `sec`, `min`, `h`, `d`
+   - Temperature: `C`, `K`, `F`
+3. **Expression equivalence**
+   - Subscript/superscript normalization (`CO₂` == `CO2`)
+   - Commutative additive expressions (`2x + 3` == `3 + 2x`)
+4. **Finnish semantic alternatives (subject-aware)**
+   - Enabled for language/society/history-type content
+   - Example: `Suomi` == `Suomen tasavalta`
+
 ### Grade-Based Thresholds
 
 | Grade | Threshold | Description |

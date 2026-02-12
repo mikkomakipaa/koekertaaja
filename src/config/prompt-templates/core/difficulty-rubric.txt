@@ -1,0 +1,26 @@
+DIFFICULTY-RUBRIC (INTENT-KRIITTINEN)
+
+Määritä vaikeus neljän ulottuvuuden mukaan:
+1. Kognitiivinen taso (muistaminen -> soveltaminen -> analyysi)
+2. Sanaston vaikeus (arkikieli -> oppiainesanasto -> tekninen sanasto)
+3. Lauseen rakenne (lyhyt ja suora -> pidempi/moniosainen)
+4. Vaiheiden määrä (1 vaihe -> 2-3 vaihetta -> 4+ vaihetta)
+
+KOKONAISVAIKEUS:
+- Käytä korkeinta ulottuvuustasoa.
+- Arvojen järjestys: helppo < normaali < vaikea.
+
+GRADE-KALIBROINTI (4-6):
+- 4. luokka: painota konkreettisuutta, lyhyitä lauseita, 1-2 vaihetta.
+- 5. luokka: salli enemmän soveltamista ja oppiainesanastoa.
+- 6. luokka: salli monivaiheinen päättely ja laajempi perustelu.
+
+KÄYTÄNNÖN RAJAT:
+- helppo: perusmuistaminen tai selkeä yksivaiheinen sovellus.
+- normaali: 2-3 vaihetta, perussoveltaminen, rajattu analyysi.
+- vaikea: monivaiheinen analyysi/synteesi tai selvästi vaativa sanasto/rakenne.
+
+LAATUTARKISTUS:
+- Vaikeus vastaa annettua difficulty-tasoa.
+- Vaikeus vastaa luokka-astetta.
+- Kysymys pysyy materiaalissa ja opetussuunnitelman mukaisena.

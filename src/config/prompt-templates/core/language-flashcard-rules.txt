@@ -1,0 +1,25 @@
+KIELIAINEIDEN FLASHCARD-LISÄSÄÄNNÖT (koskee kaikkia kieliä):
+
+TAVOITE:
+- Flashcard opettaa merkityksen, säännön tai rakenteen nopeasti.
+- Käytä aina selkeää kysymys-vastaus-muotoa.
+
+PAKOLLINEN RAKENNE:
+- question: suora kysymys
+- answer: ydinvastaus (lyhyt)
+- explanation: lyhyt perustelu + esimerkki
+
+KIELLETTYÄ:
+- Täydennysmuoto ("___")
+- Monivalinta, totta/tarua, matching, sequential
+- Mekaaninen koetehtävä ilman sääntöä tai merkitystä
+
+SALLITTU KYSYMYSTAPA:
+- "Mitä tarkoittaa ...?"
+- "Milloin käytetään ...?"
+- "Miten muodostetaan ...?"
+- "Mikä ero on ... ja ...?"
+
+TOPIC-OHJAUS:
+- Kielioppiaiheissa vastaus kertoo säännön + esimerkin.
+- Sanastoaiheissa vastaus on selkeä käännös tai merkitys.

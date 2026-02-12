@@ -1,0 +1,72 @@
+{
+  "grade_7": {
+    "atoms": {
+      "id": "atoms",
+      "label": "Atomin rakenne",
+      "prerequisites": [],
+      "enables": ["elements", "periodic_table"]
+    },
+    "elements": {
+      "id": "elements",
+      "label": "Alkuaineet",
+      "prerequisites": ["atoms"],
+      "enables": ["periodic_table", "element_symbols", "compounds"]
+    },
+    "periodic_table": {
+      "id": "periodic_table",
+      "label": "Jaksollinen järjestelmä",
+      "prerequisites": ["elements"],
+      "enables": ["valence", "chemical_bonds"]
+    },
+    "element_symbols": {
+      "id": "element_symbols",
+      "label": "Alkuaineiden symbolit",
+      "prerequisites": ["elements"],
+      "enables": ["chemical_formulas", "compounds"]
+    },
+    "compounds": {
+      "id": "compounds",
+      "label": "Yhdisteet",
+      "prerequisites": ["elements", "element_symbols"],
+      "enables": ["chemical_formulas", "chemical_reactions"]
+    },
+    "valence": {
+      "id": "valence",
+      "label": "Valenssi",
+      "prerequisites": ["atoms", "periodic_table"],
+      "enables": ["chemical_bonds", "chemical_equations"]
+    }
+  },
+  "grade_8": {
+    "chemical_formulas": {
+      "id": "chemical_formulas",
+      "label": "Kemialliset kaavat",
+      "prerequisites": ["element_symbols", "compounds"],
+      "enables": ["chemical_equations", "stoichiometry"]
+    },
+    "chemical_reactions": {
+      "id": "chemical_reactions",
+      "label": "Kemialliset reaktiot",
+      "prerequisites": ["compounds"],
+      "enables": ["chemical_equations"]
+    },
+    "chemical_equations": {
+      "id": "chemical_equations",
+      "label": "Reaktioyhtälöt",
+      "prerequisites": ["chemical_formulas", "valence"],
+      "enables": ["balancing_equations", "stoichiometry"]
+    },
+    "balancing_equations": {
+      "id": "balancing_equations",
+      "label": "Reaktioyhtälöiden tasapainotus",
+      "prerequisites": ["chemical_equations"],
+      "enables": ["stoichiometry"]
+    },
+    "acids_bases": {
+      "id": "acids_bases",
+      "label": "Hapot ja emäkset",
+      "prerequisites": ["chemical_reactions"],
+      "enables": ["ph_scale"]
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "general": {
+    "description": "Käsityö: Tekstiilityö ja tekninen työ sekä suunnitteluprosessi",
+    "topics": [
+      "Tekstiilityön perusteet (neulominen, virkkaus, ompelu)",
+      "Teknisen työn perusteet (puutyö, metallityö, muovityö)",
+      "Suunnitteluprosessi (ideointi, luonnostelu, toteutus)",
+      "Materiaalien ominaisuudet ja käyttö",
+      "Työkalujen turvallinen käyttö",
+      "Mittaaminen ja merkitseminen",
+      "Kierrätys ja uusiokäyttö",
+      "Kädentaidot ja tarkkuus",
+      "Design ja estetiikka",
+      "Suomalainen käsityöperinne"
+    ],
+    "textile_topics": [
+      "Neulominen (oikea ja nurja silmukka)",
+      "Virkkaus (ketjusilmukka, pylväs)",
+      "Ompelu (käsin ja koneella)",
+      "Kankaiden ja lankojen tuntemus",
+      "Kaavojen käyttö",
+      "Koristelu (kirjonta, applikaatio)",
+      "Tekstiilikuosisuunnittelu",
+      "Vaatteiden korjaus ja muokkaus",
+      "Huovutus ja villankäsittely",
+      "Kutominen (kudonta)"
+    ],
+    "technical_topics": [
+      "Puutyön perusteet (sahaaminen, höylääminen, viilaaminen)",
+      "Metallityön perusteet (taivutus, leikkaus)",
+      "Liitokset (naulaus, ruuvaus, liimaus)",
+      "Pintakäsittely (hiominen, maalaus, lakkaus)",
+      "Sähkötyöt (yksinkertainen kytkentä, turvallisuus)",
+      "Elektroniikan perusteet (LED, paristot)",
+      "3D-suunnittelu ja tulostus",
+      "Konetyöt (porakone, saha)",
+      "Mittaaminen ja merkitseminen tarkkuudella",
+      "Robotiikka ja ohjelmointi (Scratch, Arduino perusteet)"
+    ],
+    "learning_objectives": [
+      "Osaa käyttää perustyökaluja turvallisesti",
+      "Ymmärtää suunnitteluprosessin vaiheet",
+      "Osaa valita sopivia materiaaleja eri tarkoituksiin",
+      "Hallitsee tekstiilityön perustaitoja",
+      "Hallitsee teknisen työn perustaitoja",
+      "Osaa mitata ja merkitä tarkasti",
+      "Ymmärtää materiaalien kierrätyksen merkityksen",
+      "Osaa arvioida ja kehittää omaa työtään",
+      "Tunnistaa suomalaisia käsityöperinteitä",
+      "Osaa yhdistää käsityötä ja teknologiaa"
+    ],
+    "key_concepts": [
+      "suunnitteluprosessi",
+      "materiaali",
+      "työkalu",
+      "turvallisuus",
+      "tarkkuus",
+      "käsintaidot",
+      "kestävä kehitys",
+      "design",
+      "perinne",
+      "innovaatio"
+    ],
+    "safety_topics": [
+      "Työkalujen turvallinen käyttö",
+      "Sähköturvallisuus",
+      "Kemikaalien käsittely (liimat, lakat)",
+      "Suojainten käyttö (silmä-, kuulo-, hengityssuojaimet)",
+      "Ensiapu käsityötilanteissa",
+      "Työpisteen järjestys ja siisteys"
+    ],
+    "design_process": [
+      "1. Ideointi ja inspiraatio",
+      "2. Luonnostelu ja suunnittelu",
+      "3. Materiaalivalinnat",
+      "4. Työvaiheet ja toteutus",
+      "5. Arviointi ja kehittäminen"
+    ],
+    "finnish_traditions": [
+      "Ryijyt ja matot",
+      "Puukkoperinne",
+      "Kirjonta ja kansallispuvut",
+      "Käsityöläisperinteet (sepät, puusepät, räätälit)",
+      "Saamelaiset käsityöt (duodji)",
+      "Modernit suomalaiset design-klassikot"
+    ],
+    "modern_techniques": [
+      "3D-tulostus",
+      "Laser-leikkaus",
+      "Digitaalinen kuosisuunnittelu",
+      "Ohjelmointi ja robotiikka",
+      "Sähköiset tekstiilit (e-textiles)",
+      "Kierrätysmateriaalien käyttö"
+    ],
+    "context": "Käsityö yhdistää tekstiilityön ja teknisen työn sekä design-ajattelun. Oppilaat oppivat suunnitteluprosessin, materiaalien käytön ja perinteisiä sekä moderneja käsityötekniikoita."
+  }
+}

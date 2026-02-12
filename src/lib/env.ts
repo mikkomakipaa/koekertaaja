@@ -1,16 +1,63 @@
 import { z } from 'zod';
 
+const requiredString = (message: string) =>
+  z.string({ required_error: message }).min(1, message);
+
 const publicSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url('NEXT_PUBLIC_SUPABASE_URL must be a valid URL'),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, 'NEXT_PUBLIC_SUPABASE_ANON_KEY is required'),
+  NEXT_PUBLIC_SUPABASE_URL: requiredString('NEXT_PUBLIC_SUPABASE_URL is required').url(
+    'NEXT_PUBLIC_SUPABASE_URL must be a valid URL'
+  ),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: requiredString('NEXT_PUBLIC_SUPABASE_ANON_KEY is required'),
 });
 
-const serverSchema = publicSchema.extend({
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'SUPABASE_SERVICE_ROLE_KEY is required'),
-  ANTHROPIC_API_KEY: z.string().min(1, 'ANTHROPIC_API_KEY is required'),
-  ADMIN_EMAILS: z.string().optional(),
-  NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
-});
+const optionalNonEmptyString = (message: string) =>
+  z.preprocess(
+    (value) => (typeof value === 'string' && value.trim().length === 0 ? undefined : value),
+    z.string().min(1, message).optional()
+  );
+
+const openAIFlagSchema = z.preprocess(
+  (value) => (typeof value === 'string' ? value.trim().toLowerCase() : value),
+  z.enum(['true', 'false']).optional().default('false')
+);
+
+const providerDefaultSchema = z.preprocess(
+  (value) => (typeof value === 'string' ? value.trim().toLowerCase() : value),
+  z.enum(['anthropic', 'openai']).optional().default('anthropic')
+);
+
+const serverSchema = publicSchema
+  .extend({
+    SUPABASE_SERVICE_ROLE_KEY: requiredString('SUPABASE_SERVICE_ROLE_KEY is required'),
+    ANTHROPIC_API_KEY: requiredString('ANTHROPIC_API_KEY is required'),
+    OPENAI_API_KEY: optionalNonEmptyString('OPENAI_API_KEY is required'),
+    AI_PROVIDER_DEFAULT: providerDefaultSchema,
+    AI_ENABLE_OPENAI: openAIFlagSchema,
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    STRIPE_STANDARD_PRICE_ID: z.string().optional(),
+    STRIPE_PREMIUM_PRICE_ID: z.string().optional(),
+    ADMIN_EMAILS: z.string().optional(),
+    NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
+  })
+  .superRefine((env, ctx) => {
+    const openAIRequested = env.AI_ENABLE_OPENAI === 'true' || env.AI_PROVIDER_DEFAULT === 'openai';
+
+    if (env.AI_PROVIDER_DEFAULT === 'openai' && env.AI_ENABLE_OPENAI !== 'true') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['AI_ENABLE_OPENAI'],
+        message: 'AI_ENABLE_OPENAI must be "true" when AI_PROVIDER_DEFAULT is "openai"',
+      });
+    }
+
+    if (openAIRequested && !env.OPENAI_API_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['OPENAI_API_KEY'],
+        message: 'OPENAI_API_KEY is required when OpenAI is enabled (set AI_ENABLE_OPENAI="true" or AI_PROVIDER_DEFAULT="openai")',
+      });
+    }
+  });
 
 const formatIssues = (issues: z.ZodIssue[]) =>
   issues.map((issue) => `${issue.path.join('.') || 'env'}: ${issue.message}`);

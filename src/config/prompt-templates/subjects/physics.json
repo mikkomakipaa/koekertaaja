@@ -1,0 +1,138 @@
+{
+  "7": {
+    "description": "Fysiikka, luokka 7: Mekaniikan ja energian perusteet",
+    "topics": [
+      "Mittaaminen ja mittayksiköt (SI-järjestelmä)",
+      "Nopeus, matka ja aika",
+      "Voima ja liike (Newtonin I laki)",
+      "Massa ja paino (painovoima)",
+      "Kitka ja liukuminen",
+      "Energian muodot (liike-, asema-, lämpöenergia)",
+      "Energian säilyminen",
+      "Työ ja teho",
+      "Yksinkertaiset koneet (vipu, väkipyörä)",
+      "Tiheys ja kelluvuus"
+    ],
+    "learning_objectives": [
+      "Osaa käyttää SI-järjestelmän perusyksiköitä",
+      "Ymmärtää nopeuden, matkan ja ajan välisen yhteyden",
+      "Osaa laskea yksinkertaisia nopeus- ja voimalaskuja",
+      "Ymmärtää energian säilymisen periaatteen",
+      "Osaa soveltaa tiheyden kaavaa",
+      "Tunnistaa erilaisia energian muotoja",
+      "Ymmärtää yksinkertaisten koneiden toimintaperiaatteet"
+    ],
+    "formulas": [
+      "v = s/t (nopeus)",
+      "F = ma (Newtonin II laki)",
+      "E_k = 1/2mv² (liike-energia)",
+      "E_p = mgh (potentiaalienergia)",
+      "ρ = m/V (tiheys)",
+      "W = Fs (työ)",
+      "P = W/t (teho)"
+    ],
+    "key_concepts": [
+      "voima",
+      "liike",
+      "energia",
+      "työ",
+      "teho",
+      "tiheys",
+      "painovoima",
+      "kitka"
+    ],
+    "context": "Seitsemännellä luokalla fysiikan opetus aloitetaan mekaniikan ja energian perusteilla. Oppilaat oppivat mittaamaan ja laskemaan yksinkertaisia fysiikan ongelmia."
+  },
+  "8": {
+    "description": "Fysiikka, luokka 8: Sähkö, lämpö ja aallot",
+    "topics": [
+      "Sähkövirta ja jännite",
+      "Vastus ja Ohmin laki",
+      "Sähköpiirit (sarja- ja rinnankytkentä)",
+      "Sähköteho ja energia",
+      "Sähköturvallisuus",
+      "Lämpötila ja lämpöenergia",
+      "Olomuodon muutokset",
+      "Lämmön siirtyminen (johtuminen, konvektio, säteily)",
+      "Ääni ja ääniaallot",
+      "Valon heijastuminen ja taittuminen"
+    ],
+    "learning_objectives": [
+      "Ymmärtää sähkövirran ja jännitteen eron",
+      "Osaa soveltaa Ohmin lakia",
+      "Osaa piirtää yksinkertaisia sähköpiirejä",
+      "Ymmärtää sähköturvallisuuden perusteet",
+      "Osaa erottaa lämpötilan ja lämpöenergian",
+      "Ymmärtää lämmön siirtymisen tavat",
+      "Tietää äänen ja valon aaltoliikkeen perusteet",
+      "Osaa laskea sähkötehoa ja energiaa"
+    ],
+    "formulas": [
+      "U = RI (Ohmin laki)",
+      "P = UI (sähköteho)",
+      "E = Pt (sähköenergia)",
+      "R_kok = R₁ + R₂ (sarjakytkentä)",
+      "1/R_kok = 1/R₁ + 1/R₂ (rinnankytkentä)",
+      "Q = mcΔT (lämpöenergia)",
+      "v = fλ (aaltoliike)"
+    ],
+    "key_concepts": [
+      "sähkövirta",
+      "jännite",
+      "vastus",
+      "sähköpiiri",
+      "lämpötila",
+      "lämpöenergia",
+      "aaltoliike",
+      "taajuus",
+      "aallonpituus"
+    ],
+    "context": "Kahdeksannella luokalla fysiikassa syvennytään sähköön, lämpöön ja aaltoihin. Oppilaat oppivat ymmärtämään sähköpiirejä ja energian muuntumista."
+  },
+  "9": {
+    "description": "Fysiikka, luokka 9: Liikeilmiöt, radioaktiivisuus ja kokonaisuuden hallinta",
+    "topics": [
+      "Newtonin lait (I, II, III)",
+      "Kiihtyvyys ja hidastuvuus",
+      "Liikemäärä ja impulssi",
+      "Ympyräliike ja keskeisvoima",
+      "Atomi ja atomin rakenne",
+      "Radioaktiivisuus ja säteilyturvallisuus",
+      "Ydinenergia ja ydinvoimalat",
+      "Sähkömagnetismi",
+      "Maan painovoima ja planeettaliike",
+      "Energia ja ympäristö"
+    ],
+    "learning_objectives": [
+      "Ymmärtää Newtonin kolme lakia",
+      "Osaa laskea kiihtyvyys- ja jarrutuslaskuja",
+      "Ymmärtää liikemäärän säilymisen",
+      "Tietää atomin rakenteen ja radioaktiivisuuden perusteet",
+      "Ymmärtää ydinvoiman toimintaperiaatteet ja riskit",
+      "Osaa soveltaa fysiikan tietoja ympäristökysymyksiin",
+      "Ymmärtää sähkömagnetismin perusteet",
+      "Osaa arvioida energianlähteitä kriittisesti"
+    ],
+    "formulas": [
+      "F = ma (Newtonin II laki)",
+      "a = Δv/t (kiihtyvyys)",
+      "p = mv (liikemäärä)",
+      "F₁ = -F₂ (Newtonin III laki, voiman ja vastavoiman laki)",
+      "F_k = mv²/r (keskeisvoima)",
+      "E = mc² (massa-energia-ekvivalenssi)",
+      "F = qvB (Lorentzin voima, sähkömagnetismi)"
+    ],
+    "key_concepts": [
+      "Newtonin lait",
+      "kiihtyvyys",
+      "liikemäärä",
+      "impulssi",
+      "atomi",
+      "radioaktiivisuus",
+      "ydinenergia",
+      "sähkömagnetismi",
+      "energian säilyminen"
+    ],
+    "context": "Yhdeksännellä luokalla fysiikassa käsitellään monimutkaisempia liikeilmiöitä ja tutustutaan atomifysiikkaan. Oppilaat oppivat ymmärtämään fysiikan roolin yhteiskunnassa ja ympäristökysymyksissä."
+  }
+}

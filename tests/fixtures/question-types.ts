@@ -54,6 +54,13 @@ export const aiQuestionFixtures = {
     correct_answer: [],
     explanation: 'Tapahtumat järjestetään vanhimmasta uusimpaan.',
   },
+  flashcard: {
+    question: 'Mikä on Suomen pääkaupunki?',
+    type: 'flashcard',
+    topic: 'Maantieto',
+    correct_answer: 'Helsinki',
+    explanation: 'Helsinki on Suomen pääkaupunki.',
+  },
 } satisfies Record<QuestionType, AIQuestion>;
 
 export const dbQuestionFixtures = {
@@ -132,5 +139,17 @@ export const dbQuestionFixtures = {
     order_index: 5,
     created_at: '2024-01-01T00:00:00.000Z',
     topic: 'Historia',
+  },
+  flashcard: {
+    id: 'db-fc-1',
+    question_set_id: 'set-1',
+    question_text: 'Mikä on Suomen pääkaupunki?',
+    question_type: 'flashcard',
+    correct_answer: 'Helsinki',
+    options: null,
+    explanation: 'Helsinki on Suomen pääkaupunki.',
+    order_index: 6,
+    created_at: '2024-01-01T00:00:00.000Z',
+    topic: 'Maantieto',
   },
 } satisfies Record<QuestionType, DatabaseQuestion>;

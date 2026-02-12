@@ -15,6 +15,10 @@ import {
   buildRateLimitKey,
   createRateLimitHeaders,
 } from '@/lib/ratelimit';
+import { analyzeQuestionSetQuality, orchestrateQuestionSet } from '@/lib/utils/questionOrdering';
+import { analyzeMaterialCapacity, validateQuestionCount } from '@/lib/utils/materialAnalysis';
+import type { Question } from '@/types';
+import { dependencyResolver } from '@/lib/utils/dependencyGraph';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 300; // 5 minutes timeout for AI generation
@@ -51,10 +55,17 @@ export async function POST(request: NextRequest) {
       clientId,
       prefix: 'generate-questions',
     });
-    const rateLimitResult = checkRateLimit(rateLimitKey, {
-      limit: 5,
-      windowMs: 60 * 60 * 1000,
-    });
+    const rateLimitResult = process.env.NODE_ENV === 'development'
+      ? {
+          success: true,
+          limit: Number.MAX_SAFE_INTEGER,
+          remaining: Number.MAX_SAFE_INTEGER,
+          reset: Date.now(),
+        }
+      : checkRateLimit(rateLimitKey, {
+          limit: 5,
+          windowMs: 60 * 60 * 1000,
+        });
     baseHeaders = createRateLimitHeaders(rateLimitResult);
     const respond = (body: unknown, status = 200, headers?: Headers) =>
       NextResponse.json(body, { status, headers: headers ?? baseHeaders });
@@ -81,6 +92,7 @@ export async function POST(request: NextRequest) {
         401
       );
     }
+    const authenticatedUserId = userId;
 
     const formData = await request.formData();
 
@@ -89,6 +101,16 @@ export async function POST(request: NextRequest) {
     const targetWords = targetWordsRaw
       ? targetWordsRaw.split(',').map(w => w.trim()).filter(Boolean)
       : undefined;
+
+    const distributionRaw = formData.get('distribution') as string | null;
+    let customDistribution = null;
+    if (distributionRaw) {
+      try {
+        customDistribution = JSON.parse(distributionRaw);
+      } catch (error) {
+        logger.warn({ error }, 'Failed to parse custom distribution');
+      }
+    }
 
     const rawData = {
       subject: formData.get('subject') as string,
@@ -104,6 +126,12 @@ export async function POST(request: NextRequest) {
     };
 
     const generationMode = (formData.get('generationMode') as string) || 'quiz';
+    const orchestrateRaw = (formData.get('orchestrate') as string | null)?.toLowerCase();
+    const orchestrate = orchestrateRaw !== 'false' && orchestrateRaw !== '0';
+    const bypassCapacityCheckRaw = (formData.get('bypassCapacityCheck') as string | null)?.toLowerCase();
+    const bypassCapacityCheck = bypassCapacityCheckRaw === 'true' || bypassCapacityCheckRaw === '1';
+    const capacityCheckOnlyRaw = (formData.get('capacityCheckOnly') as string | null)?.toLowerCase();
+    const capacityCheckOnly = capacityCheckOnlyRaw === 'true' || capacityCheckOnlyRaw === '1';
 
     // Validate generation mode
     if (!['quiz', 'flashcard', 'both'].includes(generationMode)) {
@@ -135,6 +163,14 @@ export async function POST(request: NextRequest) {
       materialText,
       targetWords: validatedTargetWords,
     } = validationResult.data;
+
+    let requestedQuestionCount = 0;
+    if (generationMode === 'quiz' || generationMode === 'both') {
+      requestedQuestionCount += questionCount * 2;
+    }
+    if (generationMode === 'flashcard' || generationMode === 'both') {
+      requestedQuestionCount += questionCount;
+    }
 
     // Process uploaded files with validation
     // Note: Vercel Hobby tier has 5MB request body limit
@@ -232,6 +268,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Material sufficiency analysis before generation.
+    if (materialText && !bypassCapacityCheck) {
+      const capacity = analyzeMaterialCapacity(materialText);
+      const questionCountValidation = validateQuestionCount(questionCount, capacity);
+
+      if (questionCountValidation.status === 'risky' || questionCountValidation.status === 'excessive') {
+        return respond({
+          warningRequired: true,
+          capacity,
+          validation: questionCountValidation,
+          message: `Materiaali tukee optimaalisesti ${capacity.optimalQuestionCount} kysymystä, mutta pyysit ${questionCount}.`,
+        });
+      }
+
+      if (capacityCheckOnly) {
+        return respond({
+          warningRequired: false,
+          capacity,
+          validation: questionCountValidation,
+        });
+      }
+    } else if (capacityCheckOnly) {
+      return respond({ warningRequired: false });
+    }
+
     // STEP 1: Identify topics from material (orchestrated AI architecture)
     logger.info('Step 1: Identifying topics from material');
     const topicAnalysis = await identifyTopics({
@@ -256,6 +317,7 @@ export async function POST(request: NextRequest) {
       {
         topicCount: getSimpleTopics(topicAnalysis).length,
         totalFlashcards: flashcardQuestionCount,
+        orchestrate,
       },
       'Calculated flashcard generation count'
     );
@@ -296,6 +358,7 @@ export async function POST(request: NextRequest) {
             mode: 'quiz',
             identifiedTopics: getSimpleTopics(topicAnalysis), // Pass identified topics
             targetWords: validatedTargetWords,
+            distribution: customDistribution, // Pass user's confirmed distribution
           }).then((questions) => ({ questions, difficulty, mode: 'quiz' as const }))
         );
 
@@ -320,6 +383,7 @@ export async function POST(request: NextRequest) {
           mode: 'flashcard',
           identifiedTopics: getSimpleTopics(topicAnalysis), // Pass identified topics
           targetWords: validatedTargetWords,
+          distribution: customDistribution, // Pass user's confirmed distribution
         }).then((questions) => ({ questions, mode: 'flashcard' as const }))
       );
 
@@ -416,8 +480,52 @@ export async function POST(request: NextRequest) {
 
     for (const result of successfulResults) {
       const { questions, difficulty, mode } = result;
+      const orchestratedQuestions: Question[] =
+        mode === 'quiz' && orchestrate
+          ? orchestrateQuestionSet(questions as Question[], { expectedDifficulty: difficulty })
+          : (questions as Question[]);
+      const dependencyResult = dependencyResolver.reorderQuestionsByDependencies(
+        subject,
+        orchestratedQuestions,
+        { grade }
+      );
+      const questionsForSave = dependencyResult.reorderedQuestions as Question[];
 
-      if (questions.length === 0) {
+      logger.info(
+        {
+          mode,
+          difficulty,
+          changedOrder: dependencyResult.changed,
+          dependencyValid: dependencyResult.validation.valid,
+          violationsCaught: dependencyResult.validation.violations.length,
+        },
+        'Concept dependency validation completed'
+      );
+
+      if (!dependencyResult.validation.valid) {
+        logger.warn(
+          {
+            mode,
+            difficulty,
+            violations: dependencyResult.validation.violations.slice(0, 10),
+          },
+          'Dependency violations were detected in generated questions'
+        );
+      }
+
+      if (mode === 'quiz') {
+        const quality = analyzeQuestionSetQuality(questionsForSave);
+        logger.info(
+          {
+            difficulty,
+            orchestrated: orchestrate,
+            quality,
+          },
+          'Question ordering quality metrics'
+        );
+      }
+
+      if (questionsForSave.length === 0) {
         logger.warn({ mode, difficulty }, 'Skipping empty question set');
         dbFailures.push({
           mode,
@@ -451,11 +559,11 @@ export async function POST(request: NextRequest) {
               topic,
               subtopic,
               subject_type: subjectType,
-              question_count: questions.length,
+              question_count: questionsForSave.length,
               exam_length: examLength,
               status: 'created',  // New question sets default to unpublished
             },
-            questions
+            questionsForSave
           );
 
           if (!dbResult) {
@@ -485,7 +593,7 @@ export async function POST(request: NextRequest) {
             code: dbResult.code,
             mode,
             difficulty,
-            questionCount: dbResult.questionSet.question_count,
+            questionCount: questionsForSave.length,
           },
           'Question set saved successfully'
         );

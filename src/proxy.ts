@@ -4,6 +4,10 @@ import { checkRateLimit, getClientIp } from '@/lib/ratelimit';
 export default function middleware(request: NextRequest) {
   // Rate limiting for API routes
   if (request.nextUrl.pathname.startsWith('/api/generate-questions')) {
+    if (process.env.NODE_ENV === 'development') {
+      return NextResponse.next();
+    }
+
     const ip = getClientIp(request.headers);
 
     // Very strict rate limit: 5 requests per hour (expensive AI operations)

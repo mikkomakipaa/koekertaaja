@@ -1,0 +1,94 @@
+{
+  "4": {
+    "description": "Yhteiskuntaoppi, luokka 4: Perustiedot yhteiskunnasta ja demokratiasta",
+    "topics": [
+      "Perhe ja yhteisö",
+      "Koulun säännöt ja päätöksenteko",
+      "Lasten oikeudet",
+      "Yhteistyö ja vastuullisuus",
+      "Medialukutaito perusteet",
+      "Suomen lippu ja kansallissymbolit"
+    ],
+    "learning_objectives": [
+      "Ymmärtää yhteisön jäsenenä toimiminen",
+      "Tunnistaa demokratian perusperiaatteita kouluympäristössä",
+      "Tietää YK:n lapsen oikeuksien sopimuksen pääkohtia",
+      "Osaa toimia vastuullisesti ryhmässä",
+      "Tunnistaa median eri muotoja"
+    ],
+    "key_concepts": [
+      "demokratia",
+      "yhteisö",
+      "oikeudet",
+      "vastuullisuus",
+      "päätöksenteko",
+      "säännöt"
+    ],
+    "context": "Neljännellä luokalla yhteiskuntaoppi keskittyy lähiyhteisöön ja demokratian perusteisiin. Oppilaat oppivat ymmärtämään yhteisön merkityksen ja oman roolinsa sen jäsenenä."
+  },
+  "5": {
+    "description": "Yhteiskuntaoppi, luokka 5: Suomen yhteiskuntajärjestelmä ja kansalaisen rooli",
+    "topics": [
+      "Suomen hallitusmuoto ja presidentti",
+      "Eduskunta ja lait",
+      "Kunnat ja kuntalaiset",
+      "Vaalit ja äänestäminen",
+      "Median merkitys yhteiskunnassa",
+      "Digitaalinen kansalaisuus",
+      "Perusoikeudet Suomessa"
+    ],
+    "learning_objectives": [
+      "Ymmärtää Suomen hallitusmuodon perusrakenne",
+      "Tietää miten lait syntyvät",
+      "Ymmärtää kunnan roolin ja kunnan palvelut",
+      "Osaa selittää vaalien merkityksen",
+      "Tunnistaa median vaikutuksen yhteiskunnassa",
+      "Osaa toimia vastuullisesti verkossa"
+    ],
+    "key_concepts": [
+      "eduskunta",
+      "hallitus",
+      "presidentti",
+      "kunta",
+      "vaalit",
+      "perusoikeudet",
+      "media",
+      "digitaalinen kansalaisuus"
+    ],
+    "context": "Viidennellä luokalla yhteiskuntaoppi laajentuu kattamaan Suomen yhteiskuntajärjestelmän perusrakenteet. Oppilaat oppivat ymmärtämään demokraattisen päätöksenteon ja kansalaisen roolin."
+  },
+  "6": {
+    "description": "Yhteiskuntaoppi, luokka 6: Globaali yhteiskunta ja kansainvälinen yhteistyö",
+    "topics": [
+      "Euroopan unioni ja sen toiminta",
+      "YK ja ihmisoikeudet",
+      "Pohjoismaat ja pohjoismainen yhteistyö",
+      "Talous ja kuluttaminen",
+      "Ilmastonmuutos ja kestävä kehitys",
+      "Kriittinen medialukutaito",
+      "Monikulttuurisuus",
+      "Kansalaisyhteiskunta ja vaikuttaminen"
+    ],
+    "learning_objectives": [
+      "Ymmärtää EU:n merkityksen Suomelle",
+      "Tietää YK:n tehtävät ja ihmisoikeudet",
+      "Ymmärtää pohjoismaisen yhteistyön merkityksen",
+      "Osaa arvioida median sisältöjä kriittisesti",
+      "Ymmärtää kestävän kehityksen periaatteet",
+      "Tunnistaa eri tapoja vaikuttaa yhteiskuntaan",
+      "Osaa toimia monikulttuurisessa ympäristössä"
+    ],
+    "key_concepts": [
+      "Euroopan unioni",
+      "YK",
+      "ihmisoikeudet",
+      "Pohjoismaat",
+      "kestävä kehitys",
+      "kuluttaminen",
+      "monikulttuurisuus",
+      "kriittinen ajattelu",
+      "vaikuttaminen"
+    ],
+    "context": "Kuudennella luokalla yhteiskuntaoppi laajentuu globaaliin näkökulmaan. Oppilaat oppivat ymmärtämään Suomen paikan kansainvälisessä yhteisössä ja globaaleja yhteiskunnallisia ilmiöitä."
+  }
+}

@@ -6,6 +6,7 @@ import {
   identifyTopicsFromMaterial,
   processUploadedFiles,
 } from '@/lib/api/questionGeneration';
+import { parseRequestedProvider, validateRequestedProvider } from '@/lib/api/modelSelection';
 import { getSimpleTopics } from '@/lib/ai/topicIdentifier';
 import {
   checkRateLimit,
@@ -82,6 +83,13 @@ export async function POST(request: NextRequest) {
     const gradeStr = formData.get('grade') as string | null;
     const grade = gradeStr ? parseInt(gradeStr) : undefined;
     const materialText = (formData.get('materialText') as string | null) || undefined;
+    const targetProvider = parseRequestedProvider(formData.get('provider'));
+    if (targetProvider) {
+      const modelValidationError = validateRequestedProvider(targetProvider);
+      if (modelValidationError) {
+        return respond({ error: modelValidationError }, 400);
+      }
+    }
 
     // Validate required fields
     if (!subject) {
@@ -111,6 +119,7 @@ export async function POST(request: NextRequest) {
         grade,
         hasText: !!materialText,
         fileCount: files.length,
+        provider: targetProvider ?? 'anthropic',
       },
       'Starting topic identification'
     );
@@ -121,6 +130,7 @@ export async function POST(request: NextRequest) {
       grade,
       materialText,
       materialFiles: files.length > 0 ? files : undefined,
+      targetProvider,
     });
 
     // Extract simple topic names for backward compatibility

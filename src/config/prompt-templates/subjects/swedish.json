@@ -1,0 +1,136 @@
+{
+  "4": {
+    "description": "Ruotsi A2/B1, luokka 4: Ruotsin kielen perusteet ja yksinkertainen vuorovaikutus",
+    "topics": [
+      "Tervehdykset ja esittäytyminen (Hej, jag heter ...)",
+      "Numerot 1-100 ja värit",
+      "Perhe ja ystävät (familj, vänner)",
+      "Koulu ja harrastukset (skola, hobbyer)",
+      "Ruoka ja juomat (mat och dryck)",
+      "Viikonpäivät ja kellonajat",
+      "Yksinkertaiset kysymykset ja vastaukset",
+      "Ruotsin ääntämisen perusteet"
+    ],
+    "learning_objectives": [
+      "Osaa esittäytyä ja tervehtiä ruotsiksi",
+      "Ymmärtää yksinkertaisia ohjeita ja kysymyksiä",
+      "Osaa kertoa perheestään ja harrastuksistaan",
+      "Tunnistaa ruotsin kielen perusäänteitä",
+      "Osaa käyttää yksinkertaisia fraaseja päivittäisissä tilanteissa",
+      "Tietää perusasioita Ruotsista ja ruotsalaisesta kulttuurista"
+    ],
+    "grammar_topics": [
+      "Persoonapronominit (jag, du, han, hon)",
+      "Olla-verbi (vara: är)",
+      "Yksinkertaiset lauserakenteet (subjekti + verbi)",
+      "Perusartikkelit (en, ett, den, det)",
+      "Yksikkö ja monikko (perusmuodot)"
+    ],
+    "vocabulary_themes": [
+      "Perhe (familj)",
+      "Koulu ja luokkahuone (skola och klassrum)",
+      "Värit ja numerot (färger och nummer)",
+      "Ruoka ja juomat (mat och dryck)",
+      "Eläimet ja luonto (djur och natur)",
+      "Arjen fraasit (vardagliga fraser)"
+    ],
+    "key_concepts": [
+      "grundläggande fraser",
+      "uttal",
+      "ordförråd",
+      "enkel grammatik",
+      "kulturell förståelse"
+    ],
+    "context": "Neljännellä luokalla ruotsin opetus aloitetaan tai jatketaan perusteiden vahvistamisella. Keskitytään yksinkertaiseen vuorovaikutukseen ja perusrakenteiden oppimiseen."
+  },
+  "5": {
+    "description": "Ruotsi A2/B1, luokka 5: Perusrakenteet ja laajempi sanasto",
+    "topics": [
+      "Koti ja kodin huoneet (hemma, rum)",
+      "Kaupungissa liikkuminen ja ostokset",
+      "Vapaa-aika ja harrastukset",
+      "Säätila ja vuodenajat (väder, årstider)",
+      "Yksinkertaiset tarinat ja kertomukset",
+      "Ruotsalaiset perinteet ja juhlat",
+      "Pohjoismaat ja niiden pääkaupungit",
+      "Kirjoittaminen: lyhyet viestit ja kuvaukset"
+    ],
+    "learning_objectives": [
+      "Osaa kuvata kotiaan ja ympäristöään",
+      "Ymmärtää yksinkertaisia tekstejä ja tarinoita",
+      "Osaa kirjoittaa lyhyitä viestejä ja kuvauksia",
+      "Tunnistaa ruotsalaisen kulttuurin piirteitä",
+      "Osaa käyttää verbimuotoja eri aikamuodoissa",
+      "Ymmärtää puhuttua ruotsia tuttujen aiheiden parissa"
+    ],
+    "grammar_topics": [
+      "Verbit preesensissä (nutid: jag spelar, han spelar)",
+      "Verbit preteritissä (jag spelade)",
+      "Omistusmuodot (min, din, hans, hennes)",
+      "Prepositiot (i, på, under, vid)",
+      "Kysymyssanat (vem, vad, var, när, hur)",
+      "Adjektiivit ja vertailu (stor, större, störst)"
+    ],
+    "vocabulary_themes": [
+      "Koti ja huonekalut (hemmet och möbler)",
+      "Ostokset ja kaupat (shopping och affärer)",
+      "Vapaa-aika ja kiinnostuksen kohteet (fritid och intressen)",
+      "Sää ja vuodenajat (väder och årstider)",
+      "Matkailu ja paikat (resor och platser)",
+      "Pohjoismaat (nordiska länder)"
+    ],
+    "key_concepts": [
+      "tempusformer",
+      "substantiv och artiklar",
+      "adjektiv",
+      "ordföljd",
+      "kulturtraditioner"
+    ],
+    "context": "Viidennellä luokalla ruotsin kielen opiskelussa syvennetään perusrakenteita ja laajennetaan sanavarastoa. Oppilaat oppivat ilmaisemaan itseään monipuolisemmin."
+  },
+  "6": {
+    "description": "Ruotsi A2/B1, luokka 6: Monipuolisempi kielitaito ja kulttuuriymmärrys",
+    "topics": [
+      "Terveys ja hyvinvointi (hälsa och välmående)",
+      "Ympäristö ja luonto (miljö och natur)",
+      "Teknologia ja media",
+      "Tulevaisuuden suunnitelmat",
+      "Ruotsalainen kirjallisuus ja sadut",
+      "Ruotsin murteet ja kielialueet",
+      "Kaksikielisyys Suomessa (svenska i Finland)",
+      "Pidemmät keskustelut ja väittelyt"
+    ],
+    "learning_objectives": [
+      "Osaa keskustella monipuolisista aiheista",
+      "Ymmärtää eri tekstilajeja (kertomukset, artikkelit, ohjeet)",
+      "Osaa kirjoittaa yhtenäisiä tekstejä",
+      "Tunnistaa ruotsin murre-eroja",
+      "Osaa käyttää modaaliverbejä ja perfektiä",
+      "Ymmärtää suomenruotsalaisen kulttuurin merkityksen"
+    ],
+    "grammar_topics": [
+      "Perfekti (har + supinum: har läst, har varit)",
+      "Modaaliverbit (kan, vill, ska, måste, bör)",
+      "Passiivi (blir + particip)",
+      "Sivulauseet (att, som, när, om)",
+      "Refleksiivipronominit (sig, mig, dig)",
+      "Komparatiivi ja superlatiivi (bättre, bäst)"
+    ],
+    "vocabulary_themes": [
+      "Terveys ja keho (hälsa och kroppen)",
+      "Ympäristö ja luonnonsuojelu (miljö och naturvård)",
+      "Tekniikka ja digitaalinen media (teknik och digitala medier)",
+      "Tulevaisuuden suunnitelmat (framtidsplaner)",
+      "Tunteet ja mielipiteet (känslor och åsikter)",
+      "Suomenruotsalainen kulttuuri (finlandssvensk kultur)"
+    ],
+    "key_concepts": [
+      "sammansatta tempus",
+      "modala hjälpverb",
+      "bisatser",
+      "kulturidentitet",
+      "flerspråkighet"
+    ],
+    "context": "Kuudennella luokalla ruotsin opiskelussa painotetaan sujuvampaa ilmaisua ja kulttuuriymmärrystä. Oppilaat oppivat käyttämään monimutkaisempia rakenteita ja ymmärtämään suomenruotsalaista kulttuuria."
+  }
+}

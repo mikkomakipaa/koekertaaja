@@ -68,6 +68,8 @@ export async function createQuestionSet(
       question_type: q.question_type,
       explanation: q.explanation,
       image_url: q.image_url,
+      image_reference: q.image_reference || null,
+      requires_visual: q.requires_visual ?? false,
       order_index: index,
       topic: (q as any).topic || null,  // REQUIRED: High-level topic for stratified sampling
       skill: (q as any).skill || null,  // REQUIRED: Skill tag for performance tracking
@@ -116,6 +118,12 @@ export async function createQuestionSet(
           options: null,
         };
       }
+      case 'flashcard':
+        return {
+          ...baseQuestion,
+          correct_answer: (q as any).correct_answer,
+          options: null,
+        };
       default:
         logger.error(
           { questionType: q.question_type, questionPreview: q.question_text?.substring(0, 50) },
@@ -193,9 +201,61 @@ export async function createQuestionSet(
     return null;
   }
 
-  const { error: questionsError } = await supabaseAdmin
-    .from('questions')
-    .insert(validQuestions as any);
+  const insertQuestions = async (rows: unknown[]) =>
+    supabaseAdmin.from('questions').insert(rows as any);
+
+  const stripMissingVisualColumns = (rows: any[]): any[] =>
+    rows.map(({ image_reference: _imageReference, requires_visual: _requiresVisual, ...rest }) => rest);
+  const mapFlashcardTypeToShortAnswer = (rows: any[]): any[] =>
+    rows.map((row) =>
+      row.question_type === 'flashcard'
+        ? { ...row, question_type: 'short_answer' }
+        : row
+    );
+
+  let { error: questionsError } = await insertQuestions(validQuestions as any[]);
+
+  // Backward compatibility: some environments may not yet have visual columns.
+  // If schema cache misses these columns, retry without them instead of failing.
+  if (
+    questionsError?.code === 'PGRST204' &&
+    /image_reference|requires_visual/i.test(questionsError.message || '')
+  ) {
+    logger.warn(
+      {
+        code: questionsError.code,
+        message: questionsError.message,
+      },
+      'Questions table missing visual columns, retrying insert without visual fields'
+    );
+
+    const fallbackRows = stripMissingVisualColumns(validQuestions as any[]);
+    const fallbackResult = await insertQuestions(fallbackRows);
+    questionsError = fallbackResult.error;
+  }
+
+  // Backward compatibility: some environments still have a question_type CHECK
+  // that does not include 'flashcard'. Retry with short_answer storage type.
+  if (
+    questionsError?.code === '23514' &&
+    /question_type|questions_type_check/i.test(
+      `${questionsError.message || ''} ${questionsError.details || ''}`
+    ) &&
+    (validQuestions as any[]).some((row) => row.question_type === 'flashcard')
+  ) {
+    logger.warn(
+      {
+        code: questionsError.code,
+        message: questionsError.message,
+        details: questionsError.details,
+      },
+      'questions_type_check rejected flashcard type, retrying with short_answer storage type'
+    );
+
+    const fallbackRows = mapFlashcardTypeToShortAnswer(validQuestions as any[]);
+    const fallbackResult = await insertQuestions(fallbackRows);
+    questionsError = fallbackResult.error;
+  }
 
   if (questionsError) {
     // Log detailed error info to help diagnose issues

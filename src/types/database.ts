@@ -82,6 +82,8 @@ export interface DatabaseQuestion {
   options?: any; // JSONB
   explanation: string;
   image_url?: string;
+  image_reference?: string;
+  requires_visual?: boolean;
   order_index: number;
   created_at: string;
   topic?: string;
@@ -97,6 +99,8 @@ export function parseDatabaseQuestion(dbQuestion: DatabaseQuestion): Question {
     question_text: dbQuestion.question_text,
     explanation: dbQuestion.explanation,
     image_url: dbQuestion.image_url,
+    image_reference: dbQuestion.image_reference,
+    requires_visual: dbQuestion.requires_visual,
     order_index: dbQuestion.order_index,
     topic: dbQuestion.topic,
     skill: dbQuestion.skill,
@@ -148,6 +152,12 @@ export function parseDatabaseQuestion(dbQuestion: DatabaseQuestion): Question {
         correct_order: Array.isArray(storedAnswer?.correct_order) ? storedAnswer.correct_order : [],
       };
     }
+    case 'flashcard':
+      return {
+        ...base,
+        question_type: 'flashcard',
+        correct_answer: dbQuestion.correct_answer as string,
+      };
     default:
       throw new Error(`Unknown question type: ${dbQuestion.question_type}`);
   }

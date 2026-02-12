@@ -1,14 +1,14 @@
 {
   "english": {
-    "helppo": "VAIKEUSTASO: Helppo\n- Perussanasto ja yksinkertaiset kielioppisäännöt\n- Selkeät ja suorat kysymykset\n- Yleisimmät sanat ja perusrakenteet\n- Keskittyminen tunnistamiseen ja perusymmärrykseen",
-    "normaali": "VAIKEUSTASO: Normaali\n- Monipuolinen sanasto ja keskitason kielioppi\n- Vaatii ymmärrystä ja soveltamista\n- Lauserakenteet ja kontekstin ymmärtäminen\n- Käytännön viestintätilanteet"
+    "helppo": "VAIKEUSTASO: Helppo\n- Perussanasto ja yksinkertaiset kielioppisäännöt\n- Selkeät ja suorat kysymykset\n- Yleisimmät sanat ja perusrakenteet\n- Keskittyminen tunnistamiseen ja perusymmärrykseen\n- Sovella lisäksi DIFFICULTY CALIBRATION RUBRIC -osiota (kognitio + sanasto + syntaksi + askeleet)",
+    "normaali": "VAIKEUSTASO: Normaali\n- Monipuolinen sanasto ja keskitason kielioppi\n- Vaatii ymmärrystä ja soveltamista\n- Lauserakenteet ja kontekstin ymmärtäminen\n- Käytännön viestintätilanteet\n- Sovella lisäksi DIFFICULTY CALIBRATION RUBRIC -osiota (kognitio + sanasto + syntaksi + askeleet)"
   },
   "math": {
-    "helppo": "VAIKEUSTASO: Helppo\n- Peruslaskutoimitukset ja yksinkertaiset ongelmat\n- Selkeät ja suorat kysymykset\n- Yleisimmät kaavat ja perusrakenteet\n- Keskittyminen tunnistamiseen ja perusymmärrykseen",
-    "normaali": "VAIKEUSTASO: Normaali\n- Monipuolinen matematiikka ja keskitason ongelmanratkaisu\n- Vaatii ymmärrystä ja soveltamista\n- Sanalliset tehtävät ja kontekstin ymmärtäminen\n- Käytännön sovellukset"
+    "helppo": "VAIKEUSTASO: Helppo\n- Peruslaskutoimitukset ja yksinkertaiset ongelmat\n- Selkeät ja suorat kysymykset\n- Yleisimmät kaavat ja perusrakenteet\n- Keskittyminen tunnistamiseen ja perusymmärrykseen\n- Sovella lisäksi DIFFICULTY CALIBRATION RUBRIC -osiota (kognitio + sanasto + syntaksi + askeleet)",
+    "normaali": "VAIKEUSTASO: Normaali\n- Monipuolinen matematiikka ja keskitason ongelmanratkaisu\n- Vaatii ymmärrystä ja soveltamista\n- Sanalliset tehtävät ja kontekstin ymmärtäminen\n- Käytännön sovellukset\n- Sovella lisäksi DIFFICULTY CALIBRATION RUBRIC -osiota (kognitio + sanasto + syntaksi + askeleet)"
   },
   "generic": {
-    "helppo": "VAIKEUSTASO: Helppo\n- Perus käsitteet ja yksinkertainen sisältö\n- Selkeät ja suorat kysymykset\n- Yleisimmät käsitteet ja perusrakenteet\n- Keskittyminen tunnistamiseen ja perusymmärrykseen",
-    "normaali": "VAIKEUSTASO: Normaali\n- Monipuolinen sisältö ja keskitason ymmärrys\n- Vaatii ymmärrystä ja soveltamista\n- Käsitteiden yhteydet ja kontekstin ymmärtäminen\n- Käytännön sovellukset"
+    "helppo": "VAIKEUSTASO: Helppo\n- Peruskäsitteet ja yksinkertainen sisältö\n- Selkeät ja suorat kysymykset\n- Yleisimmät käsitteet ja perusrakenteet\n- Keskittyminen tunnistamiseen ja perusymmärrykseen\n- Sovella lisäksi DIFFICULTY CALIBRATION RUBRIC -osiota (kognitio + sanasto + syntaksi + askeleet)",
+    "normaali": "VAIKEUSTASO: Normaali\n- Monipuolinen sisältö ja keskitason ymmärrys\n- Vaatii ymmärrystä ja soveltamista\n- Käsitteiden yhteydet ja kontekstin ymmärtäminen\n- Käytännön sovellukset\n- Sovella lisäksi DIFFICULTY CALIBRATION RUBRIC -osiota (kognitio + sanasto + syntaksi + askeleet)"
   }
 }

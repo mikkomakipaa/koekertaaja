@@ -1,0 +1,92 @@
+{
+  "grade_4": {
+    "word_types": {
+      "id": "word_types",
+      "label": "Sanaluokat (substantiivi, verbi, adjektiivi)",
+      "prerequisites": [],
+      "enables": ["sentence_structure", "noun_cases", "verb_tenses"]
+    },
+    "noun_cases": {
+      "id": "noun_cases",
+      "label": "Nominatiivi, genetiivi, partitiivi",
+      "prerequisites": ["word_types"],
+      "enables": ["all_cases", "sentence_analysis"]
+    },
+    "verb_tenses": {
+      "id": "verb_tenses",
+      "label": "Verbin aikamuodot (preesens, imperfekti)",
+      "prerequisites": ["word_types"],
+      "enables": ["verb_types", "passive_voice", "compound_tenses"]
+    },
+    "sentence_structure": {
+      "id": "sentence_structure",
+      "label": "Lauseen perusrakenne",
+      "prerequisites": ["word_types"],
+      "enables": ["compound_sentences", "sentence_analysis"]
+    },
+    "spelling_basics": {
+      "id": "spelling_basics",
+      "label": "Oikeinkirjoituksen perusteet",
+      "prerequisites": [],
+      "enables": ["punctuation"]
+    }
+  },
+  "grade_5": {
+    "all_cases": {
+      "id": "all_cases",
+      "label": "Kaikki 15 sijaa",
+      "prerequisites": ["noun_cases"],
+      "enables": ["case_usage", "advanced_grammar"]
+    },
+    "sentence_analysis": {
+      "id": "sentence_analysis",
+      "label": "Lauseenjäsenten tunnistus",
+      "prerequisites": ["sentence_structure", "noun_cases"],
+      "enables": ["complex_sentence_analysis"]
+    },
+    "compound_sentences": {
+      "id": "compound_sentences",
+      "label": "Yhdyslauseet",
+      "prerequisites": ["sentence_structure"],
+      "enables": ["punctuation"]
+    },
+    "passive_voice": {
+      "id": "passive_voice",
+      "label": "Passiivi",
+      "prerequisites": ["verb_tenses"],
+      "enables": ["formal_writing", "impersonal_constructions"]
+    },
+    "punctuation": {
+      "id": "punctuation",
+      "label": "Välimerkit",
+      "prerequisites": ["spelling_basics", "compound_sentences"],
+      "enables": ["formal_writing"]
+    }
+  },
+  "grade_6": {
+    "verb_types": {
+      "id": "verb_types",
+      "label": "Verbityypit",
+      "prerequisites": ["verb_tenses"],
+      "enables": ["verb_conjugation_advanced"]
+    },
+    "formal_writing": {
+      "id": "formal_writing",
+      "label": "Asiatekstin kirjoittaminen",
+      "prerequisites": ["passive_voice", "punctuation"],
+      "enables": ["argumentative_writing"]
+    },
+    "argumentative_writing": {
+      "id": "argumentative_writing",
+      "label": "Mielipidetekstin rakenne",
+      "prerequisites": ["formal_writing", "sentence_analysis"],
+      "enables": ["source_based_writing"]
+    },
+    "text_interpretation": {
+      "id": "text_interpretation",
+      "label": "Tekstin tulkinta",
+      "prerequisites": ["sentence_analysis"],
+      "enables": ["source_based_writing"]
+    }
+  }
+}

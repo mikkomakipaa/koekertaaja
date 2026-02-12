@@ -8,6 +8,7 @@
  * - Similar phrasing
  */
 
+import { smartValidateAnswer } from './smartAnswerValidation';
 /**
  * Calculate Levenshtein distance between two strings
  * (minimum number of single-character edits needed to change one word into another)
@@ -121,8 +122,14 @@ function getSimilarityThreshold(grade?: number): number {
 export function isAnswerCorrect(
   userAnswer: string,
   correctAnswer: string,
-  grade?: number
+  grade?: number,
+  options?: { questionType?: string; subject?: string }
 ): boolean {
+  const smartResult = smartValidateAnswer(userAnswer, correctAnswer, options);
+  if (smartResult.isCorrect) {
+    return true;
+  }
+
   // Special handling for numeric answers - require exact match
   if (isNumericAnswer(correctAnswer) && isNumericAnswer(userAnswer)) {
     const normalizedUser = normalizeNumericString(userAnswer);
@@ -173,17 +180,18 @@ export function isAnswerAcceptable(
   userAnswer: string,
   correctAnswer: string,
   acceptableAnswers?: string[],
-  grade?: number
+  grade?: number,
+  options?: { questionType?: string; subject?: string }
 ): boolean {
   // Check against primary correct answer
-  if (isAnswerCorrect(userAnswer, correctAnswer, grade)) {
+  if (isAnswerCorrect(userAnswer, correctAnswer, grade, options)) {
     return true;
   }
 
   // Check against acceptable alternatives
   if (acceptableAnswers && acceptableAnswers.length > 0) {
     return acceptableAnswers.some(acceptable =>
-      isAnswerCorrect(userAnswer, acceptable, grade)
+      isAnswerCorrect(userAnswer, acceptable, grade, options)
     );
   }
 

@@ -3,158 +3,23 @@
 {{difficulty_instructions}}
 {{grade_note}}
 
-{{material_section}}{{target_words_section}}TÄRKEÄÄ - KYSYMYSTEN MUOTO:
-- Kysymykset esitetään SUOMEKSI
-- Painota SANASTOA ja KIELIOPPIA
-- Vaihtele kysymystyyppejä
-- Luo TÄSMÄLLEEN {{question_count}} kysymystä
-- NOUDATA TARKASTI vaikeustason kysymystyyppien jakaumaa
-- PERUSTA kysymykset annettuun materiaaliin {{grade_context_note}}
+{{material_section}}{{target_words_section}}KIELIAINEEN LISÄOHJEET (QUIZ + FLASHCARD):
+- Kysymysten metateksti on suomeksi.
+- Painota sanastoa ja kielioppia.
+- Luo täsmälleen {{question_count}} kysymystä.
+- Perusta kysymykset annettuun materiaaliin {{grade_context_note}}.
 {{language_subject_note}}
 
-TAGIEN EROTUS (KIELI):
-- Topic = sisältö/teema (esim. "Koulu", "Matkustaminen", "Perhe")
-- Skill = kielitaito (esim. "verb_tenses", "word_meaning", "reading_comprehension")
-- ÄLÄ tee topicista kielioppitaitoa, äläkä käytä skill-tagina aiheteemaa
-- Subtopic on vapaaehtoinen tarkenne (esim. "past_tense_irregulars")
+TAGIEN EROTUS (PAKOLLINEN):
+- topic = sisältöteema (esim. Koulu, Matkustaminen)
+- skill = kielitaito/toiminto (esim. verb_tenses, word_meaning)
+- subtopic on valinnainen tarkenne.
 
-VASTAUSVAIHTOEHTOJEN KIELI:
+VASTAUSKIELI:
 {{language_answer_language_rules}}
 
-QUIZ-MOODI: KYSYMYSTYYPPIEN KÄYTTÖOHJEET
-
-1. MULTIPLE_CHOICE (monivalinta):
-   *** PAKOLLINEN: Jokaisessa multiple_choice kysymyksessä TÄYTYY olla TASAN 4 vaihtoehtoa ***
-
-   Sanaston käännös (suomesta englanniksi):
-   Kysymys: "Mikä on sanan 'koira' englanninkielinen käännös?"
-   Vaihtoehdot: ["dog", "cat", "bird", "fish"]
-
-   Sanaston käännös (englannista suomeksi):
-   Kysymys: "Mitä sana 'happy' tarkoittaa suomeksi?"
-   Vaihtoehdot: ["iloinen", "surullinen", "vihainen", "väsynyt"]
-
-   Kielioppi - oikea verbimuoto:
-   Kysymys: "Valitse oikea verbimuoto: 'She ___ to school every day.'"
-   Vaihtoehdot: ["goes", "go", "going", "went"]
-
-   Kielioppisääntö - teoria:
-   Kysymys: "Mitä aikamuotoa käytetään kun puhutaan säännöllisesti toistuvasta toiminnasta?"
-   Vaihtoehdot: ["preesens", "imperfekti", "perfekti", "futuuri"]
-
-2. TRUE_FALSE (totta/tarua):
-   Kysymys: "Totta vai tarua: Englannin kielessä käytetään artikkelia 'an' ennen vokaalia alkavaa sanaa."
-   correct_answer: true (boolean)
-
-   Kysymys: "Totta vai tarua: Sana 'child' on monikossa 'childs'."
-   correct_answer: false (boolean)
-
-3. FILL_BLANK (täydennä):
-   - Helppo: yksi puuttuva sana
-   Kysymys: "Täydennä lause: 'I ___ breakfast every morning.' (syödä)"
-   Vastaus: "eat" tai "have"
-
-   - Normaali/Vaikea: useampia sanoja tai rakenne
-   Kysymys: "Täydennä lause oikealla verbimuodolla: 'She ___ (go) to London last week.'"
-   Vastaus: "went"
-
-   Anna acceptable_answers listaan vaihtoehtoiset hyväksyttävät vastaukset
-
-4. SHORT_ANSWER (lyhyt avoin vastaus):
-   - VAIN normaali ja vaikea vaikeustasoilla
-   - Vaatii tuottamista kohdekielellä
-
-   Normaali taso:
-   Kysymys: "Kirjoita lause englanniksi: 'Minä pidän koirista.'"
-   Vastaus: "I like dogs." tai "I love dogs."
-
-   Vaikea taso:
-   Kysymys: "Kirjoita 2-3 lausetta: Kerro mitä teit viikonloppuna."
-   Vastaus: "I went to the park on Saturday. I played football with my friends. On Sunday, I stayed at home."
-
-   Anna acceptable_answers listaan erilaisia hyväksyttäviä vastausmuotoja
-
-5. MATCHING (parit):
-   - Sopii: sanat ja käännökset, verbit ja muodot, kysymykset ja vastaukset
-   - Käytä normaali ja vaikea tasoilla
-   *** PAKOLLINEN: Jokaisessa matching kysymyksessä TÄYTYY olla VÄHINTÄÄN 4 paria ***
-
-   Esim: Yhdistä englanninkielinen sana suomenkieliseen käännökseen
-   Parit: [{"left": "happy", "right": "iloinen"}, {"left": "sad", "right": "surullinen"}, {"left": "angry", "right": "vihainen"}, {"left": "tired", "right": "väsynyt"}]
-
-6. SEQUENTIAL (järjestys):
-   - Sopii: lauseiden järjestäminen kappaleeksi, tapahtumien aikajärjestys, dialogin järjestys
-   - Käytä helppo ja normaali tasoilla
-   *** PAKOLLINEN: Helppo taso 4 kohtaa, Normaali taso 5-6 kohtaa ***
-
-   Helppo taso - Lauseet järjestykseen:
-   Kysymys: "Järjestä nämä lauseet oikeaan järjestykseen muodostaaksesi loogisen tarinan:"
-   items: [
-     "I ate my breakfast.",
-     "I woke up at 7 o'clock.",
-     "I went to school.",
-     "I brushed my teeth."
-   ]
-   correct_order: [1, 3, 0, 2]
-
-   Normaali taso - Dialogi järjestykseen:
-   Kysymys: "Järjestä nämä vuorosanat loogiseksi keskusteluksi:"
-   items: [
-     "Nice to meet you too!",
-     "I'm fine, thank you. And you?",
-     "Hello! How are you?",
-     "My name is Sarah. What's your name?",
-     "I'm doing well, thanks!",
-     "I'm John."
-   ]
-   correct_order: [2, 1, 4, 3, 5, 0]
-
-   Timeline Format - Kirjalliset tapahtumat (vuosiluvut mukana):
-   Kysymys: "Järjestä nämä kirjallisen historian tapahtumat aikajärjestykseen:"
-   items: [
-     {"text": "William Shakespeare kirjoitti Hamletin", "year": 1600},
-     {"text": "Charles Dickens julkaisi Oliver Twistin", "year": 1838},
-     {"text": "J.R.R. Tolkien julkaisi Taru sormusten herrasta", "year": 1954},
-     {"text": "J.K. Rowling julkaisi ensimmäisen Harry Potter -kirjan", "year": 1997}
-   ]
-   correct_order: [0, 1, 2, 3]
-
-   Timeline Format - Historiallisen fiktion tapahtumat:
-   Kysymys: "Järjestä nämä toisen maailmansodan aikakirjan tapahtumat aikajärjestykseen:"
-   items: [
-     {"text": "Toinen maailmansota alkoi", "year": 1939},
-     {"text": "Pearl Harboriin hyökättiin", "year": 1941},
-     {"text": "Normandian maihinnousu (D-Day)", "year": 1944},
-     {"text": "Toinen maailmansota päättyi", "year": 1945}
-   ]
-   correct_order: [0, 1, 2, 3]
-
-   MILLOIN KÄYTTÄÄ TIMELINE-MUOTOA (year-kentän kanssa):
-   - Historialliset tapahtumat (vuosiluvut)
-   - Tieteelliset löydöt ja keksinnöt (vuosiluvut)
-   - Kirjalliset julkaisut (julkaisuvuodet)
-   - Elämäkerralliset tapahtumat (ikävuodet tai kalenterivuodet)
-   - Elinkaaren vaiheet (vaihenumero year-kentässä)
-
-   MILLOIN KÄYTTÄÄ TAVALLISTA MUOTOA (ilman year-kenttää):
-   - Prosessien vaiheet (ei kalenterivuosia)
-   - Laskutoimituksen askeleet
-   - Dialogin järjestys
-   - Lauseiden järjestäminen kappaleeksi
-   - Loogiset sarjat (ei kronologiset)
-
-   YEAR-KENTÄN OHJEET:
-   - Käytä vain kronologiseen järjestykseen
-   - Elinkaarissa käytä vaihenumeroita (1, 2, 3, 4) tai ikävuosia
-   - Jätä pois, jos järjestys on looginen eikä ajallinen
-   - Varmista realistinen haarukka: -3000 ... 3000
-
-VÄÄRÄT VASTAUKSET (multiple_choice):
-- Samaan aihealueeseen liittyviä sanoja
-- Yleisiä kielioppivirheitä (esim. "go" kun pitäisi olla "goes")
-- Sekoitettavia muotoja (esim. "their/there/they're")
-- Samanlaisia sanoja (esim. "weather/whether")
-
-LISÄTARKISTUKSET (kieli):
-- Varmista, että sanaston vaikeustaso vastaa {{grade_level_note}}
-- Selitykset ovat henkilökohtaisia (sinä-muoto), informatiivisia ja suomeksi
+KIELIKOHTAISET LAATUVAATIMUKSET:
+- Multiple choice -kysymyksissä tasan 4 vaihtoehtoa.
+- Distraktorit ovat uskottavia kielivirheitä tai lähellä oikeaa merkitystä.
+- Selitykset ovat henkilökohtaisia (sinä-muoto) ja selkeitä.
+- Sanaston vaikeus vastaa {{grade_level_note}}.

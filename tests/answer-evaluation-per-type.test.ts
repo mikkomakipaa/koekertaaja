@@ -8,6 +8,7 @@ import type {
   SequentialQuestion,
   ShortAnswerQuestion,
   TrueFalseQuestion,
+  FlashcardQuestion,
 } from '../src/types/questions';
 import { aiQuestionFixtures } from './fixtures/question-types';
 
@@ -109,4 +110,17 @@ test('evaluateQuestionAnswer handles sequential', () => {
 
   assert.equal(evaluateQuestionAnswer(question, [0, 1, 2]).isCorrect, true);
   assert.equal(evaluateQuestionAnswer(question, [2, 1, 0]).isCorrect, false);
+});
+
+test('evaluateQuestionAnswer handles flashcard', () => {
+  const question: FlashcardQuestion = {
+    ...baseQuestionFields,
+    question_type: 'flashcard',
+    question_text: aiQuestionFixtures.flashcard.question,
+    explanation: aiQuestionFixtures.flashcard.explanation,
+    correct_answer: aiQuestionFixtures.flashcard.correct_answer,
+  };
+
+  assert.equal(evaluateQuestionAnswer(question, 'Helsinki').isCorrect, true);
+  assert.equal(evaluateQuestionAnswer(question, 'Turku').isCorrect, false);
 });

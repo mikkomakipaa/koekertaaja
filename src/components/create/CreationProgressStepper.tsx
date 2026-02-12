@@ -20,6 +20,12 @@ interface CreationProgressStepperProps {
 export function CreationProgressStepper({ steps, className }: CreationProgressStepperProps) {
   const completedCount = steps.filter((s) => s.status === 'completed').length;
   const totalCount = steps.length;
+  const statusText: Record<CreationStep['status'], string> = {
+    pending: 'Odottaa',
+    in_progress: 'Käynnissä',
+    completed: 'Valmis',
+    error: 'Epäonnistui',
+  };
 
   return (
     <div
@@ -32,7 +38,7 @@ export function CreationProgressStepper({ steps, className }: CreationProgressSt
         <div
           key={step.id}
           role="listitem"
-          aria-label={`${step.label}: ${step.status}`}
+          aria-label={`${step.label}: ${statusText[step.status]}`}
           className={cn(
             'rounded-xl border px-4 py-3 transition-all',
             step.status === 'completed' &&
@@ -105,7 +111,7 @@ export function CreationProgressStepper({ steps, className }: CreationProgressSt
 
               {step.metadata?.count !== undefined && step.status === 'completed' && (
                 <span className="mt-2 inline-flex items-center rounded-full bg-emerald-100/80 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">
-                  {step.metadata.count} items
+                  {step.metadata.count} kpl
                 </span>
               )}
             </div>
@@ -116,9 +122,9 @@ export function CreationProgressStepper({ steps, className }: CreationProgressSt
       {/* Overall Progress */}
       <div className="pt-3 border-t border-slate-200/70 dark:border-slate-800">
         <div className="flex items-center justify-between text-xs sm:text-sm">
-          <span className="font-medium text-slate-600 dark:text-slate-300">Progress</span>
+          <span className="font-medium text-slate-600 dark:text-slate-300">Edistyminen</span>
           <span className="font-semibold text-indigo-600 dark:text-indigo-300">
-            {completedCount} / {totalCount} steps done
+            {completedCount} / {totalCount} vaihetta valmis
           </span>
         </div>
       </div>

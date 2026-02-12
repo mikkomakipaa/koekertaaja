@@ -1,4 +1,5 @@
 import { Question } from '@/types';
+import type { ShortAnswerQuestion } from '@/types';
 import { MultipleChoice } from './MultipleChoice';
 import { FillBlank } from './FillBlank';
 import { TrueFalse } from './TrueFalse';
@@ -86,6 +87,23 @@ export function QuestionRenderer({
           onAnswerChange={onAnswerChange}
         />
       );
+
+    case 'flashcard': {
+      // Flashcards in quiz mode are treated as short answer questions
+      const flashcardAsShortAnswer: ShortAnswerQuestion = {
+        ...question,
+        question_type: 'short_answer',
+      };
+      return (
+        <ShortAnswer
+          question={flashcardAsShortAnswer}
+          userAnswer={userAnswer || ''}
+          showExplanation={showExplanation}
+          onAnswerChange={onAnswerChange}
+          placeholderHint={placeholderHint}
+        />
+      );
+    }
 
     default:
       // This should never happen due to TypeScript type checking, but handle it gracefully at runtime

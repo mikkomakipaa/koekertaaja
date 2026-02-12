@@ -1,9 +1,11 @@
 import { z } from 'zod';
+import { SUBJECTS } from '@/config/subjects';
 
 /**
  * Schema for create question set API request
  */
 const subjectTypeSchema = z.enum(['language', 'math', 'written', 'skills', 'concepts', 'geography']);
+const validSubjectIds = new Set(SUBJECTS.map((subject) => subject.id));
 
 export const createQuestionSetSchema = z.object({
   questionSetName: z
@@ -14,8 +16,14 @@ export const createQuestionSetSchema = z.object({
   subject: z
     .string()
     .min(1, 'Subject is required')
-    .max(100, 'Subject must be 100 characters or less')
-    .trim(),
+    .trim()
+    .refine(
+      (value) => {
+        if (validSubjectIds.has(value)) return true;
+        return value.length <= 100;
+      },
+      'Invalid subject'
+    ),
   questionCount: z
     .number()
     .int('Question count must be an integer')
@@ -49,6 +57,7 @@ export const createQuestionSetSchema = z.object({
     .array(z.string().trim().min(1, 'Target word must not be empty'))
     .max(100, 'Maximum 100 target words allowed')
     .optional(),
+  contentType: z.enum(['vocabulary', 'grammar', 'mixed']).optional(),
 });
 
 export type CreateQuestionSetInput = z.infer<typeof createQuestionSetSchema>;
@@ -78,6 +87,7 @@ export const aiQuestionSchema = z.object({
     'matching',
     'short_answer',
     'sequential',
+    'flashcard',
   ]),
   topic: z
     .string()
@@ -93,12 +103,24 @@ export const aiQuestionSchema = z.object({
     .regex(/^[a-z_]+$/, 'Skill must be snake_case')
     .max(100, 'Skill must be 100 characters or less')
     .optional(),
+  concept_id: z
+    .string()
+    .regex(/^[a-z_]+$/, 'Concept ID must be snake_case')
+    .max(100, 'Concept ID must be 100 characters or less')
+    .optional(),
+  image_reference: z
+    .string()
+    .regex(/^IMAGE_\d+$/i, 'Image reference must match IMAGE_X format')
+    .optional(),
+  requires_visual: z.boolean().optional(),
+  image_url: z.string().max(2000, 'Image URL must be 2000 characters or less').optional(),
   options: z.array(z.string()).min(2, 'Multiple choice questions must have at least 2 options').optional(),
   correct_answer: z.union([
     z.string(),
     z.boolean(),
     z.array(z.any()),
   ]).optional(),
+  answer: z.string().optional(),
   acceptable_answers: z.array(z.string()).optional(),
   explanation: z
     .string()
@@ -172,13 +194,23 @@ export const aiQuestionSchema = z.object({
     }
   }
 
-  // Validate that non-sequential questions have correct_answer
-  if (data.type !== 'sequential' && !data.correct_answer) {
+  // Validate that non-sequential questions have an answer payload
+  if (data.type !== 'sequential' && !data.correct_answer && !data.answer) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Question must have a correct_answer',
       path: ['correct_answer'],
     });
+  }
+
+  if (data.type === 'flashcard') {
+    if (typeof data.question === 'string' && data.question.includes('___')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Flashcard question must not use fill-in-the-blank format',
+        path: ['question'],
+      });
+    }
   }
 });
 

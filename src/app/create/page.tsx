@@ -9,24 +9,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { ARIATabBar, type Tab } from '@/components/layout/ARIATabBar';
+import { TopicConfirmationDialog } from '@/components/create/TopicConfirmationDialog';
+import type { TopicAnalysisResult } from '@/lib/ai/topicIdentifier';
 import { Textarea } from '@/components/ui/textarea';
 import { GradeSelector } from '@/components/create/GradeSelector';
 import { MaterialUpload } from '@/components/create/MaterialUpload';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
 import { getGradeBadgeClasses } from '@/lib/utils/grade-colors';
 import { cn } from '@/lib/utils';
+import {
+  analyzeValidationCoverage,
+  getAlternativeRepresentations,
+} from '@/lib/utils/smartAnswerValidation';
 import { Difficulty, QuestionSet } from '@/types';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   CircleNotch,
-  Star,
   Trash,
   ListBullets,
   Plus,
   Tag,
   BookOpenText,
-  Compass,
   ClipboardText,
   Cards,
   ChartBar,
@@ -39,15 +44,20 @@ import {
   EyeSlash,
   Flag,
   PencilSimple,
-  X
+  X,
+  Cpu
 } from '@phosphor-icons/react';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { UserMenu } from '@/components/auth/UserMenu';
 import { CreationProgressStepper } from '@/components/create/CreationProgressStepper';
 import { TestQuestionsTab } from '@/components/create/TestQuestionsTab';
+import { CapacityWarningDialog } from '@/components/create/CapacityWarningDialog';
 import { createLogger } from '@/lib/logger';
+import { SUBJECT_GROUPS, getSubjectById, subjectRequiresGrade } from '@/config/subjects';
+import type { MaterialCapacity, QuestionCountValidation } from '@/lib/utils/materialAnalysis';
 
 type CreateState = 'form' | 'loading' | 'success';
+type ProviderPreference = 'anthropic' | 'openai';
 
 type CreationStep = {
   id: 'topics' | 'quiz-helppo' | 'quiz-normaali' | 'flashcard';
@@ -56,8 +66,13 @@ type CreationStep = {
   metadata?: {
     count?: number;
     message?: string;
+    topics?: string[];
   };
 };
+
+interface QuestionSetWithDistribution extends QuestionSet {
+  type_distribution?: Record<string, number>;
+}
 
 interface QuestionGenerationResponse {
   success: boolean;
@@ -84,6 +99,12 @@ interface QuestionGenerationResponse {
   };
 }
 
+interface CapacityWarningState {
+  capacity: MaterialCapacity;
+  validation: QuestionCountValidation;
+  requestedCount: number;
+}
+
 interface FlaggedQuestion {
   questionId: string;
   questionSetId: string;
@@ -104,54 +125,53 @@ const logger = createLogger({ module: 'create.page' });
 
 export default function CreatePage() {
   const router = useRouter();
-  const subjectTypeOptions: Array<{ value: SubjectType; label: string; description: string }> = [
+  const subjectTypeOptions: Array<{ value: SubjectType; label: string }> = [
     {
       value: 'language',
       label: 'Kielet',
-      description: 'Sanasto, kielioppi, luetun ymmärtäminen',
     },
     {
       value: 'written',
       label: 'Teoria-aineet',
-      description: 'Historia, yhteiskuntaoppi, biologia ja muut lukuaineet',
     },
     {
       value: 'geography',
       label: 'Maantieto',
-      description: 'Kartat, alueet, sijainnit ja maantiedon käsitteet',
     },
     {
       value: 'math',
       label: 'Matematiikka',
-      description: 'Laskut, matemaattiset käsitteet ja ongelmanratkaisu',
     },
     {
       value: 'skills',
       label: 'Taidot',
-      description: 'Kuvataide, musiikki, käsityö tai liikunta',
     },
     {
       value: 'concepts',
       label: 'Käsitteet',
-      description: 'Uskonto, elämänkatsomus tai filosofiset aiheet',
     },
   ];
-  const subjectTypesRequiringGrade = new Set<SubjectType>([
-    'language',
-    'math',
-    'written',
-    'geography',
-    'skills',
-    'concepts',
-  ]);
   const defaultQuestionCounts = {
     min: 20,
     max: 200,
     default: 50,
   };
+  const providerOptions: Array<{ value: ProviderPreference; label: string; description: string }> = [
+    {
+      value: 'anthropic',
+      label: 'Claude',
+      description: 'Käyttää valmiiksi määriteltyjä Claude-malleja tehtäväkohtaisesti.',
+    },
+    {
+      value: 'openai',
+      label: 'OpenAI',
+      description: 'Käyttää valmiiksi määriteltyjä OpenAI-malleja tehtäväkohtaisesti.',
+    },
+  ];
 
   // Form state
   const [state, setState] = useState<CreateState>('form');
+  const [activeTab, setActiveTab] = useState<'create' | 'extend' | 'manage' | 'test-questions' | 'notifications'>('create');
   const [subject, setSubject] = useState('');
   const [topic, setTopic] = useState('');
   const [subtopic, setSubtopic] = useState('');
@@ -164,7 +184,14 @@ export default function CreatePage() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [generationMode, setGenerationMode] = useState<'quiz' | 'flashcard' | 'both'>('quiz');
   const [targetWords, setTargetWords] = useState('');
+  const [contentType, setContentType] = useState<'vocabulary' | 'grammar' | 'mixed'>('vocabulary');
+  const [providerPreference, setProviderPreference] = useState<ProviderPreference>('anthropic');
   const [error, setError] = useState('');
+  const [capacityWarning, setCapacityWarning] = useState<CapacityWarningState | null>(null);
+  const [topicConfirmation, setTopicConfirmation] = useState<{
+    analysis: TopicAnalysisResult;
+    requestedCount: number;
+  } | null>(null);
 
   // Creation progress state
   const [creationSteps, setCreationSteps] = useState<CreationStep[]>([]);
@@ -174,7 +201,7 @@ export default function CreatePage() {
   const [totalQuestionsCreated, setTotalQuestionsCreated] = useState(0);
 
   // All question sets state
-  const [allQuestionSets, setAllQuestionSets] = useState<QuestionSet[]>([]);
+  const [allQuestionSets, setAllQuestionSets] = useState<QuestionSetWithDistribution[]>([]);
   const [loadingQuestionSets, setLoadingQuestionSets] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [publishingId, setPublishingId] = useState<string | null>(null);
@@ -199,10 +226,7 @@ export default function CreatePage() {
   const minQuestionCount = defaultQuestionCounts.min;
   const maxQuestionCount = defaultQuestionCounts.max;
   const defaultQuestionCount = defaultQuestionCounts.default;
-  const hasResolvedSubjectType = subjectType !== '';
-  const requiresGrade = hasResolvedSubjectType
-    ? subjectTypesRequiringGrade.has(subjectType as SubjectType)
-    : false;
+  const requiresGrade = subject ? subjectRequiresGrade(subject) : false;
   const selectedSubjectTypeOption = subjectTypeOptions.find(
     (option) => option.value === subjectType
   );
@@ -210,6 +234,8 @@ export default function CreatePage() {
   const hasSubjectType = Boolean(subjectType);
   const hasRequiredGrade = !requiresGrade || Boolean(grade);
   const hasMaterials = materialText.trim().length > 0 || uploadedFiles.length > 0;
+  const selectedProviderLabel =
+    providerOptions.find((option) => option.value === providerPreference)?.label ?? 'Claude';
 
   const formatListForEdit = (value: unknown): string => {
     if (Array.isArray(value)) {
@@ -230,12 +256,93 @@ export default function CreatePage() {
     return JSON.parse(value);
   };
 
+  const focusMaterialInput = () => {
+    setTimeout(() => {
+      const materialTextarea = document.querySelector<HTMLTextAreaElement>(
+        'textarea[placeholder^="Esim. kirjoita materiaali"]'
+      );
+      materialTextarea?.focus();
+      materialTextarea?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 0);
+  };
+
+  const buildGenerationFormData = (options?: {
+    questionCountOverride?: number;
+    bypassCapacityCheck?: boolean;
+    capacityCheckOnly?: boolean;
+    identifiedTopics?: string[];
+    topicDistribution?: Array<{
+      topic: string;
+      targetCount: number;
+      coverage: number;
+      keywords: string[];
+      subtopics: string[];
+      difficulty: string;
+      importance: string;
+    }>;
+  }) => {
+    const formData = new FormData();
+    const requestedQuestionCount = options?.questionCountOverride ?? questionCount;
+
+    formData.append('subject', subject);
+    formData.append('questionCount', requestedQuestionCount.toString());
+    formData.append('examLength', examLength.toString());
+    formData.append('questionSetName', questionSetName);
+    if (topic.trim()) {
+      formData.append('topic', topic.trim());
+    }
+    if (subtopic.trim()) {
+      formData.append('subtopic', subtopic.trim());
+    }
+    if (grade) {
+      formData.append('grade', grade.toString());
+    }
+
+    formData.append('subjectType', subjectType);
+    formData.append('generationMode', generationMode);
+    formData.append('provider', providerPreference);
+
+    if (generationMode === 'flashcard' || generationMode === 'both') {
+      formData.append('contentType', contentType);
+    }
+
+    if (materialText.trim()) {
+      formData.append('materialText', materialText);
+    }
+
+    if (targetWords.trim()) {
+      formData.append('targetWords', targetWords);
+    }
+
+    if (options?.identifiedTopics && options.identifiedTopics.length > 0) {
+      formData.append('identifiedTopics', JSON.stringify(options.identifiedTopics));
+    }
+
+    if (options?.topicDistribution && options.topicDistribution.length > 0) {
+      formData.append('distribution', JSON.stringify(options.topicDistribution));
+    }
+
+    if (options?.bypassCapacityCheck) {
+      formData.append('bypassCapacityCheck', 'true');
+    }
+
+    if (options?.capacityCheckOnly) {
+      formData.append('capacityCheckOnly', 'true');
+    }
+
+    uploadedFiles.forEach((file, index) => {
+      formData.append(`file_${index}`, file);
+    });
+
+    return formData;
+  };
+
   // Helper functions for creation progress
   const initializeCreationSteps = (): CreationStep[] => {
     const steps: CreationStep[] = [
       {
         id: 'topics',
-        label: 'Identify topics',
+        label: 'Tunnista aihealueet',
         status: 'pending',
       },
     ];
@@ -244,12 +351,12 @@ export default function CreatePage() {
       steps.push(
         {
           id: 'quiz-helppo',
-          label: 'Quiz: Easy',
+          label: 'Koe: Helppo',
           status: 'pending',
         },
         {
           id: 'quiz-normaali',
-          label: 'Quiz: Normal',
+          label: 'Koe: Normaali',
           status: 'pending',
         }
       );
@@ -258,7 +365,7 @@ export default function CreatePage() {
     if (generationMode === 'flashcard' || generationMode === 'both') {
       steps.push({
         id: 'flashcard',
-        label: 'Flashcards',
+        label: 'Muistikortit',
         status: 'pending',
       });
     }
@@ -269,7 +376,7 @@ export default function CreatePage() {
   const updateCreationStep = (
     stepId: string,
     status: CreationStep['status'],
-    metadata?: { count?: number; message?: string }
+    metadata?: CreationStep['metadata']
   ) => {
     setCreationSteps((prev) =>
       prev.map((step) =>
@@ -278,7 +385,58 @@ export default function CreatePage() {
     );
   };
 
-  const handleSubmit = async () => {
+  // Handler for topic confirmation dialog
+  const handleTopicConfirmation = (
+    totalQuestions: number,
+    topicDistribution: Array<{ topic: string; count: number }>
+  ) => {
+    // Close dialog
+    setTopicConfirmation(null);
+
+    // Store confirmed distribution in state for use by generation
+    setQuestionCount(totalQuestions);
+
+    // Build TopicDistribution format from user's adjusted counts
+    const distribution = topicConfirmation?.analysis.topics.map((topic, index) => {
+      const userCount = topicDistribution.find(d => d.topic === topic.name)?.count || 0;
+      return {
+        topic: topic.name,
+        targetCount: userCount,
+        coverage: topic.coverage,
+        keywords: topic.keywords,
+        subtopics: topic.subtopics,
+        difficulty: topic.difficulty,
+        importance: topic.importance,
+      };
+    }) || [];
+
+    // Proceed with generation, bypassing topic confirmation
+    void handleSubmit({
+      bypassCapacityCheck: true,
+      questionCountOverride: totalQuestions,
+      bypassTopicConfirmation: true,
+      confirmedTopics: topicDistribution.map(d => d.topic),
+      topicDistribution: distribution,
+    });
+  };
+
+  const handleSubmit = async (options?: {
+    bypassCapacityCheck?: boolean;
+    questionCountOverride?: number;
+    bypassTopicConfirmation?: boolean;
+    confirmedTopics?: string[];
+    topicDistribution?: Array<{
+      topic: string;
+      targetCount: number;
+      coverage: number;
+      keywords: string[];
+      subtopics: string[];
+      difficulty: string;
+      importance: string;
+    }>;
+  }) => {
+    const requestedQuestionCount = options?.questionCountOverride ?? questionCount;
+
     // Validation
     if (!questionSetName.trim()) {
       setError('Anna kysymyssarjalle nimi!');
@@ -286,7 +444,7 @@ export default function CreatePage() {
     }
 
     if (!subject.trim()) {
-      setError('Anna aineen nimi!');
+      setError('Valitse aine!');
       return;
     }
 
@@ -305,44 +463,13 @@ export default function CreatePage() {
       return;
     }
 
+    // Note: Old word-based capacity check removed - now using intelligent topic-based confirmation
     setError('');
+    setCapacityWarning(null);
     setState('loading');
     setCreationSteps(initializeCreationSteps());
 
     try {
-      // Prepare form data
-      const formData = new FormData();
-      formData.append('subject', subject);
-      formData.append('questionCount', questionCount.toString());
-      formData.append('examLength', examLength.toString());
-      formData.append('questionSetName', questionSetName);
-      if (topic.trim()) {
-        formData.append('topic', topic.trim());
-      }
-      if (subtopic.trim()) {
-        formData.append('subtopic', subtopic.trim());
-      }
-
-      if (grade) {
-        formData.append('grade', grade.toString());
-      }
-
-      formData.append('subjectType', subjectType);
-
-      formData.append('generationMode', generationMode);
-
-      if (materialText.trim()) {
-        formData.append('materialText', materialText);
-      }
-
-      if (targetWords.trim()) {
-        formData.append('targetWords', targetWords);
-      }
-
-      uploadedFiles.forEach((file, index) => {
-        formData.append(`file_${index}`, file);
-      });
-
       // Track results across separate API calls
       const results: {
         quizSets: Array<{ code: string; name: string; difficulty: string; mode: 'quiz' | 'flashcard'; questionCount: number }>;
@@ -350,43 +477,117 @@ export default function CreatePage() {
         errors: Array<{ mode: 'quiz' | 'flashcard'; error: string }>;
       } = { quizSets: [], flashcardSet: null, errors: [] };
 
-      // Step 1: Identify topics (shared across quiz and flashcard)
-      updateCreationStep('topics', 'in_progress', { message: 'Analyzing material...' });
+      // Vaihe 1: Tunnista aihealueet (tai käytä vahvistettuja aihealueita)
       let topics: string[] = [];
-      try {
-        const topicsResponse = await fetch('/api/identify-topics', { method: 'POST', body: formData });
-        if (topicsResponse.ok) {
-          const topicsData = await topicsResponse.json();
-          topics = topicsData.topics || [];
-          updateCreationStep('topics', 'completed', {
-            count: topics.length,
-            message: `Identified ${topics.length} topics`,
+
+      if (options?.confirmedTopics) {
+        // Use already confirmed topics
+        topics = options.confirmedTopics;
+        updateCreationStep('topics', 'completed', {
+          count: topics.length,
+          message: `Käytetään ${topics.length} vahvistettua aihealuetta`,
+          topics,
+        });
+      } else {
+        // Identify topics from material
+        updateCreationStep('topics', 'in_progress', { message: 'Analysoidaan materiaalia...' });
+        let enhancedAnalysis: TopicAnalysisResult | null = null;
+
+        try {
+          const topicsResponse = await fetch('/api/identify-topics', {
+            method: 'POST',
+            body: buildGenerationFormData({
+              questionCountOverride: requestedQuestionCount,
+              bypassCapacityCheck: true,
+            }),
+          });
+          if (topicsResponse.ok) {
+            const topicsData = await topicsResponse.json();
+            const rawTopics: unknown[] = Array.isArray(topicsData.topics) ? topicsData.topics : [];
+            topics = rawTopics
+              .filter((candidate: unknown): candidate is string => typeof candidate === 'string')
+              .map((candidate) => candidate.trim())
+              .filter(Boolean);
+
+            // Extract enhanced analysis if available
+            if (topicsData.enhanced) {
+              enhancedAnalysis = topicsData.enhanced as TopicAnalysisResult;
+            }
+
+            if (topics.length === 0) {
+              logger.warn('Topic identification returned zero topics');
+              updateCreationStep('topics', 'error', {
+                message: 'Ei aihealueita tunnistettu',
+              });
+              setState('form');
+              setError('Materiaali oli liian lyhyt aihealueiden tunnistamiseen. Lisää materiaalia ja yritä uudelleen.');
+              return;
+            } else {
+              updateCreationStep('topics', 'completed', {
+                count: topics.length,
+                message: `Tunnistettiin ${topics.length} aihealuetta`,
+                topics,
+              });
+
+              // Show topic confirmation dialog if enhanced analysis available and not bypassing
+              if (enhancedAnalysis && !options?.bypassTopicConfirmation) {
+                setState('form'); // Return to form state to show dialog
+                setTopicConfirmation({
+                  analysis: enhancedAnalysis,
+                  requestedCount: requestedQuestionCount,
+                });
+                return; // Exit handleSubmit - will continue in confirmation handler
+              }
+            }
+          } else {
+          let errorMessage = 'Aihealueiden tunnistus epäonnistui';
+          try {
+            const errorData = await topicsResponse.json();
+            if (typeof errorData?.error === 'string' && errorData.error.trim()) {
+              errorMessage = errorData.error;
+            }
+          } catch (parseError) {
+            logger.warn({ parseError }, 'Failed to parse topic identification error response');
+          }
+          updateCreationStep('topics', 'error', {
+            message: errorMessage,
+            topics: [],
           });
         }
-      } catch (error) {
-        logger.warn({ error }, 'Topic identification failed');
-        updateCreationStep('topics', 'error', { message: 'Topic recognition failed' });
-      }
-
-      // Add topics to form data for subsequent requests
-      if (topics.length > 0) {
-        formData.append('identifiedTopics', JSON.stringify(topics));
+        } catch (error) {
+          logger.warn({ error }, 'Topic identification failed');
+          updateCreationStep('topics', 'error', {
+            message: 'Aihealueiden tunnistus epäonnistui',
+            topics: [],
+          });
+        }
       }
 
       // Step 2: Generate quiz sets (if requested)
       if (generationMode === 'quiz' || generationMode === 'both') {
-        updateCreationStep('quiz-helppo', 'in_progress', { message: 'Generating quiz...' });
-        updateCreationStep('quiz-normaali', 'in_progress', { message: 'Generating quiz...' });
+        updateCreationStep('quiz-helppo', 'in_progress', { message: 'Luodaan visaa...' });
+        updateCreationStep('quiz-normaali', 'in_progress', { message: 'Luodaan visaa...' });
         try {
-          const quizResponse = await fetch('/api/generate-questions/quiz', { method: 'POST', body: formData });
+          const quizResponse = await fetch('/api/generate-questions/quiz', {
+            method: 'POST',
+            body: buildGenerationFormData({
+              questionCountOverride: requestedQuestionCount,
+              bypassCapacityCheck: true,
+              identifiedTopics: topics,
+              topicDistribution: options?.topicDistribution,
+            }),
+          });
           const quizData = await quizResponse.json();
+
+          // Note: warningRequired check removed - using topic-based confirmation instead
+
           if (quizData.success && quizData.questionSets) {
             results.quizSets = quizData.questionSets;
             quizData.questionSets.forEach((set: { difficulty: string; questionCount: number }) => {
               const stepId = set.difficulty === 'helppo' ? 'quiz-helppo' : 'quiz-normaali';
               updateCreationStep(stepId, 'completed', {
                 count: set.questionCount,
-                message: `Created ${set.questionCount} questions`,
+                message: `Luotiin ${set.questionCount} kysymystä`,
               });
             });
           } else {
@@ -402,15 +603,26 @@ export default function CreatePage() {
 
       // Step 3: Generate flashcard set (if requested)
       if (generationMode === 'flashcard' || generationMode === 'both') {
-        updateCreationStep('flashcard', 'in_progress', { message: 'Generating flashcards...' });
+        updateCreationStep('flashcard', 'in_progress', { message: 'Luodaan muistikortteja...' });
         try {
-          const flashcardResponse = await fetch('/api/generate-questions/flashcard', { method: 'POST', body: formData });
+          const flashcardResponse = await fetch('/api/generate-questions/flashcard', {
+            method: 'POST',
+            body: buildGenerationFormData({
+              questionCountOverride: requestedQuestionCount,
+              bypassCapacityCheck: true,
+              identifiedTopics: topics,
+              topicDistribution: options?.topicDistribution,
+            }),
+          });
           const flashcardData = await flashcardResponse.json();
+
+          // Note: warningRequired check removed - using topic-based confirmation instead
+
           if (flashcardData.success && flashcardData.questionSet) {
             results.flashcardSet = flashcardData.questionSet;
             updateCreationStep('flashcard', 'completed', {
               count: flashcardData.questionSet.questionCount,
-              message: `Created ${flashcardData.questionSet.questionCount} cards`,
+              message: `Luotiin ${flashcardData.questionSet.questionCount} korttia`,
             });
           } else {
             throw new Error(flashcardData.error || 'Muistikorttien luonti epäonnistui');
@@ -435,8 +647,10 @@ export default function CreatePage() {
           const failureSummary = results.errors.map(e => `${e.mode === 'flashcard' ? 'Kortit' : 'Visa'}: Epäonnistui`).join('\n');
           toast.warning(`Luotiin ${allSets.length} sarjaa, ${results.errors.length} epäonnistui`, { description: failureSummary, duration: 8000 });
         }
-        // Navigate to play page to view created sets
-        router.push('/play');
+        // Show success confirmation screen and wait for user confirmation
+        setQuestionSetsCreated(allSets);
+        setTotalQuestionsCreated(totalQuestions);
+        setState('success');
       } else {
         // Total failure
         const errorDetails = results.errors.map(e => `${e.mode === 'flashcard' ? 'Kortit' : 'Visa'}: ${e.error}`).join('\n');
@@ -548,8 +762,13 @@ export default function CreatePage() {
     router.push('/');
   };
 
-  const handleBrowseSets = () => {
-    router.push('/play');
+  const handleConfirmAndReturnToCreate = () => {
+    setQuestionSetsCreated([]);
+    setTotalQuestionsCreated(0);
+    setCreationSteps([]);
+    setError('');
+    setState('form');
+    router.replace('/create');
   };
 
   const loadQuestionSets = async () => {
@@ -1000,6 +1219,40 @@ export default function CreatePage() {
     }
   }, [requiresGrade]);
 
+  useEffect(() => {
+    if (generationMode !== 'flashcard') {
+      setContentType('vocabulary');
+    }
+  }, [generationMode]);
+
+  useEffect(() => {
+    const selectedSubject = getSubjectById(subject);
+    if (!selectedSubject?.supportsGrammar) {
+      setContentType('vocabulary');
+    }
+  }, [subject]);
+
+  const validationCoverage = editingFlag
+    ? analyzeValidationCoverage({
+        questionType: editingFlag.questionType,
+        subject: editingFlag.subject,
+        correctAnswer:
+          typeof editingFlag.correctAnswer === 'string'
+            ? editCorrectAnswer || editingFlag.correctAnswer
+            : editCorrectAnswer || undefined,
+      })
+    : null;
+
+  const smartAlternatives =
+    editingFlag &&
+    ['multiple_choice', 'fill_blank', 'short_answer', 'flashcard'].includes(editingFlag.questionType)
+      ? getAlternativeRepresentations(
+          typeof editingFlag.correctAnswer === 'string'
+            ? editCorrectAnswer || editingFlag.correctAnswer
+            : editCorrectAnswer
+        )
+      : [];
+
   // Success screen
   if (state === 'success') {
     const difficultyLabels: Record<string, string> = {
@@ -1010,9 +1263,9 @@ export default function CreatePage() {
     const modeLabels: Record<string, string> = {
       quiz: 'Koe',
       flashcard: 'Kortit',
-    };
+  };
 
-    return (
+  return (
       <AuthGuard>
         <UserMenu />
         <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 flex items-center justify-center transition-colors">
@@ -1065,19 +1318,12 @@ export default function CreatePage() {
 
             <div className="flex gap-3 pt-4">
               <Button
-                onClick={handleBrowseSets}
-                mode="neutral"
+                onClick={handleConfirmAndReturnToCreate}
+                mode="quiz"
                 variant="primary"
                 className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
               >
-                Selaa kysymyssarjoja
-              </Button>
-              <Button
-                onClick={handleBackToMenu}
-                variant="secondary"
-                className="flex-1"
-              >
-                Takaisin valikkoon
+                OK, takaisin luontiin
               </Button>
             </div>
           </CardContent>
@@ -1087,61 +1333,39 @@ export default function CreatePage() {
     );
   }
 
+  // Configure tabs
+  const tabsConfig: Tab<typeof activeTab>[] = [
+    { value: 'create', label: 'Luo uusi' },
+    { value: 'extend', label: 'Laajenna' },
+    { value: 'manage', label: 'Hallitse', badge: allQuestionSets.length },
+    { value: 'test-questions', label: 'Testaa' },
+    ...(isAdmin ? [{ value: 'notifications' as const, label: 'Ilmoitukset', badge: flaggedQuestions.length, adminOnly: true }] : [])
+  ];
+
   // Form screen
   return (
     <AuthGuard>
       <UserMenu />
       <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 transition-colors">
       <div className="max-w-3xl mx-auto">
-        <Card className="rounded-xl shadow-lg dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white rounded-t-xl">
-            <CardTitle className="text-2xl md:text-3xl font-bold flex items-center gap-2 text-white">
-              <Star className="w-8 h-8" />
-              Kysymyssarjat
-            </CardTitle>
-            <CardDescription className="text-white text-base md:text-lg font-medium">
-              Luo uusia kysymyssarjoja tai hallitse olemassa olevia
-            </CardDescription>
-          </CardHeader>
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-lg border-b border-border transition-shadow">
+          <PageHeader
+            title="Kysymyssarjat"
+            subtitle="Luo uusia kysymyssarjoja tai hallitse olemassa olevia"
+          />
+          <ARIATabBar
+            tabs={tabsConfig}
+            activeTab={activeTab}
+            onTabChange={(value: typeof activeTab) => setActiveTab(value)}
+            isAdmin={isAdmin}
+          />
+        </div>
 
-          <CardContent className="p-6">
-            <Tabs defaultValue="create" className="w-full">
-              <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} mb-6`}>
-                <TabsTrigger value="create" className="text-base">
-                  <Star className="w-4 h-4 mr-2" />
-                  Luo uusi
-                </TabsTrigger>
-                <TabsTrigger value="extend" className="text-base">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Laajenna
-                </TabsTrigger>
-                <TabsTrigger value="manage" className="text-base">
-                  <ListBullets weight="duotone" className="w-4 h-4 mr-2" />
-                  Hallitse
-                  <Badge variant="count" size="xs" className="ml-2">
-                    {allQuestionSets.length}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="test-questions" className="text-base">
-                  <Eye weight="duotone" className="w-4 h-4 mr-2" />
-                  Testaa
-                </TabsTrigger>
-                {isAdmin && (
-                  <TabsTrigger value="notifications" className="text-base">
-                    <Flag weight="duotone" className="w-4 h-4 mr-2" />
-                    Ilmoitukset
-                    <Badge
-                      variant="count"
-                      size="xs"
-                      className="ml-2 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
-                    >
-                      {loadingFlags ? '…' : flaggedQuestions.length}
-                    </Badge>
-                  </TabsTrigger>
-                )}
-              </TabsList>
-
-              <TabsContent value="create" className="space-y-6">
+        {/* Tab Content */}
+        <div className="p-4 md:p-8 space-y-6">
+          {activeTab === 'create' && (
+            <div id="question-form" className="space-y-6">
             <div>
               <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                 <span className="inline-flex items-center gap-2">
@@ -1165,39 +1389,51 @@ export default function CreatePage() {
                   Aine
                 </span>
               </label>
-              <div className="space-y-4">
-                <Input
-                  type="text"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  placeholder="Esim. Maantieto, Biologia, Matematiikka"
-                  className="text-base"
-                />
-                <div>
-                  <label className="block text-base font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                    <span className="inline-flex items-center gap-2">
-                      <Compass weight="duotone" className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                      Aineen tyyppi (pakollinen)
-                    </span>
-                  </label>
-                  <select
-                    value={subjectType}
-                    onChange={(e) => setSubjectType(e.target.value as SubjectType | '')}
-                    className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
-                  >
-                    <option value="">-- Valitse tyyppi --</option>
-                    {subjectTypeOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
+              <select
+                value={subject}
+                onChange={(e) => {
+                  const selectedSubjectId = e.target.value;
+                  const selectedSubject = getSubjectById(selectedSubjectId);
+
+                  setSubject(selectedSubjectId);
+
+                  if (selectedSubject) {
+                    setSubjectType(selectedSubject.type);
+                    if (!selectedSubject.requiresGrade) {
+                      setGrade(undefined);
+                    }
+                    return;
+                  }
+
+                  setSubjectType('');
+                }}
+                className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700 text-base"
+              >
+                <option value="">-- Valitse aine --</option>
+                {SUBJECT_GROUPS.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.subjects.map((groupSubject) => (
+                      <option key={groupSubject.id} value={groupSubject.id}>
+                        {groupSubject.icon} {groupSubject.name}
                       </option>
                     ))}
-                  </select>
+                  </optgroup>
+                ))}
+              </select>
+              {subject && (() => {
+                const selectedSubject = getSubjectById(subject);
+                return selectedSubject ? (
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                    Valitse aineen tyyppi, jotta kysymykset ja vaikeusjakaumat sopivat luokka-asteelle.
-                    {selectedSubjectTypeOption ? ` ${selectedSubjectTypeOption.description}.` : ''}
+                    {selectedSubject.description}
                   </p>
+                ) : null;
+              })()}
+              {subject && subjectType && (
+                <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 mt-3">
+                  <span className="font-medium">Aineen tyyppi:</span>{' '}
+                  {selectedSubjectTypeOption?.label || subjectType}
                 </div>
-              </div>
+              )}
             </div>
 
             <div>
@@ -1247,7 +1483,29 @@ export default function CreatePage() {
                   <ClipboardText weight="duotone" className="w-5 h-5 text-indigo-700 dark:text-indigo-300" />
                   Mitä haluat luoda?
                 </span>
-              </label>
+                </label>
+              <div className="mt-4">
+                <label className="block text-sm font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                  <span className="inline-flex items-center gap-2">
+                    <Cpu weight="duotone" className="w-4 h-4 text-indigo-700 dark:text-indigo-300" />
+                    AI-palvelu
+                  </span>
+                </label>
+                <select
+                  value={providerPreference}
+                  onChange={(e) => setProviderPreference(e.target.value as ProviderPreference)}
+                  className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700 text-sm"
+                >
+                  {providerOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-2">
+                  {providerOptions.find((option) => option.value === providerPreference)?.description}
+                </p>
+              </div>
               <div className="space-y-3">
                 <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-800/30 transition-colors">
                   <input
@@ -1315,6 +1573,99 @@ export default function CreatePage() {
               </div>
             </div>
 
+            {/* Content Type Selector (language flashcards) */}
+            {generationMode === 'flashcard' && subject && (() => {
+              const selectedSubject = getSubjectById(subject);
+              return selectedSubject?.supportsGrammar ? (
+                <div className="border-2 border-purple-200 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-5">
+                  <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
+                    <span className="inline-flex items-center gap-2">
+                      <BookOpenText weight="duotone" className="w-5 h-5 text-purple-700 dark:text-purple-300" />
+                      Sisällön tyyppi
+                    </span>
+                  </label>
+
+                  <div className="space-y-3">
+                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-800/30 transition-colors">
+                      <input
+                        type="radio"
+                        name="contentType"
+                        value="vocabulary"
+                        checked={contentType === 'vocabulary'}
+                        onChange={() => setContentType('vocabulary')}
+                        className="mt-1 w-4 h-4 border-purple-300 text-purple-600 focus:ring-purple-500 dark:border-purple-600 dark:bg-gray-800"
+                      />
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900 dark:text-gray-100">
+                          Sanasto
+                        </div>
+                        <p className="text-sm text-purple-700 dark:text-purple-300">
+                          Sanojen käännökset, merkitykset, fraasit ja ilmaisut
+                        </p>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-800/30 transition-colors">
+                      <input
+                        type="radio"
+                        name="contentType"
+                        value="grammar"
+                        checked={contentType === 'grammar'}
+                        onChange={() => setContentType('grammar')}
+                        className="mt-1 w-4 h-4 border-purple-300 text-purple-600 focus:ring-purple-500 dark:border-purple-600 dark:bg-gray-800"
+                      />
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900 dark:text-gray-100">
+                          Kielioppi
+                        </div>
+                        <p className="text-sm text-purple-700 dark:text-purple-300">
+                          Kielioppisäännöt, verbitaivutus, lauserakenne, aikamuodot
+                        </p>
+                        <div className="mt-2 text-xs text-purple-800 dark:text-purple-200 bg-purple-100 dark:bg-purple-900/40 rounded px-2 py-1 inline-block">
+                          Materiaaliin tarvitaan sääntöjen selityksiä
+                        </div>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-800/30 transition-colors">
+                      <input
+                        type="radio"
+                        name="contentType"
+                        value="mixed"
+                        checked={contentType === 'mixed'}
+                        onChange={() => setContentType('mixed')}
+                        className="mt-1 w-4 h-4 border-purple-300 text-purple-600 focus:ring-purple-500 dark:border-purple-600 dark:bg-gray-800"
+                      />
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900 dark:text-gray-100">
+                          Sekalainen
+                        </div>
+                        <p className="text-sm text-purple-700 dark:text-purple-300">
+                          Sekä sanastoa että kielioppia samassa materiaalissa
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {contentType === 'grammar' && (
+                    <Alert className="mt-4 border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/30">
+                      <AlertDescription className="text-sm text-purple-900 dark:text-purple-100">
+                        <strong>Kielioppimuistikortteja varten materiaalin täytyy sisältää:</strong>
+                        <ul className="list-disc ml-5 mt-2 space-y-1">
+                          <li>Sääntöjen selityksiä (esim. &quot;Miten muodostetaan...&quot;, &quot;Mikä on...&quot;)</li>
+                          <li>Esimerkkejä säännöistä käytännössä</li>
+                          <li>Vähintään 300 merkkiä tekstiä</li>
+                        </ul>
+                        <p className="mt-2 text-xs text-purple-800 dark:text-purple-200">
+                          Jos materiaali sisältää vain sanalistoja, valitse &quot;Sanasto&quot;.
+                        </p>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              ) : null;
+            })()}
+
             <div>
               <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                 <span className="inline-flex items-center gap-2">
@@ -1339,33 +1690,6 @@ export default function CreatePage() {
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                 Harjoituskerta sisältää tämän määrän kysymyksiä
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
-                <span className="inline-flex items-center gap-2">
-                  <ListNumbers weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  Materiaalista luotavien kysymysten määrä
-                </span>
-              </label>
-              <div className="space-y-4">
-                <Slider
-                  min={minQuestionCount}
-                  max={maxQuestionCount}
-                  step={10}
-                  value={[questionCount]}
-                  onValueChange={(value) => setQuestionCount(value[0])}
-                  className="w-full"
-                />
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">{minQuestionCount} kysymystä</span>
-                  <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{questionCount}</span>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">{maxQuestionCount} kysymystä</span>
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                AI luo tämän määrän kysymyksiä materiaalista (jaetaan vaikeusasteille)
               </p>
             </div>
 
@@ -1409,7 +1733,9 @@ export default function CreatePage() {
                 Peruuta
               </Button>
               <Button
-                onClick={handleSubmit}
+                onClick={() => {
+                  void handleSubmit();
+                }}
                 mode="quiz"
                 variant="primary"
                 className="flex-1"
@@ -1418,10 +1744,12 @@ export default function CreatePage() {
                 Luo kysymyssarjat
               </Button>
             </div>
-              </TabsContent>
+            </div>
+          )}
 
-              <TabsContent value="extend" className="space-y-6">
-                <div>
+          {activeTab === 'extend' && (
+            <div className="space-y-6">
+              <div>
                   <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
                     <span className="inline-flex items-center gap-2">
                       <Package weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
@@ -1527,10 +1855,12 @@ export default function CreatePage() {
                   >
                     Lisää kysymyksiä
                   </Button>
-                </div>
-              </TabsContent>
+              </div>
+            </div>
+          )}
 
-              <TabsContent value="manage" className="space-y-4">
+          {activeTab === 'manage' && (
+            <div className="space-y-4">
                 {loadingQuestionSets ? (
                   <div className="flex justify-center py-12">
                     <CircleNotch weight="bold" className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
@@ -1622,6 +1952,57 @@ export default function CreatePage() {
                                     Luotu: {new Date(set.created_at).toLocaleDateString('fi-FI')}
                                   </p>
                                 )}
+                                {set.type_distribution && Object.keys(set.type_distribution).length > 0 && (() => {
+                                  const total = set.question_count;
+                                  const getPercentage = (count: number) => Math.round((count / total) * 100);
+
+                                  return (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                      {(set.type_distribution.multiple_choice || 0) > 0 && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                          <span className="font-medium">Monivalinta</span>
+                                          <span className="text-blue-600 dark:text-blue-400">{getPercentage(set.type_distribution.multiple_choice)}%</span>
+                                        </span>
+                                      )}
+                                      {(set.type_distribution.fill_blank || 0) > 0 && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                                          <span className="font-medium">Täytä</span>
+                                          <span className="text-purple-600 dark:text-purple-400">{getPercentage(set.type_distribution.fill_blank)}%</span>
+                                        </span>
+                                      )}
+                                      {(set.type_distribution.true_false || 0) > 0 && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                          <span className="font-medium">T/E</span>
+                                          <span className="text-green-600 dark:text-green-400">{getPercentage(set.type_distribution.true_false)}%</span>
+                                        </span>
+                                      )}
+                                      {(set.type_distribution.matching || 0) > 0 && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                                          <span className="font-medium">Yhdistä</span>
+                                          <span className="text-orange-600 dark:text-orange-400">{getPercentage(set.type_distribution.matching)}%</span>
+                                        </span>
+                                      )}
+                                      {(set.type_distribution.short_answer || 0) > 0 && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
+                                          <span className="font-medium">Kirjoita</span>
+                                          <span className="text-cyan-600 dark:text-cyan-400">{getPercentage(set.type_distribution.short_answer)}%</span>
+                                        </span>
+                                      )}
+                                      {(set.type_distribution.sequential || 0) > 0 && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                          <span className="font-medium">Järjestä</span>
+                                          <span className="text-indigo-600 dark:text-indigo-400">{getPercentage(set.type_distribution.sequential)}%</span>
+                                        </span>
+                                      )}
+                                      {(set.type_distribution.flashcard || 0) > 0 && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300">
+                                          <span className="font-medium">Kortti</span>
+                                          <span className="text-teal-600 dark:text-teal-400">{getPercentage(set.type_distribution.flashcard)}%</span>
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                               <div className="flex gap-2 ml-4">
                                 <Button
@@ -1689,20 +2070,23 @@ export default function CreatePage() {
                   <Button onClick={() => router.push('/')} variant="secondary" className="w-full">
                     Takaisin valikkoon
                   </Button>
-                </div>
-              </TabsContent>
+              </div>
+            </div>
+          )}
 
-              <TabsContent value="test-questions" className="space-y-4">
-                <TestQuestionsTab
-                  allQuestionSets={allQuestionSets}
-                  loadingQuestionSets={loadingQuestionSets}
-                  onRefreshSets={loadQuestionSets}
-                />
-              </TabsContent>
+          {activeTab === 'test-questions' && (
+            <div className="space-y-4">
+              <TestQuestionsTab
+                allQuestionSets={allQuestionSets}
+                loadingQuestionSets={loadingQuestionSets}
+                onRefreshSets={loadQuestionSets}
+              />
+            </div>
+          )}
 
-              {isAdmin && (
-                <TabsContent value="notifications" className="space-y-4">
-                  <div className="flex items-center justify-between">
+          {activeTab === 'notifications' && isAdmin && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Flag weight="duotone" className="w-5 h-5 text-indigo-600" />
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -1754,10 +2138,34 @@ export default function CreatePage() {
                                       <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
                                         {flag.questionText}
                                       </p>
-                                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                        {flag.questionSetName ?? 'Tuntematon sarja'}
-                                        {flag.questionSetCode ? ` • Koodi ${flag.questionSetCode}` : ''}
-                                      </p>
+                                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 space-y-1">
+                                        <div>
+                                          {flag.questionSetName ?? 'Tuntematon sarja'}
+                                          {flag.questionSetCode ? ` • Koodi ${flag.questionSetCode}` : ''}
+                                        </div>
+                                        {flag.questionSetId && (
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-xs text-gray-500 dark:text-gray-500">ID:</span>
+                                            <button
+                                              onClick={async () => {
+                                                try {
+                                                  await navigator.clipboard.writeText(flag.questionSetId);
+                                                  toast.success('ID kopioitu leikepöydälle');
+                                                } catch {
+                                                  toast.error('ID:n kopiointi epäonnistui');
+                                                }
+                                              }}
+                                              className="group inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                              title="Klikkaa kopioidaksesi kysymyssarjan tietokanta-ID"
+                                              aria-label={`Kopioi kysymyssarjan tietokanta-ID ${flag.questionSetId}`}
+                                            >
+                                              <span className="hidden sm:inline">{flag.questionSetId}</span>
+                                              <span className="sm:hidden">{flag.questionSetId.substring(0, 8)}...</span>
+                                              <ClipboardText className="h-3 w-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" />
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
                                     <div className="flex flex-wrap gap-2 text-xs">
                                       <Badge semantic="info" size="sm">
@@ -1807,10 +2215,10 @@ export default function CreatePage() {
                           </CardContent>
                         </Card>
                       ))}
-                    </div>
-                  )}
-                </TabsContent>
-              )}
+                  </div>
+                )}
+            </div>
+          )}
 
               <Dialog.Root open={Boolean(editingFlag)} onOpenChange={(open) => !open && setEditingFlag(null)}>
                 <Dialog.Portal>
@@ -1936,6 +2344,24 @@ export default function CreatePage() {
                           </>
                         )}
 
+                        {validationCoverage && (
+                          <div className="rounded-lg border border-blue-200 dark:border-blue-800/60 bg-blue-50/70 dark:bg-blue-900/20 px-3 py-2 text-xs text-blue-900 dark:text-blue-100 space-y-2">
+                            <div className="font-semibold">Vastauksen validointikattavuus</div>
+                            <div className="flex flex-wrap gap-2">
+                              {validationCoverage.supports.map((supportType) => (
+                                <Badge key={supportType} semantic="info" size="sm">
+                                  {supportType}
+                                </Badge>
+                              ))}
+                            </div>
+                            {smartAlternatives.length > 0 && (
+                              <p>
+                                Hyväksytään myös: {smartAlternatives.join(', ')}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
                         {editError && (
                           <Alert variant="destructive">
                             <AlertDescription>{editError}</AlertDescription>
@@ -1962,35 +2388,114 @@ export default function CreatePage() {
                   </Dialog.Content>
                 </Dialog.Portal>
               </Dialog.Root>
-            </Tabs>
-          </CardContent>
-        </Card>
+        </div>
       </div>
+      </div>
+
+      {topicConfirmation && (
+        <TopicConfirmationDialog
+          isOpen={true}
+          onClose={() => setTopicConfirmation(null)}
+          onConfirm={handleTopicConfirmation}
+          topicAnalysis={topicConfirmation.analysis}
+          initialQuestionCount={topicConfirmation.requestedCount}
+        />
+      )}
+
+      {capacityWarning && (
+        <CapacityWarningDialog
+          capacity={capacityWarning.capacity}
+          validation={capacityWarning.validation}
+          requestedCount={capacityWarning.requestedCount}
+          minimumCount={minQuestionCount}
+          onProceed={() => {
+            const requested = capacityWarning.requestedCount;
+            setCapacityWarning(null);
+            void handleSubmit({
+              bypassCapacityCheck: true,
+              questionCountOverride: requested,
+            });
+          }}
+          onAdjust={(count) => {
+            const adjustedCount = Math.max(minQuestionCount, count);
+            setQuestionCount(adjustedCount);
+            setCapacityWarning(null);
+            void handleSubmit({
+              bypassCapacityCheck: true,
+              questionCountOverride: adjustedCount,
+            });
+          }}
+          onAddMaterial={() => {
+            setCapacityWarning(null);
+            setState('form');
+            focusMaterialInput();
+          }}
+          onCancel={() => {
+            setCapacityWarning(null);
+            setState('form');
+          }}
+        />
+      )}
 
       {state === 'loading' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-2xl rounded-xl border border-slate-200/60 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
             <div className="border-b border-slate-200/70 px-6 py-5 dark:border-slate-800">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                Creating study sets
+                Luodaan kysymyssarjoja
               </h2>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                This may take a few minutes. Please keep this tab open.
+                Tämä voi kestää muutaman minuutin. Pidä tämä välilehti auki.
               </p>
+              <div className="mt-3 inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-800 dark:border-indigo-800/60 dark:bg-indigo-900/30 dark:text-indigo-200">
+                AI-palvelu: {selectedProviderLabel}
+              </div>
             </div>
             <div className="px-6 py-6">
               {creationSteps.length > 0 ? (
                 <>
                   <CreationProgressStepper steps={creationSteps} />
+                  {(() => {
+                    const topicsStep = creationSteps.find((step) => step.id === 'topics');
+                    const topics = topicsStep?.metadata?.topics;
+
+                    if (topicsStep?.status === 'completed' && topics && topics.length > 0) {
+                      return (
+                        <div className="mt-5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 dark:border-indigo-800/60 dark:bg-indigo-900/20">
+                          <div className="flex items-start gap-2">
+                            <CheckCircle
+                              weight="fill"
+                              className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600 dark:text-indigo-300"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
+                                Tunnistetut aihealueet ({topics.length})
+                              </div>
+                              <ul className="mt-2 space-y-1 text-sm text-indigo-800 dark:text-indigo-200">
+                                {topics.map((topic, index) => (
+                                  <li key={`${topic}-${index}`} className="flex items-start gap-2">
+                                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                                    <span className="min-w-0 break-words">{topic}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return null;
+                  })()}
                   {creationSteps.some((step) => step.status === 'error') && (
                     <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-100">
-                      <div className="font-semibold">Some steps failed</div>
+                      <div className="font-semibold">Osa vaiheista epäonnistui</div>
                       <ul className="mt-2 space-y-1">
                         {creationSteps
                           .filter((step) => step.status === 'error')
                           .map((step) => (
                             <li key={step.id}>
-                              {step.label}: {step.metadata?.message ?? 'Failed'}
+                              {step.label}: {step.metadata?.message ?? 'Epäonnistui'}
                             </li>
                           ))}
                       </ul>
@@ -2000,14 +2505,13 @@ export default function CreatePage() {
               ) : (
                 <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
                   <CircleNotch weight="bold" className="h-5 w-5 animate-spin text-indigo-500" />
-                  <span>Processing…</span>
+                  <span>Käsitellään…</span>
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
-    </div>
     </AuthGuard>
   );
 }

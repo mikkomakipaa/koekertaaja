@@ -1,24 +1,20 @@
-AIHEIDEN TASAPAINO (PAKOLLINEN):
+TOPIC-TAGGING (PAKOLLINEN)
+- Topic = sisältöalue (mistä kysymys kertoo).
+- Skill = toiminto/taito (mitä oppilas tekee).
+- Katso erotus-esimerkit tiedostosta topic-skill-guide.txt.
 
-1. KÄYTÄ NÄITÄ TUNNISTETTUJA AIHEALUEITA ({{topic_count}} kpl):
+KÄYTÄ NÄITÄ TUNNISTETTUJA AIHEITA ({{topic_count}} kpl):
 {{topics_list}}
 
-   - ÄLÄ KEKSI UUSIA AIHEALUEITA
-   - KÄYTÄ TÄSMÄLLEEN SAMAA KIRJOITUSASUA KUIN YLLÄ
+SÄÄNNÖT:
+- Jokaisessa kysymyksessä/kortissa on topic.
+- Topic-arvo on yksi yllä olevista nimistä täsmälleen samalla kirjoitusasulla.
+- Älä keksi uusia topic-arvoja.
+- subtopic on vapaaehtoinen tarkenne.
 
-2. JOKA IKINEN kysymys/kortti TÄYTYY sisältää "topic"-kenttä
-   - Valitse yksi yllä olevista aihealueista jokaiselle kysymykselle
-   - Kopioi aihealueen nimi TÄSMÄLLEEN sellaisenaan
-   - "subtopic" on VAPAAEHTOINEN tarkenne, käytä vain jos se selkeyttää topicia
+JAKAUTUMINEN:
+- Tavoite: noin {{questions_per_topic}} kysymystä per topic.
+- Jaa {{question_count}} kysymystä mahdollisimman tasaisesti.
+- Sallittu vaihtelu: enintään noin 2-3 kysymystä per topic laatu edellä.
 
-3. TASAINEN JAKAUTUMINEN kaikille aihealueille:
-   - TAVOITE: ~{{questions_per_topic}} kysymystä per aihealue
-   - Jaa {{question_count}} kysymystä TASAISESTI {{topic_count}} aihealueen kesken
-   - Älä suosi yhtä aihealuetta toisten kustannuksella
-   - Sallittu vaihtelu: ±1 kysymys per aihealue
-
-4. VARMISTA että JOKAINEN kysymys on merkitty aihealueella
-   - Tarkista että jokainen kysymys sisältää "topic"-kentän
-   - Tarkista että topic-kenttä vastaa yhtä yllä olevista aihealueista
-
-KYSYMYKSET ILMAN TOPIC-KENTTÄÄ TAI VÄÄRÄLLÄ TOPIC-ARVOLLA HYLÄTÄÄN.
+{{concept_dependency_section}}

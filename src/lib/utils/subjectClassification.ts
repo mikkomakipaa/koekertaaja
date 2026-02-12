@@ -11,27 +11,22 @@
  *
  * @param subject - The subject name
  * @param topic - Optional topic within the subject
+ * @param contentType - Explicit flashcard content type selection
  * @returns true if rule-based format should be used
  */
-export function isRuleBasedSubject(subject: string, topic?: string): boolean {
+export function isRuleBasedSubject(
+  subject: string,
+  topic?: string,
+  contentType?: 'vocabulary' | 'grammar' | 'mixed'
+): boolean {
   const normalized = subject.toLowerCase();
 
-  // Mathematics - always rule-based
-  if (normalized === 'matematiikka' || normalized === 'math' || normalized === 'mathematics') {
+  // Mathematics/physics/chemistry - always rule-based
+  if (['matematiikka', 'math', 'mathematics', 'fysiikka', 'physics', 'kemia', 'chemistry'].includes(normalized)) {
     return true;
   }
 
-  // Physics - formulas and laws
-  if (normalized === 'fysiikka' || normalized === 'physics') {
-    return true;
-  }
-
-  // Chemistry - equations and rules
-  if (normalized === 'kemia' || normalized === 'chemistry') {
-    return true;
-  }
-
-  // Language subjects - only for grammar topics
+  // Language subjects
   const languageSubjects = [
     'äidinkieli',
     'finnish',
@@ -44,12 +39,21 @@ export function isRuleBasedSubject(subject: string, topic?: string): boolean {
   ];
 
   if (languageSubjects.includes(normalized)) {
+    // Explicit content type takes precedence
+    if (contentType === 'grammar' || contentType === 'mixed') {
+      return true;
+    }
+
+    if (contentType === 'vocabulary') {
+      return false;
+    }
+
+    // Backward-compatible fallback for older flows without contentType
     if (!topic) {
       return false;
     }
 
     const topicLower = topic.toLowerCase();
-    // Check for grammar-related keywords
     const grammarKeywords = [
       'kielioppi',
       'grammar',
@@ -63,7 +67,7 @@ export function isRuleBasedSubject(subject: string, topic?: string): boolean {
       'tenses',
     ];
 
-    return grammarKeywords.some(keyword => topicLower.includes(keyword));
+    return grammarKeywords.some((keyword) => topicLower.includes(keyword));
   }
 
   return false;
@@ -84,6 +88,7 @@ export function validateRuleBasedQuestion(
   topic?: string
 ): { valid: boolean; reason?: string } {
   const questionText = question.question.toLowerCase();
+  const normalizedSubject = subject.toLowerCase();
 
   // Check for calculation patterns (BAD)
   const calculationPatterns = [
@@ -120,7 +125,7 @@ export function validateRuleBasedQuestion(
   // For math, reject questions with specific calculations in question_text
   // (numbers should only appear in examples in explanation field)
   const isMathSubject = ['matematiikka', 'math', 'mathematics'].includes(
-    subject.toLowerCase()
+    normalizedSubject
   );
 
   if (isMathSubject) {
@@ -154,6 +159,24 @@ export function validateRuleBasedQuestion(
     ...finnishStarters,
     ...englishStarters,
   ].some(pattern => pattern.test(questionText));
+
+  // Language grammar prompts from AI often use other instruction styles
+  // (e.g. "Milloin käytetään...", "Täydennä lause..."). We still block
+  // clear drill/calculation patterns above, but avoid failing on starter-only checks.
+  const isLanguageSubject = [
+    'äidinkieli',
+    'finnish',
+    'suomi',
+    'englanti',
+    'english',
+    'ruotsi',
+    'swedish',
+    'svenska',
+  ].includes(normalizedSubject);
+
+  if (isLanguageSubject) {
+    return { valid: true };
+  }
 
   if (!hasValidStarter) {
     return {

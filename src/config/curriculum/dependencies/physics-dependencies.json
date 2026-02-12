@@ -1,0 +1,72 @@
+{
+  "grade_7": {
+    "measurement_units": {
+      "id": "measurement_units",
+      "label": "Mittayksiköt",
+      "prerequisites": [],
+      "enables": ["speed", "density", "force"]
+    },
+    "motion_basics": {
+      "id": "motion_basics",
+      "label": "Liikkeen perusteet",
+      "prerequisites": ["measurement_units"],
+      "enables": ["speed", "acceleration"]
+    },
+    "speed": {
+      "id": "speed",
+      "label": "Nopeus",
+      "prerequisites": ["motion_basics", "measurement_units"],
+      "enables": ["acceleration", "graphs_motion"]
+    },
+    "force": {
+      "id": "force",
+      "label": "Voima",
+      "prerequisites": ["measurement_units", "motion_basics"],
+      "enables": ["newtons_laws", "pressure"]
+    },
+    "energy_basics": {
+      "id": "energy_basics",
+      "label": "Energian peruskäsitteet",
+      "prerequisites": ["measurement_units"],
+      "enables": ["work_power", "heat"]
+    }
+  },
+  "grade_8": {
+    "acceleration": {
+      "id": "acceleration",
+      "label": "Kiihtyvyys",
+      "prerequisites": ["speed"],
+      "enables": ["newtons_laws", "graphs_motion"]
+    },
+    "newtons_laws": {
+      "id": "newtons_laws",
+      "label": "Newtonin lait",
+      "prerequisites": ["force", "acceleration"],
+      "enables": ["friction", "momentum"]
+    },
+    "work_power": {
+      "id": "work_power",
+      "label": "Työ ja teho",
+      "prerequisites": ["energy_basics", "force"],
+      "enables": ["efficiency"]
+    },
+    "electric_current": {
+      "id": "electric_current",
+      "label": "Sähkövirta",
+      "prerequisites": ["measurement_units"],
+      "enables": ["voltage_resistance", "electric_circuits"]
+    },
+    "voltage_resistance": {
+      "id": "voltage_resistance",
+      "label": "Jännite ja resistanssi",
+      "prerequisites": ["electric_current"],
+      "enables": ["ohms_law", "electric_circuits"]
+    },
+    "ohms_law": {
+      "id": "ohms_law",
+      "label": "Ohmin laki",
+      "prerequisites": ["voltage_resistance"],
+      "enables": ["series_parallel_circuits"]
+    }
+  }
+}

@@ -4,108 +4,18 @@
 
 {{grade_note}}
 
-{{material_section}}TÄRKEÄÄ - KYSYMYSTEN MUOTO:
-- Kysymykset esitetään SUOMEKSI
-- Luo kysymyksiä jotka testaavat ymmärrystä aiheesta "{{subject}}"
-- Vaihtele kysymystyyppejä
-- Luo TÄSMÄLLEEN {{question_count}} kysymystä
-- Perusta kysymykset annettuun materiaaliin {{grade_context_note}}
-- Pyri noudattamaan vaikeustason kysymystyyppien jakaumaa, mutta valitse jokaiselle kysymykselle sisällön perusteella sopivin tyyppi
-- Valitse jokaiselle kysymykselle MATERIAALIN mukaan paras kysymystyyppi
+{{material_section}}MAANTIETEEN LISÄOHJEET (QUIZ + FLASHCARD):
+- Kysymykset suomeksi.
+- Luo täsmälleen {{question_count}} kysymystä.
+- Perusta kysymykset annettuun materiaaliin {{grade_context_note}}.
+- Painota sijaintia, alueiden ominaisuuksia, pääkaupunkeja, ilmastoa ja luonnonpiirteitä.
 
-TAGIEN EROTUS (MAANTIETO):
-- Topic = sisältöalue (esim. "Suomen maakunnat", "Euroopan valtiot")
-- Skill = maantiedon taito (esim. "capital_cities", "climate_zones", "location_reasoning")
-- ÄLÄ tee topicista taitoa, äläkä käytä skill-tagina sisältöaihetta
-- Subtopic on vapaaehtoinen tarkenne (esim. "Itä-Suomi", "Etelä-Eurooppa")
+TAGIEN EROTUS (PAKOLLINEN):
+- topic = sisältöalue (esim. Euroopan valtiot)
+- skill = maantieteen taito (esim. capital_cities, location_reasoning)
+- subtopic on valinnainen tarkenne.
 
-FOKUSOI PAIKKAAN JA KÄSITTEISIIN:
-- Sijainnit ja suhteet
-- Alueiden ominaisuudet
-- Pääkaupungit ja tärkeät kaupungit
-- Ilmasto ja luonnonpiirteet
-
-ESIMERKKIKYSYMYKSIÄ:
-- "Mikä valtio sijaitsee ____ vieressä?"
-- "Mikä on ____ pääkaupunki?"
-- "Miksi ____ alueella on ____ ilmasto?"
-
-QUIZ-MOODI: KYSYMYSTYYPPIEN KÄYTTÖOHJEET
-
-1. MULTIPLE_CHOICE (monivalinta):
-   - Sopii: käsitteiden tunnistaminen, faktat, sijainnit, pääkaupungit
-   *** PAKOLLINEN: Jokaisessa multiple_choice kysymyksessä TÄYTYY olla TASAN 4 vaihtoehtoa ***
-   Esim: "Mikä seuraavista on oikein?"
-   Vaihtoehdot: ["vaihtoehto 1", "vaihtoehto 2", "vaihtoehto 3", "vaihtoehto 4"]
-   - TÄYTYY olla 4 vaihtoehtoa, yksi oikea
-   - Väärät vastaukset uskottavia ja lähellä oikeaa vastausta
-
-2. TRUE_FALSE (totta/tarua):
-   - Sopii: väittämät, tosiasiat, käsitteiden ymmärtäminen
-   Esim: "Totta vai tarua: [väite aiheesta]"
-   correct_answer: true tai false (boolean)
-
-3. FILL_BLANK (täydennä):
-   - Helppo: yksi puuttuva sana tai luku
-   - Normaali/Vaikea: useampi sana tai käsite
-   Esim: "Täydennä: Suomen pääkaupunki on ___."
-   Vastaus: "Helsinki"
-   - Anna acceptable_answers listaan vaihtoehtoiset hyväksyttävät vastaukset
-
-4. SHORT_ANSWER (lyhyt avoin vastaus):
-   - VAIN normaali ja vaikea vaikeustasoilla
-   - Vaatii selitystä, perustelua tai kuvausta
-
-   Normaali taso:
-   Esim: "Selitä lyhyesti mikä on [käsite]."
-   Vastaus: "1-2 lauseen selitys"
-
-   Vaikea taso:
-   Esim: "Analysoi ja perustele miksi [ilmiö] tapahtuu."
-   Vastaus: "Perusteellinen selitys useammalla lauseella"
-
-   - Anna acceptable_answers listaan erilaisia hyväksyttäviä vastauksia
-
-5. MATCHING (parit):
-   - Sopii: käsitteet ja määritelmät, termit ja kuvaukset
-   - Käytä normaali ja vaikea tasoilla jos aihe sopii
-   *** PAKOLLINEN: Jokaisessa matching kysymyksessä TÄYTYY olla VÄHINTÄÄN 4 paria ***
-   Esim: Yhdistä käsite ja määritelmä
-   Parit: [{"left": "käsite1", "right": "määritelmä1"}, {"left": "käsite2", "right": "määritelmä2"}, {"left": "käsite3", "right": "määritelmä3"}, {"left": "käsite4", "right": "määritelmä4"}]
-
-6. SEQUENTIAL (järjestys):
-   - Sopii: prosessien vaiheet, kronologinen järjestys, tapahtumat
-   - Käytä helppo ja normaali tasoilla
-   - Helppo taso: 4 vaihetta, Normaali taso: 5-6 vaihetta
-
-   Helppo taso - Prosessin vaiheet:
-   Kysymys: "Järjestä nämä vaiheet oikeaan järjestykseen (prosessi aiheesta {{subject}}):"
-   items: [
-     "Vaihe 1 kuvaus",
-     "Vaihe 2 kuvaus",
-     "Vaihe 3 kuvaus",
-     "Vaihe 4 kuvaus"
-   ]
-   correct_order: [0, 1, 2, 3]
-
-   Normaali taso - Monivaiheinen prosessi:
-   Kysymys: "Järjestä nämä vaiheet oikeaan järjestykseen (aihe liittyen {{subject}}):"
-   items: [
-     "Ensimmäinen vaihe",
-     "Toinen vaihe",
-     "Kolmas vaihe",
-     "Neljäs vaihe",
-     "Viides vaihe",
-     "Kuudes vaihe"
-   ]
-   correct_order: [0, 1, 2, 3, 4, 5]
-
-VÄÄRÄT VASTAUKSET (multiple_choice):
-- Liity samaan aihepiiriin
-- Sisällä yleisiä väärinkäsityksiä
-- Ole lähellä oikeaa vastausta mutta selvästi väärin
-- Testaa ymmärrystä, älä vain muistia
-
-LISÄTARKISTUKSET (maantieto):
-- Selitykset ovat henkilökohtaisia (sinä-muoto), informatiivisia ja selkeitä
-- Kysymykset kattavat materiaalin laajasti
+LAATUVAATIMUKSET:
+- Multiple choice -kysymyksissä tasan 4 vaihtoehtoa.
+- Distraktorit ovat uskottavia saman alueen vaihtoehtoja.
+- Selitykset ovat henkilökohtaisia (sinä-muoto) ja selkeitä.

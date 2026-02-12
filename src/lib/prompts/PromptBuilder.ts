@@ -5,14 +5,8 @@ import type { Difficulty, Mode, Subject } from '@/types/questions';
 import { getSubjectType, type SubjectType } from './subjectTypeMapping';
 import { PromptLoader } from './PromptLoader';
 import { isRuleBasedSubject as isRuleBasedSubjectUtil } from '@/lib/utils/subjectClassification';
-import {
-  getQuestionTypeWeights,
-  formatQuestionTypeWeights,
-  calculateWeightedDifficulty,
-} from '@/lib/utils/difficultyMapping';
-import { createLogger } from '@/lib/logger';
-
-const logger = createLogger({ module: 'PromptBuilder' });
+import { dependencyResolver } from '@/lib/utils/dependencyGraph';
+import type { ExtractedVisual } from '@/lib/utils/visualExtraction';
 
 export interface BuildVariablesParams {
   subject: Subject;
@@ -33,41 +27,19 @@ export interface BuildVariablesParams {
   targetWords?: string[];
   enhancedTopics?: import('@/lib/ai/topicIdentifier').EnhancedTopic[];
   distribution?: import('@/lib/utils/questionDistribution').TopicDistribution[];
+  contentType?: 'vocabulary' | 'grammar' | 'mixed';
 }
 
-type DistributionMap = Record<string, number>;
-
-type GradeDistributionMap = Record<string, Record<string, DistributionMap>>;
-
-type FlashcardDistributionMap = Record<string, DistributionMap>;
-
 type DifficultyInstructionMap = Record<string, Record<string, string>>;
-
-interface DistributionFile {
-  language: {
-    quiz: GradeDistributionMap;
-    flashcard: FlashcardDistributionMap;
-  };
-  math: {
-    quiz: GradeDistributionMap;
-    flashcard: FlashcardDistributionMap;
-  };
-  written: {
-    quiz: GradeDistributionMap;
-    flashcard: FlashcardDistributionMap;
-  };
-  geography: {
-    quiz: GradeDistributionMap;
-    flashcard: FlashcardDistributionMap;
-  };
-  skills: {
-    quiz: GradeDistributionMap;
-    flashcard: FlashcardDistributionMap;
-  };
-  concepts: {
-    quiz: GradeDistributionMap;
-    flashcard: FlashcardDistributionMap;
-  };
+type StructuredCurriculumEntry = {
+  description?: string;
+  topics?: string[];
+  grammar_topics?: string[];
+  vocabulary_themes?: string[];
+  learning_objectives?: string[];
+  formulas?: string[];
+  key_concepts?: string[];
+  context?: string;
 }
 
 const TEMPLATE_BASE_PATH = path.join(
@@ -87,37 +59,72 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   normaali: 'Normaali',
 };
 
-const EXTRA_DISTRIBUTION_NOTES: Record<string, Record<string, string[]>> = {
+const EXTRA_TYPE_SELECTION_NOTES: Record<string, Record<string, string[]>> = {
   english: {
-    helppo: ['- ÄLÄ käytä short_answer helppo-tasolla'],
-    normaali: ['- Suosi kysymyksiä jotka vaativat SOVELTAMISTA'],
+    helppo: ['- Helppo-tasolla suosi lyhyitä, selkeitä vastauksia'],
+    normaali: ['- Lisää soveltavia kysymyksiä, kun materiaali tukee sitä'],
   },
   math: {
-    helppo: ['- ÄLÄ käytä short_answer helppo-tasolla'],
-    normaali: ['- ÄLÄ käytä short_answer (liian epämääräinen matematiikassa)'],
+    helppo: ['- Helppo-tasolla painota yksivaiheisia tai selkeitä tehtäviä'],
+    normaali: ['- Käytä perustelua vaativia kysymyksiä vain, kun ratkaisupolku on selkeä'],
   },
   written: {
-    helppo: ['- ÄLÄ käytä short_answer tai matching'],
+    helppo: ['- Helppo-tasolla pidä kysymykset faktapohjaisina ja suorina'],
     normaali: [],
   },
   geography: {
-    helppo: ['- ÄLÄ käytä short_answer tai matching'],
+    helppo: ['- Helppo-tasolla painota tunnistamista ja peruskäsitteitä'],
     normaali: [],
   },
   skills: {
-    helppo: ['- ÄLÄ käytä short_answer tai matching'],
+    helppo: ['- Helppo-tasolla suosi turvallisia, konkreettisia tilanteita'],
     normaali: [],
   },
   concepts: {
-    helppo: ['- ÄLÄ käytä short_answer tai matching'],
+    helppo: ['- Helppo-tasolla pidä käsitteet arjen esimerkeissä'],
     normaali: [],
   },
 };
 
+export interface BuildVisualQuestionPromptParams {
+  visuals: ExtractedVisual[];
+  questionCount: number;
+}
+
+export function buildVisualQuestionPrompt(params: BuildVisualQuestionPromptParams): string {
+  const { visuals, questionCount } = params;
+
+  if (visuals.length === 0) {
+    return '';
+  }
+
+  const visualDescriptions = visuals
+    .map((visual, index) => {
+      const caption = visual.caption ?? 'Ei kuvatekstiä';
+      const context = visual.contextText || 'Ei ympäröivää tekstikontekstia';
+      return [
+        `VISUAL ${index + 1} (${visual.type})`,
+        `- Reference: [IMAGE_${index + 1}]`,
+        `- Caption: ${caption}`,
+        `- Context: ${context}`,
+      ].join('\n');
+    })
+    .join('\n\n');
+
+  return [
+    'VISUAALISEN SISÄLLÖN OHJEET:',
+    `- Materiaalissa on ${visuals.length} kuvaa/diagrammia. Hyödynnä niitä aktiivisesti ${questionCount} kysymyksen joukossa.`,
+    '- Kun kysymys vaatii kuvan, lisää kenttä "requires_visual": true.',
+    '- Merkitse viite kenttään "image_reference" muodossa "IMAGE_X".',
+    '- Käytä visualeja erityisesti tulkinta-, vertailu- ja mittauskysymyksiin.',
+    '',
+    'VISUAL CONTENT:',
+    visualDescriptions,
+  ].join('\n');
+}
+
 export class PromptBuilder {
   private loader: PromptLoader;
-  private distributionsCache?: DistributionFile;
-  private distributionsPromise?: Promise<DistributionFile>;
   private difficultyInstructionsCache?: DifficultyInstructionMap;
   private difficultyInstructionsPromise?: Promise<DifficultyInstructionMap>;
   private curriculumCache = new Map<string, Record<string, string>>();
@@ -131,10 +138,11 @@ export class PromptBuilder {
     const subjectType = params.subjectType ?? getSubjectType(subjectKey);
     const mode = params.mode ?? 'quiz';
 
-    const [format, topicRules, skillTagging, typeRules] = await this.loader.loadModules([
+    const [format, topicRules, skillTagging, difficultyRubric, typeRules] = await this.loader.loadModules([
       'core/format.txt',
       'core/topic-tagging.txt',
       'core/skill-tagging.txt',
+      'core/difficulty-rubric.txt',
       `types/${subjectType}.txt`,
     ]);
 
@@ -151,9 +159,14 @@ export class PromptBuilder {
     const flashcardRules = mode === 'flashcard'
       ? await this.loader.loadModule('core/flashcard-rules.txt')
       : '';
+    const languageFlashcardRules =
+      mode === 'flashcard' && subjectType === 'language'
+        ? await this.loader.loadModule('core/language-flashcard-rules.txt')
+        : '';
 
     // Add emphasis for rule-based subjects in flashcard mode
-    const isRuleBased = mode === 'flashcard' && this.isRuleBasedSubject(subjectKey, params.topic);
+    const isRuleBased =
+      mode === 'flashcard' && this.isRuleBasedSubject(subjectKey, params.topic, params.contentType);
     const ruleBasedEmphasis = isRuleBased
       ? '\n⚠️ TÄRKEÄÄ: Tämä on sääntöpohjainen aihe (matematiikka/kielioppi). Sinun TÄYTYY käyttää SÄÄNTÖPOHJAISTA FLASHCARD-MUOTOA:\n- Kysymys: "Miten lasketaan/muodostetaan...?" (EI tiettyjä laskutehtäviä)\n- Vastaus: Sääntö/kaava + toimiva esimerkki\n- Katso tarkat ohjeet "SÄÄNTÖPOHJAINEN FLASHCARD-MUOTO" -osiosta yllä.\n'
       : '';
@@ -163,11 +176,13 @@ export class PromptBuilder {
       format,
       topicRules,
       skillTagging,
+      difficultyRubric,
       skillTaxonomy,
       typeRules,
       curriculum,
       distributions,
       flashcardRules,
+      languageFlashcardRules,
       ruleBasedEmphasis,
     ]);
 
@@ -202,9 +217,15 @@ export class PromptBuilder {
 
     try {
       const contents = await readFile(filePath, 'utf-8');
-      const parsed = JSON.parse(contents) as Record<string, string>;
-      this.curriculumCache.set(cacheKey, parsed);
-      return parsed[String(grade)] ?? '';
+      const parsed = JSON.parse(contents) as Record<string, string | StructuredCurriculumEntry>;
+      const formatted = Object.fromEntries(
+        Object.entries(parsed).map(([gradeKey, value]) => [
+          gradeKey,
+          this.formatCurriculumEntry(value),
+        ])
+      );
+      this.curriculumCache.set(cacheKey, formatted);
+      return formatted[String(grade)] ?? '';
     } catch (error) {
       if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
         return '';
@@ -217,42 +238,17 @@ export class PromptBuilder {
   async loadDistributions(
     subjectKey: string,
     subjectType: SubjectType,
-    grade: number | undefined,
+    _grade: number | undefined,
     difficulty: Difficulty,
     mode: Mode
   ): Promise<string> {
-    const distributions = await this.loadDistributionFile();
-    const subjectDistributions = distributions[subjectType];
-
-    if (!subjectDistributions) {
-      return '';
-    }
-
+    // Flashcards use a single canonical Q&A type; skip quiz-style distribution guidance.
     if (mode === 'flashcard') {
-      const gradeKey = this.resolveGradeKey(subjectDistributions.flashcard, grade);
-      const distribution = subjectDistributions.flashcard[gradeKey];
-
-      if (!distribution) {
-        return '';
-      }
-
-      const gradeLabel = grade ? `Luokka ${grade}` : '';
-      const header = gradeLabel
-        ? `KORTTITYYPPIEN JAKAUMA (${gradeLabel}):`
-        : 'KORTTITYYPPIEN JAKAUMA:';
-
+      const flashcardGuidance = this.getQuestionTypeGuidance(subjectType, mode, subjectKey);
       return [
-        header,
-        this.formatDistributionList(distribution),
+        'FLASHCARD-MUOTO (PERINTEINEN KYSYMYS-VASTAUS):',
+        flashcardGuidance,
       ].join('\n');
-    }
-
-    const gradeKey = this.resolveGradeKey(subjectDistributions.quiz, grade);
-    const difficultyDistributions = subjectDistributions.quiz[gradeKey];
-    const distribution = difficultyDistributions?.[difficulty];
-
-    if (!distribution) {
-      return '';
     }
 
     const difficultyInstructions = await this.formatDifficultyInstructions(
@@ -260,31 +256,15 @@ export class PromptBuilder {
       subjectType,
       difficulty
     );
-
-    const difficultyLabel = DIFFICULTY_LABELS[difficulty] ?? difficulty;
-    const gradeLabel = grade ? `Luokka ${grade}, ` : '';
-    const header = `KYSYMYSTYYPPIEN JAKAUMA (${gradeLabel}${difficultyLabel}):`;
     const extraNotes = this.resolveExtraNotes(subjectKey, subjectType, difficulty);
-    const distributionNotes: string[] = [];
-
-    if (subjectType === 'written' && mode === 'quiz') {
-      distributionNotes.push(
-        '- Jakauma on suuntaa-antava: valitse sopivin kysymystyyppi sisällön mukaan'
-      );
-
-      if (this.isHistorySubject(subjectKey)) {
-        distributionNotes.push(
-          '- Historian aikajanoissa pyri noin 15% sequential-kysymyksiin, kun materiaali tukee'
-        );
-      }
-    }
+    const questionTypeGuidance = this.getQuestionTypeGuidance(subjectType, mode, subjectKey);
+    const modeLabel = `KYSYMYSTYYPPIEN VALINTAOHJE (${DIFFICULTY_LABELS[difficulty] ?? difficulty}, EI KIINTEÄÄ JAKAUMAA):`;
 
     return [
       difficultyInstructions,
       [
-        header,
-        this.formatDistributionList(distribution),
-        ...distributionNotes,
+        modeLabel,
+        questionTypeGuidance,
         ...extraNotes,
       ].join('\n'),
     ]
@@ -322,36 +302,10 @@ export class PromptBuilder {
     const distributionSection = params.distribution
       ? this.formatDistributionSection(params.distribution)
       : '';
-
-    // NEW: Add difficulty-based question type guidance (Phase 4)
-    let questionTypeGuidance = '';
-    if (params.enhancedTopics && params.enhancedTopics.length > 0) {
-      // Calculate overall difficulty from topics
-      const overallDifficulty = calculateWeightedDifficulty(
-        params.enhancedTopics.map(t => ({
-          difficulty: t.difficulty,
-          coverage: t.coverage,
-        }))
-      );
-
-      const weights = getQuestionTypeWeights(overallDifficulty);
-      questionTypeGuidance = `
-KYSYMYSTYYPPIEN JAKAUMA (suositus materiaalin vaikeustason perusteella):
-${formatQuestionTypeWeights(weights)}
-
-HUOM: Tämä on suositus. Voit käyttää muita kysymystyyppejä jos materiaali sitä vaatii.
-`.trim();
-
-      logger.info(
-        {
-          overallDifficulty,
-          weights: Object.entries(weights)
-            .filter(([_, w]) => w > 0)
-            .map(([type, weight]) => ({ type, percentage: Math.round(weight * 100) })),
-        },
-        'Using difficulty-based question type weights'
-      );
-    }
+    const conceptDependencySection = dependencyResolver.getDependencyPromptSection(
+      params.subject,
+      params.grade
+    );
 
     return {
       material_type: materialType,
@@ -364,7 +318,7 @@ HUOM: Tämä on suositus. Voit käyttää muita kysymystyyppejä jos materiaali 
       topics_list: this.formatTopics(params.identifiedTopics),
       questions_per_topic: String(questionsPerTopic),
       distribution_section: distributionSection, // Phase 2
-      question_type_guidance: questionTypeGuidance, // Phase 4
+      concept_dependency_section: conceptDependencySection,
       grade_context_note: gradeContextNote,
       difficulty: params.difficulty,
       grade_level_note: gradeLevelNote,
@@ -381,10 +335,71 @@ HUOM: Tämä on suositus. Voit käyttää muita kysymystyyppejä jos materiaali 
     };
   }
 
-  private formatDistributionList(distribution: DistributionMap): string {
-    return Object.entries(distribution)
-      .map(([type, percent]) => `- ${percent}% ${type}`)
-      .join('\n');
+  private getQuestionTypeGuidance(
+    subjectType: SubjectType,
+    mode: Mode,
+    subjectKey: string
+  ): string {
+    if (mode === 'flashcard') {
+      return [
+        'Käytä kaikissa korteissa samaa tyyppiä: flashcard.',
+        'Luo kortit aina selkeänä kysymys-vastaus-parina.',
+        '',
+        'Muoto:',
+        '- question: selkeä, suora kysymys',
+        '- answer: lyhyt ydinvastaus',
+        '- explanation: lyhyt selitys ja esimerkki',
+        '',
+        'Rajoitteet:',
+        '- Älä käytä täydennysmuotoa (___)',
+        '- Älä käytä monivalinta-, totta/tarua-, matching- tai sequential-muotoa',
+        '- Yksi käsite per kortti',
+      ].join('\n');
+    }
+
+    const baseGuidance = [
+      'Käytettävissä olevat kysymystyypit (quiz):',
+      '- fill_blank: sanasto, kaavat, määritelmät, yksittäiset täsmävastaukset',
+      '- short_answer: selittäminen, perustelu, miksi/miten-kysymykset',
+      '- multiple_choice: käsitteet, vertailu, luokittelu, vaihtoehtojen arviointi',
+      '- true_false: faktaväitteet ja yleiset väärinkäsitykset',
+      '- matching: pariuttaminen (termi-määritelmä, valtio-pääkaupunki, kaava-nimi)',
+      '- sequential: aikajanat, prosessit ja vaiheittaiset järjestykset',
+      '',
+      'Valintaohjeet:',
+      '- Analysoi materiaali ja valitse jokaiselle kysymykselle luonnollisin tyyppi',
+      '- Tavoittele monipuolisuutta: älä tee koko settiä yhdellä kysymystyypillä',
+      '- Priorisoi luonnollinen sopivuus, älä pakotettua jakaumaa',
+      '- Käytä sequential-tyyppiä aina kun sisällössä on selkeä aikajärjestys tai vaiheistus',
+    ];
+
+    const subjectSpecific: Record<SubjectType, string[]> = {
+      language: [
+        'Tyypillinen painotus (ei pakollinen): fill_blank ja short_answer, tarvittaessa matching/sequential.',
+      ],
+      math: [
+        'Tyypillinen painotus (ei pakollinen): fill_blank ja multiple_choice, sequential ratkaisuvaiheisiin.',
+      ],
+      written: [
+        'Tyypillinen painotus (ei pakollinen): multiple_choice ja true_false, sequential aikajanoihin.',
+      ],
+      geography: [
+        'Tyypillinen painotus (ei pakollinen): fill_blank ja matching pääkaupunkeihin/sijainteihin.',
+      ],
+      concepts: [
+        'Tyypillinen painotus (ei pakollinen): multiple_choice, true_false ja short_answer.',
+      ],
+      skills: [
+        'Tyypillinen painotus (ei pakollinen): multiple_choice, true_false ja sequential.',
+      ],
+    };
+
+    const notes = [...(subjectSpecific[subjectType] ?? [])];
+    if (subjectType === 'written' && this.isHistorySubject(subjectKey)) {
+      notes.push('Historian sisällöissä käytä sequential-tyyppiä, kun materiaali sisältää aikajanan.');
+    }
+
+    return [...baseGuidance, ...notes].join('\n');
   }
 
   private formatTopics(topics?: string[]): string {
@@ -580,30 +595,18 @@ TÄRKEÄÄ:
     const normalized = subjectKey.toLowerCase();
 
     if (normalized === 'english' || normalized === 'englanti') {
-      return EXTRA_DISTRIBUTION_NOTES.english?.[difficulty] ?? [];
+      return EXTRA_TYPE_SELECTION_NOTES.english?.[difficulty] ?? [];
     }
 
     if (normalized === 'math' || normalized === 'matematiikka') {
-      return EXTRA_DISTRIBUTION_NOTES.math?.[difficulty] ?? [];
+      return EXTRA_TYPE_SELECTION_NOTES.math?.[difficulty] ?? [];
     }
 
     if (subjectType === 'language') {
-      return EXTRA_DISTRIBUTION_NOTES.written?.[difficulty] ?? [];
+      return EXTRA_TYPE_SELECTION_NOTES.written?.[difficulty] ?? [];
     }
 
-    return EXTRA_DISTRIBUTION_NOTES[subjectType]?.[difficulty] ?? [];
-  }
-
-  private resolveGradeKey<T>(
-    distributions: Record<string, T>,
-    grade?: number
-  ): string {
-    if (grade && distributions[String(grade)]) {
-      return String(grade);
-    }
-
-    const keys = Object.keys(distributions);
-    return keys.length > 0 ? keys[0] : '';
+    return EXTRA_TYPE_SELECTION_NOTES[subjectType]?.[difficulty] ?? [];
   }
 
   private normalizeSubjectKey(subjectKey: string): string | null {
@@ -611,8 +614,14 @@ TÄRKEÄÄ:
     const subjectMap: Record<string, string> = {
       english: 'english',
       englanti: 'english',
+      swedish: 'swedish',
+      ruotsi: 'swedish',
       math: 'math',
       matematiikka: 'math',
+      physics: 'physics',
+      fysiikka: 'physics',
+      chemistry: 'chemistry',
+      kemia: 'chemistry',
       finnish: 'finnish',
       suomi: 'finnish',
       history: 'history',
@@ -626,9 +635,57 @@ TÄRKEÄÄ:
       pe: 'pe',
       religion: 'religion',
       ethics: 'ethics',
+      society: 'society',
+      yhteiskuntaoppi: 'society',
     };
 
     return subjectMap[normalized] ?? null;
+  }
+
+  private formatCurriculumEntry(entry: string | StructuredCurriculumEntry): string {
+    if (typeof entry === 'string') {
+      return entry;
+    }
+
+    const sections: string[] = [];
+
+    if (entry.description?.trim()) {
+      sections.push(entry.description.trim());
+    }
+
+    if (entry.topics && entry.topics.length > 0) {
+      sections.push(`Aiheet:\n${entry.topics.map(topic => `- ${topic}`).join('\n')}`);
+    }
+
+    if (entry.grammar_topics && entry.grammar_topics.length > 0) {
+      sections.push(`Kielioppiaiheet:\n${entry.grammar_topics.map(topic => `- ${topic}`).join('\n')}`);
+    }
+
+    if (entry.vocabulary_themes && entry.vocabulary_themes.length > 0) {
+      sections.push(
+        `Sanastoteemat:\n${entry.vocabulary_themes.map(theme => `- ${theme}`).join('\n')}`
+      );
+    }
+
+    if (entry.learning_objectives && entry.learning_objectives.length > 0) {
+      sections.push(
+        `Oppimistavoitteet:\n${entry.learning_objectives.map(objective => `- ${objective}`).join('\n')}`
+      );
+    }
+
+    if (entry.formulas && entry.formulas.length > 0) {
+      sections.push(`Kaavat:\n${entry.formulas.map(formula => `- ${formula}`).join('\n')}`);
+    }
+
+    if (entry.key_concepts && entry.key_concepts.length > 0) {
+      sections.push(`Keskeiset käsitteet: ${entry.key_concepts.join(', ')}`);
+    }
+
+    if (entry.context?.trim()) {
+      sections.push(`Konteksti: ${entry.context.trim()}`);
+    }
+
+    return sections.join('\n\n');
   }
 
   private isHistorySubject(subjectKey: string): boolean {
@@ -644,29 +701,15 @@ TÄRKEÄÄ:
    *
    * @param subject - The subject name
    * @param topic - Optional topic within the subject
+   * @param contentType - Explicit flashcard content type
    * @returns true if rule-based format should be used
    */
-  private isRuleBasedSubject(subject: string, topic?: string): boolean {
-    return isRuleBasedSubjectUtil(subject, topic);
-  }
-
-  private async loadDistributionFile(): Promise<DistributionFile> {
-    if (this.distributionsCache) {
-      return this.distributionsCache;
-    }
-
-    if (this.distributionsPromise) {
-      return this.distributionsPromise;
-    }
-
-    this.distributionsPromise = this.readJsonFile<DistributionFile>(
-      path.join(CORE_BASE_PATH, 'grade-distributions.json')
-    ).then(distributions => {
-      this.distributionsCache = distributions;
-      return distributions;
-    });
-
-    return this.distributionsPromise;
+  private isRuleBasedSubject(
+    subject: string,
+    topic?: string,
+    contentType?: 'vocabulary' | 'grammar' | 'mixed'
+  ): boolean {
+    return isRuleBasedSubjectUtil(subject, topic, contentType);
   }
 
   private async loadSkillTaxonomy(subjectType: SubjectType): Promise<string> {

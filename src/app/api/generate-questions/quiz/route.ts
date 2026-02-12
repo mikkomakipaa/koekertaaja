@@ -8,9 +8,12 @@ import {
   processUploadedFiles,
   generateQuizSets,
   QuizGenerationRequest,
+  type QuestionGenerationOptions,
 } from '@/lib/api/questionGeneration';
 import { getSimpleTopics } from '@/lib/ai/topicIdentifier';
+import { analyzeMaterialCapacity, validateQuestionCount } from '@/lib/utils/materialAnalysis';
 import { Difficulty } from '@/types';
+import { parseRequestedProvider, validateRequestedProvider } from '@/lib/api/modelSelection';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 240; // 4 minutes for quiz generation
@@ -23,8 +26,10 @@ export async function POST(request: NextRequest) {
 
   try {
     // Verify authentication
+    let userId = '';
     try {
-      await requireAuth();
+      const user = await requireAuth();
+      userId = user.id;
       logger.info('Authentication successful');
     } catch (authError) {
       logger.warn('Authentication failed');
@@ -35,6 +40,12 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
+    const orchestrateRaw = (formData.get('orchestrate') as string | null)?.toLowerCase();
+    const orchestrate = orchestrateRaw !== 'false' && orchestrateRaw !== '0';
+    const bypassCapacityCheckRaw = (formData.get('bypassCapacityCheck') as string | null)?.toLowerCase();
+    const bypassCapacityCheck = bypassCapacityCheckRaw === 'true' || bypassCapacityCheckRaw === '1';
+    const capacityCheckOnlyRaw = (formData.get('capacityCheckOnly') as string | null)?.toLowerCase();
+    const capacityCheckOnly = capacityCheckOnlyRaw === 'true' || capacityCheckOnlyRaw === '1';
 
     // Extract form data
     const targetWordsRaw = formData.get('targetWords') as string | null;
@@ -46,6 +57,13 @@ export async function POST(request: NextRequest) {
     const identifiedTopics = identifiedTopicsRaw
       ? JSON.parse(identifiedTopicsRaw)
       : undefined;
+    const targetProvider = parseRequestedProvider(formData.get('provider'));
+    if (targetProvider) {
+      const modelValidationError = validateRequestedProvider(targetProvider);
+      if (modelValidationError) {
+        return NextResponse.json({ error: modelValidationError }, { status: 400 });
+      }
+    }
 
     const rawData = {
       subject: formData.get('subject') as string,
@@ -97,13 +115,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Material sufficiency analysis before generation.
+    if (materialText && !bypassCapacityCheck) {
+      const capacity = analyzeMaterialCapacity(materialText);
+      const questionCountValidation = validateQuestionCount(questionCount, capacity);
+
+      if (questionCountValidation.status === 'risky' || questionCountValidation.status === 'excessive') {
+        return NextResponse.json({
+          warningRequired: true,
+          capacity,
+          validation: questionCountValidation,
+          message: `Materiaali tukee optimaalisesti ${capacity.optimalQuestionCount} kysymystä, mutta pyysit ${questionCount}.`,
+        });
+      }
+
+      if (capacityCheckOnly) {
+        return NextResponse.json({
+          warningRequired: false,
+          capacity,
+          validation: questionCountValidation,
+        });
+      }
+    } else if (capacityCheckOnly) {
+      return NextResponse.json({ warningRequired: false });
+    }
+
     logger.info(
       {
         subject,
         questionCount,
+        orchestrate,
         hasTopics: !!identifiedTopics,
         hasText: !!materialText,
         fileCount: files.length,
+        bypassCapacityCheck,
+        capacityCheckOnly,
+        provider: targetProvider ?? 'anthropic',
       },
       'Starting quiz generation'
     );
@@ -119,6 +166,7 @@ export async function POST(request: NextRequest) {
         grade,
         materialText,
         materialFiles: files.length > 0 ? files : undefined,
+        targetProvider,
       });
       simpleTopics = getSimpleTopics(topicAnalysis);
     } else {
@@ -145,12 +193,15 @@ export async function POST(request: NextRequest) {
       targetWords: validatedTargetWords,
       identifiedTopics: simpleTopics,
       difficulties,
+      targetProvider,
     };
 
     // Pass enhanced topics if available (Phase 2)
+    const options: QuestionGenerationOptions = { orchestrate };
     const quizSets = await generateQuizSets(
       quizRequest,
-      topicAnalysis?.topics // Enhanced topics with coverage/keywords
+      topicAnalysis?.topics, // Enhanced topics with coverage/keywords
+      options
     );
 
     logger.info(

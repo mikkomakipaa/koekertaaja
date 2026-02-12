@@ -359,11 +359,13 @@ export function FlashcardSession({
           flashcard={currentFlashcard}
           isFlipped={isFlipped}
           onFlip={handleFlip}
+          onShowAnswer={() => setIsFlipped(true)}
+          onShowQuestion={() => setIsFlipped(false)}
           overlay={overlay}
         />
 
         {/* Navigation buttons */}
-        <div className="mt-6 flex gap-3">
+        <div className="mt-4 flex gap-3">
           <Button
             onClick={handlePrevious}
             disabled={currentIndex === 0}
