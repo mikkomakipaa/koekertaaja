@@ -62,8 +62,10 @@ const buttonVariants = cva(
       size: {
         default: `${spacing.touchTarget} px-4 py-3`,
         sm: "min-h-9 px-3 py-2 text-xs",
+        chip: `${spacing.touchTarget} px-3.5 py-2`,
         lg: `${spacing.touchTargetLarge} px-6 py-4 text-base`,
         icon: "h-10 w-10 p-0",
+        iconLg: `${spacing.touchTargetLarge} w-12 p-0`,
       },
     },
     compoundVariants: [

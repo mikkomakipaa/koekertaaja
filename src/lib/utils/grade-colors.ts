@@ -46,8 +46,8 @@ export function getGradeColors(grade: number): GradeColors {
  * <span className={getGradeBadgeClasses(4)}>Luokka: 4</span>
  */
 export function getGradeBadgeClasses(grade: number): string {
-  const { bg, text } = getGradeColors(grade);
-  return `${bg} ${text} ring-1 ring-inset ring-current/20`;
+  const { border, text } = getGradeColors(grade);
+  return `bg-white/80 dark:bg-gray-900/60 ${text} ${border} ring-1 ring-inset ring-current/15`;
 }
 
 /**

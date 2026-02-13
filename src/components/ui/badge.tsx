@@ -53,9 +53,9 @@ const badgeVariants = cva(
           "text-indigo-700 dark:text-indigo-200",
         ].join(" "),
         new: [
-          "bg-gradient-to-r from-pink-500 to-rose-500",
-          "text-white",
-          "shadow-sm",
+          "border border-rose-200 dark:border-rose-700/70",
+          "bg-rose-50 dark:bg-rose-900/25",
+          "text-rose-700 dark:text-rose-300",
         ].join(" "),
         grade: "ring-1 ring-inset ring-current/20",
       },

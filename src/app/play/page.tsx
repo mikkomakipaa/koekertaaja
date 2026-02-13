@@ -1,18 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ModeToggle } from '@/components/play/ModeToggle';
-import { CollapsibleSearch } from '@/components/ui/collapsible-search';
-import { SearchSuggestions } from '@/components/ui/search-suggestions';
+import { ModeClassBar } from '@/components/play/ModeClassBar';
 import { cn } from '@/lib/utils';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { getGradeColors } from '@/lib/utils/grade-colors';
+import { buildModeGradeQuery, parseGradeParam, parseStudyModeParam } from '@/lib/play/mode-grade-query';
 import { QuestionSet, Difficulty, StudyMode } from '@/types';
 import { readMistakesFromStorage } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
@@ -29,16 +28,10 @@ import {
   CirclesFour,
   Sparkle,
   BookOpenText,
-  GameController,
   Book,
-  BookOpen,
-  ArrowLeft,
   ArrowCounterClockwise,
   ArrowRight,
-  ListNumbers,
-  GraduationCap,
   MagnifyingGlass,
-  X,
   Star,
   ThumbsUp,
   Barbell,
@@ -71,22 +64,27 @@ const difficultyLabels: Record<string, string> = {
   normaali: 'Normaali',
 };
 
-const difficultyColors: Record<string, { bg: string; hover: string; text: string; icon: string; focus: string; shadow: string }> = {
+const difficultyColors: Record<
+  string,
+  { bg: string; hover: string; text: string; icon: string; focus: string; border: string; shadow: string }
+> = {
   helppo: {
-    bg: 'bg-gradient-to-r from-slate-600 to-slate-700 dark:from-slate-500 dark:to-slate-600',
-    hover: 'hover:from-slate-700 hover:to-slate-800 dark:hover:from-slate-600 dark:hover:to-slate-700',
-    text: 'text-white',
-    icon: 'text-cyan-400',
-    focus: 'focus-visible:ring-cyan-400 dark:focus-visible:ring-cyan-300',
-    shadow: 'shadow-slate-600/30 dark:shadow-slate-500/30',
+    bg: 'bg-teal-50 dark:bg-teal-900/30',
+    hover: 'hover:bg-teal-100 dark:hover:bg-teal-900/45',
+    text: 'text-teal-900 dark:text-teal-100',
+    icon: 'text-teal-600 dark:text-teal-300',
+    focus: 'focus-visible:ring-teal-500 dark:focus-visible:ring-teal-300',
+    border: 'border-teal-200 dark:border-teal-700/70',
+    shadow: 'shadow-sm shadow-teal-900/10 dark:shadow-black/20',
   },
   normaali: {
-    bg: 'bg-gradient-to-r from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700',
-    hover: 'hover:from-amber-600 hover:to-amber-700 dark:hover:from-amber-700 dark:hover:to-amber-800',
-    text: 'text-white',
-    icon: 'text-amber-100',
-    focus: 'focus-visible:ring-amber-400 dark:focus-visible:ring-amber-300',
-    shadow: 'shadow-amber-500/30 dark:shadow-amber-600/30',
+    bg: 'bg-amber-50 dark:bg-amber-900/25',
+    hover: 'hover:bg-amber-100 dark:hover:bg-amber-900/40',
+    text: 'text-amber-900 dark:text-amber-100',
+    icon: 'text-amber-600 dark:text-amber-300',
+    focus: 'focus-visible:ring-amber-500 dark:focus-visible:ring-amber-300',
+    border: 'border-amber-200 dark:border-amber-700/70',
+    shadow: 'shadow-sm shadow-amber-900/10 dark:shadow-black/20',
   },
 };
 
@@ -97,37 +95,37 @@ const difficultyIcons: Record<string, ReactNode> = {
 
 const subjectConfigs: Record<string, SubjectConfig> = {
   english: {
-    icon: <GlobeHemisphereWest size={24} weight="duotone" />,
+    icon: <GlobeHemisphereWest size={20} weight="duotone" />,
     label: 'Englanti',
     color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
   },
   math: {
-    icon: <MathOperations size={24} weight="duotone" />,
+    icon: <MathOperations size={20} weight="duotone" />,
     label: 'Matematiikka',
     color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
   },
   history: {
-    icon: <Scroll size={24} weight="duotone" />,
+    icon: <Scroll size={20} weight="duotone" />,
     label: 'Historia',
     color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400',
   },
   society: {
-    icon: <Bank size={24} weight="duotone" />,
+    icon: <Bank size={20} weight="duotone" />,
     label: 'Yhteiskuntaoppi',
     color: 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
   },
   biology: {
-    icon: <Leaf size={24} weight="duotone" />,
+    icon: <Leaf size={20} weight="duotone" />,
     label: 'Biologia',
     color: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400',
   },
   geography: {
-    icon: <MapTrifold size={24} weight="duotone" />,
+    icon: <MapTrifold size={20} weight="duotone" />,
     label: 'Maantiede',
     color: 'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400',
   },
   finnish: {
-    icon: <BookOpenText size={24} weight="duotone" />,
+    icon: <BookOpenText size={20} weight="duotone" />,
     label: 'Äidinkieli',
     color: 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400',
   },
@@ -136,7 +134,7 @@ const subjectConfigs: Record<string, SubjectConfig> = {
 const getSubjectConfig = (subject: string): SubjectConfig => {
   return (
     subjectConfigs[subject] ?? {
-      icon: <BookOpenText size={24} weight="duotone" />,
+      icon: <BookOpenText size={20} weight="duotone" />,
       label: subject,
       color: 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
     }
@@ -147,10 +145,10 @@ const getSubjectWithIcon = (subject: string) => {
   const config = getSubjectConfig(subject);
 
   return (
-    <div className="mb-3 flex items-center gap-3">
-      <div className={`rounded-lg p-2 ${config.color}`}>{config.icon}</div>
-      <div>
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{config.label}</span>
+    <div className="flex items-center gap-2.5">
+      <div className={`flex h-8 w-8 items-center justify-center rounded-md ${config.color}`}>{config.icon}</div>
+      <div className="pt-0.5">
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{config.label}</span>
       </div>
     </div>
   );
@@ -220,6 +218,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
 
   const showNewBadge = isNewQuestionSet(newestCreatedAt);
+  const gradeColors = group.grade ? getGradeColors(group.grade) : null;
 
   const scoreIcon = (() => {
     if (!lastScore) return null;
@@ -233,35 +232,50 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
   })();
 
   return (
-    <Card variant="interactive" padding="standard" className="relative overflow-hidden">
+    <Card
+      variant="interactive"
+      padding="compact"
+      className="relative overflow-hidden border-gray-200/90 shadow-sm shadow-gray-200/50 dark:border-gray-700/90 dark:shadow-black/20"
+    >
       <div
-        className={`absolute left-0 top-0 h-full w-1 ${
+        className={`absolute left-0 top-0 h-full w-0.5 ${
           availableDifficulties.length > 0 && groupHasFlashcards
-            ? 'bg-gradient-to-b from-indigo-500 via-purple-500 to-teal-500'
+            ? 'bg-gradient-to-b from-indigo-400 via-violet-400 to-teal-400 dark:from-indigo-500 dark:via-violet-500 dark:to-teal-500'
             : availableDifficulties.length > 0
-              ? 'bg-indigo-500'
+              ? 'bg-indigo-400 dark:bg-indigo-500'
               : groupHasFlashcards
-                ? 'bg-teal-500'
-                : 'bg-gray-300'
+                ? 'bg-teal-400 dark:bg-teal-500'
+                : 'bg-gray-300 dark:bg-gray-600'
         }`}
       />
 
-      <div className="ml-4">
-        <div className="mb-3 flex items-start justify-between gap-3">
+      <div className="ml-3.5 flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{group.name}</h3>
+            <h3 className="text-lg font-semibold leading-tight tracking-[-0.01em] text-gray-900 dark:text-gray-50">
+              {group.name}
+            </h3>
             {showNewBadge && (
-              <Badge variant="gradient" semantic="new" size="xs">
-                <Sparkle size={9} weight="fill" />
+              <Badge
+                variant="outline"
+                size="xs"
+                className="gap-1 border-rose-200 bg-rose-50/80 text-rose-700 dark:border-rose-700/70 dark:bg-rose-900/25 dark:text-rose-300"
+              >
+                <Sparkle size={8} weight="fill" />
                 Uusi
               </Badge>
             )}
           </div>
-          {group.grade && (
+          {group.grade && gradeColors && (
             <Badge
+              variant="outline"
               semantic="grade"
               size="xs"
-              className={cn(getGradeColors(group.grade).bg, getGradeColors(group.grade).text)}
+              className={cn(
+                'bg-white/80 dark:bg-gray-900/60',
+                gradeColors.text,
+                gradeColors.border
+              )}
             >
               Luokka: {group.grade}
             </Badge>
@@ -270,7 +284,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
 
         {getSubjectWithIcon(group.subject)}
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           {studyMode === 'pelaa' ? (
             availableDifficulties.length > 0 ? (
               availableDifficulties.map((difficulty) => {
@@ -282,10 +296,17 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                   <Button
                     key={difficulty}
                     onClick={() => set && router.push(`/play/${set.code}?mode=${studyMode}`)}
-                    mode={difficulty === 'helppo' ? 'neutral' : 'quiz'}
-                    variant="primary"
-                    size="default"
-                    className={cn(colors.bg, colors.hover, colors.text, colors.focus, colors.shadow)}
+                    variant="secondary"
+                    size="chip"
+                    className={cn(
+                      colors.bg,
+                      colors.hover,
+                      colors.text,
+                      colors.focus,
+                      colors.border,
+                      colors.shadow,
+                      'hover:shadow-md'
+                    )}
                     aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
                   >
                     <span className={colors.icon}>{icon}</span>
@@ -306,6 +327,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
               }}
               mode="study"
               variant="primary"
+              size="chip"
               className="group shadow-teal-500/30 dark:shadow-teal-600/30"
               aria-label="Opettele korttien avulla"
             >
@@ -322,19 +344,20 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
               onClick={() => router.push(`/play/${reviewCandidate.set.code}?mode=review`)}
               mode="review"
               variant="primary"
+              size="chip"
               className="shadow-rose-500/30 dark:shadow-rose-600/30"
-              aria-label="Kertaa virheet"
+              aria-label="Virheet"
             >
               <ArrowCounterClockwise size={20} weight="duotone" className="inline" />
-              Kertaa virheet ({reviewCandidate.count})
+              Virheet ({reviewCandidate.count})
             </Button>
           )}
         </div>
 
         {lastScore && scoreIcon && (
-          <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+          <div className="border-t border-gray-200 pt-2.5 dark:border-gray-700">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Viimeisin tulos:</span>
+              <span className="text-gray-500 dark:text-gray-400">Viimeisin tulos:</span>
               <div className="flex items-center gap-1.5">
                 {lastScore.difficulty && (
                   <span
@@ -366,19 +389,66 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
   );
 }
 
-export default function PlayBrowsePage() {
+function PlayBrowsePageSkeleton() {
+  return (
+    <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
+      <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80">
+        <div className="mx-auto max-w-4xl px-4 py-4">
+          <div className="flex gap-2">
+            <Skeleton className="h-12 flex-1 rounded-lg" />
+            <Skeleton className="h-12 flex-1 rounded-lg" />
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-4xl p-6 md:p-12">
+        <div className="mb-10">
+          <Skeleton className="mb-2 h-9 w-64" />
+          <Skeleton className="h-6 w-80 md:w-96" />
+        </div>
+
+        <div className="mb-6">
+          <Skeleton className="h-12 w-full rounded-lg" />
+        </div>
+
+        <div className="mb-6 flex gap-2">
+          <Skeleton className="h-10 w-20 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
+        </div>
+
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} variant="standard" padding="standard">
+              <Skeleton className="mb-3 h-6 w-3/4" />
+              <Skeleton className="mb-4 h-4 w-1/2" />
+              <div className="flex gap-2">
+                <Skeleton className="h-12 w-28 rounded-lg" />
+                <Skeleton className="h-12 w-28 rounded-lg" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayBrowsePageContent() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const [state, setState] = useState<BrowseState>('loading');
   const [groupedSets, setGroupedSets] = useState<GroupedQuestionSets[]>([]);
   const [error, setError] = useState('');
-  const [studyMode, setStudyMode] = useState<StudyMode>('pelaa');
-  const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
+  const [studyMode, setStudyMode] = useState<StudyMode>(() => parseStudyModeParam(searchParams.get('mode')));
+  const [selectedGrade, setSelectedGrade] = useState<number | null>(() => parseGradeParam(searchParams.get('grade')));
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const suggestionsBlurTimeout = useRef<number | null>(null);
-  const gradeScrollRef = useRef<HTMLDivElement | null>(null);
   const { recentSearches, addRecentSearch, clearRecentSearches } = useRecentSearches();
   const scrolled = useScrollDetection();
 
@@ -457,6 +527,32 @@ export default function PlayBrowsePage() {
     );
   }, [groupedSets]);
 
+  useEffect(() => {
+    const nextMode = parseStudyModeParam(searchParams.get('mode'));
+    const nextGrade = parseGradeParam(searchParams.get('grade'));
+
+    setStudyMode((previous) => (previous === nextMode ? previous : nextMode));
+    setSelectedGrade((previous) => (previous === nextGrade ? previous : nextGrade));
+  }, [searchParams]);
+
+  useEffect(() => {
+    const nextQuery = buildModeGradeQuery(searchParams, studyMode, selectedGrade);
+    const currentQuery = searchParams.toString();
+
+    if (nextQuery !== currentQuery) {
+      const href = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+      router.replace(href, { scroll: false });
+    }
+  }, [pathname, router, searchParams, selectedGrade, studyMode]);
+
+  useEffect(() => {
+    if (selectedGrade === null) return;
+    if (availableGrades.length === 0) return;
+    if (!availableGrades.includes(selectedGrade)) {
+      setSelectedGrade(null);
+    }
+  }, [availableGrades, selectedGrade]);
+
   const popularSearches = useMemo(() => ['Matematiikka', 'Englanti', 'Suomi', 'Historia', 'Biologia'], []);
 
   const suggestionPool = useMemo(() => {
@@ -520,21 +616,6 @@ export default function PlayBrowsePage() {
     }
   }, [searchOpen]);
 
-  const gradeButtonBase =
-    'flex min-h-10 flex-shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-150 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white active:scale-95 active:shadow-sm dark:shadow-md dark:hover:shadow-lg dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900';
-
-  const handleGradeScrollKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (!gradeScrollRef.current) return;
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      gradeScrollRef.current.scrollBy({ left: 140, behavior: 'smooth' });
-    }
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      gradeScrollRef.current.scrollBy({ left: -140, behavior: 'smooth' });
-    }
-  };
-
   const filteredSets = useMemo(() => {
     return groupedSets.filter((group) => {
       if (selectedGrade && group.grade !== selectedGrade) return false;
@@ -562,203 +643,39 @@ export default function PlayBrowsePage() {
   }, [groupedSets, searchQuery, selectedGrade, studyMode]);
 
   if (state === 'loading') {
-    return (
-      <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
-        <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80">
-          <div className="mx-auto max-w-4xl px-4 py-4">
-            <div className="flex gap-2">
-              <Skeleton className="h-12 flex-1 rounded-lg" />
-              <Skeleton className="h-12 flex-1 rounded-lg" />
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto max-w-4xl p-6 md:p-12">
-          <div className="mb-10">
-            <Skeleton className="mb-2 h-9 w-64" />
-            <Skeleton className="h-6 w-80 md:w-96" />
-          </div>
-
-          <div className="mb-6">
-            <Skeleton className="h-12 w-full rounded-lg" />
-          </div>
-
-          <div className="mb-6 flex gap-2">
-            <Skeleton className="h-10 w-20 rounded-lg" />
-            <Skeleton className="h-10 w-24 rounded-lg" />
-            <Skeleton className="h-10 w-24 rounded-lg" />
-            <Skeleton className="h-10 w-24 rounded-lg" />
-          </div>
-
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} variant="standard" padding="standard">
-                <Skeleton className="mb-3 h-6 w-3/4" />
-                <Skeleton className="mb-4 h-4 w-1/2" />
-                <div className="flex gap-2">
-                  <Skeleton className="h-12 w-28 rounded-lg" />
-                  <Skeleton className="h-12 w-28 rounded-lg" />
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <PlayBrowsePageSkeleton />;
   }
 
   return (
     <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
-      <div className="hidden sm:block">
-        <ModeToggle
-          currentMode={studyMode}
-          onModeChange={setStudyMode}
-          className={scrolled ? 'shadow-[0_1px_3px_rgba(0,0,0,0.08)]' : ''}
-        />
-      </div>
-
-      <div
-        className={`sm:hidden sticky top-0 z-10 border-b border-gray-200 bg-white/90 backdrop-blur-sm transition-shadow duration-150 dark:border-gray-700 dark:bg-gray-900/90 ${
-          scrolled ? 'shadow-[0_1px_3px_rgba(0,0,0,0.08)]' : ''
-        }`}
-      >
-        <div className="mx-auto max-w-4xl px-3 pt-3">
-          <div className="flex gap-3">
-            <button
-              onClick={() => setStudyMode('pelaa')}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-150 ${
-                studyMode === 'pelaa'
-                  ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-              }`}
-              aria-current={studyMode === 'pelaa' ? 'page' : undefined}
-            >
-              <GameController size={18} weight={studyMode === 'pelaa' ? 'fill' : 'regular'} />
-              Pelaa
-            </button>
-            <button
-              onClick={() => setStudyMode('opettele')}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-150 ${
-                studyMode === 'opettele'
-                  ? 'bg-teal-600 text-white shadow-md ring-2 ring-teal-400'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-              }`}
-              aria-current={studyMode === 'opettele' ? 'page' : undefined}
-            >
-              <Book size={18} weight={studyMode === 'opettele' ? 'fill' : 'regular'} />
-              Opettele
-            </button>
-          </div>
-        </div>
-
-        <div className="mx-auto max-w-4xl px-3 pt-2">
-          <div className="flex min-h-12 items-center gap-2">
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <BookOpen size={20} weight="duotone" className="text-indigo-600 dark:text-indigo-400" />
-              <span className="truncate text-lg font-bold leading-none text-gray-900 dark:text-gray-100">Valitse aihealue</span>
-            </div>
-            {!searchOpen && (
-              <button
-                type="button"
-                onClick={() => setSearchOpen(true)}
-                className="flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
-                aria-label="Avaa haku"
-              >
-                <MagnifyingGlass size={20} weight="duotone" />
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => router.push('/')}
-              className="flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
-              aria-label="Takaisin valikkoon"
-            >
-              <ArrowLeft size={18} weight="bold" />
-            </button>
-          </div>
-        </div>
-
-        <div className="mx-auto max-w-4xl px-3 pb-3 pt-2">
-          {searchOpen ? (
-            <div className="relative">
-              <CollapsibleSearch
-                placeholder="Etsi aihealuetta, ainetta tai aihetta..."
-                value={searchQuery}
-                onChange={setSearchQuery}
-                isOpen={searchOpen}
-                onToggle={setSearchOpen}
-                onClose={() => setSuggestionsOpen(false)}
-                onFocus={handleSearchFocus}
-                onBlur={handleSearchBlur}
-              />
-              <SearchSuggestions
-                isOpen={searchOpen && suggestionsOpen}
-                query={searchQuery}
-                popular={popularSearches}
-                recent={recentSearches}
-                suggestions={liveSuggestions}
-                onSelect={handleSuggestionSelect}
-                onClearRecent={clearRecentSearches}
-              />
-            </div>
-          ) : (
-            availableGrades.length > 0 && (
-              <div
-                ref={gradeScrollRef}
-                className="flex gap-2 overflow-x-auto overflow-y-visible px-3 py-1 scroll-px-3 no-scrollbar focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
-                onKeyDown={handleGradeScrollKeyDown}
-                tabIndex={0}
-                aria-label="Luokkasuodattimet"
-              >
-                <button
-                  onClick={() => setSelectedGrade(null)}
-                  className={`${gradeButtonBase} ${
-                    selectedGrade === null
-                      ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400 dark:bg-indigo-500 dark:ring-indigo-300'
-                      : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <ListNumbers size={16} weight={selectedGrade === null ? 'fill' : 'regular'} />
-                  Kaikki
-                </button>
-                {availableGrades.map((grade) => {
-                  const colors = getGradeColors(grade);
-                  const isActive = selectedGrade === grade;
-                  return (
-                    <button
-                      key={grade}
-                      onClick={() => setSelectedGrade(grade)}
-                      className={`${gradeButtonBase} ${
-                        isActive
-                          ? `${colors.bg} ${colors.text} shadow-md ring-2 ring-current/40 dark:shadow-lg`
-                          : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
-                      }`}
-                    >
-                      <GraduationCap size={16} weight={isActive ? 'fill' : 'regular'} />
-                      {grade} lk
-                    </button>
-                  );
-                })}
-              </div>
-            )
-          )}
-        </div>
-      </div>
+      <ModeClassBar
+        studyMode={studyMode}
+        onStudyModeChange={setStudyMode}
+        selectedGrade={selectedGrade}
+        onSelectedGradeChange={setSelectedGrade}
+        availableGrades={availableGrades}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        searchOpen={searchOpen}
+        onSearchOpenChange={setSearchOpen}
+        suggestionsOpen={suggestionsOpen}
+        onSearchFocus={handleSearchFocus}
+        onSearchBlur={handleSearchBlur}
+        onSuggestionSelect={handleSuggestionSelect}
+        popularSearches={popularSearches}
+        recentSearches={recentSearches}
+        liveSuggestions={liveSuggestions}
+        onClearRecentSearches={clearRecentSearches}
+        onBack={() => router.push('/')}
+        onSearchClose={() => setSuggestionsOpen(false)}
+        scrolled={scrolled}
+      />
 
       <div className="mx-auto max-w-4xl p-6 md:p-12">
-        <div className="mb-6 hidden sm:block">
-          <div className="mb-2 flex items-center gap-2">
+        <div className="mb-5 hidden sm:block">
+          <div className="mb-1.5 flex items-center gap-2">
             <BookOpenText size={28} weight="duotone" className="text-indigo-600 dark:text-indigo-400" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 md:text-3xl">Valitse aihealue</h1>
-          </div>
-          <div className="mt-2">
-            <Button
-              onClick={() => router.push('/')}
-              variant="ghost"
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
-            >
-              ← Takaisin valikkoon
-            </Button>
           </div>
         </div>
 
@@ -803,85 +720,6 @@ export default function PlayBrowsePage() {
 
         {groupedSets.length > 0 && (
           <>
-            <div className="mb-6 hidden sm:block">
-              <div className="relative">
-                <MagnifyingGlass
-                  size={20}
-                  weight="duotone"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
-                />
-                <input
-                  type="text"
-                  placeholder="Etsi aihealuetta, ainetta tai aihetta..."
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  onFocus={handleSearchFocus}
-                  onBlur={handleSearchBlur}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && searchQuery.trim()) {
-                      addRecentSearch(searchQuery);
-                      setSuggestionsOpen(false);
-                    }
-                  }}
-                  className="w-full rounded-lg border border-gray-200 bg-white py-3 pl-10 pr-10 text-sm placeholder:text-gray-400 transition-shadow focus:border-transparent focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800 dark:placeholder:text-gray-500 dark:focus:ring-purple-400 md:text-base"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-                    aria-label="Tyhjennä haku"
-                  >
-                    <X size={20} weight="bold" />
-                  </button>
-                )}
-                <SearchSuggestions
-                  isOpen={suggestionsOpen}
-                  query={searchQuery}
-                  popular={popularSearches}
-                  recent={recentSearches}
-                  suggestions={liveSuggestions}
-                  onSelect={handleSuggestionSelect}
-                  onClearRecent={clearRecentSearches}
-                />
-              </div>
-            </div>
-
-            {availableGrades.length > 0 && (
-              <div className="mb-6 hidden sm:block">
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setSelectedGrade(null)}
-                    className={`${gradeButtonBase} ${
-                      selectedGrade === null
-                        ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400 dark:bg-indigo-500 dark:shadow-lg dark:ring-indigo-300'
-                        : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <ListNumbers size={16} weight={selectedGrade === null ? 'fill' : 'regular'} />
-                    Kaikki
-                  </button>
-                  {availableGrades.map((grade) => {
-                    const colors = getGradeColors(grade);
-                    const isActive = selectedGrade === grade;
-                    return (
-                      <button
-                        key={grade}
-                        onClick={() => setSelectedGrade(grade)}
-                        className={`${gradeButtonBase} ${
-                          isActive
-                            ? `${colors.bg} ${colors.text} shadow-md ring-2 ring-current/40 dark:shadow-lg`
-                            : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        <GraduationCap size={16} weight={isActive ? 'fill' : 'regular'} />
-                        {grade} lk
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             {filteredSets.length === 0 && groupedSets.length > 0 && (
               <div className="px-6 py-12 text-center">
                 <div className="mb-6 flex justify-center">
@@ -921,5 +759,13 @@ export default function PlayBrowsePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PlayBrowsePage() {
+  return (
+    <Suspense fallback={<PlayBrowsePageSkeleton />}>
+      <PlayBrowsePageContent />
+    </Suspense>
   );
 }

@@ -1,44 +1,38 @@
 # Flashcard Template Verification Report
 
+> **⚠️ NOTE (2025-02-12):** This document describes the previous rigid distribution system. As of Task-130, the system now uses **AI-driven question type selection** with guidance instead of fixed percentages. This document is kept for historical reference.
+
 ## Summary
 
-**Status**: ✅ VERIFIED - Flashcard mode is correctly using dedicated flashcard templates
+**Status**: ⚠️ OUTDATED - System has migrated to AI-driven question type selection (see Task-130)
 
-## Investigation
+**Current Implementation:** Flashcard mode uses a single canonical `flashcard` type (question → answer format) without percentage distributions. The AI receives guidance on when flashcard format is appropriate rather than being forced to generate specific question type percentages.
+
+---
+
+## Historical Investigation (Pre-Task-130)
 
 This investigation was triggered by a task to ensure flashcard mode uses dedicated flashcard templates instead of quiz templates.
 
-## Findings
+## Historical Findings
 
-### 1. Template Selection Logic ✅
+### 1. Template Selection Logic (Historical)
 
-The `PromptBuilder` (src/lib/prompts/PromptBuilder.ts) correctly implements template selection:
+The `PromptBuilder` (src/lib/prompts/PromptBuilder.ts) implemented template selection using fixed distributions:
 
-**Line 136-138**: Loads flashcard-specific rules
-```typescript
-const flashcardRules = mode === 'flashcard'
-  ? await this.loader.loadModule('core/flashcard-rules.txt')
-  : '';
-```
+**Previous approach:** Loaded flashcard-specific distributions from `grade-distributions.json`
 
-**Line 210-226**: Loads flashcard-specific distributions
-```typescript
-if (mode === 'flashcard') {
-  const gradeKey = this.resolveGradeKey(subjectDistributions.flashcard, grade);
-  const distribution = subjectDistributions.flashcard[gradeKey];
-  // ... formats flashcard distribution
-}
-```
+**Current approach (Task-130):** Uses `getQuestionTypeGuidance()` to provide AI with selection criteria instead of enforced percentages
 
-### 2. Flashcard Distributions ✅
+### 2. Flashcard Distributions (DEPRECATED)
 
-The `grade-distributions.json` file correctly defines separate flashcard distributions for each subject type:
+The previous system used rigid distributions:
 
-- **Language**: 60% fill_blank, 30% short_answer, 10% matching
-- **Math**: 70% fill_blank, 20% matching, 10% short_answer
-- **Written/Skills/Concepts**: 50% fill_blank, 30% short_answer, 20% matching
+- **Language**: 60% fill_blank, 30% short_answer, 10% matching ❌ DEPRECATED
+- **Math**: 70% fill_blank, 20% matching, 10% short_answer ❌ DEPRECATED
+- **Written/Skills/Concepts**: 50% fill_blank, 30% short_answer, 20% matching ❌ DEPRECATED
 
-These distributions **exclude passive recognition types** (multiple_choice, true_false, sequential).
+**Current system:** Flashcard mode uses single `flashcard` type with question → answer format. No percentage distributions.
 
 ### 3. Flashcard Rules ✅
 

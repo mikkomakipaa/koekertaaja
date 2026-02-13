@@ -11,6 +11,9 @@ interface ModeToggleProps {
 }
 
 export function ModeToggle({ currentMode, onModeChange, className }: ModeToggleProps) {
+  const modeButtonBase =
+    'flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900';
+
   return (
     <div
       className={cn(
@@ -18,13 +21,13 @@ export function ModeToggle({ currentMode, onModeChange, className }: ModeToggleP
         className
       )}
     >
-      <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className="mx-auto max-w-4xl px-4 py-3">
         <div className="flex gap-2">
           <button
             onClick={() => onModeChange('pelaa')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all duration-150 ${
+            className={`${modeButtonBase} ${
               currentMode === 'pelaa'
-                ? 'bg-indigo-600 dark:bg-indigo-500 text-white shadow-lg ring-2 ring-indigo-400 dark:ring-indigo-300'
+                ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400 dark:bg-indigo-500 dark:ring-indigo-300'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
             aria-current={currentMode === 'pelaa' ? 'page' : undefined}
@@ -34,9 +37,9 @@ export function ModeToggle({ currentMode, onModeChange, className }: ModeToggleP
           </button>
           <button
             onClick={() => onModeChange('opettele')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all duration-150 ${
+            className={`${modeButtonBase} ${
               currentMode === 'opettele'
-                ? 'bg-teal-600 dark:bg-teal-500 text-white shadow-lg ring-2 ring-teal-400 dark:ring-teal-300'
+                ? 'bg-teal-600 text-white shadow-md ring-2 ring-teal-400 dark:bg-teal-500 dark:ring-teal-300'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
             aria-current={currentMode === 'opettele' ? 'page' : undefined}

@@ -36,8 +36,8 @@ Koekertaaja is an interactive exam preparation application that helps students p
 - **Multiple Source Types**: Upload PDFs, images, or write text
 - **Automatic Multi-Difficulty Sets**: Creates 2 exam areas (Helppo, Normaali) automatically
 - **Optional Flashcard Generation**: Create a separate flashcard set optimized for memorization
-  - **Subject-optimized distributions**: English (60/30/10), Math (70/20/10), Generic (50/30/20)
-  - **Active recall focus**: Only fill_blank, short_answer, and matching types
+  - **AI-driven question type selection**: AI chooses the most appropriate question type for each concept
+  - **Flashcard format**: Single canonical flashcard type (question → answer) for active recall
   - **Topic selection**: Choose specific topics to practice
   - **Kid-friendly format**: Clean explanations with memory aids
 - **Topic-Balanced Generation**: AI identifies 3-5 topics and recommends pool size based on material capacity
