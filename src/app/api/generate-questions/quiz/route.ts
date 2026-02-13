@@ -180,6 +180,7 @@ export async function POST(request: NextRequest) {
     const difficulties: Difficulty[] = ['helppo', 'normaali'];
 
     const quizRequest: QuizGenerationRequest = {
+      userId,
       subject,
       subjectType,
       questionCount,

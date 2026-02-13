@@ -13,6 +13,7 @@ Koekertaaja is an interactive exam preparation application that helps students p
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)
 ![Anthropic Claude](https://img.shields.io/badge/AI-Claude_Sonnet_4-purple)
+![OpenAI](https://img.shields.io/badge/AI-OpenAI_GPT--5-0ea5e9)
 
 
 ## ✨ Features
@@ -31,7 +32,7 @@ Koekertaaja is an interactive exam preparation application that helps students p
 - **Personal Bests**: Track and beat your highest scores per question set
 
 ### 📚 Question Set Creation
-- **AI-Assisted Generation**: Claude Sonnet 4 AI creates questions from your materials
+- **AI-Assisted Generation**: Provider-selectable AI generation (Claude or OpenAI) from your materials
 - **Multiple Source Types**: Upload PDFs, images, or write text
 - **Automatic Multi-Difficulty Sets**: Creates 2 exam areas (Helppo, Normaali) automatically
 - **Optional Flashcard Generation**: Create a separate flashcard set optimized for memorization
@@ -39,7 +40,7 @@ Koekertaaja is an interactive exam preparation application that helps students p
   - **Active recall focus**: Only fill_blank, short_answer, and matching types
   - **Topic selection**: Choose specific topics to practice
   - **Kid-friendly format**: Clean explanations with memory aids
-- **Topic-Balanced Generation**: AI identifies 3-5 topics and distributes questions evenly (~10 cards per topic)
+- **Topic-Balanced Generation**: AI identifies 3-5 topics and recommends pool size based on material capacity
 - **Flexible Subject Input**: Enter any subject name (English, Math, History, Biology, etc.)
 - **Grade-Specific Distributions**: Question types tailored for grades 4-6
 - **Adjustable Parameters**:
@@ -68,6 +69,7 @@ Koekertaaja is an interactive exam preparation application that helps students p
 - **Responsive Layout**: Seamless experience across all screen sizes
 - **Visual Hierarchy**: Clear information organization with color-coded badges
 - **Empty States**: Helpful guidance for first-time users
+- **Create Flow Confirmation**: After generation, user confirms success and returns to create view (no forced redirect to browse page)
 
 ## 🚀 Quick Start (For Non-Technical Users)
 
@@ -79,9 +81,14 @@ Koekertaaja is an interactive exam preparation application that helps students p
    - Create a new project
    - Note down Project URL and anon public key (found in Settings → API)
 
-2. **Anthropic Account** (AI):
+2. **Anthropic Account** (AI, required):
    - Go to [console.anthropic.com](https://console.anthropic.com)
    - Create an account and get an API key
+   - Note down the API key
+
+3. **OpenAI Account** (AI, optional for provider selection):
+   - Go to [platform.openai.com](https://platform.openai.com)
+   - Create an API key
    - Note down the API key
 
 ### Step 2: Install the Application
@@ -106,6 +113,9 @@ Koekertaaja is an interactive exam preparation application that helps students p
      NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
      SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
      ANTHROPIC_API_KEY=your_anthropic_api_key_here
+     OPENAI_API_KEY=your_openai_api_key_here
+     AI_ENABLE_OPENAI=true
+     AI_PROVIDER_DEFAULT=anthropic
      ```
 
 ### Step 3: Initialize Database
@@ -134,7 +144,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - **Styling**: Tailwind CSS + shadcn/ui components
 - **Icons**: Phosphor Icons (duotone vector icons)
 - **Database**: Supabase (PostgreSQL with RLS)
-- **AI**: Anthropic Claude API (claude-sonnet-4-20250514)
+- **AI**: Provider-router architecture (Anthropic + OpenAI)
 - **Hosting**: Vercel-ready with CSP headers
 
 ### Project Structure
@@ -161,7 +171,7 @@ koekertaaja/
 │   │   └── useGameSession.ts    # Game state and points
 │   ├── config/                  # Configuration
 │   │   ├── subjects.ts          # Subject definitions
-│   │   └── prompts/             # AI prompts (quiz + flashcard for each subject)
+│   │   └── prompt-templates/    # AI prompt modules (core + type + subject)
 │   └── types/                   # TypeScript types
 └── supabase/
     └── migrations/              # Database schema
@@ -262,6 +272,7 @@ See the LICENSE file for details.
 - [Next.js](https://nextjs.org/) - React framework
 - [Supabase](https://supabase.com/) - Backend-as-a-Service
 - [Anthropic Claude](https://www.anthropic.com/) - AI model
+- [OpenAI](https://openai.com/) - AI model
 - [shadcn/ui](https://ui.shadcn.com/) - UI components
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [Phosphor Icons](https://phosphoricons.com/) - Icon system

@@ -7,6 +7,7 @@ import { PromptLoader } from './PromptLoader';
 import { isRuleBasedSubject as isRuleBasedSubjectUtil } from '@/lib/utils/subjectClassification';
 import { dependencyResolver } from '@/lib/utils/dependencyGraph';
 import type { ExtractedVisual } from '@/lib/utils/visualExtraction';
+import type { PromptMetadata } from './promptVersion';
 
 export interface BuildVariablesParams {
   subject: Subject;
@@ -128,12 +129,23 @@ export class PromptBuilder {
   private difficultyInstructionsCache?: DifficultyInstructionMap;
   private difficultyInstructionsPromise?: Promise<DifficultyInstructionMap>;
   private curriculumCache = new Map<string, Record<string, string>>();
+  private promptMetadata: PromptMetadata = {
+    versions: {},
+    assembledAt: new Date(0).toISOString(),
+  };
 
   constructor(loader?: PromptLoader) {
     this.loader = loader ?? new PromptLoader();
   }
 
   async assemblePrompt(params: BuildVariablesParams): Promise<string> {
+    const result = await this.assemblePromptWithMetadata(params);
+    return result.prompt;
+  }
+
+  async assemblePromptWithMetadata(
+    params: BuildVariablesParams
+  ): Promise<{ prompt: string; metadata: PromptMetadata }> {
     const subjectKey = params.subject.toLowerCase();
     const subjectType = params.subjectType ?? getSubjectType(subjectKey);
     const mode = params.mode ?? 'quiz';
@@ -186,7 +198,20 @@ export class PromptBuilder {
       ruleBasedEmphasis,
     ]);
 
-    return this.loader.substituteVariables(assembled, variables);
+    const prompt = this.loader.substituteVariables(assembled, variables);
+    this.promptMetadata = {
+      versions: this.loader.getVersionMetadata(),
+      assembledAt: new Date().toISOString(),
+    };
+
+    return {
+      prompt,
+      metadata: this.promptMetadata,
+    };
+  }
+
+  getPromptMetadata(): PromptMetadata {
+    return this.promptMetadata;
   }
 
   concatenateModules(modules: string[]): string {

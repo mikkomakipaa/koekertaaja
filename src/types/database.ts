@@ -64,6 +64,12 @@ export interface Database {
         Update: Partial<Omit<QuestionFlag, 'id' | 'created_at'>> & Record<string, unknown>;
         Relationships: [];
       };
+      prompt_metrics: {
+        Row: PromptMetricRow & Record<string, unknown>;
+        Insert: Omit<PromptMetricRow, 'id' | 'created_at'> & Record<string, unknown>;
+        Update: Partial<Omit<PromptMetricRow, 'id' | 'created_at'>> & Record<string, unknown>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -89,6 +95,33 @@ export interface DatabaseQuestion {
   topic?: string;
   skill?: string;
   subtopic?: string;
+}
+
+export interface PromptMetricRow {
+  id: string;
+  created_at: string;
+  user_id?: string | null;
+  subject: string;
+  difficulty: string;
+  mode: 'quiz' | 'flashcard';
+  question_count_requested: number;
+  provider: string;
+  model: string;
+  prompt_version?: Record<string, string> | null;
+  question_count_generated: number;
+  question_count_valid: number;
+  generation_latency_ms: number;
+  input_tokens?: number | null;
+  output_tokens?: number | null;
+  estimated_cost_usd?: number | null;
+  validation_pass_rate?: number | null;
+  skill_coverage?: number | null;
+  topic_coverage?: number | null;
+  type_variety_score?: number | null;
+  had_errors?: boolean | null;
+  error_summary?: string | null;
+  retry_count?: number | null;
+  question_set_id?: string | null;
 }
 
 // Helper to convert DatabaseQuestion to typed Question

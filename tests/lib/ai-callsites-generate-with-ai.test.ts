@@ -4,11 +4,13 @@ import type { GenerateWithAIOptions } from '../../src/lib/ai/providerRouter';
 import type { AIMessageContent } from '../../src/lib/ai/providerTypes';
 import { generateQuestions } from '../../src/lib/ai/questionGenerator';
 import { identifyTopics } from '../../src/lib/ai/topicIdentifier';
+import type { PromptMetadata } from '../../src/lib/prompts/promptVersion';
 
 test('generateQuestions uses generateWithAI and preserves response parsing/validation', async () => {
   let capturedOptions: { provider?: string; model?: string; maxTokens?: number } | undefined;
   let capturedMessageCount = 0;
   let capturedPromptText = '';
+  let capturedPromptMetadata: PromptMetadata | undefined;
 
   const questions = await generateQuestions(
     {
@@ -18,6 +20,9 @@ test('generateQuestions uses generateWithAI and preserves response parsing/valid
       questionCount: 1,
       materialText: 'Peruslaskut 2 + 2.',
       mode: 'quiz',
+      onPromptMetadata: (metadata) => {
+        capturedPromptMetadata = metadata;
+      },
     },
     {
       generateWithAI: async (messages: AIMessageContent[], options?: GenerateWithAIOptions) => {
@@ -56,6 +61,10 @@ test('generateQuestions uses generateWithAI and preserves response parsing/valid
   assert.equal(questions.length, 1);
   assert.equal(questions[0].question_type, 'multiple_choice');
   assert.equal(questions[0].topic, 'Laskut');
+  assert.ok(capturedPromptMetadata);
+  assert.ok(capturedPromptMetadata?.assembledAt);
+  assert.equal(capturedPromptMetadata?.versions['core/format.txt'], '2.0.0');
+  assert.equal(capturedPromptMetadata?.versions['types/math.txt'], '1.0.0');
 });
 
 test('identifyTopics uses generateWithAI and preserves JSON parsing flow', async () => {

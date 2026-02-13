@@ -5,6 +5,7 @@ import { createLogger } from '@/lib/logger';
 import { selectModelForTask } from './modelSelector';
 
 const logger = createLogger({ module: 'topicIdentifier' });
+const TOPIC_IDENTIFIER_PROMPT_VERSION = '1.0.0';
 
 const TOPIC_FI_REPLACEMENTS: Array<[RegExp, string]> = [
   [/\bpractical communication\b/gi, 'käytännön viestintä'],
@@ -90,6 +91,7 @@ export interface TopicAnalysisMetadata {
   completeness: number;            // 0.85 (85% coverage)
   materialType?: 'textbook' | 'worksheet' | 'notes' | 'mixed';
   recommendedQuestionPoolSize?: number;
+  promptVersion?: string;
 }
 
 /**
@@ -170,7 +172,8 @@ export async function identifyTopics(
     "totalConcepts": 10,
     "estimatedDifficulty": "normaali",
     "completeness": 0.85,
-    "materialType": "textbook"
+    "materialType": "textbook",
+    "recommendedQuestionPoolSize": 60
   }
 }`,
     [
@@ -183,6 +186,8 @@ export async function identifyTopics(
       '- subtopics: 2-4 aliaihetta per topic.',
       '- importance vain: "high" | "medium" | "low".',
       '- metadata.materialType vain: "textbook" | "worksheet" | "notes" | "mixed".',
+      '- metadata.recommendedQuestionPoolSize on kokonaisluku väliltä 20-200.',
+      '- recommendedQuestionPoolSize on ensisijainen suositus kysymyspoolin koolle tämän materiaalin laajuuden perusteella.',
       '- name- ja subtopics-arvot suomeksi.',
     ].join('\n'),
     [
@@ -206,6 +211,7 @@ export async function identifyTopics(
       grade,
       hasFiles: !!materialFiles && materialFiles.length > 0,
       hasMaterialText: !!materialText,
+      promptVersion: TOPIC_IDENTIFIER_PROMPT_VERSION,
     },
     'Identifying topics from material'
   );
@@ -256,6 +262,7 @@ export async function identifyTopics(
       estimatedDifficulty: string;
       completeness: number;
       materialType?: string;
+      recommendedQuestionPoolSize?: number | string;
     };
   };
 
@@ -283,6 +290,7 @@ export async function identifyTopics(
       totalConcepts: result.topics.length * 3,
       estimatedDifficulty: 'normaali',
       completeness: 0.8,
+      recommendedQuestionPoolSize: 40,
     };
   }
 
@@ -426,6 +434,10 @@ export async function identifyTopics(
     estimatedDifficulty: result.metadata.estimatedDifficulty as Difficulty,
     completeness: result.metadata.completeness,
     materialType: result.metadata.materialType as any,
+    recommendedQuestionPoolSize: normalizeRecommendedQuestionPoolSize(
+      result.metadata.recommendedQuestionPoolSize
+    ),
+    promptVersion: TOPIC_IDENTIFIER_PROMPT_VERSION,
   };
 
   logger.info(
@@ -446,4 +458,23 @@ export async function identifyTopics(
     primarySubject: subject,
     metadata,
   };
+}
+
+function normalizeRecommendedQuestionPoolSize(value: unknown): number | undefined {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+
+  const parsed = typeof value === 'number'
+    ? value
+    : typeof value === 'string'
+      ? Number.parseInt(value, 10)
+      : NaN;
+
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+
+  const rounded = Math.round(parsed);
+  return Math.max(20, Math.min(200, rounded));
 }

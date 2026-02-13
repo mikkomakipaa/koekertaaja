@@ -1,4 +1,5 @@
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
+import type { PromptMetadata } from '@/lib/prompts/promptVersion';
 
 // Question Types
 export type QuestionType =
@@ -133,6 +134,7 @@ export interface QuestionSet {
   question_count: number;
   exam_length?: number;
   status: QuestionSetStatus;  // 'created' (unpublished) or 'published' (visible on play pages)
+  prompt_metadata?: PromptMetadata | null;
   created_at: string;
   updated_at?: string;
 }

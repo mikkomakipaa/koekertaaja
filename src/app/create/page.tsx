@@ -52,6 +52,7 @@ import { UserMenu } from '@/components/auth/UserMenu';
 import { CreationProgressStepper } from '@/components/create/CreationProgressStepper';
 import { TestQuestionsTab } from '@/components/create/TestQuestionsTab';
 import { CapacityWarningDialog } from '@/components/create/CapacityWarningDialog';
+import { MetricsTab } from '@/components/metrics/MetricsTab';
 import { createLogger } from '@/lib/logger';
 import { SUBJECT_GROUPS, getSubjectById, subjectRequiresGrade } from '@/config/subjects';
 import type { MaterialCapacity, QuestionCountValidation } from '@/lib/utils/materialAnalysis';
@@ -171,7 +172,7 @@ export default function CreatePage() {
 
   // Form state
   const [state, setState] = useState<CreateState>('form');
-  const [activeTab, setActiveTab] = useState<'create' | 'extend' | 'manage' | 'test-questions' | 'notifications'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'extend' | 'manage' | 'test-questions' | 'notifications' | 'metrics'>('create');
   const [subject, setSubject] = useState('');
   const [topic, setTopic] = useState('');
   const [subtopic, setSubtopic] = useState('');
@@ -1339,7 +1340,10 @@ export default function CreatePage() {
     { value: 'extend', label: 'Laajenna' },
     { value: 'manage', label: 'Hallitse', badge: allQuestionSets.length },
     { value: 'test-questions', label: 'Testaa' },
-    ...(isAdmin ? [{ value: 'notifications' as const, label: 'Ilmoitukset', badge: flaggedQuestions.length, adminOnly: true }] : [])
+    ...(isAdmin ? [
+      { value: 'notifications' as const, label: 'Ilmoitukset', badge: flaggedQuestions.length, adminOnly: true },
+      { value: 'metrics' as const, label: 'Metriikat', adminOnly: true },
+    ] : [])
   ];
 
   // Form screen
@@ -1348,8 +1352,8 @@ export default function CreatePage() {
       <UserMenu />
       <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 transition-colors">
       <div className="max-w-3xl mx-auto">
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-lg border-b border-border transition-shadow">
+        {/* Header */}
+        <div className="bg-background border-b border-border">
           <PageHeader
             title="Kysymyssarjat"
             subtitle="Luo uusia kysymyssarjoja tai hallitse olemassa olevia"
@@ -2218,6 +2222,10 @@ export default function CreatePage() {
                   </div>
                 )}
             </div>
+          )}
+
+          {activeTab === 'metrics' && isAdmin && (
+            <MetricsTab />
           )}
 
               <Dialog.Root open={Boolean(editingFlag)} onOpenChange={(open) => !open && setEditingFlag(null)}>

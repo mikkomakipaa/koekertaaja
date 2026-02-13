@@ -19,6 +19,7 @@ import { analyzeQuestionSetQuality, orchestrateQuestionSet } from '@/lib/utils/q
 import { analyzeMaterialCapacity, validateQuestionCount } from '@/lib/utils/materialAnalysis';
 import type { Question } from '@/types';
 import { dependencyResolver } from '@/lib/utils/dependencyGraph';
+import type { PromptMetadata } from '@/lib/prompts/promptVersion';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 300; // 5 minutes timeout for AI generation
@@ -331,6 +332,7 @@ export async function POST(request: NextRequest) {
     // Prepare parallel generation tasks
     const generationTasks: Promise<{
       questions: any[];
+      promptMetadata?: PromptMetadata;
       difficulty?: Difficulty;
       mode: 'quiz' | 'flashcard';
     }>[] = [];
@@ -344,6 +346,7 @@ export async function POST(request: NextRequest) {
     // Add quiz generation tasks
     if (generationMode === 'quiz' || generationMode === 'both') {
       for (const difficulty of difficulties) {
+        let promptMetadata: PromptMetadata | undefined;
         generationTasks.push(
           generateQuestions({
             subject,
@@ -359,7 +362,18 @@ export async function POST(request: NextRequest) {
             identifiedTopics: getSimpleTopics(topicAnalysis), // Pass identified topics
             targetWords: validatedTargetWords,
             distribution: customDistribution, // Pass user's confirmed distribution
-          }).then((questions) => ({ questions, difficulty, mode: 'quiz' as const }))
+            metricsContext: {
+              userId: authenticatedUserId,
+            },
+            onPromptMetadata: (metadata) => {
+              promptMetadata = metadata;
+            },
+          }).then((questions) => ({
+            questions,
+            promptMetadata,
+            difficulty,
+            mode: 'quiz' as const,
+          }))
         );
 
         // Track metadata for error reporting
@@ -369,6 +383,7 @@ export async function POST(request: NextRequest) {
 
     // Add flashcard generation task
     if (generationMode === 'flashcard' || generationMode === 'both') {
+      let promptMetadata: PromptMetadata | undefined;
       generationTasks.push(
         generateQuestions({
           subject,
@@ -384,7 +399,17 @@ export async function POST(request: NextRequest) {
           identifiedTopics: getSimpleTopics(topicAnalysis), // Pass identified topics
           targetWords: validatedTargetWords,
           distribution: customDistribution, // Pass user's confirmed distribution
-        }).then((questions) => ({ questions, mode: 'flashcard' as const }))
+          metricsContext: {
+            userId: authenticatedUserId,
+          },
+          onPromptMetadata: (metadata) => {
+            promptMetadata = metadata;
+          },
+        }).then((questions) => ({
+          questions,
+          promptMetadata,
+          mode: 'flashcard' as const,
+        }))
       );
 
       // Track metadata for error reporting
@@ -397,6 +422,7 @@ export async function POST(request: NextRequest) {
     // Process settled results - separate successes from failures
     const successfulResults: Array<{
       questions: any[];
+      promptMetadata?: PromptMetadata;
       difficulty?: Difficulty;
       mode: 'quiz' | 'flashcard';
     }> = [];
@@ -479,7 +505,7 @@ export async function POST(request: NextRequest) {
     }> = [];
 
     for (const result of successfulResults) {
-      const { questions, difficulty, mode } = result;
+      const { questions, promptMetadata, difficulty, mode } = result;
       const orchestratedQuestions: Question[] =
         mode === 'quiz' && orchestrate
           ? orchestrateQuestionSet(questions as Question[], { expectedDifficulty: difficulty })
@@ -562,6 +588,7 @@ export async function POST(request: NextRequest) {
               question_count: questionsForSave.length,
               exam_length: examLength,
               status: 'created',  // New question sets default to unpublished
+              prompt_metadata: promptMetadata,
             },
             questionsForSave
           );

@@ -1,3 +1,9 @@
+# Version: 1.0.0
+# Last Updated: 2026-02-12
+# Author: System
+# Changes: Added prompt version tracking metadata
+# Breaking: false
+
 KIELIAINEIDEN FLASHCARD-LISÄSÄÄNNÖT (koskee kaikkia kieliä):
 
 TAVOITE:

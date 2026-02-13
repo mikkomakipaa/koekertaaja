@@ -20,8 +20,10 @@ export async function POST(request: NextRequest) {
 
   try {
     // Verify authentication
+    let userId = '';
     try {
-      await requireAuth();
+      const user = await requireAuth();
+      userId = user.id;
       logger.info('Authentication successful');
     } catch (authError) {
       logger.warn('Authentication failed');
@@ -174,6 +176,10 @@ export async function POST(request: NextRequest) {
       materialFiles: files.length > 0 ? files : undefined,
       mode: existingSet.mode || 'quiz',
       identifiedTopics: getSimpleTopics(topicAnalysis),
+      metricsContext: {
+        userId,
+        questionSetId,
+      },
     });
 
     if (newQuestions.length === 0) {

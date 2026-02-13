@@ -233,6 +233,7 @@ export async function POST(request: NextRequest) {
 
     // Step 2: Generate flashcard set
     const flashcardRequest: FlashcardGenerationRequest = {
+      userId,
       subject,
       subjectType,
       questionCount,

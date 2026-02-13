@@ -31,10 +31,13 @@ import { createLogger } from '@/lib/logger';
 import { buildVisualQuestionPrompt, PromptBuilder } from '@/lib/prompts/PromptBuilder';
 import { PromptLoader } from '@/lib/prompts/PromptLoader';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
+import type { PromptMetadata } from '@/lib/prompts/promptVersion';
 import { isRuleBasedSubject, validateRuleBasedQuestion } from '@/lib/utils/subjectClassification';
 import { dependencyResolver } from '@/lib/utils/dependencyGraph';
 import { extractMaterialWithVisuals, parseImageReference, type ExtractedVisual } from '@/lib/utils/visualExtraction';
 import { selectModelForTask } from './modelSelector';
+import { calculateCost } from './costCalculator';
+import { logPromptMetricsFireAndForget, type PromptMetricsInsert } from '@/lib/metrics/logPromptMetrics';
 
 const logger = createLogger({ module: 'questionGenerator' });
 const VISUAL_QUESTION_SUPPORT_ENABLED = false;
@@ -237,10 +240,33 @@ export interface GenerateQuestionsParams {
   contentType?: 'vocabulary' | 'grammar' | 'mixed';
   visuals?: ExtractedVisual[];
   targetProvider?: AIProvider;
+  onPromptMetadata?: (promptMetadata: PromptMetadata) => void;
+  metricsContext?: {
+    userId?: string;
+    questionSetId?: string;
+    retryCount?: number;
+  };
 }
 
 interface GenerateQuestionsDeps {
   generateWithAI?: typeof providerRouter.generateWithAI;
+}
+
+function calculateVarietyScore(
+  questions: Array<{ type?: string }>
+): number {
+  if (questions.length === 0) {
+    return 0;
+  }
+
+  const uniqueTypes = new Set(
+    questions
+      .map((question) => question.type)
+      .filter((type): type is string => typeof type === 'string' && type.trim().length > 0)
+  );
+
+  const score = (uniqueTypes.size / questions.length) * 100;
+  return Number(score.toFixed(2));
 }
 
 function toAnswerString(value: unknown): string {
@@ -374,6 +400,8 @@ export async function generateQuestions(
     contentType,
     visuals,
     targetProvider,
+    onPromptMetadata,
+    metricsContext,
   } = params;
 
   const extractedMaterial = visuals
@@ -444,6 +472,7 @@ export async function generateQuestions(
 
   // Get prompt based on subject and mode
   let prompt = '';
+  let promptMetadata: PromptMetadata | undefined;
   const loader = new PromptLoader();
   const builder = new PromptBuilder(loader);
 
@@ -473,6 +502,8 @@ export async function generateQuestions(
       distribution,
       contentType,
     });
+    promptMetadata = builder.getPromptMetadata();
+    onPromptMetadata?.(promptMetadata);
 
     const visualPrompt = buildVisualQuestionPrompt({
       visuals: effectiveVisuals,
@@ -486,6 +517,7 @@ export async function generateQuestions(
       {
         subject,
         mode,
+        promptVersions: Object.keys(promptMetadata?.versions ?? {}).length,
       },
       'Prompt assembled successfully'
     );
@@ -518,6 +550,7 @@ export async function generateQuestions(
     targetProvider,
   });
   const aiCallStartedAt = Date.now();
+  let aiRetryCount = 0;
   logger.info(
     {
       provider: selectedModel.provider,
@@ -555,6 +588,7 @@ export async function generateQuestions(
     selectedModel.provider === 'openai' &&
     (cleanContent === '[]' || cleanContent.length < 3)
   ) {
+    aiRetryCount += 1;
     logger.warn(
       { model: selectedModel.model, contentLength: cleanContent.length },
       'OpenAI returned empty/near-empty quiz payload - retrying once with gpt-5.1'
@@ -611,11 +645,37 @@ export async function generateQuestions(
         'Failed to parse AI response as JSON'
       );
 
+      logPromptMetricsFireAndForget({
+        user_id: metricsContext?.userId ?? null,
+        question_set_id: metricsContext?.questionSetId ?? null,
+        subject,
+        difficulty,
+        mode,
+        question_count_requested: questionCount,
+        provider: selectedModel.provider,
+        model: selectedModel.model,
+        prompt_version: promptMetadata?.versions ?? null,
+        question_count_generated: 0,
+        question_count_valid: 0,
+        generation_latency_ms: Date.now() - aiCallStartedAt,
+        input_tokens: response.usage?.input_tokens ?? null,
+        output_tokens: response.usage?.output_tokens ?? null,
+        estimated_cost_usd: calculateCost(response.usage, selectedModel.model),
+        validation_pass_rate: 0,
+        skill_coverage: 0,
+        topic_coverage: 0,
+        type_variety_score: 0,
+        had_errors: true,
+        error_summary: secondError instanceof Error ? secondError.message : 'Invalid JSON response',
+        retry_count: metricsContext?.retryCount ?? aiRetryCount,
+      });
+
       throw new Error('AI returned invalid JSON format. The response could not be parsed.');
     }
   }
 
   // Validate AI response structure with Zod - filter out invalid questions gracefully
+  const totalGeneratedByAI = parsedQuestions.length;
   const validQuestions: any[] = [];
   const invalidQuestions: Array<{ index: number; errors: any[]; question: any }> = [];
   const excludedFlashcardTypes: Array<{ index: number; type: string; question: any }> = [];
@@ -932,6 +992,30 @@ export async function generateQuestions(
       },
       'Too many invalid questions - insufficient valid questions generated'
     );
+    logPromptMetricsFireAndForget({
+      user_id: metricsContext?.userId ?? null,
+      question_set_id: metricsContext?.questionSetId ?? null,
+      subject,
+      difficulty,
+      mode,
+      question_count_requested: questionCount,
+      provider: selectedModel.provider,
+      model: selectedModel.model,
+      prompt_version: promptMetadata?.versions ?? null,
+      question_count_generated: totalGeneratedByAI,
+      question_count_valid: validQuestions.length,
+      generation_latency_ms: Date.now() - aiCallStartedAt,
+      input_tokens: response.usage?.input_tokens ?? null,
+      output_tokens: response.usage?.output_tokens ?? null,
+      estimated_cost_usd: calculateCost(response.usage, selectedModel.model),
+      validation_pass_rate: totalGeneratedByAI > 0 ? Number(((validQuestions.length / totalGeneratedByAI) * 100).toFixed(2)) : 0,
+      skill_coverage: Number(skillCoverage.toFixed(2)),
+      topic_coverage: Number(topicCoverage.toFixed(2)),
+      type_variety_score: calculateVarietyScore(validQuestions),
+      had_errors: true,
+      error_summary: `Too few valid questions (${validQuestions.length}/${questionCount})`,
+      retry_count: metricsContext?.retryCount ?? aiRetryCount,
+    });
     throw new Error(
       `AI generated too few valid questions (${validQuestions.length}/${questionCount}). ` +
       `Required: ${minRequiredQuestions}+` +
@@ -996,6 +1080,39 @@ export async function generateQuestions(
     },
     'AI response validated successfully'
   );
+
+  const generatedCount = totalGeneratedByAI;
+  const validCount = validQuestions.length;
+  const validationPassRate = generatedCount > 0
+    ? Number(((validCount / generatedCount) * 100).toFixed(2))
+    : 0;
+  const typeVarietyScore = calculateVarietyScore(parsedQuestions);
+  const generationLatencyMs = Date.now() - aiCallStartedAt;
+  const metricsData: PromptMetricsInsert = {
+    user_id: metricsContext?.userId ?? null,
+    question_set_id: metricsContext?.questionSetId ?? null,
+    subject,
+    difficulty,
+    mode,
+    question_count_requested: questionCount,
+    provider: selectedModel.provider,
+    model: selectedModel.model,
+    prompt_version: promptMetadata?.versions ?? null,
+    question_count_generated: generatedCount,
+    question_count_valid: validCount,
+    generation_latency_ms: generationLatencyMs,
+    input_tokens: response.usage?.input_tokens ?? null,
+    output_tokens: response.usage?.output_tokens ?? null,
+    estimated_cost_usd: calculateCost(response.usage, selectedModel.model),
+    validation_pass_rate: validationPassRate,
+    skill_coverage: Number(skillCoverage.toFixed(2)),
+    topic_coverage: Number(topicCoverage.toFixed(2)),
+    type_variety_score: typeVarietyScore,
+    had_errors: invalidQuestions.length > 0,
+    error_summary: invalidQuestions.length > 0 ? `${invalidQuestions.length} validation failures` : null,
+    retry_count: metricsContext?.retryCount ?? aiRetryCount,
+  };
+  logPromptMetricsFireAndForget(metricsData);
 
   // Validate and transform questions
   const questions: Question[] = parsedQuestions.map((q, index) => {

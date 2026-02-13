@@ -13,6 +13,7 @@ import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty, QuestionSet, Question } from '@/types';
 import { createLogger } from '@/lib/logger';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
+import type { PromptMetadata } from '@/lib/prompts/promptVersion';
 import { calculateDistribution, formatDistributionForPrompt } from '@/lib/utils/questionDistribution';
 import { validateCoverage, formatCoverageReport } from '@/lib/utils/coverageValidation';
 import { isRuleBasedSubject } from '@/lib/utils/subjectClassification';
@@ -45,6 +46,7 @@ export interface MaterialFile {
 }
 
 export interface GenerationRequest {
+  userId?: string;
   subject: string;
   subjectType?: string;
   grade?: number;
@@ -404,11 +406,17 @@ export async function identifyTopicsFromMaterial(
     targetProvider: request.targetProvider,
   });
 
-  topicAnalysis.metadata.recommendedQuestionPoolSize = recommendQuestionPoolSize({
+  const aiRecommendedPoolSize = topicAnalysis.metadata.recommendedQuestionPoolSize;
+  const fallbackRecommendedPoolSize = recommendQuestionPoolSize({
     materialText: request.materialText,
     totalConcepts: topicAnalysis.metadata.totalConcepts,
     completeness: topicAnalysis.metadata.completeness,
   });
+
+  topicAnalysis.metadata.recommendedQuestionPoolSize =
+    typeof aiRecommendedPoolSize === 'number' && Number.isFinite(aiRecommendedPoolSize)
+      ? aiRecommendedPoolSize
+      : fallbackRecommendedPoolSize;
 
   logger.info(
     {
@@ -422,6 +430,10 @@ export async function identifyTopicsFromMaterial(
       })),
       topicCount: topicAnalysis.topics.length,
       metadata: topicAnalysis.metadata,
+      recommendedPoolSizeSource:
+        typeof aiRecommendedPoolSize === 'number' && Number.isFinite(aiRecommendedPoolSize)
+          ? 'ai'
+          : 'fallback-heuristic',
     },
     'Enhanced topics identified successfully'
   );
@@ -486,6 +498,7 @@ export async function generateQuizSets(
   for (const difficulty of request.difficulties) {
     logger.info({ difficulty }, `Generating quiz questions for difficulty`);
 
+    let promptMetadata: PromptMetadata | undefined;
     const questions = await generateQuestions({
       subject: request.subject,
       subjectType: request.subjectType as SubjectType | undefined,
@@ -503,6 +516,12 @@ export async function generateQuizSets(
       distribution, // NEW: Pass calculated distribution
       visuals,
       targetProvider: request.targetProvider,
+      metricsContext: {
+        userId: request.userId,
+      },
+      onPromptMetadata: (metadata) => {
+        promptMetadata = metadata;
+      },
     });
 
     if (questions.length === 0) {
@@ -638,6 +657,7 @@ export async function generateQuizSets(
           question_count: visualizedQuestions.length,
           exam_length: request.examLength,
           status: 'created',
+          prompt_metadata: promptMetadata,
         },
         visualizedQuestions
       );
@@ -728,6 +748,7 @@ export async function generateFlashcardSet(
     'Prepared visual assets for flashcard generation'
   );
 
+  let promptMetadata: PromptMetadata | undefined;
   const questions = await generateQuestions({
     subject: request.subject,
     subjectType: request.subjectType as SubjectType | undefined,
@@ -746,6 +767,12 @@ export async function generateFlashcardSet(
     distribution, // NEW: Pass calculated distribution
     visuals,
     targetProvider: request.targetProvider,
+    metricsContext: {
+      userId: request.userId,
+    },
+    onPromptMetadata: (metadata) => {
+      promptMetadata = metadata;
+    },
   });
 
   const normalizedQuestions: Question[] = questions.map((question, index) => ({
@@ -918,6 +945,7 @@ export async function generateFlashcardSet(
         question_count: dependencyOrderedQuestions.length,
         exam_length: request.examLength,
         status: 'created',
+        prompt_metadata: promptMetadata,
       },
       dependencyOrderedQuestions
     );

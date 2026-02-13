@@ -52,6 +52,7 @@ export function TestQuestionsTab({
   // Type filters configuration
   const typeFilters: Array<{ value: QuestionType | 'all'; label: string; icon: React.ReactElement }> = [
     { value: 'all', label: 'Kaikki', icon: <ListBullets size={14} weight="duotone" /> },
+    { value: 'flashcard', label: 'Kortti', icon: <Article size={14} weight="duotone" /> },
     { value: 'multiple_choice', label: 'Monivalinta', icon: <ListChecks size={14} weight="duotone" /> },
     { value: 'fill_blank', label: 'Täytä', icon: <TextT size={14} weight="duotone" /> },
     { value: 'true_false', label: 'Tosi/Epä', icon: <CheckCircle size={14} weight="duotone" /> },
