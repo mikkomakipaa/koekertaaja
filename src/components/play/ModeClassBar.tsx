@@ -101,7 +101,7 @@ export function ModeClassBar({
       )}
     >
       <div className="mx-auto max-w-4xl px-3 py-4 sm:px-4">
-        <div className="flex items-center gap-2.5 py-0.5">
+        <div className="flex min-w-0 items-center gap-2.5 py-0.5">
           <div
             role="radiogroup"
             aria-label="Opiskelutila"
@@ -141,7 +141,10 @@ export function ModeClassBar({
           </div>
 
           <div
-            className="min-w-0 overflow-x-auto overflow-y-visible no-scrollbar sm:overflow-visible"
+            className={cn(
+              'min-w-0 overflow-x-auto overflow-y-visible no-scrollbar sm:overflow-visible',
+              searchOpen && 'hidden sm:block'
+            )}
             aria-label="Luokkasuodattimet"
           >
             <div className="flex min-h-11 sm:min-h-12 flex-nowrap items-center gap-2">
@@ -171,8 +174,13 @@ export function ModeClassBar({
             </div>
           </div>
 
-          <div className="relative flex flex-shrink-0 items-center justify-end">
-            <div className="relative">
+          <div
+            className={cn(
+              'relative ml-auto flex min-w-0 items-center justify-end',
+              searchOpen ? 'flex-1 sm:flex-none' : 'flex-shrink-0'
+            )}
+          >
+            <div className={cn('relative', searchOpen && 'w-full sm:w-auto')}>
               <CollapsibleSearch
                 placeholder="Etsi aihealuetta, ainetta tai aihetta..."
                 value={searchQuery}
@@ -184,7 +192,7 @@ export function ModeClassBar({
                 onBlur={onSearchBlur}
                 className={cn(
                   'h-11 w-11 sm:h-12 sm:w-12 rounded-xl shadow-sm shadow-gray-200/50 dark:shadow-black/20',
-                  searchOpen && 'w-[220px] sm:w-[260px]'
+                  searchOpen && 'w-full sm:w-[260px]'
                 )}
               />
               <SearchSuggestions
