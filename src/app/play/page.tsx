@@ -362,15 +362,15 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                 {lastScore.difficulty && (
                   <span
                     className={cn(
-                      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
-                      lastScore.difficulty === 'helppo' &&
-                        'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-                      lastScore.difficulty === 'normaali' &&
-                        'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-200',
+                      difficultyColors[lastScore.difficulty]?.bg,
+                      difficultyColors[lastScore.difficulty]?.border
                     )}
                     title={difficultyLabels[lastScore.difficulty] || lastScore.difficulty}
                   >
-                    {difficultyIcons[lastScore.difficulty]}
+                    <span className={difficultyColors[lastScore.difficulty]?.icon}>
+                      {difficultyIcons[lastScore.difficulty]}
+                    </span>
                     <span className="hidden sm:inline">{difficultyLabels[lastScore.difficulty]}</span>
                   </span>
                 )}

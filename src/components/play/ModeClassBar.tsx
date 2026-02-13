@@ -41,7 +41,7 @@ const controlBase =
   'inline-flex min-h-11 sm:min-h-12 items-center justify-center gap-2 rounded-xl px-3 sm:px-4 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white active:scale-[0.99] dark:focus-visible:ring-offset-gray-900';
 
 const inactiveControl =
-  'border border-gray-200 bg-white text-gray-700 shadow-sm shadow-gray-200/50 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:shadow-black/20 dark:hover:border-gray-600 dark:hover:bg-gray-800';
+  'border border-gray-300/80 bg-transparent text-gray-700 shadow-none hover:border-gray-400 hover:bg-transparent dark:border-gray-600 dark:bg-transparent dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-transparent';
 
 export function ModeClassBar({
   studyMode,
@@ -161,7 +161,7 @@ export function ModeClassBar({
                       controlBase,
                       'flex-shrink-0',
                       isActive
-                        ? `${colors.bg} ${colors.text} shadow-md ring-2 ring-inset ring-current/40 focus-visible:ring-current/60 dark:shadow-lg`
+                        ? `bg-transparent ${colors.text} border border-current/60 shadow-none focus-visible:ring-current/60`
                         : inactiveControl
                     )}
                     aria-pressed={isActive}
