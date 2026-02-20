@@ -147,6 +147,72 @@ export interface QuestionSetWithQuestions extends QuestionSet {
 // Study Mode
 export type StudyMode = 'pelaa' | 'opettele';
 
+/**
+ * Available interactive learning modes in the play experience.
+ */
+export type QuizMode = 'quiz' | 'flashcard' | 'speed-quiz';
+
+/**
+ * Client-side session state for an active Aikahaaste (speed quiz) run.
+ */
+export interface SpeedQuizSession {
+  /** Identifies this session as speed quiz mode. */
+  mode: 'speed-quiz';
+  /** Share code of the question set being played. */
+  questionSetCode: string;
+  /** The 10 selected questions for this run. */
+  selectedQuestions: Question[];
+  /** Zero-based index of the currently active question. */
+  currentQuestionIndex: number;
+  /** Fixed time limit per question in seconds (v1). */
+  timePerQuestion: 15;
+  /** Fixed number of questions in one session (v1). */
+  totalQuestions: 10;
+  /** Session start timestamp in milliseconds. */
+  startTime: number;
+  /** Timestamp in milliseconds when the current question started. */
+  questionStartTime: number;
+  /** Question IDs automatically skipped due to timeout. */
+  skippedQuestions: string[];
+  /** Mapping of question ID to the submitted user answer. */
+  answers: Record<string, string>;
+  /** Question IDs answered correctly. */
+  correctAnswers: string[];
+  /** Question IDs answered incorrectly. */
+  wrongAnswers: string[];
+}
+
+/**
+ * Summary payload for rendering speed quiz results.
+ */
+export interface SpeedQuizResult {
+  /** Total elapsed quiz time in seconds. */
+  totalTime: number;
+  /** Number of correctly answered questions. */
+  correctCount: number;
+  /** Number of incorrectly answered questions. */
+  wrongCount: number;
+  /** Number of questions skipped due to timeout. */
+  skippedCount: number;
+  /** Final points earned from the session. */
+  score: number;
+  /** Longest consecutive correct-answer streak. */
+  bestStreak: number;
+  /** Per-question outcome data for results breakdown UI. */
+  questions: Array<{
+    /** Question ID. */
+    id: string;
+    /** Question text shown to the user. */
+    question: string;
+    /** Result status of this question in speed quiz mode. */
+    status: 'correct' | 'wrong' | 'skipped';
+    /** User-submitted answer, when available. */
+    userAnswer?: string;
+    /** Correct answer shown in results view. */
+    correctAnswer: string;
+  }>;
+}
+
 // Flashcard (converted from questions, excludes sequential)
 export type FlashcardCompatibleQuestion = Exclude<Question, SequentialQuestion>;
 

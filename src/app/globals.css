@@ -27,24 +27,24 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222 47% 11%;
     --foreground: 210 40% 98%;
-    --card: 217.2 32.6% 17.5%;
+    --card: 217 33% 17%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 217 33% 17%;
     --popover-foreground: 210 40% 98%;
     --primary: 142.1 70.6% 45.3%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 217 33% 17%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 215 28% 17%;
+    --input: 215 28% 25%;
     --ring: 142.1 70.6% 45.3%;
   }
 }
@@ -87,6 +87,72 @@
 
 .animate-wiggle {
   animation: wiggle 1s ease-in-out 3;
+}
+
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.01);
+  }
+}
+
+@keyframes pulse-fast {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 1s ease-in-out infinite;
+}
+
+.animate-pulse-fast {
+  animation: pulse-fast 0.5s ease-in-out infinite;
+}
+
+@keyframes countdown-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.countdown-number {
+  animation: countdown-appear 0.8s ease-out;
+}
+
+@keyframes speed-quiz-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.speed-quiz-transition {
+  animation: speed-quiz-fade 200ms ease-out;
 }
 
 @keyframes hero-fade {
@@ -146,12 +212,59 @@
     scroll-behavior: auto;
   }
 
+  .animate-pulse-subtle,
+  .animate-pulse-fast,
+  .countdown-number,
+  .speed-quiz-transition {
+    animation: none;
+    transform: none;
+  }
+
   .hero-fade,
   .scroll-fade {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
     transition: none !important;
+  }
+}
+
+@layer components {
+  .speed-quiz-primary {
+    @apply bg-amber-700 text-amber-50 transition-colors duration-200 hover:bg-amber-800 dark:bg-amber-700 dark:hover:bg-amber-800;
+  }
+
+  .speed-quiz-accent {
+    @apply text-amber-700 dark:text-amber-300;
+  }
+
+  .speed-quiz-border {
+    @apply border-amber-200 dark:border-amber-800;
+  }
+
+  .timer-safe {
+    @apply bg-emerald-500;
+  }
+
+  .timer-warning {
+    @apply bg-amber-500;
+  }
+
+  .timer-critical {
+    @apply bg-red-500;
+  }
+}
+
+@layer base {
+  button,
+  [role="button"],
+  a,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  select,
+  summary {
+    @apply transition-colors duration-200;
   }
 }
 

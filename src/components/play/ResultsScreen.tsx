@@ -10,7 +10,8 @@ import { useBadges } from '@/hooks/useBadges';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
 import { cn } from '@/lib/utils';
-import { CheckCircle, XCircle, Medal, ArrowCounterClockwise } from '@phosphor-icons/react';
+import { buildQuestionDetails, getResultsBreakdown, type QuestionDetailStatus, toggleQuestionExpanded } from '@/lib/play/results-screen';
+import { CheckCircle, XCircle, Medal, ArrowCounterClockwise, X, ArrowRight } from '@phosphor-icons/react';
 import {
   DiamondsFour,
   Fire,
@@ -33,6 +34,7 @@ interface ResultsScreenProps {
   answers: Answer[];
   totalPoints: number;
   bestStreak: number;
+  skippedQuestions?: string[];
   questionSetCode?: string;
   difficulty?: string;
   durationSeconds?: number;
@@ -42,12 +44,113 @@ interface ResultsScreenProps {
   onBackToMenu: () => void;
 }
 
+function QuestionDetailCard({
+  question,
+  status,
+  userAnswer,
+  isExpanded,
+  onToggle,
+}: {
+  question: {
+    id: string;
+    question: string;
+    correctAnswer: string;
+  };
+  status: QuestionDetailStatus;
+  userAnswer?: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  const statusIcon = {
+    correct: <CheckCircle size={20} weight="fill" className="text-emerald-600 dark:text-emerald-400" />,
+    wrong: <X size={20} weight="bold" className="text-red-600 dark:text-red-400" />,
+    skipped: <ArrowRight size={20} weight="bold" className="text-slate-500 dark:text-slate-400" />,
+  };
+
+  const statusText = {
+    correct: 'Oikein',
+    wrong: 'Väärin',
+    skipped: 'Ohitettu',
+  };
+
+  const preview = question.question.length > 100
+    ? `${question.question.substring(0, 100)}...`
+    : question.question;
+
+  return (
+    <Card
+      className="cursor-pointer transition-shadow hover:shadow-md"
+      onClick={onToggle}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onToggle();
+        }
+      }}
+      aria-expanded={isExpanded}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          {statusIcon[status]}
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{preview}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{statusText[status]}</p>
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div className="mt-4 space-y-2 border-t border-gray-200 pt-4 dark:border-gray-700">
+            <p className="text-sm text-gray-900 dark:text-gray-100">
+              <MathText>{question.question}</MathText>
+            </p>
+
+            {status === 'skipped' && (
+              <div className="rounded bg-emerald-50 p-3 dark:bg-emerald-900/20">
+                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+                  Oikea vastaus:
+                </p>
+                <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                  <MathText>{question.correctAnswer}</MathText>
+                </p>
+              </div>
+            )}
+
+            {status === 'wrong' && (
+              <>
+                <div className="rounded bg-red-50 p-3 dark:bg-red-900/20">
+                  <p className="text-sm font-semibold text-red-900 dark:text-red-100">
+                    Valitsit:
+                  </p>
+                  <p className="text-sm text-red-800 dark:text-red-200">
+                    <MathText>{userAnswer || 'Ei vastausta'}</MathText>
+                  </p>
+                </div>
+                <div className="rounded bg-emerald-50 p-3 dark:bg-emerald-900/20">
+                  <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+                    Oikea vastaus:
+                  </p>
+                  <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                    <MathText>{question.correctAnswer}</MathText>
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function ResultsScreen({
   score,
   total,
   answers,
   totalPoints,
   bestStreak,
+  skippedQuestions,
   questionSetCode,
   difficulty,
   durationSeconds,
@@ -70,8 +173,14 @@ export function ResultsScreen({
   const [personalBest, setPersonalBest] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [showAllAnswers, setShowAllAnswers] = useState(false);
+  const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
   const hasRecordedRef = useRef(false);
   const sessionMistakeCount = answers.filter(answer => !answer.isCorrect).length;
+  const { skippedCount, correctCount, wrongCount } = getResultsBreakdown(answers, skippedQuestions);
+  const questionDetails = buildQuestionDetails(answers, skippedQuestions);
+  const skippedAnswerCount = skippedCount > 0
+    ? skippedCount
+    : answers.filter(answer => answer.userAnswer === null && !answer.isCorrect).length;
   const reviewMistakeCount = mistakeCount > 0 ? mistakeCount : sessionMistakeCount;
 
   // Track if events have already been captured to prevent duplicates
@@ -274,6 +383,17 @@ export function ResultsScreen({
           <Card variant="frosted" padding="compact">
             <CardContent>
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <ArrowCounterClockwise size={18} weight="duotone" className="text-amber-500" />
+                Ohitetut
+              </div>
+              <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {skippedAnswerCount}
+              </div>
+            </CardContent>
+          </Card>
+          <Card variant="frosted" padding="compact">
+            <CardContent>
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
                 <Medal size={18} weight="duotone" className="text-purple-500" />
                 Uusia merkkejä
               </div>
@@ -348,6 +468,48 @@ export function ResultsScreen({
                   <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
                     Vastausten yhteenveto
                   </h3>
+                  <div className="flex flex-wrap items-center gap-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={18} weight="fill" className="text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-gray-600 dark:text-gray-400">Oikein: {correctCount}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <X size={18} weight="bold" className="text-red-600 dark:text-red-400" />
+                      <span className="text-gray-600 dark:text-gray-400">Väärin: {wrongCount}</span>
+                    </div>
+                    {skippedCount > 0 && (
+                      <div className="flex items-center gap-2">
+                        <ArrowRight size={18} weight="bold" className="text-slate-500 dark:text-slate-400" />
+                        <span className="text-gray-600 dark:text-gray-400">Ohitettu: {skippedCount}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {skippedQuestions && skippedQuestions.length > 0 ? (
+                  <div className="mt-6">
+                    <h3 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">Kysymykset</h3>
+                    <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
+                      {questionDetails.map((detail) => {
+                        return (
+                          <QuestionDetailCard
+                            key={detail.id}
+                            question={{
+                              id: detail.id,
+                              question: detail.question,
+                              correctAnswer: detail.correctAnswer,
+                            }}
+                            status={detail.status}
+                            userAnswer={detail.userAnswer}
+                            isExpanded={expandedQuestionId === detail.id}
+                            onToggle={() => {
+                              setExpandedQuestionId((current) => toggleQuestionExpanded(current, detail.id));
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowAllAnswers(false)}
@@ -372,44 +534,56 @@ export function ResultsScreen({
                       Kaikki
                     </button>
                   </div>
-                </div>
-                <div className="space-y-2 max-h-[420px] md:max-h-[520px] overflow-y-auto pr-1">
-                  {answers.filter(answer => showAllAnswers || !answer.isCorrect).map((answer, index) => (
-                    <div
-                      key={index}
-                      className={`p-4 rounded-lg border-l-4 ${
-                        answer.isCorrect
-                          ? 'bg-green-50 border-green-500'
-                          : 'bg-red-50 border-red-500'
-                      }`}
-                    >
-                      <div className="flex items-start gap-2">
-                        {answer.isCorrect ? (
-                          <CheckCircle weight="duotone" className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        ) : (
-                          <XCircle weight="duotone" className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-                        )}
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">
-                            <MathText>{answer.questionText}</MathText>
-                          </p>
-                          {!answer.isCorrect && (
-                            <p className="text-sm text-gray-600 mt-1">
-                              Oikea vastaus:{' '}
-                              <span className="font-semibold">
-                                {typeof answer.correctAnswer === 'object' ? (
-                                  JSON.stringify(answer.correctAnswer)
-                                ) : (
-                                  <MathText>{String(answer.correctAnswer)}</MathText>
-                                )}
-                              </span>
-                            </p>
-                          )}
+                )}
+                {!skippedQuestions || skippedQuestions.length === 0 ? (
+                  <div className="space-y-2 max-h-[420px] md:max-h-[520px] overflow-y-auto pr-1">
+                    {answers.filter(answer => showAllAnswers || !answer.isCorrect).map((answer, index) => {
+                      const isSkipped = answer.userAnswer === null && !answer.isCorrect;
+                      return (
+                        <div
+                          key={index}
+                          className={`p-4 rounded-lg border-l-4 ${
+                            answer.isCorrect
+                              ? 'bg-green-50 border-green-500'
+                              : isSkipped
+                                ? 'bg-amber-50 border-amber-500'
+                                : 'bg-red-50 border-red-500'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2">
+                            {answer.isCorrect ? (
+                              <CheckCircle weight="duotone" className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                            ) : isSkipped ? (
+                              <ArrowCounterClockwise weight="duotone" className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                            ) : (
+                              <XCircle weight="duotone" className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                            )}
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">
+                                <MathText>{answer.questionText}</MathText>
+                              </p>
+                              {isSkipped && (
+                                <p className="text-sm text-amber-700 mt-1">Tämä kysymys ohitettiin aikarajan vuoksi.</p>
+                              )}
+                              {!answer.isCorrect && !isSkipped && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Oikea vastaus:{' '}
+                                  <span className="font-semibold">
+                                    {typeof answer.correctAnswer === 'object' ? (
+                                      JSON.stringify(answer.correctAnswer)
+                                    ) : (
+                                      <MathText>{String(answer.correctAnswer)}</MathText>
+                                    )}
+                                  </span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
           </TabsContent>

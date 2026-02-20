@@ -1,9 +1,10 @@
 'use client';
 
 import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,6 +13,12 @@ import { cn } from '@/lib/utils';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { getGradeColors } from '@/lib/utils/grade-colors';
 import { buildModeGradeQuery, parseGradeParam, parseStudyModeParam } from '@/lib/play/mode-grade-query';
+import {
+  buildDifficultyHref,
+  getAvailableDifficulties,
+  getDifficultyTargetSet,
+  type BrowseDifficulty,
+} from '@/lib/play/browse-difficulties';
 import { QuestionSet, Difficulty, StudyMode } from '@/types';
 import { readMistakesFromStorage } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
@@ -26,6 +33,7 @@ import {
   Books,
   Circle,
   CirclesFour,
+  Timer,
   Sparkle,
   BookOpenText,
   Book,
@@ -62,6 +70,7 @@ const logger = createLogger({ module: 'play.page' });
 const difficultyLabels: Record<string, string> = {
   helppo: 'Helppo',
   normaali: 'Normaali',
+  aikahaaste: 'Aikahaaste',
 };
 
 const difficultyColors: Record<
@@ -86,11 +95,21 @@ const difficultyColors: Record<
     border: 'border-amber-200 dark:border-amber-700/70',
     shadow: 'shadow-sm shadow-amber-900/10 dark:shadow-black/20',
   },
+  aikahaaste: {
+    bg: 'bg-indigo-50 dark:bg-indigo-900/30',
+    hover: 'hover:bg-indigo-100 dark:hover:bg-indigo-900/45',
+    text: 'text-indigo-900 dark:text-indigo-100',
+    icon: 'text-indigo-600 dark:text-indigo-300',
+    focus: 'focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300',
+    border: 'border-indigo-200 dark:border-indigo-700/70',
+    shadow: 'shadow-sm shadow-indigo-900/10 dark:shadow-black/20',
+  },
 };
 
 const difficultyIcons: Record<string, ReactNode> = {
   helppo: <Circle size={20} weight="bold" className="inline" />,
   normaali: <CirclesFour size={20} weight="bold" className="inline" />,
+  aikahaaste: <Timer size={20} weight="duotone" className="inline" />,
 };
 
 const subjectConfigs: Record<string, SubjectConfig> = {
@@ -151,12 +170,6 @@ const getSubjectWithIcon = (subject: string) => {
         <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{config.label}</span>
       </div>
     </div>
-  );
-};
-
-const getAvailableDifficulties = (sets: QuestionSet[]) => {
-  return ['helppo', 'normaali'].filter((difficulty) =>
-    sets.some((set) => set.difficulty === difficulty && set.mode === 'quiz')
   );
 };
 
@@ -288,14 +301,16 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
           {studyMode === 'pelaa' ? (
             availableDifficulties.length > 0 ? (
               availableDifficulties.map((difficulty) => {
-                const set = group.sets.find((s) => s.difficulty === difficulty && s.mode === 'quiz');
+                const set = getDifficultyTargetSet(group.sets, difficulty);
                 const colors = difficultyColors[difficulty];
                 const icon = difficultyIcons[difficulty];
 
                 return (
                   <Button
                     key={difficulty}
-                    onClick={() => set && router.push(`/play/${set.code}?mode=${studyMode}`)}
+                    onClick={() =>
+                      set && router.push(buildDifficultyHref(set.code, studyMode, difficulty))
+                    }
                     variant="secondary"
                     size="chip"
                     className={cn(
@@ -310,7 +325,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                     aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
                   >
                     <span className={colors.icon}>{icon}</span>
-                    {difficultyLabels[difficulty]}
+                    <span>{difficultyLabels[difficulty]}</span>
                   </Button>
                 );
               })
@@ -345,7 +360,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
               mode="review"
               variant="primary"
               size="chip"
-              className="shadow-rose-500/30 dark:shadow-rose-600/30"
+              className="px-3 shadow-sm shadow-rose-900/10 hover:shadow-md active:shadow-sm dark:shadow-black/20"
               aria-label="Virheet"
             >
               <ArrowCounterClockwise size={20} weight="duotone" className="inline" />
@@ -678,7 +693,6 @@ function PlayBrowsePageContent() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 md:text-3xl">Valitse aihealue</h1>
           </div>
         </div>
-
         {state === 'error' && (
           <Alert variant="destructive" className="mb-6">
             <AlertDescription>{error}</AlertDescription>

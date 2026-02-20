@@ -17,12 +17,22 @@ import { VisualQuestionPreview } from '@/components/questions/VisualQuestionPrev
 import { ProgressBar } from '@/components/play/ProgressBar';
 import { ResultsScreen } from '@/components/play/ResultsScreen';
 import { FlashcardSession } from '@/components/play/FlashcardSession';
+import { SpeedQuizIntro, SpeedQuizTimer } from '@/components/speedQuiz';
 import { useGameSession } from '@/hooks/useGameSession';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 import { useSessionProgress } from '@/hooks/useSessionProgress';
+import { useSpeedQuizTimer } from '@/hooks/useSpeedQuizTimer';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
 import { shuffleArray } from '@/lib/utils';
+import {
+  AIKAHAASTE_QUESTION_COUNT,
+  AIKAHAASTE_TIME_LIMIT_SECONDS,
+  getAikahaasteTimeoutTransition,
+  isAikahaasteMode,
+  selectRandomQuestionsForAikahaaste,
+  shouldShowAikahaasteTimer,
+} from '@/lib/play/aikahaaste';
 import { QuestionSetWithQuestions, StudyMode, Flashcard, type QuestionType, type QuestionFlagReason } from '@/types';
 import { createLogger } from '@/lib/logger';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -121,10 +131,12 @@ export default function PlayPage() {
   const searchParams = useSearchParams();
   const code = params.code as string;
   const modeParam = searchParams.get('mode');
+  const difficultyParam = searchParams.get('difficulty');
   const draftParam = searchParams.get('draft') === '1';
   const isReviewMode = modeParam === 'review';
   const studyMode: StudyMode = modeParam === 'opettele' ? 'opettele' : 'pelaa';
   const isFlashcardMode = studyMode === 'opettele';
+  const isAikahaaste = isAikahaasteMode({ difficultyParam, studyMode, isReviewMode });
   const allCodes = searchParams.get('all'); // Comma-separated codes for study mode
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -143,7 +155,11 @@ export default function PlayPage() {
   const [flagFeedback, setFlagFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [flaggedQuestionIds, setFlaggedQuestionIds] = useState<string[]>([]);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [showIntro, setShowIntro] = useState(isAikahaaste);
+  const [skippedQuestions, setSkippedQuestions] = useState<string[]>([]);
+  const [currentQuestionStartTime, setCurrentQuestionStartTime] = useState<number>(Date.now());
   const lastModeRef = useRef<string | null>(null);
+  const onTimeoutRef = useRef<() => void>(() => {});
   const { getMistakes, removeMistake, mistakeCount, error: mistakesError } = useReviewMistakes(code);
   const { updateProgress, clearProgress } = useSessionProgress(questionSet?.code ?? code);
 
@@ -153,6 +169,16 @@ export default function PlayPage() {
     const mistakeIds = new Set(mistakes.map(m => m.questionId));
     return questionSet.questions.filter(question => mistakeIds.has(question.id));
   }, [isReviewMode, questionSet?.questions, getMistakes, mistakeCount]);
+
+  const sessionQuestionPool = useMemo(() => {
+    if (!questionSet?.questions) return [];
+
+    if (!isAikahaaste) {
+      return questionSet.questions;
+    }
+
+    return selectRandomQuestionsForAikahaaste(questionSet.questions, AIKAHAASTE_QUESTION_COUNT);
+  }, [isAikahaaste, questionSet?.questions]);
 
   const {
     currentQuestion,
@@ -173,13 +199,18 @@ export default function PlayPage() {
     nextQuestion,
     startNewSession,
   } = useGameSession(
-    questionSet?.questions || [],
-    questionSet?.exam_length ?? 15,
+    sessionQuestionPool,
+    isAikahaaste ? AIKAHAASTE_QUESTION_COUNT : (questionSet?.exam_length ?? 15),
     questionSet?.grade, // pass grade for age-appropriate answer checking
     questionSet?.subject,
     isReviewMode,
     mistakeQuestions,
     questionSet?.code
+  );
+
+  const { timeRemaining, colorState, isRunning, start, stop, reset } = useSpeedQuizTimer(
+    AIKAHAASTE_TIME_LIMIT_SECONDS,
+    () => onTimeoutRef.current()
   );
 
   useEffect(() => {
@@ -207,8 +238,14 @@ export default function PlayPage() {
   }, [currentQuestion?.id]);
 
   useEffect(() => {
+    setShowIntro(isAikahaaste);
+    setSkippedQuestions([]);
+  }, [isAikahaaste, questionSet?.id]);
+
+  useEffect(() => {
     if (typeof window === 'undefined') return;
-    const shouldBlockBack = state === 'playing' && !isReviewMode;
+    const canPause = !isAikahaaste;
+    const shouldBlockBack = state === 'playing' && !isReviewMode && canPause;
     if (!shouldBlockBack) return;
 
     const pushGuardState = () => {
@@ -234,7 +271,7 @@ export default function PlayPage() {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [state, isReviewMode]);
+  }, [state, isReviewMode, isAikahaaste]);
 
   // Load question set(s)
   useEffect(() => {
@@ -426,6 +463,65 @@ export default function PlayPage() {
     invalidMistakes.forEach(mistake => removeMistake(mistake.questionId));
   }, [isReviewMode, questionSet, getMistakes, removeMistake]);
 
+  useEffect(() => {
+    onTimeoutRef.current = () => {
+      if (!isAikahaaste || state !== 'playing' || showIntro || showExplanation || !currentQuestion) {
+        return;
+      }
+
+      const transition = getAikahaasteTimeoutTransition(currentQuestionIndex, selectedQuestions.length);
+
+      setSkippedQuestions((prev) =>
+        prev.includes(currentQuestion.id) ? prev : [...prev, currentQuestion.id]
+      );
+      skipQuestion();
+
+      if (transition.shouldEnd) {
+        setState('results');
+        return;
+      }
+
+      nextQuestion();
+      setCurrentQuestionStartTime(Date.now());
+    };
+  }, [
+    currentQuestion,
+    currentQuestionIndex,
+    isAikahaaste,
+    nextQuestion,
+    selectedQuestions.length,
+    showExplanation,
+    showIntro,
+    skipQuestion,
+    state,
+  ]);
+
+  useEffect(() => {
+    if (!isAikahaaste) {
+      stop();
+      return;
+    }
+
+    if (state !== 'playing' || showIntro || showExplanation || selectedQuestions.length === 0) {
+      stop();
+      return;
+    }
+
+    reset();
+    start();
+    setCurrentQuestionStartTime(Date.now());
+  }, [
+    currentQuestionIndex,
+    isAikahaaste,
+    reset,
+    selectedQuestions.length,
+    showExplanation,
+    showIntro,
+    start,
+    state,
+    stop,
+  ]);
+
   const isAnswerEmpty = useCallback((answer: unknown) => {
     if (answer === null || answer === '') return true;
     if (typeof answer === 'object') {
@@ -452,12 +548,67 @@ export default function PlayPage() {
   }, [showExplanation, userAnswer, setUserAnswer]);
 
   const handleSubmitAnswer = useCallback(() => {
+    if (isAikahaaste && isAnswerEmpty(userAnswer)) {
+      return;
+    }
+
     submitAnswer();
-  }, [submitAnswer]);
+
+    if (!isAikahaaste) {
+      return;
+    }
+
+    const transition = getAikahaasteTimeoutTransition(currentQuestionIndex, selectedQuestions.length);
+    if (transition.shouldEnd) {
+      stop();
+      setState('results');
+      return;
+    }
+
+    nextQuestion();
+    setCurrentQuestionStartTime(Date.now());
+  }, [
+    currentQuestionIndex,
+    isAikahaaste,
+    isAnswerEmpty,
+    nextQuestion,
+    selectedQuestions.length,
+    stop,
+    submitAnswer,
+    userAnswer,
+  ]);
 
   const handleSkipQuestion = useCallback(() => {
+    if (isAikahaaste && currentQuestion) {
+      setSkippedQuestions((prev) =>
+        prev.includes(currentQuestion.id) ? prev : [...prev, currentQuestion.id]
+      );
+    }
+
     skipQuestion();
-  }, [skipQuestion]);
+
+    if (!isAikahaaste) {
+      return;
+    }
+
+    const transition = getAikahaasteTimeoutTransition(currentQuestionIndex, selectedQuestions.length);
+    if (transition.shouldEnd) {
+      stop();
+      setState('results');
+      return;
+    }
+
+    nextQuestion();
+    setCurrentQuestionStartTime(Date.now());
+  }, [
+    currentQuestion,
+    currentQuestionIndex,
+    isAikahaaste,
+    nextQuestion,
+    selectedQuestions.length,
+    skipQuestion,
+    stop,
+  ]);
 
   const handleNextQuestion = () => {
     if (isLastQuestion) {
@@ -588,6 +739,9 @@ export default function PlayPage() {
   ]);
 
   const handlePlayAgain = () => {
+    setSkippedQuestions([]);
+    setCurrentQuestionStartTime(Date.now());
+    setShowIntro(isAikahaaste);
     startNewSession();
     setSessionStartTime(Date.now());
     setState('playing');
@@ -645,9 +799,10 @@ export default function PlayPage() {
         totalPoints={totalPoints}
         bestStreak={bestStreak}
         questionSetCode={code}
-        difficulty={questionSet?.difficulty}
+        difficulty={isAikahaaste ? 'aikahaaste' : questionSet?.difficulty}
         durationSeconds={durationSeconds}
         mode={isFlashcardMode ? 'flashcard' : 'quiz'}
+        skippedQuestions={isAikahaaste ? skippedQuestions : undefined}
         onPlayAgain={handlePlayAgain}
         onReviewMistakes={isReviewMode ? undefined : handleReviewMistakes}
         onBackToMenu={handleBackToMenu}
@@ -667,6 +822,7 @@ export default function PlayPage() {
   };
 
   const displayName = questionSet?.name ? stripDifficultySuffix(questionSet.name) : 'Kysymyssarja';
+  const canPause = !isAikahaaste;
 
   // Flashcard mode
   if (studyMode === 'opettele') {
@@ -789,6 +945,22 @@ export default function PlayPage() {
     );
   }
 
+  if (isAikahaaste && showIntro && questionSet) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+        <SpeedQuizIntro
+          questionSetName={displayName}
+          onStart={() => {
+            setShowIntro(false);
+            setCurrentQuestionStartTime(Date.now());
+            reset();
+            start();
+          }}
+        />
+      </div>
+    );
+  }
+
   // Playing screen - show loading while session initializes
   if (!currentQuestion || selectedQuestions.length === 0) {
     if (isReviewMode && questionSet && mistakeQuestions.length === 0) {
@@ -862,16 +1034,18 @@ export default function PlayPage() {
                   </p>
                 </div>
               </div>
-              <Button
-                onClick={() => setShowExitConfirm(true)}
-                variant="ghost"
-                size="sm"
-                aria-label="Lopeta harjoitus"
-                className="text-white/90 hover:text-white hover:bg-white/10"
-              >
-                <X className="w-5 h-5 mr-1" />
-                Lopeta
-              </Button>
+              {canPause && (
+                <Button
+                  onClick={() => setShowExitConfirm(true)}
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Lopeta harjoitus"
+                  className="text-white/90 hover:text-white hover:bg-white/10"
+                >
+                  <X className="w-5 h-5 mr-1" />
+                  Lopeta
+                </Button>
+              )}
             </div>
 
             {/* Progress bar + Percentage (same row) */}
@@ -888,6 +1062,19 @@ export default function PlayPage() {
             </div>
           </div>
         </div>
+      )}
+      {shouldShowAikahaasteTimer({
+        isAikahaaste,
+        isRunning,
+        showIntro,
+        state,
+      }) && (
+        <SpeedQuizTimer
+          timeRemaining={timeRemaining}
+          timeLimit={AIKAHAASTE_TIME_LIMIT_SECONDS}
+          colorState={colorState}
+          placement="inline"
+        />
       )}
 
       {/* Content */}

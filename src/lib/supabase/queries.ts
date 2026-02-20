@@ -110,6 +110,14 @@ export async function getAllQuestionSets(): Promise<QuestionSet[]> {
 }
 
 /**
+ * Fetch published question sets for browse-mode pages.
+ * Alias kept explicit for route-level readability.
+ */
+export async function fetchPublishedQuestionSets(): Promise<QuestionSet[]> {
+  return getAllQuestionSets();
+}
+
+/**
  * Get all question sets for management (includes drafts and published)
  */
 export async function getAllQuestionSetsForManage(): Promise<QuestionSet[]> {

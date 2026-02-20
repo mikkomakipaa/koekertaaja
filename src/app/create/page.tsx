@@ -30,7 +30,6 @@ import {
   Trash,
   ListBullets,
   Plus,
-  Tag,
   BookOpenText,
   ClipboardText,
   Cards,
@@ -45,14 +44,15 @@ import {
   Flag,
   PencilSimple,
   X,
-  Cpu
+  Cpu,
+  SignOut
 } from '@phosphor-icons/react';
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import { UserMenu } from '@/components/auth/UserMenu';
 import { CreationProgressStepper } from '@/components/create/CreationProgressStepper';
 import { TestQuestionsTab } from '@/components/create/TestQuestionsTab';
 import { CapacityWarningDialog } from '@/components/create/CapacityWarningDialog';
 import { MetricsTab } from '@/components/metrics/MetricsTab';
+import { useAuth } from '@/hooks/useAuth';
 import { createLogger } from '@/lib/logger';
 import { SUBJECT_GROUPS, getSubjectById, subjectRequiresGrade } from '@/config/subjects';
 import type { MaterialCapacity, QuestionCountValidation } from '@/lib/utils/materialAnalysis';
@@ -126,6 +126,7 @@ const logger = createLogger({ module: 'create.page' });
 
 export default function CreatePage() {
   const router = useRouter();
+  const { signOut } = useAuth();
   const subjectTypeOptions: Array<{ value: SubjectType; label: string }> = [
     {
       value: 'language',
@@ -174,8 +175,6 @@ export default function CreatePage() {
   const [state, setState] = useState<CreateState>('form');
   const [activeTab, setActiveTab] = useState<'create' | 'extend' | 'manage' | 'test-questions' | 'notifications' | 'metrics'>('create');
   const [subject, setSubject] = useState('');
-  const [topic, setTopic] = useState('');
-  const [subtopic, setSubtopic] = useState('');
   const [subjectType, setSubjectType] = useState<SubjectType | ''>('');
   const [grade, setGrade] = useState<number | undefined>(undefined);
   const [examLength, setExamLength] = useState(15);
@@ -289,12 +288,6 @@ export default function CreatePage() {
     formData.append('questionCount', requestedQuestionCount.toString());
     formData.append('examLength', examLength.toString());
     formData.append('questionSetName', questionSetName);
-    if (topic.trim()) {
-      formData.append('topic', topic.trim());
-    }
-    if (subtopic.trim()) {
-      formData.append('subtopic', subtopic.trim());
-    }
     if (grade) {
       formData.append('grade', grade.toString());
     }
@@ -763,6 +756,11 @@ export default function CreatePage() {
     router.push('/');
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+  };
+
   const handleConfirmAndReturnToCreate = () => {
     setQuestionSetsCreated([]);
     setTotalQuestionsCreated(0);
@@ -1163,6 +1161,7 @@ export default function CreatePage() {
       const formData = new FormData();
       formData.append('questionSetId', selectedSetToExtend);
       formData.append('questionsToAdd', questionsToAdd.toString());
+      formData.append('provider', providerPreference);
 
       if (materialText.trim()) {
         formData.append('materialText', materialText);
@@ -1268,10 +1267,9 @@ export default function CreatePage() {
 
   return (
       <AuthGuard>
-        <UserMenu />
-        <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 flex items-center justify-center transition-colors">
-        <Card className="max-w-3xl rounded-xl shadow-2xl dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white rounded-t-xl">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 md:p-12 flex items-center justify-center transition-colors">
+        <Card className="max-w-3xl rounded-xl shadow-2xl border-slate-200 dark:border-slate-800 dark:bg-slate-900">
+          <CardHeader className="bg-gradient-to-r from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 text-white rounded-t-xl">
             <CardTitle className="text-3xl flex items-center gap-2">
               <CheckCircle weight="duotone" className="w-8 h-8" />
               Kysymyssarjat luotu onnistuneesti!
@@ -1283,7 +1281,7 @@ export default function CreatePage() {
 
           <CardContent className="p-6 space-y-6">
             <div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">Luodut kysymyssarjat:</h3>
+              <h3 className="text-xl font-semibold mb-3 text-slate-900 dark:text-slate-100">Luodut kysymyssarjat:</h3>
               <div className="space-y-2">
                 {questionSetsCreated.map((set, index) => (
                   <Card
@@ -1295,18 +1293,18 @@ export default function CreatePage() {
                     <CardContent>
                       <div className="flex justify-between items-center">
                         <div>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">
+                          <p className="font-semibold text-slate-900 dark:text-slate-100">
                             {set.mode === 'flashcard'
                               ? `${set.name} - ${modeLabels[set.mode]}`
                               : difficultyLabels[set.difficulty] || set.difficulty}
                           </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
                             {set.questionCount} kysymystä
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Koodi:</p>
-                          <code className="px-3 py-1 bg-gray-100 dark:bg-gray-600 rounded font-mono text-lg font-bold text-gray-900 dark:text-gray-100">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Koodi:</p>
+                          <code className="px-3 py-1 bg-slate-100 dark:bg-slate-600 rounded font-mono text-lg font-bold text-slate-900 dark:text-slate-100">
                             {set.code}
                           </code>
                         </div>
@@ -1349,31 +1347,46 @@ export default function CreatePage() {
   // Form screen
   return (
     <AuthGuard>
-      <UserMenu />
-      <div className="min-h-screen bg-white dark:bg-gray-900 p-6 md:p-12 transition-colors">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 md:p-12 transition-colors">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="bg-background border-b border-border">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors">
           <PageHeader
             title="Kysymyssarjat"
             subtitle="Luo uusia kysymyssarjoja tai hallitse olemassa olevia"
+            rightActions={(
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+                className="inline-flex items-center gap-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+              >
+                <SignOut weight="duotone" className="h-4 w-4" />
+                Kirjaudu ulos
+              </Button>
+            )}
+            className="px-5 pt-6 pb-4 sm:px-6 md:px-7"
           />
           <ARIATabBar
             tabs={tabsConfig}
             activeTab={activeTab}
             onTabChange={(value: typeof activeTab) => setActiveTab(value)}
             isAdmin={isAdmin}
+            className="bg-slate-50/80 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800/50"
           />
         </div>
 
         {/* Tab Content */}
-        <div className="p-4 md:p-8 space-y-6">
+        <div className="mt-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm md:p-8 transition-colors">
           {activeTab === 'create' && (
-            <div id="question-form" className="space-y-6">
+            <div
+              id="question-form"
+              className="space-y-6 text-slate-900 dark:text-slate-100"
+            >
             <div>
-              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
+              <label className="mb-3 block text-base font-semibold text-slate-900 dark:text-slate-100">
                 <span className="inline-flex items-center gap-2">
-                  <Tag weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  <ListBullets weight="duotone" className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                   Kysymyssarjan nimi
                 </span>
               </label>
@@ -1382,14 +1395,14 @@ export default function CreatePage() {
                 value={questionSetName}
                 onChange={(e) => setQuestionSetName(e.target.value)}
                 placeholder="Esim. Englanti 7. luokka - Kappale 3"
-                className="text-base"
+                className="text-base bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
 
             <div>
-              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
+              <label className="mb-3 block text-base font-semibold text-slate-900 dark:text-slate-100">
                 <span className="inline-flex items-center gap-2">
-                  <BookOpenText weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  <BookOpenText weight="duotone" className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                   Aine
                 </span>
               </label>
@@ -1411,7 +1424,7 @@ export default function CreatePage() {
 
                   setSubjectType('');
                 }}
-                className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700 text-base"
+                className="w-full rounded-lg border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-3 text-base"
               >
                 <option value="">-- Valitse aine --</option>
                 {SUBJECT_GROUPS.map((group) => (
@@ -1427,49 +1440,17 @@ export default function CreatePage() {
               {subject && (() => {
                 const selectedSubject = getSubjectById(subject);
                 return selectedSubject ? (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  <p className="mt-2 text-sm text-slate-600">
                     {selectedSubject.description}
                   </p>
                 ) : null;
               })()}
               {subject && subjectType && (
-                <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 mt-3">
+                <div className="mt-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50 p-3 text-sm text-slate-700 dark:text-slate-300">
                   <span className="font-medium">Aineen tyyppi:</span>{' '}
                   {selectedSubjectTypeOption?.label || subjectType}
                 </div>
               )}
-            </div>
-
-            <div>
-              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
-                <span className="inline-flex items-center gap-2">
-                  <Tag weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  Aihe
-                </span>
-              </label>
-              <Input
-                type="text"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="Esim. Suomen maakunnat"
-                className="text-base"
-              />
-            </div>
-
-            <div>
-              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
-                <span className="inline-flex items-center gap-2">
-                  <Tag weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  Alateema
-                </span>
-              </label>
-              <Input
-                type="text"
-                value={subtopic}
-                onChange={(e) => setSubtopic(e.target.value)}
-                placeholder="Esim. Länsi-Suomi"
-                className="text-base"
-              />
             </div>
 
             {requiresGrade && (
@@ -1481,24 +1462,24 @@ export default function CreatePage() {
             )}
 
             {/* Generation Mode Selector */}
-            <div className="border-2 border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-5">
-              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
+            <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 p-5">
+              <label className="mb-3 block text-base font-semibold text-slate-900 dark:text-slate-100">
                 <span className="inline-flex items-center gap-2">
-                  <ClipboardText weight="duotone" className="w-5 h-5 text-indigo-700 dark:text-indigo-300" />
+                  <ClipboardText weight="duotone" className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                   Mitä haluat luoda?
                 </span>
                 </label>
               <div className="mt-4">
-                <label className="block text-sm font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                <label className="mb-2 block text-sm font-semibold text-slate-900 dark:text-slate-100">
                   <span className="inline-flex items-center gap-2">
-                    <Cpu weight="duotone" className="w-4 h-4 text-indigo-700 dark:text-indigo-300" />
+                    <Cpu weight="duotone" className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     AI-palvelu
                   </span>
                 </label>
                 <select
                   value={providerPreference}
                   onChange={(e) => setProviderPreference(e.target.value as ProviderPreference)}
-                  className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700 text-sm"
+                  className="w-full rounded-lg border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-3 text-sm"
                 >
                   {providerOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -1506,62 +1487,62 @@ export default function CreatePage() {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-2">
+                <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
                   {providerOptions.find((option) => option.value === providerPreference)?.description}
                 </p>
               </div>
               <div className="space-y-3">
-                <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-800/30 transition-colors">
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg p-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                   <input
                     type="radio"
                     name="generationMode"
                     value="quiz"
                     checked={generationMode === 'quiz'}
                     onChange={(e) => setGenerationMode(e.target.value as 'quiz')}
-                    className="mt-1 w-5 h-5 border-indigo-300 text-indigo-600 focus:ring-indigo-500 dark:border-indigo-600 dark:bg-gray-800"
+                    className="mt-1 h-5 w-5 border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
                   />
                   <div className="flex-1">
-                    <div className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
                       <BookOpenText weight="duotone" className="w-4 h-4" />
                       Koe (2 vaikeustasoa)
                     </div>
-                    <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
                       Luo kaksi kysymyssarjaa: Helppo ja Normaali. Sopii kokeiden harjoitteluun.
                     </p>
                   </div>
                 </label>
 
-                <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-800/30 transition-colors">
+                <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                   <input
                     type="radio"
                     name="generationMode"
                     value="flashcard"
                     checked={generationMode === 'flashcard'}
                     onChange={(e) => setGenerationMode(e.target.value as 'flashcard')}
-                    className="mt-1 w-5 h-5 border-purple-300 text-purple-600 focus:ring-purple-500 dark:border-purple-600 dark:bg-gray-800"
+                    className="mt-1 w-5 h-5 border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
                   />
                   <div className="flex-1">
-                    <div className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                       <Cards weight="duotone" className="w-4 h-4" />
                       Kortit (vain 1 sarja)
                     </div>
-                    <p className="text-sm text-purple-700 dark:text-purple-300">
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
                       Luo yksi korttisarja oppimiseen. Sisältää avoimia kysymyksiä ja yksityiskohtaisia selityksiä.
                     </p>
                   </div>
                 </label>
 
-                <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-green-100 dark:hover:bg-green-800/30 transition-colors">
+                <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                   <input
                     type="radio"
                     name="generationMode"
                     value="both"
                     checked={generationMode === 'both'}
                     onChange={(e) => setGenerationMode(e.target.value as 'both')}
-                    className="mt-1 w-5 h-5 border-green-300 text-green-600 focus:ring-green-500 dark:border-green-600 dark:bg-gray-800"
+                    className="mt-1 w-5 h-5 border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
                   />
                   <div className="flex-1">
-                    <div className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                       <span className="inline-flex items-center gap-1">
                         <BookOpenText weight="duotone" className="w-4 h-4" />
                         <Plus className="w-3 h-3" />
@@ -1569,7 +1550,7 @@ export default function CreatePage() {
                       </span>
                       Molemmat (2 koetta + 1 korttisarja)
                     </div>
-                    <p className="text-sm text-green-700 dark:text-green-300">
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
                       Luo sekä koesarjat että korttisarja. Kattavin vaihtoehto monipuoliseen harjoitteluun.
                     </p>
                   </div>
@@ -1581,70 +1562,70 @@ export default function CreatePage() {
             {generationMode === 'flashcard' && subject && (() => {
               const selectedSubject = getSubjectById(subject);
               return selectedSubject?.supportsGrammar ? (
-                <div className="border-2 border-purple-200 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-5">
-                  <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
+                <div className="border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/30 rounded-lg p-5">
+                  <label className="block text-base font-semibold mb-3 text-slate-900 dark:text-slate-100">
                     <span className="inline-flex items-center gap-2">
-                      <BookOpenText weight="duotone" className="w-5 h-5 text-purple-700 dark:text-purple-300" />
+                      <BookOpenText weight="duotone" className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                       Sisällön tyyppi
                     </span>
                   </label>
 
                   <div className="space-y-3">
-                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-800/30 transition-colors">
+                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                       <input
                         type="radio"
                         name="contentType"
                         value="vocabulary"
                         checked={contentType === 'vocabulary'}
                         onChange={() => setContentType('vocabulary')}
-                        className="mt-1 w-4 h-4 border-purple-300 text-purple-600 focus:ring-purple-500 dark:border-purple-600 dark:bg-gray-800"
+                        className="mt-1 w-4 h-4 border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
                       />
                       <div className="flex-1">
-                        <div className="font-semibold text-gray-900 dark:text-gray-100">
+                        <div className="font-semibold text-slate-900 dark:text-slate-100">
                           Sanasto
                         </div>
-                        <p className="text-sm text-purple-700 dark:text-purple-300">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
                           Sanojen käännökset, merkitykset, fraasit ja ilmaisut
                         </p>
                       </div>
                     </label>
 
-                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-800/30 transition-colors">
+                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                       <input
                         type="radio"
                         name="contentType"
                         value="grammar"
                         checked={contentType === 'grammar'}
                         onChange={() => setContentType('grammar')}
-                        className="mt-1 w-4 h-4 border-purple-300 text-purple-600 focus:ring-purple-500 dark:border-purple-600 dark:bg-gray-800"
+                        className="mt-1 w-4 h-4 border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
                       />
                       <div className="flex-1">
-                        <div className="font-semibold text-gray-900 dark:text-gray-100">
+                        <div className="font-semibold text-slate-900 dark:text-slate-100">
                           Kielioppi
                         </div>
-                        <p className="text-sm text-purple-700 dark:text-purple-300">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
                           Kielioppisäännöt, verbitaivutus, lauserakenne, aikamuodot
                         </p>
-                        <div className="mt-2 text-xs text-purple-800 dark:text-purple-200 bg-purple-100 dark:bg-purple-900/40 rounded px-2 py-1 inline-block">
+                        <div className="mt-2 text-xs text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-slate-700/50 rounded px-2 py-1 inline-block">
                           Materiaaliin tarvitaan sääntöjen selityksiä
                         </div>
                       </div>
                     </label>
 
-                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-800/30 transition-colors">
+                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                       <input
                         type="radio"
                         name="contentType"
                         value="mixed"
                         checked={contentType === 'mixed'}
                         onChange={() => setContentType('mixed')}
-                        className="mt-1 w-4 h-4 border-purple-300 text-purple-600 focus:ring-purple-500 dark:border-purple-600 dark:bg-gray-800"
+                        className="mt-1 w-4 h-4 border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
                       />
                       <div className="flex-1">
-                        <div className="font-semibold text-gray-900 dark:text-gray-100">
+                        <div className="font-semibold text-slate-900 dark:text-slate-100">
                           Sekalainen
                         </div>
-                        <p className="text-sm text-purple-700 dark:text-purple-300">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
                           Sekä sanastoa että kielioppia samassa materiaalissa
                         </p>
                       </div>
@@ -1671,9 +1652,9 @@ export default function CreatePage() {
             })()}
 
             <div>
-              <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
+              <label className="block text-base font-semibold mb-3 text-slate-900 dark:text-slate-100">
                 <span className="inline-flex items-center gap-2">
-                  <ChartBar weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  <ChartBar weight="duotone" className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   Sarjan pituus (kysymystä per sarja)
                 </span>
               </label>
@@ -1687,14 +1668,11 @@ export default function CreatePage() {
                   className="w-full"
                 />
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">5 kysymystä</span>
-                  <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{examLength}</span>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">20 kysymystä</span>
+                  <span className="text-sm text-slate-600 dark:text-slate-400">5 kysymystä</span>
+                  <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{examLength}</span>
+                  <span className="text-sm text-slate-600 dark:text-slate-400">20 kysymystä</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                Harjoituskerta sisältää tämän määrän kysymyksiä
-              </p>
             </div>
 
             <MaterialUpload
@@ -1707,9 +1685,9 @@ export default function CreatePage() {
             {/* Target Words Input (Language subjects only) */}
             {subjectType === 'language' && (
               <div>
-                <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
+                <label className="block text-base font-semibold mb-3 text-slate-900 dark:text-slate-100">
                   <span className="inline-flex items-center gap-2">
-                    <BookOpenText weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    <BookOpenText weight="duotone" className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                     Pakolliset sanat (valinnainen)
                   </span>
                 </label>
@@ -1720,7 +1698,7 @@ export default function CreatePage() {
                   onChange={(e) => setTargetWords(e.target.value)}
                   className="text-base"
                 />
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
                   Anna pilkulla erotettu lista sanoista, jotka haluat sisällyttää kysymyksiin. AI varmistaa, että kaikki sanat tulevat käytettyä.
                 </p>
               </div>
@@ -1754,16 +1732,16 @@ export default function CreatePage() {
           {activeTab === 'extend' && (
             <div className="space-y-6">
               <div>
-                  <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
+                  <label className="block text-base font-semibold mb-3 text-slate-900 dark:text-slate-100">
                     <span className="inline-flex items-center gap-2">
-                      <Package weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                      <Package weight="duotone" className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                       Valitse laajennettava kysymyssarja
                     </span>
                   </label>
                   <select
                     value={selectedSetToExtend}
                     onChange={(e) => setSelectedSetToExtend(e.target.value)}
-                    className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full p-3 border rounded-lg text-slate-900 dark:text-slate-100 dark:bg-slate-800 dark:border-slate-700"
                   >
                     <option value="">-- Valitse kysymyssarja --</option>
                     {allQuestionSets.map((set) => (
@@ -1776,7 +1754,7 @@ export default function CreatePage() {
 
                 {selectedSetToExtend && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-4">
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
                       Valittu sarja:
                     </h3>
                     {(() => {
@@ -1807,9 +1785,32 @@ export default function CreatePage() {
                 )}
 
                 <div>
-                  <label className="block text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
+                  <label className="mb-2 block text-sm font-semibold text-slate-900 dark:text-slate-100">
                     <span className="inline-flex items-center gap-2">
-                      <PlusCircle weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                      <Cpu weight="duotone" className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      AI-palvelu
+                    </span>
+                  </label>
+                  <select
+                    value={providerPreference}
+                    onChange={(e) => setProviderPreference(e.target.value as ProviderPreference)}
+                    className="w-full rounded-lg border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-3 text-sm"
+                  >
+                    {providerOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                    {providerOptions.find((option) => option.value === providerPreference)?.description}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-base font-semibold mb-3 text-slate-900 dark:text-slate-100">
+                    <span className="inline-flex items-center gap-2">
+                      <PlusCircle weight="duotone" className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                       Lisättävien kysymysten määrä
                     </span>
                   </label>
@@ -1823,12 +1824,12 @@ export default function CreatePage() {
                       className="w-full"
                     />
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">5 kysymystä</span>
-                      <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{questionsToAdd}</span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">50 kysymystä</span>
+                      <span className="text-sm text-slate-600 dark:text-slate-400">5 kysymystä</span>
+                      <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{questionsToAdd}</span>
+                      <span className="text-sm text-slate-600 dark:text-slate-400">50 kysymystä</span>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
                     Näin monta kysymystä lisätään sarjaan
                   </p>
                 </div>
@@ -1860,6 +1861,9 @@ export default function CreatePage() {
                     Lisää kysymyksiä
                   </Button>
               </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Uudet kysymykset luodaan palvelulla: {selectedProviderLabel}
+              </p>
             </div>
           )}
 
@@ -1870,14 +1874,14 @@ export default function CreatePage() {
                     <CircleNotch weight="bold" className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
                   </div>
                 ) : allQuestionSets.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <div className="text-center py-12 text-slate-500 dark:text-slate-400">
                     <p className="text-base">Ei kysymyssarjoja.</p>
                     <p className="text-sm mt-2">Luo uusi kysymyssarja tai korttisarja "Luo uusi" -välilehdeltä.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                      <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                         Kysymyssarjat ({allQuestionSets.length})
                       </h3>
                       <Button
@@ -1902,12 +1906,12 @@ export default function CreatePage() {
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100">{set.name}</h4>
+                                  <h4 className="text-base font-semibold text-slate-900 dark:text-slate-100">{set.name}</h4>
                                   <span
                                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                                       status === 'published'
                                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300'
+                                        : 'bg-slate-100 text-gray-800 dark:bg-slate-600 dark:text-gray-300'
                                     }`}
                                   >
                                     {status === 'published' ? (
@@ -1923,7 +1927,7 @@ export default function CreatePage() {
                                     )}
                                   </span>
                                 </div>
-                                <div className="flex gap-3 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                <div className="flex gap-3 mt-2 text-sm text-slate-600 dark:text-slate-400">
                                   <span className="inline-flex items-center gap-1">
                                     <BookOpenText weight="duotone" className="w-4 h-4" />
                                     {set.subject}
@@ -1943,16 +1947,16 @@ export default function CreatePage() {
                                     {set.difficulty}
                                   </span>
                                 </div>
-                                <div className="flex gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                <div className="flex gap-3 mt-1 text-sm text-slate-500 dark:text-slate-400">
                                   <span>{set.question_count} kysymystä</span>
                                   <span>•</span>
                                   <span>
                                     Koodi:{' '}
-                                    <code className="font-mono font-bold text-gray-900 dark:text-gray-100">{set.code}</code>
+                                    <code className="font-mono font-bold text-slate-900 dark:text-slate-100">{set.code}</code>
                                   </span>
                                 </div>
                                 {set.created_at && (
-                                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                  <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
                                     Luotu: {new Date(set.created_at).toLocaleDateString('fi-FI')}
                                   </p>
                                 )}
@@ -1993,9 +1997,9 @@ export default function CreatePage() {
                                         </span>
                                       )}
                                       {(set.type_distribution.sequential || 0) > 0 && (
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
                                           <span className="font-medium">Järjestä</span>
-                                          <span className="text-indigo-600 dark:text-indigo-400">{getPercentage(set.type_distribution.sequential)}%</span>
+                                          <span className="text-emerald-600 dark:text-emerald-400">{getPercentage(set.type_distribution.sequential)}%</span>
                                         </span>
                                       )}
                                       {(set.type_distribution.flashcard || 0) > 0 && (
@@ -2092,8 +2096,8 @@ export default function CreatePage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Flag weight="duotone" className="w-5 h-5 text-indigo-600" />
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      <Flag weight="duotone" className="w-5 h-5 text-emerald-600" />
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                         Ilmoitetut kysymykset ({flaggedQuestions.length})
                       </h3>
                     </div>
@@ -2115,10 +2119,10 @@ export default function CreatePage() {
 
                   {loadingFlags ? (
                     <div className="flex justify-center py-6">
-                      <CircleNotch weight="bold" className="w-6 h-6 animate-spin text-indigo-500 dark:text-indigo-400" />
+                      <CircleNotch weight="bold" className="w-6 h-6 animate-spin text-emerald-600 dark:text-emerald-400" />
                     </div>
                   ) : flaggedQuestions.length === 0 ? (
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <div className="text-sm text-slate-500 dark:text-slate-400">
                       Ei ilmoitettuja kysymyksiä tällä hetkellä.
                     </div>
                   ) : (
@@ -2139,17 +2143,17 @@ export default function CreatePage() {
                                   </div>
                                   <div className="space-y-2">
                                     <div>
-                                      <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                                      <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
                                         {flag.questionText}
                                       </p>
-                                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 space-y-1">
+                                      <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 space-y-1">
                                         <div>
                                           {flag.questionSetName ?? 'Tuntematon sarja'}
                                           {flag.questionSetCode ? ` • Koodi ${flag.questionSetCode}` : ''}
                                         </div>
                                         {flag.questionSetId && (
                                           <div className="flex items-center gap-2">
-                                            <span className="text-xs text-gray-500 dark:text-gray-500">ID:</span>
+                                            <span className="text-xs text-slate-500 dark:text-slate-500">ID:</span>
                                             <button
                                               onClick={async () => {
                                                 try {
@@ -2159,7 +2163,7 @@ export default function CreatePage() {
                                                   toast.error('ID:n kopiointi epäonnistui');
                                                 }
                                               }}
-                                              className="group inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                              className="group inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-xs text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors"
                                               title="Klikkaa kopioidaksesi kysymyssarjan tietokanta-ID"
                                               aria-label={`Kopioi kysymyssarjan tietokanta-ID ${flag.questionSetId}`}
                                             >
@@ -2205,7 +2209,7 @@ export default function CreatePage() {
                                   variant="outline"
                                   size="sm"
                                   disabled={dismissingFlagId === flag.questionId}
-                                  className="gap-2 text-gray-600 hover:text-gray-900"
+                                  className="gap-2 text-slate-600 hover:text-slate-900"
                                 >
                                   {dismissingFlagId === flag.questionId ? (
                                     <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
@@ -2231,15 +2235,15 @@ export default function CreatePage() {
               <Dialog.Root open={Boolean(editingFlag)} onOpenChange={(open) => !open && setEditingFlag(null)}>
                 <Dialog.Portal>
                   <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" />
-                  <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[94vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-700">
+                  <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[94vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white dark:bg-slate-900 p-6 shadow-xl border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-4">
-                      <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      <Dialog.Title className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                         Muokkaa ilmoitettua kysymystä
                       </Dialog.Title>
                       <Dialog.Close asChild>
                         <button
                           type="button"
-                          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                          className="text-gray-400 hover:text-slate-600 dark:hover:text-gray-300"
                           aria-label="Sulje"
                         >
                           <X size={18} />
@@ -2250,7 +2254,7 @@ export default function CreatePage() {
                     {editingFlag && (
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                          <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
                             Kysymysteksti
                           </label>
                           <Textarea
@@ -2262,7 +2266,7 @@ export default function CreatePage() {
 
                         {(editingFlag.questionType === 'multiple_choice' || editingFlag.questionType === 'fill_blank' || editingFlag.questionType === 'short_answer') && (
                           <div>
-                            <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                            <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
                               Oikea vastaus
                             </label>
                             <Input
@@ -2274,7 +2278,7 @@ export default function CreatePage() {
 
                         {editingFlag.questionType === 'multiple_choice' && (
                           <div>
-                            <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                            <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
                               Vaihtoehdot (yksi per rivi tai pilkulla)
                             </label>
                             <Textarea
@@ -2287,7 +2291,7 @@ export default function CreatePage() {
 
                         {(editingFlag.questionType === 'fill_blank' || editingFlag.questionType === 'short_answer') && (
                           <div>
-                            <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                            <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
                               Hyväksyttävät vastaukset (valinnainen, yksi per rivi)
                             </label>
                             <Textarea
@@ -2300,13 +2304,13 @@ export default function CreatePage() {
 
                         {editingFlag.questionType === 'true_false' && (
                           <div>
-                            <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                            <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
                               Oikea vastaus
                             </label>
                             <select
                               value={editTrueFalse}
                               onChange={(event) => setEditTrueFalse(event.target.value as 'true' | 'false')}
-                              className="w-full h-10 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm text-gray-900 dark:text-gray-100"
+                              className="w-full h-10 rounded-lg border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm text-slate-900 dark:text-slate-100"
                             >
                               <option value="true">Totta</option>
                               <option value="false">Tarua</option>
@@ -2316,7 +2320,7 @@ export default function CreatePage() {
 
                         {(editingFlag.questionType === 'matching' || editingFlag.questionType === 'sequential') && (
                           <div>
-                            <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                            <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
                               Oikea vastaus (JSON)
                             </label>
                             <Textarea
@@ -2330,7 +2334,7 @@ export default function CreatePage() {
                         {editingFlag.questionType === 'map' && (
                           <>
                             <div>
-                              <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                              <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
                                 Oikea vastaus (teksti tai JSON)
                               </label>
                               <Textarea
@@ -2340,7 +2344,7 @@ export default function CreatePage() {
                               />
                             </div>
                             <div>
-                              <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                              <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
                                 Vaihtoehdot (JSON)
                               </label>
                               <Textarea
@@ -2455,7 +2459,7 @@ export default function CreatePage() {
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                 Tämä voi kestää muutaman minuutin. Pidä tämä välilehti auki.
               </p>
-              <div className="mt-3 inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-800 dark:border-indigo-800/60 dark:bg-indigo-900/30 dark:text-indigo-200">
+              <div className="mt-3 inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                 AI-palvelu: {selectedProviderLabel}
               </div>
             </div>
@@ -2469,20 +2473,20 @@ export default function CreatePage() {
 
                     if (topicsStep?.status === 'completed' && topics && topics.length > 0) {
                       return (
-                        <div className="mt-5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 dark:border-indigo-800/60 dark:bg-indigo-900/20">
+                        <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/60 dark:bg-emerald-900/20">
                           <div className="flex items-start gap-2">
                             <CheckCircle
                               weight="fill"
-                              className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600 dark:text-indigo-300"
+                              className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400"
                             />
                             <div className="min-w-0 flex-1">
-                              <div className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
+                              <div className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
                                 Tunnistetut aihealueet ({topics.length})
                               </div>
-                              <ul className="mt-2 space-y-1 text-sm text-indigo-800 dark:text-indigo-200">
+                              <ul className="mt-2 space-y-1 text-sm text-emerald-800 dark:text-emerald-200">
                                 {topics.map((topic, index) => (
                                   <li key={`${topic}-${index}`} className="flex items-start gap-2">
-                                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-600 dark:bg-emerald-400" />
                                     <span className="min-w-0 break-words">{topic}</span>
                                   </li>
                                 ))}
@@ -2512,7 +2516,7 @@ export default function CreatePage() {
                 </>
               ) : (
                 <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-                  <CircleNotch weight="bold" className="h-5 w-5 animate-spin text-indigo-500" />
+                  <CircleNotch weight="bold" className="h-5 w-5 animate-spin text-emerald-600" />
                   <span>Käsitellään…</span>
                 </div>
               )}
