@@ -129,7 +129,11 @@ function inferDifficultyScore(question: Question): number {
   const text = question.question_text.toLowerCase();
   let score = 1;
 
-  if (question.question_type === 'matching' || question.question_type === 'multiple_choice') {
+  if (
+    question.question_type === 'matching'
+    || question.question_type === 'multiple_choice'
+    || question.question_type === 'multiple_select'
+  ) {
     score += 1;
   }
 

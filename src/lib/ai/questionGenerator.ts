@@ -289,6 +289,9 @@ function normalizeQuestionType(rawType: unknown, mode: 'quiz' | 'flashcard'): st
     multiple_choice_question: 'multiple_choice',
     multiplechoice: 'multiple_choice',
     multiple_choice: 'multiple_choice',
+    multiple_select: 'multiple_select',
+    multiple_select_question: 'multiple_select',
+    multipleselect: 'multiple_select',
     fill_in_the_blank: 'fill_blank',
     fill_blank: 'fill_blank',
     truefalse: 'true_false',
@@ -347,6 +350,22 @@ function normalizeAIQuestionShape(
     question.options = question.choices;
   }
 
+  if (question.type === 'multiple_select') {
+    if (!Array.isArray(question.correct_answers)) {
+      question.correct_answers =
+        question.correctAnswers ??
+        question.answers ??
+        question.correct ??
+        (Array.isArray(question.correct_answer) ? question.correct_answer : []);
+    }
+
+    if (Array.isArray(question.options) && Array.isArray(question.correct_answers)) {
+      question.correct_answers = question.correct_answers
+        .filter((answer: unknown): answer is string => typeof answer === 'string')
+        .filter((answer: string) => question.options.includes(answer));
+    }
+  }
+
   if (!question.explanation && typeof question.rationale === 'string') {
     question.explanation = question.rationale;
   }
@@ -354,6 +373,8 @@ function normalizeAIQuestionShape(
     const fallbackAnswer =
       typeof question.correct_answer === 'string'
         ? question.correct_answer
+        : Array.isArray(question.correct_answers)
+          ? question.correct_answers.join(', ')
         : Array.isArray(question.correct_answer)
           ? question.correct_answer.join(', ')
           : String(question.correct_answer ?? '');
@@ -1158,6 +1179,24 @@ export async function generateQuestions(
           options: shuffledOptions,
           correct_answer: toAnswerString(q.correct_answer ?? q.answer),
         };
+
+      case 'multiple_select': {
+        const options = Array.isArray(q.options) ? q.options : [];
+        const correctAnswers = Array.isArray(q.correct_answers)
+          ? q.correct_answers
+          : Array.isArray(q.correct_answer)
+            ? q.correct_answer
+            : [];
+
+        return {
+          ...base,
+          question_type: 'multiple_select' as const,
+          options,
+          correct_answers: correctAnswers.filter((answer: unknown): answer is string =>
+            typeof answer === 'string' && options.includes(answer)
+          ),
+        };
+      }
 
       case 'fill_blank':
         return {

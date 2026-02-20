@@ -83,6 +83,12 @@ export async function createQuestionSet(
           correct_answer: (q as any).correct_answer,
           options: (q as any).options,
         };
+      case 'multiple_select':
+        return {
+          ...baseQuestion,
+          correct_answer: (q as any).correct_answers,
+          options: (q as any).options,
+        };
       case 'fill_blank':
         return {
           ...baseQuestion,
@@ -168,8 +174,8 @@ export async function createQuestionSet(
       return false;
     }
 
-    // Validate multiple_choice questions must have non-empty options
-    if (q.question_type === 'multiple_choice') {
+    // Validate selection-based questions must have non-empty options
+    if (q.question_type === 'multiple_choice' || q.question_type === 'multiple_select') {
       if (!q.options || !Array.isArray(q.options) || q.options.length === 0) {
         logger.error(
           {
@@ -178,7 +184,7 @@ export async function createQuestionSet(
             is_array: Array.isArray(q.options),
             options_length: q.options?.length || 0,
           },
-          'Multiple choice question missing options'
+          'Selection question missing options'
         );
         return false;
       }

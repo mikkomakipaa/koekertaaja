@@ -45,7 +45,7 @@ export function createAnthropicAdapter(dependencies: AnthropicAdapterDependencie
     options: AnthropicAdapterOptions = {}
   ): Promise<AIResponse> {
     const client = dependencies.client ?? getDefaultClient();
-    const model = options.model ?? 'claude-sonnet-4-5-20250929';
+    const model = options.model ?? 'claude-sonnet-4-6-20250514';
     const maxTokens = options.maxTokens ?? 16000;
     const startedAt = Date.now();
 

@@ -4,6 +4,7 @@ import type { PromptMetadata } from '@/lib/prompts/promptVersion';
 // Question Types
 export type QuestionType =
   | 'multiple_choice'
+  | 'multiple_select'
   | 'fill_blank'
   | 'true_false'
   | 'matching'
@@ -53,6 +54,12 @@ export interface MultipleChoiceQuestion extends BaseQuestion {
   question_type: 'multiple_choice';
   options: string[];
   correct_answer: string;
+}
+
+export interface MultipleSelectQuestion extends BaseQuestion {
+  question_type: 'multiple_select';
+  options: string[];
+  correct_answers: string[];
 }
 
 export interface FillBlankQuestion extends BaseQuestion {
@@ -112,6 +119,7 @@ export function isStringArray(items: unknown): items is string[] {
 // Union type of all question types
 export type Question =
   | MultipleChoiceQuestion
+  | MultipleSelectQuestion
   | FillBlankQuestion
   | TrueFalseQuestion
   | MatchingQuestion
@@ -256,6 +264,8 @@ export interface Answer {
   questionText: string;
   userAnswer: any;
   correctAnswer: any;
+  questionType?: QuestionType;
+  questionOptions?: string[];
   isCorrect: boolean;
   explanation: string;
   pointsEarned?: number;

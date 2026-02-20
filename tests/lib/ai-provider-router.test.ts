@@ -54,12 +54,12 @@ test('generateWithAI falls back to OpenAI on transient Anthropic failure when en
   let openAICalls = 0;
 
   try {
-    const response = await generateWithAI(messages, { provider: 'anthropic', model: 'claude-sonnet-4-5-20250929' }, {
+    const response = await generateWithAI(messages, { provider: 'anthropic', model: 'claude-sonnet-4-6-20250514' }, {
       anthropic: async () => {
         anthropicCalls += 1;
         throw new AIProviderError({
           provider: 'anthropic',
-          model: 'claude-sonnet-4-5-20250929',
+          model: 'claude-sonnet-4-6-20250514',
           category: 'provider_unavailable',
           message: 'Anthropic API is temporarily unavailable. Please try again later.',
           statusCode: 503,
@@ -93,11 +93,11 @@ test('generateWithAI does not fall back when transient failure occurs but OpenAI
   try {
     await assert.rejects(
       () =>
-        generateWithAI(messages, { provider: 'anthropic', model: 'claude-sonnet-4-5-20250929' }, {
+        generateWithAI(messages, { provider: 'anthropic', model: 'claude-sonnet-4-6-20250514' }, {
           anthropic: async () => {
             throw new AIProviderError({
               provider: 'anthropic',
-              model: 'claude-sonnet-4-5-20250929',
+              model: 'claude-sonnet-4-6-20250514',
               category: 'provider_unavailable',
               message: 'Anthropic API is temporarily unavailable. Please try again later.',
               statusCode: 503,
@@ -127,11 +127,11 @@ test('generateWithAI does not fall back on non-transient Anthropic failure', asy
   try {
     await assert.rejects(
       () =>
-        generateWithAI(messages, { provider: 'anthropic', model: 'claude-sonnet-4-5-20250929' }, {
+        generateWithAI(messages, { provider: 'anthropic', model: 'claude-sonnet-4-6-20250514' }, {
           anthropic: async () => {
             throw new AIProviderError({
               provider: 'anthropic',
-              model: 'claude-sonnet-4-5-20250929',
+              model: 'claude-sonnet-4-6-20250514',
               category: 'auth',
               message: 'Invalid API key. Please check your ANTHROPIC_API_KEY environment variable.',
               statusCode: 401,

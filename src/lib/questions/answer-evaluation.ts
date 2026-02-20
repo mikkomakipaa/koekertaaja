@@ -15,6 +15,37 @@ export function evaluateQuestionAnswer(
         correctAnswer: question.correct_answer,
         matchType: userAnswer === question.correct_answer ? 'exact' : 'none',
       };
+    case 'multiple_select': {
+      const userSelections = Array.isArray(userAnswer)
+        ? userAnswer.filter((value): value is string => typeof value === 'string')
+        : [];
+      const userSet = new Set(userSelections);
+      const correctSet = new Set(question.correct_answers);
+
+      if (userSet.size !== correctSet.size) {
+        return {
+          isCorrect: false,
+          correctAnswer: question.correct_answers,
+          matchType: 'none',
+        };
+      }
+
+      for (const correct of correctSet) {
+        if (!userSet.has(correct)) {
+          return {
+            isCorrect: false,
+            correctAnswer: question.correct_answers,
+            matchType: 'none',
+          };
+        }
+      }
+
+      return {
+        isCorrect: true,
+        correctAnswer: question.correct_answers,
+        matchType: 'exact',
+      };
+    }
     case 'fill_blank': {
       const smartResult = smartValidateAnswer(
         String(userAnswer ?? ''),

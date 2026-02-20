@@ -103,7 +103,7 @@ export default async function SpeedQuizPlayPage({
         <SpeedQuizPageErrorView
           code={code}
           status="ineligible"
-          message="Aikahaaste vaatii vähintään 10 kysymystä ilman Yhdistä-tehtäviä."
+          message="Aikahaaste vaatii vähintään 10 kysymystä ilman Yhdistä- ja valitse useita -tehtäviä."
         />
       );
     }

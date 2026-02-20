@@ -19,7 +19,7 @@ test('selectModelForTask keeps default Claude mapping for question generation', 
   const selection = selectModelForTask('question_generation');
   assert.deepEqual(selection, {
     provider: 'anthropic',
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-6-20250514',
   });
 });
 
@@ -33,7 +33,7 @@ test('selectModelForTask keeps default Claude mapping for flashcard creation', (
   const conceptualSelection = selectModelForTask('flashcard_creation', { isConceptual: true });
   assert.deepEqual(conceptualSelection, {
     provider: 'anthropic',
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-6-20250514',
   });
 });
 
@@ -41,7 +41,7 @@ test('selectModelForTask keeps default Claude mapping for visual questions', () 
   const selection = selectModelForTask('visual_questions');
   assert.deepEqual(selection, {
     provider: 'anthropic',
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-6-20250514',
   });
 });
 
@@ -66,7 +66,7 @@ test('selectModelForTask supports OpenAI mappings when explicitly targeted', () 
 });
 
 test('getModelPricing returns pricing metadata for Anthropic and OpenAI models', () => {
-  assert.deepEqual(getModelPricing('claude-sonnet-4-5-20250929'), {
+  assert.deepEqual(getModelPricing('claude-sonnet-4-6-20250514'), {
     input: 3,
     output: 15,
   });

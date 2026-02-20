@@ -55,7 +55,7 @@ export const providerQualityRegressionFixtures: ProviderRegressionFixture[] = [
     inputSummary: 'Lauseen jasenet: subjekti, predikaatti, objekti; esimerkkilauseet.',
     baseline: {
       provider: 'anthropic',
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6-20250514',
       output:
         '{"question":"Mika on predikaatti lauseessa \\"Koira juoksee nopeasti\\"?","type":"multiple_choice","options":["Koira","juoksee","nopeasti","on"],"correct_answer":"juoksee","explanation":"Predikaatti kertoo, mita subjekti tekee. Sana \\"juoksee\\" kertoo toiminnan."}',
       jsonValid: true,
@@ -105,7 +105,7 @@ export const providerQualityRegressionFixtures: ProviderRegressionFixture[] = [
     inputSummary: 'Voimakuvio, jossa laatikkoa vedetaan vaakasuunnassa kahdella eri voimalla.',
     baseline: {
       provider: 'anthropic',
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6-20250514',
       output:
         '{"question":"Kumpaan suuntaan laatikko liikkuu, jos oikealle vetaa 8 N ja vasemmalle 3 N?","type":"multiple_choice","options":["Vasemmalle","Oikealle","Ei liiku","Ylos"],"correct_answer":"Oikealle","explanation":"Nettovoima on 8 N - 3 N = 5 N oikealle, joten liike tapahtuu oikealle."}',
       jsonValid: true,

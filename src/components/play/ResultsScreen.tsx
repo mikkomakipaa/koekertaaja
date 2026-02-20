@@ -10,6 +10,7 @@ import { useBadges } from '@/hooks/useBadges';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
 import { cn } from '@/lib/utils';
+import { getBadgeIcon, getBadgeColors } from '@/lib/utils/badgeStyles';
 import {
   buildQuestionDetails,
   getCelebrationQueue,
@@ -28,21 +29,15 @@ import {
 } from '@/lib/utils/celebrations';
 import { CheckCircle, XCircle, Medal, ArrowCounterClockwise, X, ArrowRight } from '@phosphor-icons/react';
 import {
-  DiamondsFour,
   Fire,
   Sparkle,
   Star,
   Confetti,
-  ThumbsUp,
   Barbell,
   Target,
-  Trophy,
   Rocket,
-  Lightning,
-  Palette,
   LockSimple
 } from '@phosphor-icons/react';
-import { BadgeId } from '@/types';
 
 interface ResultsScreenProps {
   score: number;
@@ -72,6 +67,10 @@ function QuestionDetailCard({
     id: string;
     question: string;
     correctAnswer: string;
+    questionType?: Answer['questionType'];
+    questionOptions?: string[];
+    rawCorrectAnswer?: unknown;
+    rawUserAnswer?: unknown;
   };
   status: QuestionDetailStatus;
   userAnswer?: string;
@@ -122,6 +121,57 @@ function QuestionDetailCard({
             <p className="text-sm text-gray-900 dark:text-gray-100">
               <MathText>{question.question}</MathText>
             </p>
+
+            {question.questionType === 'multiple_select'
+              && Array.isArray(question.questionOptions)
+              && Array.isArray(question.rawCorrectAnswer) && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Vastausvaihtoehdot:
+                  </p>
+                  {question.questionOptions.map((option, index) => {
+                    const correctAnswers = question.rawCorrectAnswer as string[];
+                    const userSelections = Array.isArray(question.rawUserAnswer)
+                      ? question.rawUserAnswer.filter((value): value is string => typeof value === 'string')
+                      : [];
+                    const shouldSelect = correctAnswers.includes(option);
+                    const userSelected = userSelections.includes(option);
+
+                    const variant =
+                      userSelected && shouldSelect ? 'correct-selection' :
+                      userSelected && !shouldSelect ? 'wrong-selection' :
+                      !userSelected && shouldSelect ? 'missed-correct' :
+                      'correct-non-selection';
+
+                    const icon =
+                      userSelected && shouldSelect ? '✓' :
+                      userSelected && !shouldSelect ? '✗' :
+                      !userSelected && shouldSelect ? '○' :
+                      '';
+
+                    return (
+                      <div
+                        key={`${option}-${index}`}
+                        className={cn(
+                          'rounded-lg p-2 text-sm',
+                          variant === 'correct-selection' && 'bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-100',
+                          variant === 'wrong-selection' && 'bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-100',
+                          variant === 'missed-correct' && 'bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-100',
+                          variant === 'correct-non-selection' && 'text-slate-600 dark:text-slate-400'
+                        )}
+                      >
+                        {icon && <span className="mr-2 font-bold">{icon}</span>}
+                        <MathText>{option}</MathText>
+                      </div>
+                    );
+                  })}
+                  <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                    <p>✓ = Oikein valittu</p>
+                    <p>✗ = Väärin valittu</p>
+                    <p>○ = Jäi valitsematta (pitäisi valita)</p>
+                  </div>
+                </div>
+              )}
 
             {status === 'skipped' && (
               <div className="rounded bg-emerald-50 p-3 dark:bg-emerald-900/20">
@@ -344,75 +394,6 @@ export function ResultsScreen({
         button: 'bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 text-white shadow-md hover:shadow-lg active:shadow-sm',
       };
 
-  // Get badge icon based on ID
-  const getBadgeIcon = (badgeId: BadgeId, size: number = 32) => {
-    const iconMap = {
-      first_session: <Sparkle size={size} weight="fill" className="inline" />,
-      '5_sessions': <Fire size={size} weight="duotone" className="inline" />,
-      '10_sessions': <Barbell size={size} weight="bold" className="inline" />,
-      '25_sessions': <Trophy size={size} weight="duotone" className="inline" />,
-      perfect_score: <Star size={size} weight="fill" className="inline" />,
-      nopea_tarkka: <Target size={size} weight="duotone" className="inline" />,
-      beat_personal_best: <Rocket size={size} weight="duotone" className="inline" />,
-      speed_demon: <Lightning size={size} weight="fill" className="inline" />,
-      tried_both_levels: <Palette size={size} weight="duotone" className="inline" />,
-      streak_3: <Fire size={size} weight="duotone" className="inline" />,
-      streak_5: <Fire size={size} weight="fill" className="inline" />,
-      streak_10: <Fire size={size} weight="fill" className="inline text-orange-600" />,
-    };
-    return iconMap[badgeId] || <Star size={size} weight="regular" className="inline" />;
-  };
-
-  // Get badge colors based on category
-  const getBadgeColors = (badgeId: string) => {
-    // Practice/Milestone badges (Indigo - matches Quiz)
-    if (['first_session', '5_sessions', '10_sessions', '25_sessions'].includes(badgeId)) {
-      return {
-        light: 'from-indigo-50 to-indigo-100 border-indigo-500',
-        dark: 'dark:from-indigo-900/30 dark:to-indigo-800/20 dark:border-indigo-600',
-        text: 'text-indigo-900 dark:text-indigo-100'
-      };
-    }
-    // Performance badges (Amber - challenge)
-    if (['perfect_score', 'nopea_tarkka', 'beat_personal_best'].includes(badgeId)) {
-      return {
-        light: 'from-amber-50 to-amber-100 border-amber-500',
-        dark: 'dark:from-amber-900/30 dark:to-amber-800/20 dark:border-amber-600',
-        text: 'text-amber-900 dark:text-amber-100'
-      };
-    }
-    // Speed badge (Cyan - matches Easy)
-    if (badgeId === 'speed_demon') {
-      return {
-        light: 'from-cyan-50 to-cyan-100 border-cyan-500',
-        dark: 'dark:from-cyan-900/30 dark:to-cyan-800/20 dark:border-cyan-600',
-        text: 'text-cyan-900 dark:text-cyan-100'
-      };
-    }
-    // Exploration badge (Teal - matches Study)
-    if (badgeId === 'tried_both_levels') {
-      return {
-        light: 'from-teal-50 to-teal-100 border-teal-500',
-        dark: 'dark:from-teal-900/30 dark:to-teal-800/20 dark:border-teal-600',
-        text: 'text-teal-900 dark:text-teal-100'
-      };
-    }
-    // Streak badges (orange/red - fire, consistency)
-    if (['streak_3', 'streak_5', 'streak_10'].includes(badgeId)) {
-      return {
-        light: 'from-orange-50 to-red-100 border-orange-400',
-        dark: 'dark:from-orange-900 dark:to-red-900 dark:border-orange-600',
-        text: 'text-orange-900 dark:text-orange-100'
-      };
-    }
-    // Default (shouldn't happen)
-    return {
-      light: 'from-gray-50 to-gray-100 border-gray-400',
-      dark: 'dark:from-gray-800 dark:to-gray-700 dark:border-gray-700',
-      text: 'text-gray-900 dark:text-gray-100'
-    };
-  };
-
   const displayPersonalBest = personalBest > 0 ? (isNewRecord ? totalPoints : personalBest) : null;
   const unlockedBadgesCount = badges.filter(b => b.unlocked).length;
   const newlyUnlockedBadges = badges.filter(badge => newlyUnlocked.includes(badge.id));
@@ -442,17 +423,6 @@ export function ResultsScreen({
 
         {/* Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <Card variant="frosted" padding="compact">
-            <CardContent>
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
-                <DiamondsFour size={18} weight="duotone" className="text-yellow-500" />
-                Pisteprosentti
-              </div>
-              <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
-                {percentage}%
-              </div>
-            </CardContent>
-          </Card>
           <Card variant="frosted" padding="compact">
             <CardContent>
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -509,7 +479,9 @@ export function ResultsScreen({
           <TabsList className="grid w-full grid-cols-3 rounded-xl bg-white/80 dark:bg-gray-900/70 p-1 shadow-sm border border-white/60 dark:border-gray-800">
             <TabsTrigger value="overview" className="rounded-xl text-sm md:text-base">Yhteenveto</TabsTrigger>
             <TabsTrigger value="answers" className="rounded-xl text-sm md:text-base">Vastaukset</TabsTrigger>
-            <TabsTrigger value="badges" className="rounded-xl text-sm md:text-base">Merkit</TabsTrigger>
+            <TabsTrigger value="badges" className="rounded-xl text-sm md:text-base">
+              Merkit ({unlockedBadgesCount}/12)
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6 space-y-4">
@@ -673,40 +645,6 @@ export function ResultsScreen({
           </TabsContent>
 
           <TabsContent value="badges" className="mt-6 space-y-5">
-            <Card variant="frosted" padding="standard">
-              <CardHeader className="mb-3 space-y-0">
-                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  <Sparkle size={18} weight="duotone" className="text-emerald-500" />
-                  Uudet merkit
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {newlyUnlockedBadges.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {newlyUnlockedBadges.map(badge => {
-                      const colors = getBadgeColors(badge.id);
-                      return (
-                        <BadgeDisplay
-                          badge={badge}
-                          key={badge.id}
-                          className={`p-3 rounded-lg text-center bg-gradient-to-br ${colors.light} ${colors.dark} border-2`}
-                        >
-                          <div className="text-3xl mb-1 flex justify-center">
-                            {getBadgeIcon(badge.id)}
-                          </div>
-                          <div className={`text-xs font-medium leading-tight ${colors.text}`}>
-                            {badge.name}
-                          </div>
-                        </BadgeDisplay>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Ei uusia merkkejä tällä kertaa.</p>
-                )}
-              </CardContent>
-            </Card>
-
             <Card variant="frosted" padding="standard">
               <CardHeader className="mb-3 space-y-0">
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">

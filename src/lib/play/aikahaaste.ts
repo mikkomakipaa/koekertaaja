@@ -16,7 +16,9 @@ export function selectRandomQuestionsForAikahaaste(
   count = AIKAHAASTE_QUESTION_COUNT,
   random: () => number = Math.random
 ): Question[] {
-  const pool = questions.filter((question) => question.question_type !== 'matching');
+  const pool = questions.filter(
+    (question) => question.question_type !== 'matching' && question.question_type !== 'multiple_select'
+  );
 
   for (let i = pool.length - 1; i > 0; i -= 1) {
     const j = Math.floor(random() * (i + 1));

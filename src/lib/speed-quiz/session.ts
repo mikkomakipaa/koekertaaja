@@ -52,6 +52,10 @@ function getCorrectAnswerText(question: Question): string {
     return question.correct_order.join(' -> ');
   }
 
+  if (question.question_type === 'multiple_select') {
+    return question.correct_answers.join(', ');
+  }
+
   return stringifyAnswer(question.correct_answer);
 }
 

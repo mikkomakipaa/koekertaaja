@@ -86,7 +86,7 @@ test('selectRandomQuestions throws when there are fewer than requested questions
 
   assert.throws(
     () => selectRandomQuestions(questions),
-    /Not enough questions for speed quiz: requires at least 10, received 5/
+    /Not enough questions for speed quiz: requires at least 10 eligible questions, received 5/
   );
 });
 
@@ -112,6 +112,26 @@ test('selectRandomQuestions excludes matching (Yhdistä) questions from selectio
   assert.equal(selected.some((question) => question.question_type === 'matching'), false);
 });
 
+test('selectRandomQuestions excludes multiple_select questions from selection', () => {
+  const questions: Question[] = [
+    ...Array.from({ length: 10 }, (_, index) => createQuestion(index)),
+    {
+      id: 'q-ms-1',
+      question_set_id: 'set-1',
+      question_text: 'Valitse kaikki oikeat',
+      question_type: 'multiple_select',
+      explanation: 'Selitys',
+      order_index: 99,
+      options: ['A', 'B', 'C', 'D', 'E'],
+      correct_answers: ['A', 'C'],
+    },
+  ];
+
+  const selected = selectRandomQuestions(questions);
+  assert.equal(selected.length, 10);
+  assert.equal(selected.some((question) => question.question_type === 'multiple_select'), false);
+});
+
 test('canRunSpeedQuiz returns correct eligibility result', () => {
   assert.equal(canRunSpeedQuiz(createQuestionSet()), true);
   assert.equal(canRunSpeedQuiz(createQuestionSet({ question_count: 9 })), false);
@@ -134,7 +154,7 @@ test('getSpeedQuizEligibilityMessage returns Finnish messages and null when elig
   );
 });
 
-test('getSpeedQuizEligibleQuestionCount excludes matching (Yhdistä) questions', () => {
+test('getSpeedQuizEligibleQuestionCount excludes matching and multiple_select questions', () => {
   const questions: Question[] = [
     ...Array.from({ length: 8 }, (_, index) => createQuestion(index)),
     {
@@ -145,6 +165,16 @@ test('getSpeedQuizEligibleQuestionCount excludes matching (Yhdistä) questions',
       explanation: 'Selitys',
       order_index: 101,
       pairs: [{ left: 'a', right: '1' }],
+    },
+    {
+      id: 'q-ms-1',
+      question_set_id: 'set-1',
+      question_text: 'Valitse kaikki',
+      question_type: 'multiple_select',
+      explanation: 'Selitys',
+      order_index: 103,
+      options: ['A', 'B', 'C', 'D', 'E'],
+      correct_answers: ['A', 'B'],
     },
     {
       id: 'q-match-2',

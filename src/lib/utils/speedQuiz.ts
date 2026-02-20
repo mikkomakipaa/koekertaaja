@@ -3,7 +3,9 @@ import type { Question, QuestionSet } from '@/types/questions';
 const SPEED_QUIZ_MIN_QUESTIONS = 10;
 
 export function getSpeedQuizEligibleQuestionCount(questions: Question[]): number {
-  return questions.filter((question) => question.question_type !== 'matching').length;
+  return questions.filter(
+    (question) => question.question_type !== 'matching' && question.question_type !== 'multiple_select'
+  ).length;
 }
 
 /**
@@ -39,11 +41,13 @@ export function shuffleArray<T>(array: T[]): T[] {
  * @returns Exactly `count` randomly ordered questions.
  */
 export function selectRandomQuestions(questions: Question[], count: number = SPEED_QUIZ_MIN_QUESTIONS): Question[] {
-  const eligibleQuestions = questions.filter((question) => question.question_type !== 'matching');
+  const eligibleQuestions = questions.filter(
+    (question) => question.question_type !== 'matching' && question.question_type !== 'multiple_select'
+  );
 
   if (eligibleQuestions.length < count) {
     throw new Error(
-      `Not enough questions for speed quiz: requires at least ${count}, received ${eligibleQuestions.length}`
+      `Not enough questions for speed quiz: requires at least ${count} eligible questions, received ${eligibleQuestions.length}`
     );
   }
 

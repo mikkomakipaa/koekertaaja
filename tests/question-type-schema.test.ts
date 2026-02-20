@@ -16,6 +16,33 @@ test('aiQuestionSchema rejects multiple_choice without options', () => {
   assert.equal(result.success, false);
 });
 
+test('aiQuestionSchema accepts valid multiple_select with 5 options and 2-3 correct answers', () => {
+  const fixture = structuredClone(aiQuestionFixtures.multiple_select);
+  const result = aiQuestionSchema.safeParse(fixture);
+  assert.equal(result.success, true);
+});
+
+test('aiQuestionSchema rejects multiple_select with too few correct answers', () => {
+  const fixture = structuredClone(aiQuestionFixtures.multiple_select);
+  fixture.correct_answers = ['2'];
+  const result = aiQuestionSchema.safeParse(fixture);
+  assert.equal(result.success, false);
+});
+
+test('aiQuestionSchema rejects multiple_select with all options correct', () => {
+  const fixture = structuredClone(aiQuestionFixtures.multiple_select);
+  fixture.correct_answers = [...fixture.options];
+  const result = aiQuestionSchema.safeParse(fixture);
+  assert.equal(result.success, false);
+});
+
+test('aiQuestionSchema rejects multiple_select with non-5 option count', () => {
+  const fixture = structuredClone(aiQuestionFixtures.multiple_select);
+  fixture.options = fixture.options.slice(0, 4);
+  const result = aiQuestionSchema.safeParse(fixture);
+  assert.equal(result.success, false);
+});
+
 test('aiQuestionSchema rejects fill_blank without correct_answer', () => {
   const { correct_answer: _correctAnswer, ...fixture } = structuredClone(
     aiQuestionFixtures.fill_blank,

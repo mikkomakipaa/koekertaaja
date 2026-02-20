@@ -58,6 +58,27 @@ describe('ResultsScreen', () => {
     assert.equal(details[2]?.correctAnswer, '5');
   });
 
+  it('preserves raw data for multiple_select option-level feedback', () => {
+    const multiSelectAnswers: Answer[] = [
+      {
+        questionId: 'ms1',
+        questionText: 'Mitkä ovat alkulukuja?',
+        userAnswer: ['2', '4'],
+        correctAnswer: ['2', '3'],
+        questionType: 'multiple_select',
+        questionOptions: ['2', '3', '4', '8', '9'],
+        isCorrect: false,
+        explanation: '2 ja 3 ovat alkulukuja.',
+      },
+    ];
+
+    const details = buildQuestionDetails(multiSelectAnswers);
+    assert.equal(details[0]?.questionType, 'multiple_select');
+    assert.deepEqual(details[0]?.questionOptions, ['2', '3', '4', '8', '9']);
+    assert.deepEqual(details[0]?.rawCorrectAnswer, ['2', '3']);
+    assert.deepEqual(details[0]?.rawUserAnswer, ['2', '4']);
+  });
+
   it('treats all incorrect answers as wrong when skippedQuestions is omitted', () => {
     const summary = getResultsBreakdown(answers);
     assert.deepEqual(summary, {

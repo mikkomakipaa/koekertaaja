@@ -14,6 +14,7 @@ const logger = createLogger({ module: 'difficultyMapping' });
 
 export interface QuestionTypeWeights {
   multiple_choice: number;
+  multiple_select: number;
   fill_blank: number;
   true_false: number;
   matching: number;
@@ -34,16 +35,18 @@ export function getQuestionTypeWeights(
     case 'helppo':
       return {
         multiple_choice: 0.40, // 40% multiple choice
+        multiple_select: 0.05, // 5% multiple select
         fill_blank: 0.25, // 25% fill blank
         true_false: 0.20, // 20% true/false
         matching: 0.10, // 10% matching
-        short_answer: 0.05, // 5% short answer
+        short_answer: 0.00, // 0% short answer
         sequential: 0.00, // 0% sequential
       };
 
     case 'normaali':
       return {
         multiple_choice: 0.30, // 30% multiple choice
+        multiple_select: 0.10, // 10% multiple select
         fill_blank: 0.25, // 25% fill blank
         true_false: 0.10, // 10% true/false
         matching: 0.20, // 20% matching
@@ -80,6 +83,7 @@ export function formatQuestionTypeWeights(weights: QuestionTypeWeights): string 
 function formatQuestionTypeFinnish(type: QuestionType): string {
   const labels: Record<QuestionType, string> = {
     multiple_choice: 'Monivalinta',
+    multiple_select: 'Valitse useita',
     fill_blank: 'Täydennys',
     true_false: 'Tosi/Epätosi',
     matching: 'Paritus',

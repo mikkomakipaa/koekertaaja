@@ -207,6 +207,10 @@ export function useGameSession(
         questionText: currentQuestion.question_text,
         userAnswer,
         correctAnswer,
+        questionType: currentQuestion.question_type,
+        questionOptions: 'options' in currentQuestion && Array.isArray(currentQuestion.options)
+          ? currentQuestion.options
+          : undefined,
         isCorrect,
         explanation: currentQuestion.explanation,
         pointsEarned,
@@ -269,6 +273,10 @@ export function useGameSession(
         questionText: currentQuestion.question_text,
         userAnswer: null,
         correctAnswer,
+        questionType: currentQuestion.question_type,
+        questionOptions: 'options' in currentQuestion && Array.isArray(currentQuestion.options)
+          ? currentQuestion.options
+          : undefined,
         isCorrect: false,
         explanation: currentQuestion.explanation,
         pointsEarned: 0,

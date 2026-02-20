@@ -5,6 +5,7 @@ import type {
   FillBlankQuestion,
   MatchingQuestion,
   MultipleChoiceQuestion,
+  MultipleSelectQuestion,
   SequentialQuestion,
   ShortAnswerQuestion,
   TrueFalseQuestion,
@@ -47,6 +48,21 @@ test('evaluateQuestionAnswer handles fill_blank with leniency', () => {
 
   assert.equal(evaluateQuestionAnswer(question, 'vuonna 1917').isCorrect, true);
   assert.equal(evaluateQuestionAnswer(question, '1918').isCorrect, false);
+});
+
+test('evaluateQuestionAnswer handles multiple_select with all-or-nothing scoring', () => {
+  const question: MultipleSelectQuestion = {
+    ...baseQuestionFields,
+    question_type: 'multiple_select',
+    question_text: aiQuestionFixtures.multiple_select.question,
+    explanation: aiQuestionFixtures.multiple_select.explanation,
+    options: aiQuestionFixtures.multiple_select.options,
+    correct_answers: aiQuestionFixtures.multiple_select.correct_answers,
+  };
+
+  assert.equal(evaluateQuestionAnswer(question, ['2', '3', '11']).isCorrect, true);
+  assert.equal(evaluateQuestionAnswer(question, ['2', '3']).isCorrect, false);
+  assert.equal(evaluateQuestionAnswer(question, ['2', '3', '4']).isCorrect, false);
 });
 
 test('evaluateQuestionAnswer handles true_false', () => {

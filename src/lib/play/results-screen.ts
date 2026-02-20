@@ -8,6 +8,10 @@ export interface QuestionDetailItem {
   question: string;
   correctAnswer: string;
   userAnswer?: string;
+  questionType?: Answer['questionType'];
+  questionOptions?: string[];
+  rawCorrectAnswer?: unknown;
+  rawUserAnswer?: unknown;
   status: QuestionDetailStatus;
 }
 
@@ -63,6 +67,10 @@ export function buildQuestionDetails(answers: Answer[], skippedQuestions?: strin
       question: answer.questionText,
       correctAnswer: stringifyAnswer(answer.correctAnswer),
       userAnswer: stringifyAnswer(answer.userAnswer) || undefined,
+      questionType: answer.questionType,
+      questionOptions: answer.questionOptions,
+      rawCorrectAnswer: answer.correctAnswer,
+      rawUserAnswer: answer.userAnswer,
       status,
     };
   });

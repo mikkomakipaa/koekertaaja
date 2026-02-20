@@ -13,15 +13,16 @@ JSON-SKEEMA (KENTTÄTASON SOPIMUS):
 [
   {
     "question": "kysymysteksti",
-    "type": "multiple_choice" | "fill_blank" | "true_false" | "short_answer" | "matching" | "sequential" | "flashcard",
+    "type": "multiple_choice" | "multiple_select" | "fill_blank" | "true_false" | "short_answer" | "matching" | "sequential" | "flashcard",
     "topic": "aihealue",
     "subtopic": "valinnainen alateema",
     "skill": "snake_case_taito",
-    "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4"],
+    "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4", "vaihtoehto5"],
     "pairs": [{"left": "vasen", "right": "oikea"}],
     "items": ["vaihe 1", "vaihe 2", "vaihe 3", "vaihe 4"],
     "correct_order": [0, 1, 2, 3],
     "correct_answer": "oikea vastaus",
+    "correct_answers": ["vastaus1", "vastaus2"],
     "answer": "flashcard-tilan ydinvastaus",
     "acceptable_answers": ["vaihtoehtoinen hyväksyttävä vastaus"],
     "explanation": "2-3 lauseen henkilökohtainen selitys (sinä-muoto)"
@@ -36,6 +37,9 @@ PAKOLLISET YHTEISET SÄÄNNÖT:
 
 TYYPPIKOHTAINEN MINIMISOPIMUS:
 - multiple_choice: options on pakollinen ja sisältää tasan 4 vaihtoehtoa.
+- multiple_select: options on pakollinen ja sisältää tasan 5 vaihtoehtoa.
+  correct_answers on pakollinen ja sisältää 2-3 oikeaa vaihtoehtoa options-listasta.
+  Älä tee triviaalia kysymystä, jossa kaikki vaihtoehdot ovat oikein.
 - true_false: correct_answer on boolean (true/false).
 - fill_blank: correct_answer on pakollinen; acceptable_answers suositeltu.
 - short_answer: correct_answer on pakollinen; acceptable_answers suositeltu.

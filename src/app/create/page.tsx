@@ -832,6 +832,11 @@ export default function CreatePage() {
         setEditOptions(formatListForEdit(flag.options));
         break;
       }
+      case 'multiple_select': {
+        setEditCorrectAnswer(formatListForEdit(flag.correctAnswer));
+        setEditOptions(formatListForEdit(flag.options));
+        break;
+      }
       case 'fill_blank': {
         setEditCorrectAnswer(typeof flag.correctAnswer === 'string' ? flag.correctAnswer : '');
         setEditAcceptableAnswers(formatListForEdit(flag.options));
@@ -902,6 +907,30 @@ export default function CreatePage() {
           payload = {
             ...payload,
             correctAnswer: editCorrectAnswer.trim(),
+            options,
+          };
+          break;
+        }
+        case 'multiple_select': {
+          const options = parseListInput(editOptions);
+          const correctAnswers = parseListInput(editCorrectAnswer);
+
+          if (options.length !== 5) {
+            failEdit('Anna tasan 5 vaihtoehtoa.');
+            return;
+          }
+          if (correctAnswers.length < 2 || correctAnswers.length > 3) {
+            failEdit('Anna 2-3 oikeaa vastausta.');
+            return;
+          }
+          if (!correctAnswers.every((answer) => options.includes(answer))) {
+            failEdit('Kaikkien oikeiden vastausten pitää löytyä vaihtoehdoista.');
+            return;
+          }
+
+          payload = {
+            ...payload,
+            correctAnswer: correctAnswers,
             options,
           };
           break;
@@ -2264,10 +2293,10 @@ export default function CreatePage() {
                           />
                         </div>
 
-                        {(editingFlag.questionType === 'multiple_choice' || editingFlag.questionType === 'fill_blank' || editingFlag.questionType === 'short_answer') && (
+                        {(editingFlag.questionType === 'multiple_choice' || editingFlag.questionType === 'multiple_select' || editingFlag.questionType === 'fill_blank' || editingFlag.questionType === 'short_answer') && (
                           <div>
                             <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                              Oikea vastaus
+                              {editingFlag.questionType === 'multiple_select' ? 'Oikeat vastaukset (2-3, yksi per rivi)' : 'Oikea vastaus'}
                             </label>
                             <Input
                               value={editCorrectAnswer}
@@ -2276,10 +2305,12 @@ export default function CreatePage() {
                           </div>
                         )}
 
-                        {editingFlag.questionType === 'multiple_choice' && (
+                        {(editingFlag.questionType === 'multiple_choice' || editingFlag.questionType === 'multiple_select') && (
                           <div>
                             <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                              Vaihtoehdot (yksi per rivi tai pilkulla)
+                              {editingFlag.questionType === 'multiple_select'
+                                ? 'Vaihtoehdot (tasan 5, yksi per rivi tai pilkulla)'
+                                : 'Vaihtoehdot (yksi per rivi tai pilkulla)'}
                             </label>
                             <Textarea
                               value={editOptions}

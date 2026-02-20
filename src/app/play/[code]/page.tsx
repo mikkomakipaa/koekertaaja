@@ -71,6 +71,10 @@ const getQuestionTypeInfo = (type: QuestionType): { label: string; icon: ReactNo
       label: 'Monivalinta',
       icon: <ListChecks size={14} weight="duotone" />,
     },
+    multiple_select: {
+      label: 'Valitse useita',
+      icon: <ListChecks size={14} weight="duotone" />,
+    },
     true_false: {
       label: 'Totta vai tarua',
       icon: <CheckCircle size={14} weight="duotone" />,
@@ -104,6 +108,7 @@ const getPlaceholderHint = (questionType: QuestionType, questionText: string): s
     fill_blank: 'Esim: sana, termi tai lyhyt vastaus',
     short_answer: 'Kirjoita omin sanoin (1-3 lausetta)',
     multiple_choice: 'Valitse yksi vaihtoehto',
+    multiple_select: 'Valitse kaikki oikeat vaihtoehdot',
     true_false: 'Valitse totta tai tarua',
     matching: 'Yhdistä oikeat parit',
     sequential: 'Järjestä kohteet oikeaan järjestykseen',

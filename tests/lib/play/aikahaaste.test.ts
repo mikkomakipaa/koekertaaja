@@ -36,6 +36,19 @@ function createMatchingQuestion(id: string): Question {
   };
 }
 
+function createMultipleSelectQuestion(id: string): Question {
+  return {
+    id,
+    question_set_id: 'set-1',
+    question_text: `Valitse kaikki ${id}`,
+    question_type: 'multiple_select',
+    explanation: 'Selitys',
+    order_index: 1,
+    options: ['A', 'B', 'C', 'D', 'E'],
+    correct_answers: ['A', 'C'],
+  };
+}
+
 describe('aikahaaste utils', () => {
   it('detects aikahaaste mode only for quiz play route', () => {
     assert.strictEqual(
@@ -72,16 +85,28 @@ describe('aikahaaste utils', () => {
     assert.notDeepStrictEqual(selected.map((question) => question.id), questions.slice(0, 10).map((question) => question.id));
   });
 
-  it('excludes matching (Yhdistä) questions from aikahaaste selection', () => {
+  it('excludes matching and multiple_select questions from aikahaaste selection', () => {
     const questions: Question[] = [
       ...Array.from({ length: 10 }, (_, index) => createQuestion(String(index + 1))),
       ...Array.from({ length: 5 }, (_, index) => createMatchingQuestion(`m-${index + 1}`)),
+      ...Array.from({ length: 5 }, (_, index) => createMultipleSelectQuestion(`ms-${index + 1}`)),
     ];
 
     const selected = selectRandomQuestionsForAikahaaste(questions);
 
     assert.strictEqual(selected.length, AIKAHAASTE_QUESTION_COUNT);
     assert.ok(selected.every((question) => question.question_type !== 'matching'));
+    assert.ok(selected.every((question) => question.question_type !== 'multiple_select'));
+  });
+
+  it('returns empty selection when question set only has excluded types', () => {
+    const onlyExcluded: Question[] = [
+      ...Array.from({ length: 4 }, (_, index) => createMatchingQuestion(`m-only-${index + 1}`)),
+      ...Array.from({ length: 4 }, (_, index) => createMultipleSelectQuestion(`ms-only-${index + 1}`)),
+    ];
+
+    const selected = selectRandomQuestionsForAikahaaste(onlyExcluded);
+    assert.deepStrictEqual(selected, []);
   });
 
   it('ends quiz on timeout at last question and advances otherwise', () => {

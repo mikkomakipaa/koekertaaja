@@ -187,6 +187,10 @@ function questionContainsKeyword(
       textParts.push(question.correct_answer);
       textParts.push(...question.options);
       break;
+    case 'multiple_select':
+      textParts.push(...question.correct_answers);
+      textParts.push(...question.options);
+      break;
     case 'fill_blank':
     case 'short_answer':
       textParts.push(question.correct_answer);

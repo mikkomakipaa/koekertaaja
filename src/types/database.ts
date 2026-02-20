@@ -148,6 +148,13 @@ export function parseDatabaseQuestion(dbQuestion: DatabaseQuestion): Question {
         options: (dbQuestion.options as string[]) || [],
         correct_answer: dbQuestion.correct_answer as string,
       };
+    case 'multiple_select':
+      return {
+        ...base,
+        question_type: 'multiple_select',
+        options: (dbQuestion.options as string[]) || [],
+        correct_answers: Array.isArray(dbQuestion.correct_answer) ? dbQuestion.correct_answer as string[] : [],
+      };
     case 'fill_blank':
       return {
         ...base,

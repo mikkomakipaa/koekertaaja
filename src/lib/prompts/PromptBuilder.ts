@@ -387,6 +387,7 @@ export class PromptBuilder {
       '- fill_blank: sanasto, kaavat, määritelmät, yksittäiset täsmävastaukset',
       '- short_answer: selittäminen, perustelu, miksi/miten-kysymykset',
       '- multiple_choice: käsitteet, vertailu, luokittelu, vaihtoehtojen arviointi',
+      '- multiple_select: valitse kaikki oikein -tehtävät, joissa on 2-3 oikeaa vaihtoehtoa',
       '- true_false: faktaväitteet ja yleiset väärinkäsitykset',
       '- matching: pariuttaminen (termi-määritelmä, valtio-pääkaupunki, kaava-nimi)',
       '- sequential: aikajanat, prosessit ja vaiheittaiset järjestykset',

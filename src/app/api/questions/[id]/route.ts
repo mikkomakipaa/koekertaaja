@@ -83,6 +83,34 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         normalizedOptions = parsed.data.options;
         break;
       }
+      case 'multiple_select': {
+        const schema = z.object({
+          correctAnswer: z.array(z.string().min(1)).min(2).max(3),
+          options: z.array(z.string().min(1)).length(5),
+        });
+        const parsed = schema.safeParse({ correctAnswer, options });
+        if (!parsed.success) {
+          const errors = parsed.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`);
+          return NextResponse.json(
+            { error: 'Validation failed', details: errors },
+            { status: 400 }
+          );
+        }
+
+        const allCorrectInOptions = parsed.data.correctAnswer.every((answer) =>
+          parsed.data.options.includes(answer)
+        );
+        if (!allCorrectInOptions) {
+          return NextResponse.json(
+            { error: 'Validation failed', details: ['correctAnswer: All correct answers must be present in options'] },
+            { status: 400 }
+          );
+        }
+
+        normalizedCorrectAnswer = parsed.data.correctAnswer;
+        normalizedOptions = parsed.data.options;
+        break;
+      }
       case 'fill_blank': {
         const schema = z.object({
           correctAnswer: z.string().min(1, 'Correct answer is required'),

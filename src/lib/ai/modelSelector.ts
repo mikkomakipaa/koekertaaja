@@ -3,7 +3,7 @@ import type { AIModelSelection, AIProvider } from './providerTypes';
 
 export type ClaudeModel =
   | 'claude-haiku-4-5-20251001'
-  | 'claude-sonnet-4-5-20250929'
+  | 'claude-sonnet-4-6-20250514'
   | 'claude-opus-4-6-20250514';
 
 export type OpenAIModel =
@@ -15,7 +15,7 @@ export type AIModel = ClaudeModel | OpenAIModel;
 
 export const AI_MODEL_VALUES = [
   'claude-haiku-4-5-20251001',
-  'claude-sonnet-4-5-20250929',
+  'claude-sonnet-4-6-20250514',
   'claude-opus-4-6-20250514',
   'gpt-5-nano',
   'gpt-5-mini',
@@ -70,21 +70,21 @@ export function selectModelForTask(
 
     case 'question_generation':
       // Sonnet for best quality-cost balance
-      return { provider: 'anthropic', model: 'claude-sonnet-4-5-20250929' };
+      return { provider: 'anthropic', model: 'claude-sonnet-4-6-20250514' };
 
     case 'flashcard_creation':
       // Use Sonnet for conceptual flashcards, Haiku for standard
       if (isConceptual) {
-        return { provider: 'anthropic', model: 'claude-sonnet-4-5-20250929' };
+        return { provider: 'anthropic', model: 'claude-sonnet-4-6-20250514' };
       }
       return { provider: 'anthropic', model: 'claude-haiku-4-5-20251001' };
 
     case 'visual_questions':
       // Sonnet has vision support
-      return { provider: 'anthropic', model: 'claude-sonnet-4-5-20250929' };
+      return { provider: 'anthropic', model: 'claude-sonnet-4-6-20250514' };
 
     default:
-      return { provider: 'anthropic', model: 'claude-sonnet-4-5-20250929' };
+      return { provider: 'anthropic', model: 'claude-sonnet-4-6-20250514' };
   }
 }
 
@@ -121,11 +121,11 @@ export function getModelMetadataByModel(model: AIModel): ModelMetadata {
         name: 'Haiku 4.5',
         pricing: { input: 0.8, output: 4 },
       };
-    case 'claude-sonnet-4-5-20250929':
+    case 'claude-sonnet-4-6-20250514':
       return {
         provider: 'anthropic',
         model,
-        name: 'Sonnet 4.5',
+        name: 'Sonnet 4.6',
         pricing: { input: 3, output: 15 },
       };
     case 'claude-opus-4-6-20250514':

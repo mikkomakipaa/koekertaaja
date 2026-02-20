@@ -315,6 +315,7 @@ export interface SubjectConfig {
 
 const BASE_QUESTION_TYPES: QuestionType[] = [
   'multiple_choice',
+  'multiple_select',
   'fill_blank',
   'true_false',
   'matching',

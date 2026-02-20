@@ -82,6 +82,7 @@ export const aiQuestionSchema = z.object({
     .max(1000, 'Question must be 1000 characters or less'),
   type: z.enum([
     'multiple_choice',
+    'multiple_select',
     'fill_blank',
     'true_false',
     'matching',
@@ -115,6 +116,7 @@ export const aiQuestionSchema = z.object({
   requires_visual: z.boolean().optional(),
   image_url: z.string().max(2000, 'Image URL must be 2000 characters or less').optional(),
   options: z.array(z.string()).min(2, 'Multiple choice questions must have at least 2 options').optional(),
+  correct_answers: z.array(z.string()).optional(),
   correct_answer: z.union([
     z.string(),
     z.boolean(),
@@ -148,6 +150,43 @@ export const aiQuestionSchema = z.object({
         message: 'Multiple choice questions must have at least 2 options',
         path: ['options'],
       });
+    }
+  }
+
+  if (data.type === 'multiple_select') {
+    if (!Array.isArray(data.options) || data.options.length !== 5) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Multiple select questions must have exactly 5 options',
+        path: ['options'],
+      });
+    }
+
+    if (!Array.isArray(data.correct_answers) || data.correct_answers.length < 2 || data.correct_answers.length > 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Multiple select questions must have 2-3 correct answers',
+        path: ['correct_answers'],
+      });
+    }
+
+    if (Array.isArray(data.options) && Array.isArray(data.correct_answers)) {
+      const allInOptions = data.correct_answers.every((answer) => data.options?.includes(answer));
+      if (!allInOptions) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'All multiple select correct answers must be present in options',
+          path: ['correct_answers'],
+        });
+      }
+
+      if (data.correct_answers.length >= data.options.length) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Multiple select question cannot have all options correct',
+          path: ['correct_answers'],
+        });
+      }
     }
   }
 
@@ -195,7 +234,7 @@ export const aiQuestionSchema = z.object({
   }
 
   // Validate that non-sequential questions have an answer payload
-  if (data.type !== 'sequential' && !data.correct_answer && !data.answer) {
+  if (data.type !== 'sequential' && data.type !== 'multiple_select' && !data.correct_answer && !data.answer) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Question must have a correct_answer',

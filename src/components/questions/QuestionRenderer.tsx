@@ -1,6 +1,7 @@
 import { Question } from '@/types';
 import type { ShortAnswerQuestion } from '@/types';
 import { MultipleChoice } from './MultipleChoice';
+import { MultipleSelect } from './MultipleSelect';
 import { FillBlank } from './FillBlank';
 import { TrueFalse } from './TrueFalse';
 import { Matching } from './Matching';
@@ -44,6 +45,16 @@ export function QuestionRenderer({
           showExplanation={showExplanation}
           onAnswerChange={onAnswerChange}
           placeholderHint={placeholderHint}
+        />
+      );
+
+    case 'multiple_select':
+      return (
+        <MultipleSelect
+          question={question}
+          selectedAnswers={Array.isArray(userAnswer) ? userAnswer : []}
+          showExplanation={showExplanation}
+          onSelectionChange={onAnswerChange}
         />
       );
 

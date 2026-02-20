@@ -1,7 +1,8 @@
 'use client';
 
 import { useRef, type KeyboardEvent } from 'react';
-import { ArrowLeft, Book, GameController, GraduationCap } from '@phosphor-icons/react';
+import Link from 'next/link';
+import { ArrowLeft, Book, GameController, GraduationCap, Trophy } from '@phosphor-icons/react';
 import { CollapsibleSearch } from '@/components/ui/collapsible-search';
 import { SearchSuggestions } from '@/components/ui/search-suggestions';
 import { cn } from '@/lib/utils';
@@ -173,6 +174,15 @@ export function ModeClassBar({
               })}
             </div>
           </div>
+
+          <Link
+            href="/play/achievements"
+            className={cn(controlBase, inactiveControl, 'flex-shrink-0 min-w-11 sm:min-w-12')}
+            aria-label="Saavutukset"
+          >
+            <Trophy size={18} weight="duotone" />
+            <span className="hidden lg:inline">Saavutukset</span>
+          </Link>
 
           <div
             className={cn(

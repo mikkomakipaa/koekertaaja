@@ -54,6 +54,7 @@ export function TestQuestionsTab({
     { value: 'all', label: 'Kaikki', icon: <ListBullets size={14} weight="duotone" /> },
     { value: 'flashcard', label: 'Kortti', icon: <Article size={14} weight="duotone" /> },
     { value: 'multiple_choice', label: 'Monivalinta', icon: <ListChecks size={14} weight="duotone" /> },
+    { value: 'multiple_select', label: 'Valitse useita', icon: <ListChecks size={14} weight="duotone" /> },
     { value: 'fill_blank', label: 'Täytä', icon: <TextT size={14} weight="duotone" /> },
     { value: 'true_false', label: 'Tosi/Epä', icon: <CheckCircle size={14} weight="duotone" /> },
     { value: 'matching', label: 'Yhdistä', icon: <Shuffle size={14} weight="duotone" /> },
@@ -120,6 +121,7 @@ export function TestQuestionsTab({
     const typeMap: Record<QuestionType, { label: string; icon: React.ReactElement }> = {
       fill_blank: { label: 'Täydennä lause', icon: <TextT size={14} weight="duotone" /> },
       multiple_choice: { label: 'Monivalinta', icon: <ListChecks size={14} weight="duotone" /> },
+      multiple_select: { label: 'Valitse useita', icon: <ListChecks size={14} weight="duotone" /> },
       true_false: { label: 'Totta vai tarua', icon: <CheckCircle size={14} weight="duotone" /> },
       matching: { label: 'Yhdistä parit', icon: <Shuffle size={14} weight="duotone" /> },
       short_answer: { label: 'Lyhyt vastaus', icon: <ChatText size={14} weight="duotone" /> },

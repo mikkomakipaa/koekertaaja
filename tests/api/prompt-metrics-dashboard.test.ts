@@ -25,7 +25,7 @@ const metrics: PromptMetricRow[] = [
     mode: 'quiz',
     question_count_requested: 20,
     provider: 'anthropic',
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-6-20250514',
     prompt_version: { 'core/format': '2.0.0' },
     question_count_generated: 20,
     question_count_valid: 20,

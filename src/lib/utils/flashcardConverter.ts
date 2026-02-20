@@ -3,6 +3,7 @@ import {
   Flashcard,
   FlashcardCompatibleQuestion,
   MultipleChoiceQuestion,
+  MultipleSelectQuestion,
   FlashcardQuestion,
   FillBlankQuestion,
   TrueFalseQuestion,
@@ -48,6 +49,9 @@ function formatAnswer(question: FlashcardCompatibleQuestion): string {
     case 'multiple_choice':
       return formatMultipleChoiceAnswer(question as MultipleChoiceQuestion);
 
+    case 'multiple_select':
+      return formatMultipleSelectAnswer(question as MultipleSelectQuestion);
+
     case 'flashcard':
       return formatFlashcardAnswer(question as FlashcardQuestion);
 
@@ -77,6 +81,10 @@ function formatFlashcardAnswer(question: FlashcardQuestion): string {
  */
 function formatMultipleChoiceAnswer(question: MultipleChoiceQuestion): string {
   return appendSmartAlternatives(question.correct_answer);
+}
+
+function formatMultipleSelectAnswer(question: MultipleSelectQuestion): string {
+  return question.correct_answers.join(', ');
 }
 
 /**

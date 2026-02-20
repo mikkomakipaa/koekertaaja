@@ -53,7 +53,7 @@ test('generateQuestions uses generateWithAI and preserves response parsing/valid
   );
 
   assert.equal(capturedOptions?.provider, 'anthropic');
-  assert.equal(capturedOptions?.model, 'claude-sonnet-4-5-20250929');
+  assert.equal(capturedOptions?.model, 'claude-sonnet-4-6-20250514');
   assert.equal(capturedMessageCount, 1);
   assert.match(capturedPromptText, /JSON-VASTAUSMUOTO/i);
   assert.match(capturedPromptText, /Palauta vain JSON-taulukko/i);
