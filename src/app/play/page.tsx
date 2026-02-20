@@ -416,7 +416,7 @@ function PlayBrowsePageSkeleton() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-4xl p-6 md:p-12">
+      <div className="mx-auto max-w-4xl px-4 pb-10 pt-4 md:p-12">
         <div className="mb-10">
           <Skeleton className="mb-2 h-9 w-64" />
           <Skeleton className="h-6 w-80 md:w-96" />
@@ -686,7 +686,7 @@ function PlayBrowsePageContent() {
         scrolled={scrolled}
       />
 
-      <div className="mx-auto max-w-4xl p-6 md:p-12">
+      <div className="mx-auto max-w-4xl px-4 pb-10 pt-4 md:p-12">
         <div className="mb-5 hidden sm:block">
           <div className="mb-1.5 flex items-center gap-2">
             <BookOpenText size={28} weight="duotone" className="text-indigo-600 dark:text-indigo-400" />

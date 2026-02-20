@@ -101,8 +101,8 @@ export function ModeClassBar({
         className
       )}
     >
-      <div className="mx-auto max-w-4xl px-3 py-4 sm:px-4">
-        <div className="flex min-w-0 items-center gap-2.5 py-0.5">
+      <div className="mx-auto max-w-4xl px-3 py-3 sm:px-4 sm:py-4">
+        <div className="flex min-w-0 items-center gap-2">
           <div
             role="radiogroup"
             aria-label="Opiskelutila"
@@ -218,11 +218,11 @@ export function ModeClassBar({
           </div>
         </div>
 
-        <div className="mt-3">
+        <div className="mt-2 sm:mt-3">
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-2 rounded-md px-1 py-1 text-base font-semibold tracking-tight text-slate-700 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-300 dark:hover:text-slate-100 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
+            className="inline-flex items-center gap-2 rounded-md px-1 py-1 text-sm font-semibold tracking-tight text-slate-700 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:text-base dark:text-slate-300 dark:hover:text-slate-100 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
           >
             <ArrowLeft size={18} weight="regular" aria-hidden="true" />
             Palaa alkuun
