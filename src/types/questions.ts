@@ -270,6 +270,7 @@ export type BadgeId =
   | '10_sessions'
   | '25_sessions'
   | 'perfect_score'
+  | 'nopea_tarkka'
   | 'beat_personal_best'
   | 'speed_demon'
   | 'tried_both_levels'

@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildQuestionDetails, getResultsBreakdown, toggleQuestionExpanded } from '@/lib/play/results-screen';
+import {
+  buildQuestionDetails,
+  getCelebrationQueue,
+  getNextCelebration,
+  getResultsBreakdown,
+  isPerfectScoreSession,
+  toggleQuestionExpanded
+} from '@/lib/play/results-screen';
 import type { Answer } from '@/types';
 
 const answers: Answer[] = [
@@ -64,5 +71,96 @@ describe('ResultsScreen', () => {
     assert.equal(toggleQuestionExpanded(null, 'q1'), 'q1');
     assert.equal(toggleQuestionExpanded('q1', 'q1'), null);
     assert.equal(toggleQuestionExpanded('q1', 'q2'), 'q2');
+  });
+
+  it('detects perfect score only when no questions are skipped', () => {
+    assert.equal(
+      isPerfectScoreSession({ score: 10, total: 10, skippedQuestions: [] }),
+      true
+    );
+    assert.equal(
+      isPerfectScoreSession({ score: 10, total: 10, skippedQuestions: ['q1'] }),
+      false
+    );
+    assert.equal(
+      isPerfectScoreSession({ score: 9, total: 10, skippedQuestions: [] }),
+      false
+    );
+  });
+
+  it('builds celebration queue in deterministic order', () => {
+    const queue = getCelebrationQueue({
+      score: 10,
+      total: 10,
+      skippedQuestions: [],
+      questionSetCode: 'ABC123',
+      allBadgesUnlocked: true,
+      hasCelebratedPerfect: false,
+      hasCelebratedAllBadges: false,
+    });
+
+    assert.deepEqual(queue, ['perfect-score', 'all-badges']);
+  });
+
+  it('does not add perfect-score celebration when question set code is missing', () => {
+    const queue = getCelebrationQueue({
+      score: 10,
+      total: 10,
+      skippedQuestions: [],
+      allBadgesUnlocked: false,
+      hasCelebratedPerfect: false,
+      hasCelebratedAllBadges: false,
+    });
+
+    assert.deepEqual(queue, []);
+  });
+
+  it('adds all-badges celebration independently when perfect-score requirements are not met', () => {
+    const queue = getCelebrationQueue({
+      score: 9,
+      total: 10,
+      skippedQuestions: [],
+      questionSetCode: 'ABC123',
+      allBadgesUnlocked: true,
+      hasCelebratedPerfect: false,
+      hasCelebratedAllBadges: false,
+    });
+
+    assert.deepEqual(queue, ['all-badges']);
+  });
+
+  it('skips celebrations when already celebrated or requirements are not met', () => {
+    assert.deepEqual(
+      getCelebrationQueue({
+        score: 10,
+        total: 10,
+        skippedQuestions: ['q1'],
+        questionSetCode: 'ABC123',
+        allBadgesUnlocked: false,
+        hasCelebratedPerfect: false,
+        hasCelebratedAllBadges: false,
+      }),
+      []
+    );
+
+    assert.deepEqual(
+      getCelebrationQueue({
+        score: 10,
+        total: 10,
+        skippedQuestions: [],
+        questionSetCode: 'ABC123',
+        allBadgesUnlocked: true,
+        hasCelebratedPerfect: true,
+        hasCelebratedAllBadges: true,
+      }),
+      []
+    );
+  });
+
+  it('returns next celebration from queue progression', () => {
+    const queue = ['perfect-score', 'all-badges'] as const;
+    assert.equal(getNextCelebration([...queue], 'perfect-score'), 'all-badges');
+    assert.equal(getNextCelebration([...queue], 'all-badges'), null);
+    assert.equal(getNextCelebration([...queue], null), null);
   });
 });

@@ -799,6 +799,7 @@ export default function PlayPage() {
         totalPoints={totalPoints}
         bestStreak={bestStreak}
         questionSetCode={code}
+        questionSetName={questionSet?.name}
         difficulty={isAikahaaste ? 'aikahaaste' : questionSet?.difficulty}
         durationSeconds={durationSeconds}
         mode={isFlashcardMode ? 'flashcard' : 'quiz'}

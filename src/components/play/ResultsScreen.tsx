@@ -10,7 +10,22 @@ import { useBadges } from '@/hooks/useBadges';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
 import { cn } from '@/lib/utils';
-import { buildQuestionDetails, getResultsBreakdown, type QuestionDetailStatus, toggleQuestionExpanded } from '@/lib/play/results-screen';
+import {
+  buildQuestionDetails,
+  getCelebrationQueue,
+  getNextCelebration,
+  getResultsBreakdown,
+  type CelebrationType,
+  type QuestionDetailStatus,
+  toggleQuestionExpanded
+} from '@/lib/play/results-screen';
+import { CelebrationModal } from '@/components/celebrations/CelebrationModal';
+import {
+  hasCelebratedAllBadges,
+  hasCelebratedPerfectScore,
+  markAllBadgesCelebrated,
+  markPerfectScoreCelebrated,
+} from '@/lib/utils/celebrations';
 import { CheckCircle, XCircle, Medal, ArrowCounterClockwise, X, ArrowRight } from '@phosphor-icons/react';
 import {
   DiamondsFour,
@@ -21,6 +36,7 @@ import {
   ThumbsUp,
   Barbell,
   Target,
+  Trophy,
   Rocket,
   Lightning,
   Palette,
@@ -36,6 +52,7 @@ interface ResultsScreenProps {
   bestStreak: number;
   skippedQuestions?: string[];
   questionSetCode?: string;
+  questionSetName?: string;
   difficulty?: string;
   durationSeconds?: number;
   mode?: 'quiz' | 'flashcard';
@@ -152,6 +169,7 @@ export function ResultsScreen({
   bestStreak,
   skippedQuestions,
   questionSetCode,
+  questionSetName,
   difficulty,
   durationSeconds,
   mode = 'quiz',
@@ -174,7 +192,10 @@ export function ResultsScreen({
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [showAllAnswers, setShowAllAnswers] = useState(false);
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
+  const [showCelebration, setShowCelebration] = useState<CelebrationType | null>(null);
+  const [celebrationQueue, setCelebrationQueue] = useState<CelebrationType[]>([]);
   const hasRecordedRef = useRef(false);
+  const celebrationTimeoutRef = useRef<number | null>(null);
   const sessionMistakeCount = answers.filter(answer => !answer.isCorrect).length;
   const { skippedCount, correctCount, wrongCount } = getResultsBreakdown(answers, skippedQuestions);
   const questionDetails = buildQuestionDetails(answers, skippedQuestions);
@@ -219,6 +240,68 @@ export function ResultsScreen({
     totalPoints,
     updatePersonalBest,
   ]);
+
+  useEffect(() => {
+    if (badges.length === 0) {
+      return;
+    }
+
+    const allBadgesUnlocked = badges.every((badge) => badge.unlocked);
+    const shouldCelebratePerfectScore = questionSetCode ? hasCelebratedPerfectScore(questionSetCode) : true;
+    const celebrations = getCelebrationQueue({
+      score,
+      total,
+      skippedQuestions,
+      questionSetCode,
+      allBadgesUnlocked,
+      hasCelebratedPerfect: shouldCelebratePerfectScore,
+      hasCelebratedAllBadges: hasCelebratedAllBadges(),
+    });
+
+    if (celebrations.length === 0) {
+      return;
+    }
+
+    if (celebrations.includes('perfect-score') && questionSetCode) {
+      try {
+        markPerfectScoreCelebrated(questionSetCode);
+      } catch (error) {
+        console.warn('Could not save celebration state:', error);
+      }
+    }
+
+    if (celebrations.includes('all-badges')) {
+      try {
+        markAllBadgesCelebrated();
+      } catch (error) {
+        console.warn('Could not save celebration state:', error);
+      }
+    }
+
+    setCelebrationQueue(celebrations);
+    setShowCelebration(celebrations[0] ?? null);
+  }, [badges, questionSetCode, score, skippedQuestions, total]);
+
+  useEffect(() => {
+    return () => {
+      if (celebrationTimeoutRef.current !== null) {
+        window.clearTimeout(celebrationTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCelebrationClose = () => {
+    const nextCelebration = getNextCelebration(celebrationQueue, showCelebration);
+    if (!nextCelebration) {
+      setShowCelebration(null);
+      setCelebrationQueue([]);
+      return;
+    }
+
+    celebrationTimeoutRef.current = window.setTimeout(() => {
+      setShowCelebration(nextCelebration);
+    }, 300);
+  };
 
 
   // Determine celebration level
@@ -267,8 +350,9 @@ export function ResultsScreen({
       first_session: <Sparkle size={size} weight="fill" className="inline" />,
       '5_sessions': <Fire size={size} weight="duotone" className="inline" />,
       '10_sessions': <Barbell size={size} weight="bold" className="inline" />,
-      '25_sessions': <Target size={size} weight="duotone" className="inline" />,
+      '25_sessions': <Trophy size={size} weight="duotone" className="inline" />,
       perfect_score: <Star size={size} weight="fill" className="inline" />,
+      nopea_tarkka: <Target size={size} weight="duotone" className="inline" />,
       beat_personal_best: <Rocket size={size} weight="duotone" className="inline" />,
       speed_demon: <Lightning size={size} weight="fill" className="inline" />,
       tried_both_levels: <Palette size={size} weight="duotone" className="inline" />,
@@ -290,7 +374,7 @@ export function ResultsScreen({
       };
     }
     // Performance badges (Amber - challenge)
-    if (['perfect_score', 'beat_personal_best'].includes(badgeId)) {
+    if (['perfect_score', 'nopea_tarkka', 'beat_personal_best'].includes(badgeId)) {
       return {
         light: 'from-amber-50 to-amber-100 border-amber-500',
         dark: 'dark:from-amber-900/30 dark:to-amber-800/20 dark:border-amber-600',
@@ -688,6 +772,14 @@ export function ResultsScreen({
           </div>
         </div>
       </div>
+      {showCelebration && (
+        <CelebrationModal
+          type={showCelebration}
+          onClose={handleCelebrationClose}
+          questionSetName={showCelebration === 'perfect-score' ? questionSetName : undefined}
+          badges={showCelebration === 'all-badges' ? badges.filter((badge) => badge.unlocked) : undefined}
+        />
+      )}
     </div>
   );
 }

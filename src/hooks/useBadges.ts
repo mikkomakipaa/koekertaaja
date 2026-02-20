@@ -28,6 +28,33 @@ interface StoredBadgeData {
   stats: BadgeStats;
 }
 
+const MONIPUOLINEN_REQUIRED_MODES = ['helppo', 'normaali', 'aikahaaste'] as const;
+
+export function hasUnlockedMonipuolinen(levelsPlayed: string[]): boolean {
+  return MONIPUOLINEN_REQUIRED_MODES.every((mode) => levelsPlayed.includes(mode));
+}
+
+export function hasUnlockedHuippupisteet(params: {
+  totalPoints: number;
+  previousPersonalBest: number;
+}): boolean {
+  const { totalPoints, previousPersonalBest } = params;
+  return totalPoints > 0 && totalPoints >= previousPersonalBest;
+}
+
+export function hasUnlockedNopeaJaTarkka(params: {
+  difficulty?: string;
+  score: number;
+  totalQuestions: number;
+}): boolean {
+  const { difficulty, score, totalQuestions } = params;
+  return difficulty === 'aikahaaste' && score === totalQuestions && totalQuestions === 10;
+}
+
+export function getBadgeDefinitionCount(): number {
+  return Object.keys(BADGE_DEFINITIONS).length;
+}
+
 const BADGE_DEFINITIONS: Record<BadgeId, Omit<Badge, 'unlocked' | 'unlockedAt'>> = {
   first_session: {
     id: 'first_session',
@@ -54,7 +81,7 @@ const BADGE_DEFINITIONS: Record<BadgeId, Omit<Badge, 'unlocked' | 'unlockedAt'>>
     id: '25_sessions',
     name: 'Mestari',
     description: 'Suorita 25 harjoituskierrosta',
-    emoji: '🎯',
+    emoji: '🏆',
     unlockConditions: ['Suorita 25 harjoitussessiota'],
   },
   perfect_score: {
@@ -64,14 +91,21 @@ const BADGE_DEFINITIONS: Record<BadgeId, Omit<Badge, 'unlocked' | 'unlockedAt'>>
     emoji: '⭐',
     unlockConditions: ['Saa 100% pisteistä yhdessä sessiossa'],
   },
+  nopea_tarkka: {
+    id: 'nopea_tarkka',
+    name: 'Nopea ja tarkka',
+    description: 'Saa 100% Aikahaaste-tilassa',
+    emoji: '🎯',
+    unlockConditions: ['Saa kaikki 10 kysymystä oikein Aikahaaste-tilassa'],
+  },
   beat_personal_best: {
     id: 'beat_personal_best',
     name: 'Huippupisteet',
-    description: 'Päihitä henkilökohtainen ennätyksesi',
+    description: 'Saavuta henkilökohtainen ennätyksesi',
     emoji: '🚀',
     unlockConditions: [
-      'Saa enemmän pisteitä kuin aiempi ennätyksesi',
-      'Vaatii vähintään 2 suoritettua sessiota',
+      'Saa vähintään henkilökohtaisen ennätyksesi verran pisteitä',
+      'Myös tasatulos avaa merkin',
     ],
   },
   speed_demon: {
@@ -84,9 +118,9 @@ const BADGE_DEFINITIONS: Record<BadgeId, Omit<Badge, 'unlocked' | 'unlockedAt'>>
   tried_both_levels: {
     id: 'tried_both_levels',
     name: 'Monipuolinen',
-    description: 'Kokeile molempia vaikeustasoja',
+    description: 'Kokeile kaikkia kolmea pelimuotoa',
     emoji: '🎪',
-    unlockConditions: ['Kokeile molempia vaikeustasoja (Helppo ja Normaali)'],
+    unlockConditions: ['Kokeile kaikkia pelimuotoja (Helppo, Normaali ja Aikahaaste)'],
   },
   streak_3: {
     id: 'streak_3',
@@ -232,8 +266,13 @@ export function useBadges(questionSetCode?: string) {
     // Perfect score
     if (score === totalQuestions) newBadges.push('perfect_score');
 
+    // Nopea ja tarkka: Perfect score in Aikahaaste mode
+    if (hasUnlockedNopeaJaTarkka({ difficulty, score, totalQuestions })) {
+      newBadges.push('nopea_tarkka');
+    }
+
     // Beat personal best
-    if (totalPoints > stats.personalBest && stats.personalBest > 0) {
+    if (hasUnlockedHuippupisteet({ totalPoints, previousPersonalBest: stats.personalBest })) {
       newBadges.push('beat_personal_best');
     }
 
@@ -242,8 +281,8 @@ export function useBadges(questionSetCode?: string) {
       newBadges.push('speed_demon');
     }
 
-    // Tried both levels
-    if (newStats.levelsPlayed.length >= 2) {
+    // Monipuolinen: require all three play modes.
+    if (hasUnlockedMonipuolinen(newStats.levelsPlayed)) {
       newBadges.push('tried_both_levels');
     }
 
