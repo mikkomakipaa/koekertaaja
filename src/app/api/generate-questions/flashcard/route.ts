@@ -13,6 +13,7 @@ import {
 import { getSimpleTopics } from '@/lib/ai/topicIdentifier';
 import { analyzeMaterialCapacity, validateQuestionCount } from '@/lib/utils/materialAnalysis';
 import { parseRequestedProvider, validateRequestedProvider } from '@/lib/api/modelSelection';
+import { getDefaultFlashcardContentType, isLanguageSubject } from '@/lib/utils/subjectClassification';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 240; // 4 minutes for flashcard generation
@@ -39,7 +40,29 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
-    const contentType = (formData.get('contentType') as string | null) || 'vocabulary';
+
+    // Extract subject info early to determine content type default
+    const rawSubject = formData.get('subject') as string;
+    const rawSubjectType = (formData.get('subjectType') as string | null) || undefined;
+    const rawContentType = formData.get('contentType') as string | null;
+
+    // Detect language subjects for flashcard content type defaulting
+    const languageSubject = isLanguageSubject(rawSubject || '', rawSubjectType);
+
+    // For language subjects, default to 'grammar' for flashcards (not 'vocabulary')
+    const contentType = rawContentType || getDefaultFlashcardContentType(rawSubject || '', rawSubjectType);
+
+    logger.info(
+      {
+        subject: rawSubject,
+        subjectType: rawSubjectType,
+        contentType,
+        isLanguageSubject: languageSubject,
+        wasExplicit: !!rawContentType,
+      },
+      'Flashcard contentType determined'
+    );
+
     const bypassCapacityCheckRaw = (formData.get('bypassCapacityCheck') as string | null)?.toLowerCase();
     const bypassCapacityCheck = bypassCapacityCheckRaw === 'true' || bypassCapacityCheckRaw === '1';
     const capacityCheckOnlyRaw = (formData.get('capacityCheckOnly') as string | null)?.toLowerCase();
@@ -101,6 +124,28 @@ export async function POST(request: NextRequest) {
       contentType: validatedContentType,
     } = validationResult.data;
 
+    // Block vocabulary flashcards for language subjects
+    if (languageSubject && validatedContentType === 'vocabulary') {
+      logger.warn(
+        { subject, contentType: validatedContentType },
+        'Vocabulary flashcards blocked for language subject'
+      );
+
+      return NextResponse.json(
+        {
+          error: 'Vocabulary flashcards not supported for language subjects',
+          message: 'Sanasto-flashcardeja ei tueta kieliaineille. Käytä kielioppi-flashcardeja tai quiz-muotoa sanastolle.',
+          suggestion: {
+            useQuizForVocabulary: 'Luo quiz-muotoinen kysymyssarja sanastosta (monivalintakysymykset toimivat paremmin)',
+            useGrammarForFlashcards: 'Käytä flashcardeja kielioppisääntöjen opetteluun (contentType: \'grammar\')',
+          },
+          allowedContentTypes: ['grammar', 'mixed'],
+          rejectedContentType: 'vocabulary',
+        },
+        { status: 400 }
+      );
+    }
+
     // Process uploaded files
     const { files, error: fileError } = await processUploadedFiles(formData);
     if (fileError) {
@@ -146,7 +191,9 @@ export async function POST(request: NextRequest) {
               'Lisää kielioppisääntöjen selityksiä materiaaliin',
               'Varmista että materiaali sisältää "Miten muodostetaan..." tai "Mikä on..." -muotoisia selityksiä',
               'Lataa PDF tai kuva-tiedosto jossa on sääntöjen selityksiä',
-              'Jos materiaali sisältää vain sanoja, valitse "Sanasto" sisällön tyyppinä',
+              languageSubject
+                ? 'Jos materiaali sisältää vain sanalistoja, käytä quiz-muotoa sanaston harjoitteluun'
+                : 'Jos materiaali sisältää vain sanoja, valitse "Sanasto" sisällön tyyppinä',
             ],
           },
           { status: 400 }

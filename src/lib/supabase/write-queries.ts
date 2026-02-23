@@ -374,3 +374,68 @@ export async function deleteQuestionSet(questionSetId: string): Promise<boolean>
 
   return true;
 }
+
+/**
+ * Delete all questions with a specific topic (or null topic) from a question set
+ * Updates question_sets.question_count after deletion
+ */
+export async function deleteQuestionsByTopic(
+  questionSetId: string,
+  topic: string | null
+): Promise<{ deletedCount: number; newQuestionCount: number } | null> {
+  const supabaseAdmin = getSupabaseAdmin();
+
+  // Delete questions matching topic
+  let deleteQuery = supabaseAdmin
+    .from('questions')
+    .delete({ count: 'exact' })
+    .eq('question_set_id', questionSetId);
+
+  if (topic === null) {
+    deleteQuery = deleteQuery.is('topic', null);
+  } else {
+    deleteQuery = deleteQuery.eq('topic', topic);
+  }
+
+  const { count: deletedCount, error: deleteError } = await deleteQuery;
+
+  if (deleteError) {
+    logger.error(
+      { error: deleteError, questionSetId, topic },
+      'Error deleting questions by topic'
+    );
+    return null;
+  }
+
+  // Get new question count
+  const { count: newQuestionCount, error: countError } = await supabaseAdmin
+    .from('questions')
+    .select('*', { count: 'exact', head: true })
+    .eq('question_set_id', questionSetId);
+
+  if (countError) {
+    logger.error(
+      { error: countError, questionSetId },
+      'Error counting questions after topic deletion'
+    );
+    return null;
+  }
+
+  const finalCount = newQuestionCount ?? 0;
+
+  // Update question_sets.question_count
+  const { error: updateError } = await supabaseAdmin
+    .from('question_sets')
+    .update({ question_count: finalCount })
+    .eq('id', questionSetId);
+
+  if (updateError) {
+    logger.error(
+      { error: updateError, questionSetId, finalCount },
+      'Error updating question_count after topic deletion'
+    );
+    return null;
+  }
+
+  return { deletedCount: deletedCount ?? 0, newQuestionCount: finalCount };
+}

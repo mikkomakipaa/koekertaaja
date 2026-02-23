@@ -45,7 +45,9 @@ import {
   PencilSimple,
   X,
   Cpu,
-  SignOut
+  SignOut,
+  CaretDown,
+  CaretUp,
 } from '@phosphor-icons/react';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { CreationProgressStepper } from '@/components/create/CreationProgressStepper';
@@ -73,6 +75,7 @@ type CreationStep = {
 
 interface QuestionSetWithDistribution extends QuestionSet {
   type_distribution?: Record<string, number>;
+  topic_distribution?: Record<string, number>;
 }
 
 interface QuestionGenerationResponse {
@@ -205,6 +208,8 @@ export default function CreatePage() {
   const [loadingQuestionSets, setLoadingQuestionSets] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [expandedTopicSets, setExpandedTopicSets] = useState<Set<string>>(new Set());
+  const [deletingTopic, setDeletingTopic] = useState<{ setId: string; topic: string | null } | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [flaggedQuestions, setFlaggedQuestions] = useState<FlaggedQuestion[]>([]);
   const [loadingFlags, setLoadingFlags] = useState(false);
@@ -216,6 +221,8 @@ export default function CreatePage() {
   const [editOptions, setEditOptions] = useState('');
   const [editAcceptableAnswers, setEditAcceptableAnswers] = useState('');
   const [editTrueFalse, setEditTrueFalse] = useState<'true' | 'false'>('true');
+  const [editMatchingPairs, setEditMatchingPairs] = useState<Array<{ left: string; right: string }>>([]);
+  const [editSequentialItems, setEditSequentialItems] = useState<string[]>([]);
   const [editError, setEditError] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -825,6 +832,8 @@ export default function CreatePage() {
     setEditCorrectAnswer('');
     setEditOptions('');
     setEditAcceptableAnswers('');
+    setEditMatchingPairs([]);
+    setEditSequentialItems([]);
 
     switch (flag.questionType) {
       case 'multiple_choice': {
@@ -842,7 +851,8 @@ export default function CreatePage() {
         setEditAcceptableAnswers(formatListForEdit(flag.options));
         break;
       }
-      case 'short_answer': {
+      case 'short_answer':
+      case 'flashcard': {
         setEditCorrectAnswer(typeof flag.correctAnswer === 'string' ? flag.correctAnswer : '');
         setEditAcceptableAnswers(formatListForEdit(flag.options));
         break;
@@ -852,11 +862,28 @@ export default function CreatePage() {
         break;
       }
       case 'matching': {
-        setEditCorrectAnswer(JSON.stringify(flag.correctAnswer ?? [], null, 2));
+        const rawPairs = Array.isArray(flag.correctAnswer) ? flag.correctAnswer : [];
+        const pairs = rawPairs.map((p: any) => ({
+          left: String(p?.left ?? ''),
+          right: String(p?.right ?? ''),
+        }));
+        setEditMatchingPairs(pairs.length > 0 ? pairs : [{ left: '', right: '' }]);
         break;
       }
       case 'sequential': {
-        setEditCorrectAnswer(JSON.stringify(flag.correctAnswer ?? { items: [], correct_order: [] }, null, 2));
+        const raw = flag.correctAnswer ?? { items: [], correct_order: [] };
+        const items: any[] = raw.items ?? [];
+        const correctOrder: number[] = raw.correct_order ?? [];
+        let orderedItems: string[];
+        if (correctOrder.length === items.length && correctOrder.length > 0) {
+          orderedItems = correctOrder.map((idx) => {
+            const item = items[idx];
+            return typeof item === 'string' ? item : (item?.text ?? '');
+          });
+        } else {
+          orderedItems = items.map((item) => (typeof item === 'string' ? item : (item?.text ?? '')));
+        }
+        setEditSequentialItems(orderedItems.length > 0 ? orderedItems : ['']);
         break;
       }
       case 'map': {
@@ -936,7 +963,8 @@ export default function CreatePage() {
           break;
         }
         case 'fill_blank':
-        case 'short_answer': {
+        case 'short_answer':
+        case 'flashcard': {
           if (!editCorrectAnswer.trim()) {
             failEdit('Anna oikea vastaus.');
             return;
@@ -956,21 +984,31 @@ export default function CreatePage() {
           };
           break;
         }
-        case 'matching':
+        case 'matching': {
+          const validPairs = editMatchingPairs.filter((p) => p.left.trim() && p.right.trim());
+          if (validPairs.length === 0) {
+            failEdit('Anna vähintään yksi pari.');
+            return;
+          }
+          payload = {
+            ...payload,
+            correctAnswer: validPairs.map((p) => ({ left: p.left.trim(), right: p.right.trim() })),
+          };
+          break;
+        }
         case 'sequential': {
-          if (!editCorrectAnswer.trim()) {
-            failEdit('Anna oikea vastaus JSON-muodossa.');
+          const validItems = editSequentialItems.filter((i) => i.trim());
+          if (validItems.length === 0) {
+            failEdit('Anna vähintään yksi järjestettävä kohde.');
             return;
           }
-          try {
-            payload = {
-              ...payload,
-              correctAnswer: parseJsonInput(editCorrectAnswer),
-            };
-          } catch (error) {
-            failEdit('Virheellinen JSON oikeassa vastauksessa.');
-            return;
-          }
+          payload = {
+            ...payload,
+            correctAnswer: {
+              items: validItems.map((i) => i.trim()),
+              correct_order: validItems.map((_, idx) => idx),
+            },
+          };
           break;
         }
         case 'map': {
@@ -1170,6 +1208,42 @@ export default function CreatePage() {
     }
   };
 
+  const handleDeleteByTopic = async (
+    setId: string,
+    topicKey: string,
+    topicLabel: string,
+    count: number
+  ) => {
+    const topic = topicKey === '__null__' ? null : topicKey;
+    if (!confirm(`Poistetaan ${count} kysymystä aiheesta "${topicLabel}". Tätä ei voi peruuttaa.`)) {
+      return;
+    }
+
+    setDeletingTopic({ setId, topic });
+    try {
+      const response = await fetch('/api/questions/delete-by-topic', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ questionSetId: setId, topic }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Aiheen kysymysten poistaminen epäonnistui');
+      }
+
+      await loadQuestionSets();
+    } catch (error) {
+      logger.error({ error }, 'Error deleting questions by topic');
+      const errorMessage = error instanceof Error ? error.message : 'Aiheen kysymysten poistaminen epäonnistui';
+      alert(`Virhe: ${errorMessage}`);
+    } finally {
+      setDeletingTopic(null);
+    }
+  };
+
   const handleExtendSet = async () => {
     // Validation
     if (!selectedSetToExtend) {
@@ -1249,17 +1323,17 @@ export default function CreatePage() {
   }, [requiresGrade]);
 
   useEffect(() => {
-    if (generationMode !== 'flashcard') {
-      setContentType('vocabulary');
-    }
-  }, [generationMode]);
-
-  useEffect(() => {
     const selectedSubject = getSubjectById(subject);
-    if (!selectedSubject?.supportsGrammar) {
+
+    if (generationMode === 'quiz' || !selectedSubject?.supportsGrammar) {
       setContentType('vocabulary');
+      return;
     }
-  }, [subject]);
+
+    if (selectedSubject.type === 'language' && contentType === 'vocabulary') {
+      setContentType('grammar');
+    }
+  }, [generationMode, subject, contentType]);
 
   const validationCoverage = editingFlag
     ? analyzeValidationCoverage({
@@ -1590,6 +1664,7 @@ export default function CreatePage() {
             {/* Content Type Selector (language flashcards) */}
             {generationMode === 'flashcard' && subject && (() => {
               const selectedSubject = getSubjectById(subject);
+              const isLanguageSubject = selectedSubject?.type === 'language';
               return selectedSubject?.supportsGrammar ? (
                 <div className="border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/30 rounded-lg p-5">
                   <label className="block text-base font-semibold mb-3 text-slate-900 dark:text-slate-100">
@@ -1600,24 +1675,26 @@ export default function CreatePage() {
                   </label>
 
                   <div className="space-y-3">
-                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                      <input
-                        type="radio"
-                        name="contentType"
-                        value="vocabulary"
-                        checked={contentType === 'vocabulary'}
-                        onChange={() => setContentType('vocabulary')}
-                        className="mt-1 w-4 h-4 border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
-                      />
-                      <div className="flex-1">
-                        <div className="font-semibold text-slate-900 dark:text-slate-100">
-                          Sanasto
+                    {!isLanguageSubject && (
+                      <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <input
+                          type="radio"
+                          name="contentType"
+                          value="vocabulary"
+                          checked={contentType === 'vocabulary'}
+                          onChange={() => setContentType('vocabulary')}
+                          className="mt-1 w-4 h-4 border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <div className="flex-1">
+                          <div className="font-semibold text-slate-900 dark:text-slate-100">
+                            Sanasto
+                          </div>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            Sanojen käännökset, merkitykset, fraasit ja ilmaisut
+                          </p>
                         </div>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          Sanojen käännökset, merkitykset, fraasit ja ilmaisut
-                        </p>
-                      </div>
-                    </label>
+                      </label>
+                    )}
 
                     <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                       <input
@@ -1661,6 +1738,15 @@ export default function CreatePage() {
                     </label>
                   </div>
 
+                  {isLanguageSubject && (
+                    <Alert className="mt-4 border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/30">
+                      <AlertDescription className="text-sm text-amber-900 dark:text-amber-100">
+                        <strong>Kieliaineiden flashcardit ovat kielioppiin.</strong> Sanaston harjoitteluun käytä
+                        quiz-muotoa, jossa monivalintatehtävät toimivat paremmin.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
                   {contentType === 'grammar' && (
                     <Alert className="mt-4 border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/30">
                       <AlertDescription className="text-sm text-purple-900 dark:text-purple-100">
@@ -1671,7 +1757,9 @@ export default function CreatePage() {
                           <li>Vähintään 300 merkkiä tekstiä</li>
                         </ul>
                         <p className="mt-2 text-xs text-purple-800 dark:text-purple-200">
-                          Jos materiaali sisältää vain sanalistoja, valitse &quot;Sanasto&quot;.
+                          {isLanguageSubject
+                            ? 'Jos materiaali sisältää vain sanalistoja, valitse quiz-muoto.'
+                            : 'Jos materiaali sisältää vain sanalistoja, valitse "Sanasto".'}
                         </p>
                       </AlertDescription>
                     </Alert>
@@ -2040,6 +2128,54 @@ export default function CreatePage() {
                                     </div>
                                   );
                                 })()}
+                                {set.topic_distribution && Object.keys(set.topic_distribution).length > 0 && (
+                                  <>
+                                    <button
+                                      onClick={() => setExpandedTopicSets(prev => {
+                                        const next = new Set(prev);
+                                        next.has(set.id) ? next.delete(set.id) : next.add(set.id);
+                                        return next;
+                                      })}
+                                      className="mt-2 flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                                    >
+                                      <CaretDown weight="bold" className={cn("w-3 h-3 transition-transform", expandedTopicSets.has(set.id) && "rotate-180")} />
+                                      Hallinnoi aiheita ({Object.keys(set.topic_distribution).length} aihetta)
+                                    </button>
+
+                                    {expandedTopicSets.has(set.id) && (
+                                      <div className="mt-2 border-t border-slate-100 dark:border-slate-700 pt-2 space-y-1">
+                                        {Object.entries(set.topic_distribution)
+                                          .sort(([, a], [, b]) => b - a)
+                                          .map(([topicKey, count]) => {
+                                            const label = topicKey === '__null__' ? 'Ei aihetta' : topicKey;
+                                            const topicValue = topicKey === '__null__' ? null : topicKey;
+                                            const isDeleting = deletingTopic?.setId === set.id && deletingTopic?.topic === topicValue;
+                                            return (
+                                              <div key={topicKey} className="flex items-center justify-between text-sm">
+                                                <span className="text-slate-700 dark:text-slate-300">
+                                                  {label}
+                                                  <span className="ml-2 text-xs text-slate-400">{count} kys</span>
+                                                </span>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  disabled={isDeleting}
+                                                  onClick={() => handleDeleteByTopic(set.id, topicKey, label, count)}
+                                                  className="h-6 px-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                >
+                                                  {isDeleting ? (
+                                                    <CircleNotch weight="bold" className="w-3 h-3 animate-spin" />
+                                                  ) : (
+                                                    <Trash weight="duotone" className="w-3 h-3" />
+                                                  )}
+                                                </Button>
+                                              </div>
+                                            );
+                                          })}
+                                      </div>
+                                    )}
+                                  </>
+                                )}
                               </div>
                               <div className="flex gap-2 ml-4">
                                 <Button
@@ -2293,10 +2429,87 @@ export default function CreatePage() {
                           />
                         </div>
 
-                        {(editingFlag.questionType === 'multiple_choice' || editingFlag.questionType === 'multiple_select' || editingFlag.questionType === 'fill_blank' || editingFlag.questionType === 'short_answer') && (
+                        {/* multiple_choice: single correct answer + options list */}
+                        {editingFlag.questionType === 'multiple_choice' && (
+                          <>
+                            <div>
+                              <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                                Oikea vastaus
+                              </label>
+                              <Input
+                                value={editCorrectAnswer}
+                                onChange={(event) => setEditCorrectAnswer(event.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                                Vaihtoehdot (yksi per rivi)
+                              </label>
+                              <Textarea
+                                value={editOptions}
+                                onChange={(event) => setEditOptions(event.target.value)}
+                                className="min-h-[90px]"
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        {/* multiple_select: 2-3 correct answers + exactly 5 options */}
+                        {editingFlag.questionType === 'multiple_select' && (
+                          <>
+                            <div>
+                              <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                                Oikeat vastaukset (2–3, yksi per rivi)
+                              </label>
+                              <Textarea
+                                value={editCorrectAnswer}
+                                onChange={(event) => setEditCorrectAnswer(event.target.value)}
+                                className="min-h-[70px]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                                Vaihtoehdot (tasan 5, yksi per rivi)
+                              </label>
+                              <Textarea
+                                value={editOptions}
+                                onChange={(event) => setEditOptions(event.target.value)}
+                                className="min-h-[110px]"
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        {/* fill_blank / short_answer: primary answer + optional alternatives */}
+                        {(editingFlag.questionType === 'fill_blank' || editingFlag.questionType === 'short_answer') && (
+                          <>
+                            <div>
+                              <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                                Oikea vastaus
+                              </label>
+                              <Input
+                                value={editCorrectAnswer}
+                                onChange={(event) => setEditCorrectAnswer(event.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                                Hyväksyttävät vastaukset (valinnainen, yksi per rivi)
+                              </label>
+                              <Textarea
+                                value={editAcceptableAnswers}
+                                onChange={(event) => setEditAcceptableAnswers(event.target.value)}
+                                className="min-h-[70px]"
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        {/* flashcard: simple answer */}
+                        {editingFlag.questionType === 'flashcard' && (
                           <div>
                             <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                              {editingFlag.questionType === 'multiple_select' ? 'Oikeat vastaukset (2-3, yksi per rivi)' : 'Oikea vastaus'}
+                              Oikea vastaus
                             </label>
                             <Input
                               value={editCorrectAnswer}
@@ -2305,34 +2518,7 @@ export default function CreatePage() {
                           </div>
                         )}
 
-                        {(editingFlag.questionType === 'multiple_choice' || editingFlag.questionType === 'multiple_select') && (
-                          <div>
-                            <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                              {editingFlag.questionType === 'multiple_select'
-                                ? 'Vaihtoehdot (tasan 5, yksi per rivi tai pilkulla)'
-                                : 'Vaihtoehdot (yksi per rivi tai pilkulla)'}
-                            </label>
-                            <Textarea
-                              value={editOptions}
-                              onChange={(event) => setEditOptions(event.target.value)}
-                              className="min-h-[90px]"
-                            />
-                          </div>
-                        )}
-
-                        {(editingFlag.questionType === 'fill_blank' || editingFlag.questionType === 'short_answer') && (
-                          <div>
-                            <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                              Hyväksyttävät vastaukset (valinnainen, yksi per rivi)
-                            </label>
-                            <Textarea
-                              value={editAcceptableAnswers}
-                              onChange={(event) => setEditAcceptableAnswers(event.target.value)}
-                              className="min-h-[90px]"
-                            />
-                          </div>
-                        )}
-
+                        {/* true_false: dropdown */}
                         {editingFlag.questionType === 'true_false' && (
                           <div>
                             <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
@@ -2349,16 +2535,124 @@ export default function CreatePage() {
                           </div>
                         )}
 
-                        {(editingFlag.questionType === 'matching' || editingFlag.questionType === 'sequential') && (
+                        {/* matching: structured pair editor */}
+                        {editingFlag.questionType === 'matching' && (
                           <div>
                             <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                              Oikea vastaus (JSON)
+                              Parit (vasen → oikea)
                             </label>
-                            <Textarea
-                              value={editCorrectAnswer}
-                              onChange={(event) => setEditCorrectAnswer(event.target.value)}
-                              className="min-h-[140px] font-mono text-xs"
-                            />
+                            <div className="space-y-2">
+                              {editMatchingPairs.map((pair, idx) => (
+                                <div key={idx} className="flex gap-2 items-center">
+                                  <Input
+                                    value={pair.left}
+                                    onChange={(e) => {
+                                      const next = [...editMatchingPairs];
+                                      next[idx] = { ...next[idx], left: e.target.value };
+                                      setEditMatchingPairs(next);
+                                    }}
+                                    placeholder="Vasen"
+                                    className="flex-1"
+                                  />
+                                  <span className="text-slate-400 text-sm shrink-0">→</span>
+                                  <Input
+                                    value={pair.right}
+                                    onChange={(e) => {
+                                      const next = [...editMatchingPairs];
+                                      next[idx] = { ...next[idx], right: e.target.value };
+                                      setEditMatchingPairs(next);
+                                    }}
+                                    placeholder="Oikea"
+                                    className="flex-1"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditMatchingPairs((prev) => prev.filter((_, i) => i !== idx))}
+                                    disabled={editMatchingPairs.length <= 1}
+                                    className="text-red-400 hover:text-red-600 disabled:opacity-30 p-1 shrink-0"
+                                    aria-label="Poista pari"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setEditMatchingPairs((prev) => [...prev, { left: '', right: '' }])}
+                              className="mt-2 flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                            >
+                              <Plus size={12} /> Lisää pari
+                            </button>
+                          </div>
+                        )}
+
+                        {/* sequential: ordered list with up/down controls */}
+                        {editingFlag.questionType === 'sequential' && (
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                              Oikea järjestys (ylhäältä alas)
+                            </label>
+                            <div className="space-y-2">
+                              {editSequentialItems.map((item, idx) => (
+                                <div key={idx} className="flex gap-2 items-center">
+                                  <span className="text-xs text-slate-400 w-5 text-right shrink-0 tabular-nums">{idx + 1}.</span>
+                                  <Input
+                                    value={item}
+                                    onChange={(e) => {
+                                      const next = [...editSequentialItems];
+                                      next[idx] = e.target.value;
+                                      setEditSequentialItems(next);
+                                    }}
+                                    className="flex-1"
+                                  />
+                                  <div className="flex flex-col gap-0.5 shrink-0">
+                                    <button
+                                      type="button"
+                                      disabled={idx === 0}
+                                      onClick={() => {
+                                        const next = [...editSequentialItems];
+                                        [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+                                        setEditSequentialItems(next);
+                                      }}
+                                      className="text-slate-400 hover:text-slate-600 disabled:opacity-30 p-0.5"
+                                      aria-label="Siirrä ylös"
+                                    >
+                                      <CaretUp size={12} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={idx === editSequentialItems.length - 1}
+                                      onClick={() => {
+                                        const next = [...editSequentialItems];
+                                        [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+                                        setEditSequentialItems(next);
+                                      }}
+                                      className="text-slate-400 hover:text-slate-600 disabled:opacity-30 p-0.5"
+                                      aria-label="Siirrä alas"
+                                    >
+                                      <CaretDown size={12} />
+                                    </button>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditSequentialItems((prev) => prev.filter((_, i) => i !== idx))}
+                                    disabled={editSequentialItems.length <= 1}
+                                    className="text-red-400 hover:text-red-600 disabled:opacity-30 p-1 shrink-0"
+                                    aria-label="Poista kohde"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setEditSequentialItems((prev) => [...prev, ''])}
+                              className="mt-2 flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                            >
+                              <Plus size={12} /> Lisää kohde
+                            </button>
                           </div>
                         )}
 

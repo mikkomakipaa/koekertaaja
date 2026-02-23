@@ -143,12 +143,12 @@ export function ModeClassBar({
 
           <div
             className={cn(
-              'min-w-0 overflow-x-auto overflow-y-visible no-scrollbar sm:overflow-visible',
+              'flex-1 min-w-0 overflow-x-auto no-scrollbar',
               searchOpen && 'hidden sm:block'
             )}
             aria-label="Luokkasuodattimet"
           >
-            <div className="flex min-h-11 sm:min-h-12 flex-nowrap items-center gap-2">
+            <div className="flex min-h-11 sm:min-h-12 flex-nowrap items-center gap-1.5 sm:gap-2">
               {availableGrades.map((grade) => {
                 const colors = getGradeColors(grade);
                 const isActive = selectedGrade === grade;
@@ -177,7 +177,20 @@ export function ModeClassBar({
 
           <Link
             href="/play/achievements"
-            className={cn(controlBase, inactiveControl, 'flex-shrink-0 min-w-11 sm:min-w-12')}
+            className={cn(
+              // Base interactive styles
+              'inline-flex flex-shrink-0 items-center justify-center rounded-xl',
+              'transition-all duration-150 active:scale-[0.99]',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900',
+              // Square icon button on mobile/tablet — same as the search button
+              'h-11 sm:h-12 w-11 sm:w-12',
+              // On lg+ grow to show text label
+              'lg:w-auto lg:gap-2 lg:px-3 lg:py-2.5 lg:text-sm lg:font-semibold',
+              // Colors match the search button and mode-toggle pill (white bg, gray-200 border)
+              'border border-gray-200 bg-white text-gray-600 shadow-sm shadow-gray-200/50',
+              'hover:bg-gray-50 hover:text-gray-900',
+              'dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:shadow-black/20',
+            )}
             aria-label="Saavutukset"
           >
             <Trophy size={18} weight="duotone" />
@@ -186,8 +199,8 @@ export function ModeClassBar({
 
           <div
             className={cn(
-              'relative ml-auto flex min-w-0 items-center justify-end',
-              searchOpen ? 'flex-1 sm:flex-none' : 'flex-shrink-0'
+              'relative flex items-center',
+              searchOpen ? 'flex-1 sm:flex-shrink-0' : 'flex-shrink-0'
             )}
           >
             <div className={cn('relative', searchOpen && 'w-full sm:w-auto')}>

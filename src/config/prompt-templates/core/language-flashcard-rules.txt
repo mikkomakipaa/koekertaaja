@@ -7,7 +7,7 @@
 KIELIAINEIDEN FLASHCARD-LISÄSÄÄNNÖT (koskee kaikkia kieliä):
 
 TAVOITE:
-- Flashcard opettaa merkityksen, säännön tai rakenteen nopeasti.
+- Flashcard opettaa kielioppisäännön tai rakenteen nopeasti.
 - Käytä aina selkeää kysymys-vastaus-muotoa.
 
 PAKOLLINEN RAKENNE:
@@ -21,11 +21,33 @@ KIELLETTYÄ:
 - Mekaaninen koetehtävä ilman sääntöä tai merkitystä
 
 SALLITTU KYSYMYSTAPA:
-- "Mitä tarkoittaa ...?"
 - "Milloin käytetään ...?"
 - "Miten muodostetaan ...?"
 - "Mikä ero on ... ja ...?"
 
+KIELIAINEIDEN FLASHCARD-SISÄLTÖ (PAKOLLINEN):
+
+SALLITUT AIHEET (VAIN KIELIOPPI):
+- Aikamuodot ja verbin taivutus (tenses, conjugation)
+- Lauserakenteet (sentence structure)
+- Sijamuodot ja prepositiot (cases, prepositions)
+- Kielioppisäännöt ja poikkeukset (grammar rules, exceptions)
+- Eron selittäminen (explaining differences: in vs. on, a vs. an)
+
+KIELLETYT AIHEET (ÄLÄ LUO NÄISTÄ):
+- Sanastokortit ("Mitä tarkoittaa X?", "Käännä suomeksi Y")
+- Viestintätilanteet ilman kielioppisääntöä (tervehtiminen, esittäytyminen)
+- Kulttuuriaiheet ilman kielioppiyhteyttä (englanninkieliset maat, tavat)
+- Yksittäisten sanojen käännökset tai merkitykset
+
+OIKEA MUOTO:
+✅ "Milloin käytetään englannin present perfect -aikamuotoa?"
+   → Vastaus: Sääntö + esimerkki
+
+❌ "Mitä tarkoittaa 'beautiful'?"
+   → Tämä on sanastokysymys, kuuluu quiz-muotoon
+
 TOPIC-OHJAUS:
-- Kielioppiaiheissa vastaus kertoo säännön + esimerkin.
-- Sanastoaiheissa vastaus on selkeä käännös tai merkitys.
+- topic = kielioppiaihe (esim. "Verb Tenses", "Prepositiot")
+- skill = kielitaito (esim. "verb_conjugation", "sentence_structure")
+- ÄLÄ käytä topic = "Sanasto" tai "Matkustaminen" tai muita viestintätilanteita

@@ -5,6 +5,52 @@
  * (teaching rules/formulas) vs question-based format (testing facts).
  */
 
+export type FlashcardContentType = 'vocabulary' | 'grammar' | 'mixed';
+
+const LANGUAGE_SUBJECTS = [
+  'äidinkieli',
+  'finnish',
+  'suomi',
+  'englanti',
+  'english',
+  'ruotsi',
+  'swedish',
+  'svenska',
+  'spanish',
+  'espanja',
+  'french',
+  'ranska',
+  'german',
+  'saksa',
+] as const;
+
+/**
+ * Determines if a subject should be treated as language for flashcard rules.
+ */
+export function isLanguageSubject(subject: string, subjectType?: string): boolean {
+  if (subjectType === 'language') {
+    return true;
+  }
+
+  const normalized = subject.trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+
+  return LANGUAGE_SUBJECTS.includes(normalized as (typeof LANGUAGE_SUBJECTS)[number]);
+}
+
+/**
+ * Returns the flashcard content type default for a subject.
+ * Language flashcards default to grammar; others default to vocabulary.
+ */
+export function getDefaultFlashcardContentType(
+  subject: string,
+  subjectType?: string
+): FlashcardContentType {
+  return isLanguageSubject(subject, subjectType) ? 'grammar' : 'vocabulary';
+}
+
 /**
  * Determines if a subject/topic should use rule-based flashcard format.
  * Rule-based format teaches concepts/formulas rather than testing specific calculations.
@@ -17,7 +63,7 @@
 export function isRuleBasedSubject(
   subject: string,
   topic?: string,
-  contentType?: 'vocabulary' | 'grammar' | 'mixed'
+  contentType?: FlashcardContentType
 ): boolean {
   const normalized = subject.toLowerCase();
 
@@ -27,18 +73,7 @@ export function isRuleBasedSubject(
   }
 
   // Language subjects
-  const languageSubjects = [
-    'äidinkieli',
-    'finnish',
-    'suomi',
-    'englanti',
-    'english',
-    'ruotsi',
-    'swedish',
-    'svenska',
-  ];
-
-  if (languageSubjects.includes(normalized)) {
+  if (isLanguageSubject(normalized)) {
     // Explicit content type takes precedence
     if (contentType === 'grammar' || contentType === 'mixed') {
       return true;
@@ -163,18 +198,7 @@ export function validateRuleBasedQuestion(
   // Language grammar prompts from AI often use other instruction styles
   // (e.g. "Milloin käytetään...", "Täydennä lause..."). We still block
   // clear drill/calculation patterns above, but avoid failing on starter-only checks.
-  const isLanguageSubject = [
-    'äidinkieli',
-    'finnish',
-    'suomi',
-    'englanti',
-    'english',
-    'ruotsi',
-    'swedish',
-    'svenska',
-  ].includes(normalizedSubject);
-
-  if (isLanguageSubject) {
+  if (isLanguageSubject(normalizedSubject)) {
     return { valid: true };
   }
 

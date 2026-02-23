@@ -29,20 +29,24 @@ export async function GET() {
       typedQuestionSets.map(async (set) => {
         const { data: questions } = await supabaseAdmin
           .from('questions')
-          .select('question_type')
+          .select('question_type, topic')
           .eq('question_set_id', set.id);
 
         // Count question types
         const typeDistribution: Record<string, number> = {};
+        const topicDistribution: Record<string, number> = {};
         if (questions) {
-          (questions as Array<{ question_type: string }>).forEach((q) => {
+          (questions as Array<{ question_type: string; topic: string | null }>).forEach((q) => {
             typeDistribution[q.question_type] = (typeDistribution[q.question_type] || 0) + 1;
+            const topicKey = q.topic ?? '__null__';
+            topicDistribution[topicKey] = (topicDistribution[topicKey] || 0) + 1;
           });
         }
 
         return {
           ...set,
           type_distribution: typeDistribution,
+          topic_distribution: topicDistribution,
         };
       })
     );

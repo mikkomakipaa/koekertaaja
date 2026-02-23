@@ -205,6 +205,21 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         normalizedCorrectAnswer = parsed.data.correctAnswer;
         break;
       }
+      case 'flashcard': {
+        const schema = z.object({
+          correctAnswer: z.string().min(1, 'Correct answer is required'),
+        });
+        const parsed = schema.safeParse({ correctAnswer });
+        if (!parsed.success) {
+          const errors = parsed.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`);
+          return NextResponse.json(
+            { error: 'Validation failed', details: errors },
+            { status: 400 }
+          );
+        }
+        normalizedCorrectAnswer = parsed.data.correctAnswer;
+        break;
+      }
       default: {
         logger.warn({ questionType }, 'Unsupported question type');
         return NextResponse.json(

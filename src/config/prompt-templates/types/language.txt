@@ -9,10 +9,21 @@
 {{difficulty_instructions}}
 {{grade_note}}
 
-{{material_section}}{{target_words_section}}KIELIAINEEN LISÄOHJEET (QUIZ + FLASHCARD):
+{{material_section}}{{target_words_section}}KIELIAINEEN LISÄOHJEET:
 - Kysymysten metateksti on suomeksi.
-- Painota sanastoa ja kielioppia.
+
+FLASHCARD-MUOTO (jos mode=flashcard):
+- Luo täsmälleen {{question_count}} kielioppi-pohjaista flashcard-kysymystä.
+- Keskity VAIN kielioppisääntöihin, rakenteisiin ja taivutuksiin.
+- ÄLÄ luo sanastokysymyksiä tai käännöstehtäviä.
+- Perusta kysymykset annettuun materiaaliin {{grade_context_note}}.
+- Kysymykset alkavat: "Miten muodostetaan...", "Milloin käytetään...", "Mikä ero on..."
+- Vastaukset sisältävät säännön + esimerkin.
+
+QUIZ-MUOTO (jos mode=quiz):
 - Luo täsmälleen {{question_count}} kysymystä.
+- Painota sanastoa ja kielioppia.
+- Voit käyttää sekä sanastokysymyksiä että kielioppisääntöjä.
 - Perusta kysymykset annettuun materiaaliin {{grade_context_note}}.
 {{language_subject_note}}
 

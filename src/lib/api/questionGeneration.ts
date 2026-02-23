@@ -16,7 +16,7 @@ import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
 import type { PromptMetadata } from '@/lib/prompts/promptVersion';
 import { calculateDistribution, formatDistributionForPrompt } from '@/lib/utils/questionDistribution';
 import { validateCoverage, formatCoverageReport } from '@/lib/utils/coverageValidation';
-import { isRuleBasedSubject } from '@/lib/utils/subjectClassification';
+import { isLanguageSubject, isRuleBasedSubject } from '@/lib/utils/subjectClassification';
 import {
   calculateWeightedDifficulty,
   validateDifficultyConsistency,
@@ -221,16 +221,7 @@ function diagnoseFlashcardFailure(
   const materialLower = (request.materialText || '').toLowerCase();
 
   const isEnglish = ['english', 'englanti'].includes(subjectLower);
-  const isLanguageSubject = [
-    'english',
-    'englanti',
-    'suomi',
-    'finnish',
-    'ruotsi',
-    'swedish',
-    'svenska',
-    'äidinkieli',
-  ].includes(subjectLower);
+  const languageSubject = isLanguageSubject(subjectLower, request.subjectType);
 
   const grammarKeywords = [
     'kielioppi',
@@ -254,7 +245,7 @@ function diagnoseFlashcardFailure(
     request.contentType
   );
   const isGrammarSubject =
-    isLanguageSubject && (materialMentionsGrammar || hasGrammarKeywords || isRuleBasedByClassifier);
+    languageSubject && (materialMentionsGrammar || hasGrammarKeywords || isRuleBasedByClassifier);
 
   const issues: string[] = [];
   const suggestions: string[] = [];
@@ -268,7 +259,7 @@ function diagnoseFlashcardFailure(
     suggestions.push('Lisää enemmän materiaalitekstiä (vähintään 200 merkkiä suositeltu)');
   }
 
-  if (isLanguageSubject && materialMentionsGrammar && !hasGrammarKeywords) {
+  if (languageSubject && materialMentionsGrammar && !hasGrammarKeywords) {
     issues.push('Materiaali sisältää kielioppisääntöjä, mutta aihe-kentässä ei ole kielioppi-avainsanoja');
     if (isEnglish) {
       suggestions.push('Lisää "Grammar rules" tai "Verbs" aihe-kenttään (Topic-kentässä)');
@@ -277,7 +268,7 @@ function diagnoseFlashcardFailure(
     }
   }
 
-  if (isLanguageSubject && !topicProvided) {
+  if (languageSubject && !topicProvided) {
     issues.push('Aihe-kenttä on tyhjä');
     suggestions.push('Lisää aihe (esim. "Sanasto", "Kielioppi", "Verbit")');
   }
@@ -287,7 +278,7 @@ function diagnoseFlashcardFailure(
     suggestions.push('Jaa materiaali kappaleisiin tai lisää otsikoita');
   }
 
-  if (isLanguageSubject && !materialMentionsGrammar) {
+  if (languageSubject && !materialMentionsGrammar) {
     suggestions.push('Kokeile "Koe"-tilaa korttien sijaan, jos materiaali on sanastopohjaista');
   }
 
