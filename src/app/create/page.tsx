@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { PageHeader } from '@/components/layout/PageHeader';
 import { ARIATabBar, type Tab } from '@/components/layout/ARIATabBar';
 import { TopicConfirmationDialog } from '@/components/create/TopicConfirmationDialog';
 import type { TopicAnalysisResult } from '@/lib/ai/topicIdentifier';
@@ -38,6 +37,7 @@ import {
   Package,
   PlusCircle,
   GraduationCap,
+  CalendarBlank,
   CheckCircle,
   Eye,
   EyeSlash,
@@ -46,6 +46,7 @@ import {
   X,
   Cpu,
   SignOut,
+  ArrowLeft,
   CaretDown,
   CaretUp,
 } from '@phosphor-icons/react';
@@ -181,6 +182,7 @@ export default function CreatePage() {
   const [subjectType, setSubjectType] = useState<SubjectType | ''>('');
   const [grade, setGrade] = useState<number | undefined>(undefined);
   const [examLength, setExamLength] = useState(15);
+  const [examDate, setExamDate] = useState('');
   const [questionCount, setQuestionCount] = useState(defaultQuestionCounts.default);
   const [questionSetName, setQuestionSetName] = useState('');
   const [materialText, setMaterialText] = useState('');
@@ -240,6 +242,7 @@ export default function CreatePage() {
   const hasSubject = Boolean(subject.trim());
   const hasSubjectType = Boolean(subjectType);
   const hasRequiredGrade = !requiresGrade || Boolean(grade);
+  const hasExamDate = Boolean(examDate);
   const hasMaterials = materialText.trim().length > 0 || uploadedFiles.length > 0;
   const selectedProviderLabel =
     providerOptions.find((option) => option.value === providerPreference)?.label ?? 'Claude';
@@ -294,6 +297,9 @@ export default function CreatePage() {
     formData.append('subject', subject);
     formData.append('questionCount', requestedQuestionCount.toString());
     formData.append('examLength', examLength.toString());
+    if (examDate) {
+      formData.append('examDate', examDate);
+    }
     formData.append('questionSetName', questionSetName);
     if (grade) {
       formData.append('grade', grade.toString());
@@ -451,6 +457,11 @@ export default function CreatePage() {
 
     if (!subjectType) {
       setError('Valitse aineen tyyppi!');
+      return;
+    }
+
+    if (!examDate) {
+      setError('Valitse koepäivä!');
       return;
     }
 
@@ -1454,28 +1465,40 @@ export default function CreatePage() {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors">
-          <PageHeader
-            title="Kysymyssarjat"
-            subtitle="Luo uusia kysymyssarjoja tai hallitse olemassa olevia"
-            rightActions={(
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-                className="inline-flex items-center gap-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-              >
-                <SignOut weight="duotone" className="h-4 w-4" />
-                Kirjaudu ulos
-              </Button>
-            )}
-            className="px-5 pt-6 pb-4 sm:px-6 md:px-7"
-          />
+          <div className="relative border-b border-black/10 bg-white transition-shadow duration-150 dark:border-slate-700 dark:bg-slate-900">
+            <div className="mx-auto max-w-3xl px-4">
+              <div className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2.5 pb-1.5 pt-3">
+                <button
+                  type="button"
+                  onClick={() => router.push('/')}
+                  aria-label="Takaisin"
+                  className="inline-grid h-11 w-11 place-items-center rounded-xl bg-transparent text-black/55 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
+                >
+                  <ArrowLeft size={20} weight="regular" aria-hidden="true" />
+                </button>
+
+                <h1 className="truncate text-[22px] font-bold leading-[1.1] tracking-tight text-slate-900 max-[480px]:text-[19px] dark:text-slate-100">
+                  Kysymyssarjat
+                </h1>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleSignOut}
+                  aria-label="Kirjaudu ulos"
+                  className="h-11 w-11 rounded-[14px] border border-black/[0.08] bg-black/[0.02] text-slate-700 transition-all hover:bg-black/[0.04] hover:text-slate-900 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <SignOut weight="duotone" className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </div>
           <ARIATabBar
             tabs={tabsConfig}
             activeTab={activeTab}
             onTabChange={(value: typeof activeTab) => setActiveTab(value)}
             isAdmin={isAdmin}
-            className="bg-slate-50/80 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800/50"
+            className="bg-slate-50/80 dark:bg-slate-900/50"
           />
         </div>
 
@@ -1499,6 +1522,21 @@ export default function CreatePage() {
                 onChange={(e) => setQuestionSetName(e.target.value)}
                 placeholder="Esim. Englanti 7. luokka - Kappale 3"
                 className="text-base bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-3 block text-base font-semibold text-slate-900 dark:text-slate-100">
+                <span className="inline-flex items-center gap-2">
+                  <CalendarBlank weight="duotone" className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  Koepäivä
+                </span>
+              </label>
+              <Input
+                type="date"
+                value={examDate}
+                onChange={(e) => setExamDate(e.target.value)}
+                className="text-base bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
               />
             </div>
 
@@ -1838,7 +1876,7 @@ export default function CreatePage() {
                 mode="quiz"
                 variant="primary"
                 className="flex-1"
-                disabled={!questionSetName.trim() || !hasSubject || !hasSubjectType || !hasRequiredGrade || !hasMaterials}
+                disabled={!questionSetName.trim() || !hasSubject || !hasSubjectType || !hasRequiredGrade || !hasExamDate || !hasMaterials}
               >
                 Luo kysymyssarjat
               </Button>

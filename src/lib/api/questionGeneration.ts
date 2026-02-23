@@ -52,6 +52,7 @@ export interface GenerationRequest {
   grade?: number;
   questionCount: number;
   examLength: number;
+  examDate?: string;
   questionSetName: string;
   topic?: string;
   subtopic?: string;
@@ -647,6 +648,7 @@ export async function generateQuizSets(
           subject_type: request.subjectType as any,
           question_count: visualizedQuestions.length,
           exam_length: request.examLength,
+          exam_date: request.examDate ?? null,
           status: 'created',
           prompt_metadata: promptMetadata,
         },
@@ -935,6 +937,7 @@ export async function generateFlashcardSet(
         subject_type: request.subjectType as any,
         question_count: dependencyOrderedQuestions.length,
         exam_length: request.examLength,
+        exam_date: request.examDate ?? null,
         status: 'created',
         prompt_metadata: promptMetadata,
       },

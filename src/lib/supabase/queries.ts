@@ -55,6 +55,7 @@ export async function getRecentQuestionSets(limit = 10): Promise<QuestionSet[]> 
     .from('question_sets')
     .select('*')
     .eq('status', 'published')
+    .order('exam_date', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
     .limit(limit);
 

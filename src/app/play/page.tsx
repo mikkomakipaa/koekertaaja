@@ -501,7 +501,41 @@ function PlayBrowsePageContent() {
           return acc;
         }, {} as Record<string, GroupedQuestionSets>);
 
-        const groupedArray = Object.values(grouped);
+        const latestGroupExamDate = (group: GroupedQuestionSets): number | null => {
+          const timestamps = group.sets
+            .map((set) => set.exam_date)
+            .filter((value): value is string => Boolean(value))
+            .map((value) => new Date(value).getTime())
+            .filter((value) => Number.isFinite(value));
+
+          if (timestamps.length === 0) return null;
+          return Math.max(...timestamps);
+        };
+
+        const latestGroupCreatedAt = (group: GroupedQuestionSets): number => {
+          const timestamps = group.sets
+            .map((set) => set.created_at)
+            .filter((value): value is string => Boolean(value))
+            .map((value) => new Date(value).getTime())
+            .filter((value) => Number.isFinite(value));
+
+          if (timestamps.length === 0) return 0;
+          return Math.max(...timestamps);
+        };
+
+        const groupedArray = Object.values(grouped).sort((a, b) => {
+          const examA = latestGroupExamDate(a);
+          const examB = latestGroupExamDate(b);
+
+          if (examA !== null && examB !== null && examA !== examB) {
+            return examB - examA;
+          }
+
+          if (examA !== null && examB === null) return -1;
+          if (examA === null && examB !== null) return 1;
+
+          return latestGroupCreatedAt(b) - latestGroupCreatedAt(a);
+        });
 
         if (groupedArray.length === 0) {
           setError('Ei vielä kysymyssarjoja. Luo ensimmäinen!');

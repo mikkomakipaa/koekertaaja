@@ -141,6 +141,7 @@ export interface QuestionSet {
   subtopic?: string;
   question_count: number;
   exam_length?: number;
+  exam_date?: string | null;
   status: QuestionSetStatus;  // 'created' (unpublished) or 'published' (visible on play pages)
   prompt_metadata?: PromptMetadata | null;
   created_at: string;

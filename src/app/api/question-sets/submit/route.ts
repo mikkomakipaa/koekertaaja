@@ -58,6 +58,10 @@ export async function POST(request: NextRequest) {
       mode: z.enum(['quiz', 'flashcard'], {
         errorMap: () => ({ message: 'Mode must be "quiz" or "flashcard"' }),
       }),
+      examDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Exam date must be in YYYY-MM-DD format')
+        .optional(),
       grade: z
         .number()
         .int('Grade must be an integer')
@@ -86,7 +90,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { questionSetName, subject, difficulty, mode, grade, topic, subtopic, questions } = validationResult.data;
+    const { questionSetName, subject, difficulty, mode, examDate, grade, topic, subtopic, questions } = validationResult.data;
 
     // CRITICAL: Validate flashcard mode restrictions
     if (mode === 'flashcard') {
@@ -185,6 +189,7 @@ export async function POST(request: NextRequest) {
           subtopic,
           question_count: questions.length,
           exam_length: questions.length,
+          exam_date: examDate ?? null,
           status: 'created',  // New question sets default to unpublished
         },
         transformedQuestions as any
@@ -223,6 +228,7 @@ export async function POST(request: NextRequest) {
         difficulty: dbResult.questionSet.difficulty,
         mode: dbResult.questionSet.mode,
         question_count: dbResult.questionSet.question_count,
+        exam_date: dbResult.questionSet.exam_date ?? null,
         created_at: dbResult.questionSet.created_at,
       },
       questionCount: questions.length,

@@ -38,12 +38,6 @@ const MODE_OPTIONS: Array<{ value: StudyMode; label: string; icon: typeof GameCo
   { value: 'opettele', label: 'Opettele', icon: Book },
 ];
 
-const controlBase =
-  'inline-flex min-h-11 sm:min-h-12 items-center justify-center gap-2 rounded-xl px-3 sm:px-4 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white active:scale-[0.99] dark:focus-visible:ring-offset-gray-900';
-
-const inactiveControl =
-  'border border-gray-300/80 bg-transparent text-gray-700 shadow-none hover:border-gray-400 hover:bg-transparent dark:border-gray-600 dark:bg-transparent dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-transparent';
-
 export function ModeClassBar({
   studyMode,
   onStudyModeChange,
@@ -101,7 +95,7 @@ export function ModeClassBar({
         className
       )}
     >
-      <div className="mx-auto max-w-[980px] px-4">
+      <div className="mx-auto max-w-4xl px-4">
         <div className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2.5 pb-1.5 pt-3 sm:hidden">
           <button
             type="button"
@@ -234,144 +228,124 @@ export function ModeClassBar({
           </div>
         </div>
 
-        <div className="hidden min-w-0 items-center gap-2 py-4 sm:flex">
-          <div
-            role="radiogroup"
-            aria-label="Opiskelutila"
-            className="inline-flex flex-shrink-0 min-h-11 sm:min-h-12 items-center rounded-xl border border-gray-200 bg-white p-1 shadow-sm shadow-gray-200/50 dark:border-gray-700 dark:bg-gray-900 dark:shadow-black/20"
-          >
-            {MODE_OPTIONS.map((mode, index) => {
-              const isActive = studyMode === mode.value;
-              const Icon = mode.icon;
+        <div className="hidden py-4 sm:block">
+          <div className="flex min-w-0 items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                type="button"
+                onClick={onBack}
+                aria-label="Takaisin"
+                className="inline-grid h-11 w-11 sm:h-12 sm:w-12 place-items-center rounded-[14px] border border-black/[0.08] bg-black/[0.02] text-gray-600 transition-all hover:bg-black/[0.04] hover:text-gray-900 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
+              >
+                <ArrowLeft size={20} weight="regular" aria-hidden="true" />
+              </button>
+              <h1 className="truncate text-[30px] font-bold leading-[1.05] tracking-tight text-slate-900 dark:text-slate-100">
+                Koekertaaja
+              </h1>
+            </div>
 
-              return (
-                <button
-                  key={mode.value}
-                  ref={(element) => {
-                    modeRefs.current[index] = element;
-                  }}
-                  type="button"
-                  role="radio"
-                  aria-checked={isActive}
-                  tabIndex={isActive ? 0 : -1}
-                  onClick={() => onStudyModeChange(mode.value)}
-                  onKeyDown={(event) => handleModeKeyDown(index, event)}
+            <div className="relative flex flex-shrink-0 items-center gap-2">
+              <div className="relative">
+                <CollapsibleSearch
+                  placeholder="Etsi aihealuetta, ainetta tai aihetta..."
+                  value={searchQuery}
+                  onChange={onSearchQueryChange}
+                  isOpen={searchOpen}
+                  onToggle={onSearchOpenChange}
+                  onClose={onSearchClose}
+                  onFocus={onSearchFocus}
+                  onBlur={onSearchBlur}
                   className={cn(
-                    controlBase,
-                    'min-w-[52px] min-[430px]:min-w-[96px] sm:min-w-[120px] border-transparent',
-                    isActive
-                      ? mode.value === 'pelaa'
-                        ? 'bg-indigo-600 text-white focus-visible:ring-indigo-500 dark:bg-indigo-500 dark:focus-visible:ring-indigo-400'
-                        : 'bg-teal-600 text-white focus-visible:ring-teal-500 dark:bg-teal-500 dark:focus-visible:ring-teal-400'
-                      : 'text-gray-600 hover:bg-gray-100 focus-visible:ring-indigo-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-400'
+                    'h-11 w-11 sm:h-12 sm:w-12 rounded-[14px] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900',
+                    !searchOpen &&
+                      'border-black/[0.08] bg-black/[0.02] text-gray-600 hover:bg-black/[0.04] hover:text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800',
+                    searchOpen && 'w-[260px] md:w-[320px]'
                   )}
-                >
-                  <Icon size={18} weight={isActive ? 'fill' : 'regular'} />
-                  <span className="hidden min-[430px]:inline">{mode.label}</span>
-                </button>
-              );
-            })}
-          </div>
+                />
+                <SearchSuggestions
+                  isOpen={searchOpen && suggestionsOpen}
+                  query={searchQuery}
+                  popular={popularSearches}
+                  recent={recentSearches}
+                  suggestions={liveSuggestions}
+                  onSelect={onSuggestionSelect}
+                  onClearRecent={onClearRecentSearches}
+                />
+              </div>
 
-          <div
-            className={cn(
-              'flex-1 min-w-0 overflow-x-auto no-scrollbar',
-              searchOpen && 'hidden sm:block'
-            )}
-            aria-label="Luokkasuodattimet"
-          >
-            <div className="flex min-h-11 sm:min-h-12 flex-nowrap items-center gap-1.5 sm:gap-2">
-              {availableGrades.map((grade) => {
-                const colors = getGradeColors(grade);
-                const isActive = selectedGrade === grade;
-
-                return (
-                  <button
-                    key={grade}
-                    type="button"
-                    onClick={() => onSelectedGradeChange(isActive ? null : grade)}
-                    className={cn(
-                      controlBase,
-                      'flex-shrink-0',
-                      isActive
-                        ? `bg-transparent ${colors.text} border border-current/60 shadow-none focus-visible:ring-current/60`
-                        : inactiveControl
-                    )}
-                    aria-pressed={isActive}
-                  >
-                    <GraduationCap size={16} weight={isActive ? 'fill' : 'regular'} />
-                    {grade} lk
-                  </button>
-                );
-              })}
+              <Link
+                href="/play/achievements"
+                aria-label="Saavutukset"
+                className="inline-grid h-11 w-11 sm:h-12 sm:w-12 place-items-center rounded-[14px] border border-black/[0.08] bg-black/[0.02] text-gray-600 transition-all hover:bg-black/[0.04] hover:text-gray-900 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
+              >
+                <Trophy size={18} weight="duotone" />
+              </Link>
             </div>
           </div>
 
-          <Link
-            href="/play/achievements"
-            className={cn(
-              // Base interactive styles
-              'inline-flex flex-shrink-0 items-center justify-center rounded-xl',
-              'transition-all duration-150 active:scale-[0.99]',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900',
-              // Square icon button on mobile/tablet — same as the search button
-              'h-11 sm:h-12 w-11 sm:w-12',
-              // On lg+ grow to show text label
-              'lg:w-auto lg:gap-2 lg:px-3 lg:py-2.5 lg:text-sm lg:font-semibold',
-              // Colors match the search button and mode-toggle pill (white bg, gray-200 border)
-              'border border-gray-200 bg-white text-gray-600 shadow-sm shadow-gray-200/50',
-              'hover:bg-gray-50 hover:text-gray-900',
-              'dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:shadow-black/20',
-            )}
-            aria-label="Saavutukset"
-          >
-            <Trophy size={18} weight="duotone" />
-            <span className="hidden lg:inline">Saavutukset</span>
-          </Link>
+          <div className="mt-3 border-t border-black/5 pt-3 dark:border-gray-700/80">
+            <div className="mx-auto w-full max-w-[760px] overflow-x-auto no-scrollbar">
+              <div
+                role="radiogroup"
+                aria-label="Suodattimet"
+                className="inline-flex min-h-12 min-w-full items-center justify-center gap-1.5 rounded-[18px] bg-slate-100 p-1 dark:bg-slate-800"
+              >
+                {MODE_OPTIONS.map((mode, index) => {
+                  const isActive = studyMode === mode.value;
+                  const Icon = mode.icon;
 
-          <div
-            className={cn(
-              'relative flex items-center',
-              searchOpen ? 'flex-1 sm:flex-shrink-0' : 'flex-shrink-0'
-            )}
-          >
-            <div className={cn('relative', searchOpen && 'w-full sm:w-auto')}>
-              <CollapsibleSearch
-                placeholder="Etsi aihealuetta, ainetta tai aihetta..."
-                value={searchQuery}
-                onChange={onSearchQueryChange}
-                isOpen={searchOpen}
-                onToggle={onSearchOpenChange}
-                onClose={onSearchClose}
-                onFocus={onSearchFocus}
-                onBlur={onSearchBlur}
-                className={cn(
-                  'h-11 w-11 sm:h-12 sm:w-12 rounded-xl shadow-sm shadow-gray-200/50 dark:shadow-black/20',
-                  searchOpen && 'w-full sm:w-[260px]'
-                )}
-              />
-              <SearchSuggestions
-                isOpen={searchOpen && suggestionsOpen}
-                query={searchQuery}
-                popular={popularSearches}
-                recent={recentSearches}
-                suggestions={liveSuggestions}
-                onSelect={onSuggestionSelect}
-                onClearRecent={onClearRecentSearches}
-              />
+                  return (
+                    <button
+                      key={mode.value}
+                      ref={(element) => {
+                        modeRefs.current[index] = element;
+                      }}
+                      type="button"
+                      role="radio"
+                      aria-checked={isActive}
+                      tabIndex={isActive ? 0 : -1}
+                      onClick={() => onStudyModeChange(mode.value)}
+                      onKeyDown={(event) => handleModeKeyDown(index, event)}
+                      className={cn(
+                        'inline-flex h-10 min-w-[44px] items-center justify-center gap-2 rounded-[14px] px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900',
+                        isActive
+                          ? mode.value === 'pelaa'
+                            ? 'bg-indigo-600 font-semibold text-white'
+                            : 'bg-teal-600 font-semibold text-white'
+                          : 'text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700'
+                      )}
+                    >
+                      <Icon size={18} weight={isActive ? 'fill' : 'regular'} />
+                      <span>{mode.label}</span>
+                    </button>
+                  );
+                })}
+
+                {availableGrades.map((grade) => {
+                  const colors = getGradeColors(grade);
+                  const isActive = selectedGrade === grade;
+
+                  return (
+                    <button
+                      key={grade}
+                      type="button"
+                      onClick={() => onSelectedGradeChange(isActive ? null : grade)}
+                      className={cn(
+                        'inline-flex h-10 min-w-[44px] items-center justify-center gap-2 rounded-[14px] px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900',
+                        isActive
+                          ? `border border-current/60 bg-transparent font-semibold ${colors.text}`
+                          : 'text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700'
+                      )}
+                      aria-pressed={isActive}
+                    >
+                      <GraduationCap size={16} weight={isActive ? 'fill' : 'regular'} />
+                      {grade} lk
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="mt-2 hidden sm:block sm:mt-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex items-center gap-2 rounded-md px-1 py-1 text-sm font-semibold tracking-tight text-slate-700 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:text-base dark:text-slate-300 dark:hover:text-slate-100 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
-          >
-            <ArrowLeft size={18} weight="regular" aria-hidden="true" />
-            Palaa alkuun
-          </button>
         </div>
       </div>
     </div>

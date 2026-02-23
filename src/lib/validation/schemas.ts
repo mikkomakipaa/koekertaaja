@@ -34,6 +34,10 @@ export const createQuestionSetSchema = z.object({
     .int('Exam length must be an integer')
     .min(5, 'Minimum 5 questions per exam')
     .max(20, 'Maximum 20 questions per exam'),
+  examDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Exam date must be in YYYY-MM-DD format')
+    .optional(),
   grade: z
     .number()
     .int('Grade must be an integer')

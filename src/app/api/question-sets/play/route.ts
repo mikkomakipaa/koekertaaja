@@ -15,6 +15,7 @@ export async function GET(request: Request) {
     const query = supabase
       .from('question_sets')
       .select('*')
+      .order('exam_date', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
       .limit(Number.isFinite(limit) && limit > 0 ? limit : 100);
 
