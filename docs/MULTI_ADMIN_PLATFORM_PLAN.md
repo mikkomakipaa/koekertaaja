@@ -48,6 +48,14 @@ Add/extend tables:
   - add index on `(owner_user_id, created_at desc)`
   - add index on `(school_id, created_at desc)`
 
+- `student_profiles` (new — Phase 5)
+  - `id uuid primary key`
+  - `display_name text not null`
+  - `join_token text unique not null` (random UUID, stored in client localStorage)
+  - `school_id uuid null references schools(id)`
+  - `created_at timestamptz`
+  - index on `join_token` (lookup path for every game join)
+
 - `admin_api_keys`
   - `id uuid primary key`
   - `user_id uuid not null references auth.users(id)`
@@ -73,6 +81,11 @@ Enable RLS and enforce:
 
 - `admin_api_keys`
   - user can `select/insert/update/delete` only where `user_id = auth.uid()`.
+
+- `student_profiles`
+  - no direct client RLS via `auth.uid()` — students are not Supabase Auth users.
+  - all reads and writes go through a dedicated server-side route that validates the `join_token` from a signed session cookie before touching the table.
+  - service role used exclusively; no anon key access permitted.
 
 ### 4) API route and service-layer changes
 
@@ -123,6 +136,56 @@ Two rollout options:
 
 Start with Option A to reduce migration complexity and avoid blocking multi-admin core delivery.
 
+### 7) User profiles — teacher and student
+
+The platform has two distinct user types with different identity requirements.
+
+#### Teacher profile (`admin_profiles`)
+
+Already defined in section 2. Teachers authenticate via Supabase Auth and have a full account.
+
+Minimal required fields:
+- `user_id` — FK to `auth.users(id)`, primary key
+- `display_name text` — shown in admin UI and (optionally) to students during a game
+- `school_id uuid null` — optional school link (Phase 4)
+- `created_at timestamptz`
+
+No additional fields are needed at launch. Do not add phone, address, or role-title fields unless a concrete feature requires them.
+
+#### Student profile (`student_profiles`)
+
+Students must not be required to create an account. Classroom use demands zero-friction entry — asking students to register with an email breaks the game flow.
+
+Design: **token-based pseudonymous identity**
+
+How it works:
+1. On first game join, the client generates a random UUID `join_token` and stores it in `localStorage`.
+2. The server creates (or looks up) a `student_profiles` row keyed by that token.
+3. On subsequent visits the same token is sent, restoring the student's display name and history.
+4. If `localStorage` is cleared the student enters as a new anonymous participant — this is acceptable.
+
+Minimal required fields:
+- `id uuid primary key`
+- `display_name text not null` — chosen by the student at game entry (e.g. "Mikko", "Player 1")
+- `join_token text unique not null` — random UUID generated client-side; never displayed
+- `school_id uuid null references schools(id)` — optionally assigned when a teacher creates a class session
+- `created_at timestamptz`
+
+Explicitly excluded to keep data minimal and reduce GDPR surface:
+- no email
+- no real name field (display name is self-chosen and not verified)
+- no password or PIN
+- no date of birth
+- no device fingerprint
+
+Data retention: student profiles with no linked sessions older than the configured retention period (see open question 7) should be deleted by a scheduled job.
+
+RLS for `student_profiles`:
+- `select`: allow via matching `join_token` supplied in a server-validated session cookie or JWT claim — not exposed to other students or admins.
+- `insert`: allow from application service role only (client sends token, server inserts row).
+- `update`: `display_name` only, restricted to matching `join_token` session.
+- `delete`: service role only (for retention job and GDPR deletion).
+
 ## Migration Plan (incremental)
 
 ### Phase 0 — Preflight
@@ -163,6 +226,14 @@ Start with Option A to reduce migration complexity and avoid blocking multi-admi
 - add `schools` and `admin_profiles.school_id`,
 - ship school-scoped filtering (read-only first),
 - decide whether to move to strict tenancy.
+
+### Phase 5 — User profiles
+- create `student_profiles` table with `join_token` index,
+- implement server-side join-token session cookie flow (set on first game entry, validated on subsequent requests),
+- add `student_id` FK to `game_sessions` (depends on session persistence being introduced alongside or before this phase),
+- add teacher profile display in admin UI (display name shown on question set list and dashboard),
+- add student data retention scheduled job (delete profiles with no sessions older than configured period),
+- verify no student PII is stored beyond display name and token.
 
 ## Open Questions to Validate (Design Review Checklist)
 
@@ -205,9 +276,9 @@ These must be answered before implementation freeze:
 
 ### Additional questions (from implementation review)
 
-11. **Student identity model**
-    - Students are currently anonymous. Is there a plan to introduce student accounts or persistent student identity?
-    - Without this, teacher dashboards, result attribution, and adaptive difficulty are impossible regardless of multi-admin progress.
+11. **Student identity model** *(addressed in Phase 5 — see section 7)*
+    - Resolved: students use token-based pseudonymous profiles (no Supabase Auth account required).
+    - Remaining decision: should a teacher be able to pre-provision student profiles with class-assigned display names, or is self-chosen entry-time naming sufficient?
 
 12. **Session and progress persistence**
     - Game sessions are currently in-memory only; there is no `game_sessions` or `session_answers` table.
@@ -246,7 +317,7 @@ The following gaps were identified during implementation review and must be addr
 | Gap | Severity | Phase affected | Notes |
 |-----|----------|----------------|-------|
 | Pre-existing security issues (rate limiting, weak code RNG, missing CSP, RLS bug) | High | Phase 0 | Adding auth on top of these does not fix them; abuse surface increases with open signup |
-| Student identity model absent | Medium | All phases | Teacher dashboards and result attribution are blocked without this |
+| Student identity model absent | Medium | Phase 5 | Addressed: token-based pseudonymous profiles planned in section 7 / Phase 5 |
 | Session/progress persistence absent | Medium | Analytics/Phase 4+ | No `game_sessions` table; all game state is in-memory |
 | Public read policy conflict | High | Phase 1 | Existing anonymous read on published sets must be explicitly preserved in new RLS or student play breaks |
 | Application-layer auth not specified | High | Phase 2 | Next.js middleware and client helper patterns must be decided before Phase 2 implementation |
@@ -276,6 +347,7 @@ The following gaps were identified during implementation review and must be addr
 1. Ownership + RLS first (highest security impact).
 2. Per-admin API keys second (functional isolation).
 3. School separation third (optional tenancy).
-4. Collaboration roles last (if needed).
+4. User profiles (teacher display + student token identity) alongside or after session persistence.
+5. Collaboration roles last (if needed).
 
 This sequence minimizes risk while delivering immediate multi-admin safety.
