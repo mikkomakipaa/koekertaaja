@@ -19,6 +19,7 @@ import {
   getDifficultyTargetSet,
   type BrowseDifficulty,
 } from '@/lib/play/browse-difficulties';
+import { getLatestDifficultyScore, getPrimaryDifficulty, type DifficultyScoreMap } from '@/lib/play/primary-mode';
 import { QuestionSet, Difficulty, StudyMode } from '@/types';
 import { readMistakesFromStorage } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
@@ -72,7 +73,7 @@ const difficultyLabels: Record<string, string> = {
 
 const difficultyColors: Record<
   string,
-  { bg: string; hover: string; text: string; icon: string; focus: string; border: string; shadow: string }
+  { bg: string; hover: string; text: string; icon: string; focus: string; border: string }
 > = {
   helppo: {
     bg: 'bg-teal-50 dark:bg-teal-900/30',
@@ -81,7 +82,6 @@ const difficultyColors: Record<
     icon: 'text-teal-600 dark:text-teal-300',
     focus: 'focus-visible:ring-teal-500 dark:focus-visible:ring-teal-300',
     border: 'border-teal-200 dark:border-teal-700/70',
-    shadow: 'shadow-sm shadow-teal-900/10 dark:shadow-black/20',
   },
   normaali: {
     bg: 'bg-amber-50 dark:bg-amber-900/25',
@@ -90,7 +90,6 @@ const difficultyColors: Record<
     icon: 'text-amber-600 dark:text-amber-300',
     focus: 'focus-visible:ring-amber-500 dark:focus-visible:ring-amber-300',
     border: 'border-amber-200 dark:border-amber-700/70',
-    shadow: 'shadow-sm shadow-amber-900/10 dark:shadow-black/20',
   },
   aikahaaste: {
     bg: 'bg-indigo-50 dark:bg-indigo-900/30',
@@ -99,9 +98,10 @@ const difficultyColors: Record<
     icon: 'text-indigo-600 dark:text-indigo-300',
     focus: 'focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300',
     border: 'border-indigo-200 dark:border-indigo-700/70',
-    shadow: 'shadow-sm shadow-indigo-900/10 dark:shadow-black/20',
   },
 };
+
+const playPageButtonShadow = 'shadow-[0_2px_6px_rgba(0,0,0,0.25),0_0_0_1px_rgba(255,255,255,0.04)]';
 
 const difficultyIcons: Record<string, ReactNode> = {
   helppo: <Circle size={20} weight="bold" className="inline" />,
@@ -182,15 +182,22 @@ const hasFlashcards = (sets: QuestionSet[]) => {
 
 // Grade colors now imported from centralized design tokens
 
-const formatQuestionSetDate = (createdAt?: string): string | null => {
-  if (!createdAt) return null;
-  const created = new Date(createdAt);
-  if (Number.isNaN(created.getTime())) return null;
+const formatQuestionSetDate = (examDate?: string | null): string | null => {
+  if (!examDate) return null;
+
+  // exam_date is stored as DATE (YYYY-MM-DD); parse locally to avoid timezone day shifts.
+  const dateOnlyMatch = examDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const parsed = dateOnlyMatch
+    ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
+    : new Date(examDate);
+
+  if (Number.isNaN(parsed.getTime())) return null;
+
   return new Intl.DateTimeFormat('fi-FI', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  }).format(created);
+  }).format(parsed);
 };
 
 interface QuestionSetCardProps {
@@ -205,18 +212,22 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
 
   const helppoSet = group.sets.find((set) => set.mode === 'quiz' && set.difficulty === 'helppo');
   const normaaliSet = group.sets.find((set) => set.mode === 'quiz' && set.difficulty === 'normaali');
-
-  const primaryQuizSet = normaaliSet ?? helppoSet ?? group.sets.find((set) => set.mode === 'quiz') ?? group.sets[0];
+  const aikahaasteSet = group.sets.find(
+    (set) => set.mode === 'quiz' && (set.difficulty as string) === 'aikahaaste'
+  );
 
   const helppoScore = useLastScore(helppoSet?.code).lastScore;
   const normaaliScore = useLastScore(normaaliSet?.code).lastScore;
-
-  const lastScore = useMemo(() => {
-    if (helppoScore && normaaliScore) {
-      return helppoScore.timestamp >= normaaliScore.timestamp ? helppoScore : normaaliScore;
-    }
-    return helppoScore ?? normaaliScore ?? null;
-  }, [helppoScore, normaaliScore]);
+  const aikahaasteScore = useLastScore(aikahaasteSet?.code).lastScore;
+  const difficultyScores: DifficultyScoreMap = {
+    helppo: helppoScore,
+    normaali: normaaliScore,
+    aikahaaste: aikahaasteScore,
+  };
+  const primaryDifficulty = getPrimaryDifficulty(availableDifficulties, difficultyScores);
+  const primarySet = getDifficultyTargetSet(group.sets, primaryDifficulty);
+  const primaryScore = difficultyScores[primaryDifficulty];
+  const latestDifficultyScore = getLatestDifficultyScore(availableDifficulties, difficultyScores);
 
   const difficultyOrder: Difficulty[] = ['helppo', 'normaali'];
   const reviewCandidates = difficultyOrder
@@ -230,12 +241,12 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
     }));
   const reviewCandidate = reviewCandidates.find((candidate) => candidate.count > 0);
 
-  const newestCreatedAt = group.sets
-    .map((set) => set.created_at)
+  const newestExamDate = group.sets
+    .map((set) => set.exam_date)
     .filter((value): value is string => Boolean(value))
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
 
-  const formattedDate = formatQuestionSetDate(newestCreatedAt);
+  const formattedDate = formatQuestionSetDate(newestExamDate);
   const gradeColors = group.grade ? getGradeColors(group.grade) : null;
 
   return (
@@ -256,7 +267,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
         }`}
       />
 
-      <div className="ml-3.5 grid grid-rows-[auto_auto_auto] gap-3 max-[480px]:gap-2.5">
+      <div className="ml-3.5 grid grid-rows-[auto_auto_auto] gap-2.5 max-[480px]:gap-2">
         <div className="grid grid-cols-[1fr_auto] items-center gap-2.5">
           <div className="min-w-0">
             {getSubjectHeaderMeta(group.subject, formattedDate)}
@@ -280,52 +291,97 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
         <div>
           {studyMode === 'pelaa' ? (
             availableDifficulties.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2.5 min-[820px]:grid-cols-4">
-                {availableDifficulties.map((difficulty, index) => {
-                  const set = getDifficultyTargetSet(group.sets, difficulty);
-                  const colors = difficultyColors[difficulty];
-                  const icon = difficultyIcons[difficulty];
-                  const timedShouldSpanFull = index === 2 && !reviewCandidate;
+              <div className="space-y-2">
+                <Button
+                  onClick={() =>
+                    primarySet && router.push(buildDifficultyHref(primarySet.code, studyMode, primaryDifficulty))
+                  }
+                  mode="quiz"
+                  variant="primary"
+                  size="chip"
+                  className={cn(
+                    playPageButtonShadow,
+                    'group h-[52px] w-full min-w-12 justify-between rounded-[14px] px-3.5 text-[15px] font-semibold min-[481px]:h-12 max-[480px]:text-[14px]'
+                  )}
+                  aria-label={`${primaryScore ? 'Jatka' : 'Aloita'} ${difficultyLabels[primaryDifficulty]} vaikeustaso`}
+                >
+                  <span className="flex items-center gap-2">
+                    {difficultyIcons[primaryDifficulty]}
+                    <span>{primaryScore ? 'Jatka' : 'Aloita'} {difficultyLabels[primaryDifficulty]}</span>
+                  </span>
+                  <span className="flex items-center gap-2 text-white/85">
+                    {primaryScore && (
+                      <span className="text-[12px] font-medium tabular-nums max-[480px]:text-[11px]">
+                        {primaryScore.score}/{primaryScore.total}
+                      </span>
+                    )}
+                    <ArrowRight size={16} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </Button>
 
-                  return (
+                <div
+                  className={cn(
+                    'grid gap-2',
+                    availableDifficulties.length === 3 ? 'grid-cols-3' : 'grid-cols-2'
+                  )}
+                >
+                  {availableDifficulties.map((difficulty) => {
+                    const set = getDifficultyTargetSet(group.sets, difficulty);
+                    const colors = difficultyColors[difficulty];
+                    const icon = difficultyIcons[difficulty];
+                    const isNormaali = difficulty === 'normaali';
+
+                    return (
+                      <Button
+                        key={difficulty}
+                        onClick={() =>
+                          set && router.push(buildDifficultyHref(set.code, studyMode, difficulty))
+                        }
+                        variant="secondary"
+                        size="chip"
+                        className={cn(
+                          colors.bg,
+                          colors.hover,
+                          colors.text,
+                          colors.focus,
+                          colors.border,
+                          isNormaali
+                            ? 'bg-white/90 hover:bg-amber-50/60 dark:bg-gray-900/30 dark:hover:bg-amber-900/25 border-amber-300/80 text-amber-800 shadow-none dark:border-amber-700/60 dark:text-amber-200'
+                            : playPageButtonShadow,
+                          'h-12 min-h-12 min-w-12 justify-center gap-1.5 rounded-[12px] px-2.5 text-[13px] font-semibold max-[480px]:text-[12px]'
+                        )}
+                        aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
+                      >
+                        <span className={colors.icon}>{icon}</span>
+                        <span className="truncate">{difficultyLabels[difficulty]}</span>
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between gap-2 border-t border-gray-200/80 pt-1 dark:border-gray-700/80">
+                  {reviewCandidate ? (
                     <Button
-                      key={difficulty}
-                      onClick={() =>
-                        set && router.push(buildDifficultyHref(set.code, studyMode, difficulty))
-                      }
-                      variant="secondary"
-                      size="chip"
-                      className={cn(
-                        colors.bg,
-                        colors.hover,
-                        colors.text,
-                        colors.focus,
-                        colors.border,
-                        colors.shadow,
-                        'h-11 min-w-11 justify-center gap-2 rounded-[14px] px-3 text-[15px] font-semibold whitespace-nowrap hover:shadow-md active:scale-[0.99] max-[480px]:h-[42px] max-[480px]:text-[14px]',
-                        timedShouldSpanFull && 'col-span-2 min-[820px]:col-span-1'
-                      )}
-                      aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
+                      onClick={() => router.push(`/play/${reviewCandidate.set.code}?mode=review`)}
+                      mode="review"
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto min-h-0 gap-1 rounded-md px-0.5 py-0.5 text-[12px] font-semibold text-rose-700 hover:bg-rose-50 hover:text-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/25"
+                      aria-label="Virheet"
                     >
-                      <span className={colors.icon}>{icon}</span>
-                      <span className="overflow-hidden text-ellipsis">{difficultyLabels[difficulty]}</span>
+                      <ArrowCounterClockwise size={14} weight="duotone" className="inline" />
+                      Virheet ({reviewCandidate.count})
                     </Button>
-                  );
-                })}
+                  ) : (
+                    <span className="text-[12px] font-medium text-gray-500 dark:text-gray-400">↻ Virheet (0)</span>
+                  )}
 
-                {reviewCandidate && (
-                  <Button
-                    onClick={() => router.push(`/play/${reviewCandidate.set.code}?mode=review`)}
-                    mode="review"
-                    variant="outline"
-                    size="chip"
-                    className="h-11 w-full max-w-full justify-center gap-2 rounded-[14px] border-rose-300 bg-rose-50/40 px-3 text-[15px] font-semibold whitespace-nowrap text-rose-700 opacity-90 saturate-90 shadow-sm shadow-rose-900/10 hover:border-rose-400 hover:bg-rose-50/70 hover:text-rose-800 hover:shadow-md hover:saturate-100 active:scale-[0.99] max-[480px]:h-[42px] max-[480px]:text-[14px] dark:border-rose-700/70 dark:bg-rose-900/20 dark:text-rose-300 dark:hover:bg-rose-900/30 dark:shadow-black/20"
-                    aria-label="Virheet"
-                  >
-                    <ArrowCounterClockwise size={20} weight="duotone" className="inline" />
-                    Virheet ({reviewCandidate.count})
-                  </Button>
-                )}
+                  <span className="truncate text-right text-[12px] text-gray-500 dark:text-gray-400">
+                    {latestDifficultyScore
+                      ? `${difficultyLabels[latestDifficultyScore.difficulty]} · ${latestDifficultyScore.score.score}/${latestDifficultyScore.score.total} (${latestDifficultyScore.score.percentage}%)`
+                      : 'Ei tuloksia vielä'}
+                  </span>
+                </div>
               </div>
             ) : (
               <p className="text-sm text-gray-500 dark:text-gray-400">Ei pelimuotoa saatavilla</p>
@@ -341,7 +397,10 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
               mode="study"
               variant="primary"
               size="chip"
-              className="group h-11 min-w-11 justify-center gap-2 rounded-[14px] px-3 text-[15px] font-semibold whitespace-nowrap shadow-teal-500/30 active:scale-[0.99] max-[480px]:h-[42px] max-[480px]:text-[14px] dark:shadow-teal-600/30"
+              className={cn(
+                playPageButtonShadow,
+                'group h-11 min-w-11 justify-center gap-2 rounded-[14px] px-3 text-[15px] font-semibold whitespace-nowrap active:scale-[0.99] max-[480px]:h-[42px] max-[480px]:text-[14px]'
+              )}
               aria-label="Opettele korttien avulla"
             >
               <Book size={20} weight="duotone" />
@@ -353,34 +412,6 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
           )}
 
         </div>
-
-        {lastScore && (
-          <div className="border-t border-gray-200 pt-2.5 dark:border-gray-700">
-            <div className="flex items-center gap-2 text-sm">
-              <div className="inline-flex items-center gap-2 whitespace-nowrap">
-                {lastScore.difficulty && (
-                  <span
-                    className={cn(
-                      'inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] font-medium text-gray-700 dark:text-gray-200',
-                      difficultyColors[lastScore.difficulty]?.bg,
-                      difficultyColors[lastScore.difficulty]?.border
-                    )}
-                    title={difficultyLabels[lastScore.difficulty] || lastScore.difficulty}
-                  >
-                    <span className={difficultyColors[lastScore.difficulty]?.icon}>
-                      {difficultyIcons[lastScore.difficulty]}
-                    </span>
-                    <span className="hidden sm:inline">{difficultyLabels[lastScore.difficulty]}</span>
-                  </span>
-                )}
-                <span className="font-semibold text-gray-900 dark:text-gray-100">
-                  {lastScore.score}/{lastScore.total}
-                </span>
-                <span className="text-gray-500 dark:text-gray-400">({lastScore.percentage}%)</span>
-              </div>
-            </div>
-          </div>
-        )}
 
       </div>
     </Card>
@@ -732,7 +763,7 @@ function PlayBrowsePageContent() {
                   mode="quiz"
                   variant="primary"
                   size="lg"
-                  className="px-8 text-base"
+                  className={cn(playPageButtonShadow, 'px-8 text-base')}
                 >
                   <Sparkle size={20} weight="fill" />
                   Luo kysymyssarja
@@ -740,7 +771,7 @@ function PlayBrowsePageContent() {
                 <Button
                   onClick={() => router.push('/')}
                   variant="outline"
-                  className="rounded-lg px-8 py-3 text-base font-semibold"
+                  className={cn(playPageButtonShadow, 'rounded-lg px-8 py-3 text-base font-semibold')}
                 >
                   Takaisin valikkoon
                 </Button>
@@ -766,12 +797,20 @@ function PlayBrowsePageContent() {
                 </p>
                 <div className="flex justify-center gap-3">
                   {searchQuery && (
-                    <Button onClick={() => setSearchQuery('')} variant="outline">
+                    <Button
+                      onClick={() => setSearchQuery('')}
+                      variant="outline"
+                      className={playPageButtonShadow}
+                    >
                       Tyhjennä haku
                     </Button>
                   )}
                   {selectedGrade && (
-                    <Button onClick={() => setSelectedGrade(null)} variant="outline">
+                    <Button
+                      onClick={() => setSelectedGrade(null)}
+                      variant="outline"
+                      className={playPageButtonShadow}
+                    >
                       Näytä kaikki luokat
                     </Button>
                   )}
