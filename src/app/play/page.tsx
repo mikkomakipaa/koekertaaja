@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ModeClassBar } from '@/components/play/ModeClassBar';
+import { PrimaryActionButton } from '@/components/play/PrimaryActionButton';
 import { cn } from '@/lib/utils';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { getGradeColors } from '@/lib/utils/grade-colors';
@@ -23,6 +24,7 @@ import { getLatestDifficultyScore, getPrimaryDifficulty, type DifficultyScoreMap
 import { QuestionSet, Difficulty, StudyMode } from '@/types';
 import { readMistakesFromStorage } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
+import { useSessionProgress } from '@/hooks/useSessionProgress';
 import { useRecentSearches } from '@/hooks/useRecentSearches';
 import { useScrollDetection } from '@/hooks/useScrollDetection';
 import { createLogger } from '@/lib/logger';
@@ -39,7 +41,6 @@ import {
   BookOpenText,
   Book,
   ArrowCounterClockwise,
-  ArrowRight,
   MagnifyingGlass,
   Leaf,
   MapTrifold,
@@ -69,6 +70,12 @@ const difficultyLabels: Record<string, string> = {
   helppo: 'Helppo',
   normaali: 'Normaali',
   aikahaaste: 'Aikahaaste',
+};
+
+const difficultyPartitiveLabels: Record<string, string> = {
+  helppo: 'Helppoa',
+  normaali: 'Normaalia',
+  aikahaaste: 'Aikahaastetta',
 };
 
 const difficultyColors: Record<
@@ -227,6 +234,15 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
   const primaryDifficulty = getPrimaryDifficulty(availableDifficulties, difficultyScores);
   const primarySet = getDifficultyTargetSet(group.sets, primaryDifficulty);
   const primaryScore = difficultyScores[primaryDifficulty];
+  const { progress: primaryProgress } = useSessionProgress(primarySet?.code);
+  const hasInProgressPrimary = Boolean(
+    primaryProgress && primaryProgress.answered > 0 && primaryProgress.answered < primaryProgress.total
+  );
+  const primaryActionText = hasInProgressPrimary
+    ? 'Jatka'
+    : primaryScore
+      ? `Jatka ${difficultyPartitiveLabels[primaryDifficulty] ?? difficultyLabels[primaryDifficulty]}`
+      : `Aloita ${difficultyLabels[primaryDifficulty]}`;
   const latestDifficultyScore = getLatestDifficultyScore(availableDifficulties, difficultyScores);
 
   const difficultyOrder: Difficulty[] = ['helppo', 'normaali'];
@@ -251,7 +267,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
 
   return (
     <Card
-      variant="interactive"
+      variant="standard"
       padding="compact"
       className="relative overflow-hidden rounded-[18px] border-gray-200/90 shadow-sm shadow-gray-200/50 dark:border-gray-700/90 dark:shadow-black/20"
     >
@@ -292,32 +308,22 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
           {studyMode === 'pelaa' ? (
             availableDifficulties.length > 0 ? (
               <div className="space-y-2">
-                <Button
+                <PrimaryActionButton
                   onClick={() =>
                     primarySet && router.push(buildDifficultyHref(primarySet.code, studyMode, primaryDifficulty))
                   }
                   mode="quiz"
-                  variant="primary"
-                  size="chip"
-                  className={cn(
-                    playPageButtonShadow,
-                    'group h-[52px] w-full min-w-12 justify-between rounded-[14px] px-3.5 text-[15px] font-semibold min-[481px]:h-12 max-[480px]:text-[14px]'
-                  )}
-                  aria-label={`${primaryScore ? 'Jatka' : 'Aloita'} ${difficultyLabels[primaryDifficulty]} vaikeustaso`}
-                >
-                  <span className="flex items-center gap-2">
-                    {difficultyIcons[primaryDifficulty]}
-                    <span>{primaryScore ? 'Jatka' : 'Aloita'} {difficultyLabels[primaryDifficulty]}</span>
-                  </span>
-                  <span className="flex items-center gap-2 text-white/85">
-                    {primaryScore && (
+                  icon={difficultyIcons[primaryDifficulty]}
+                  label={primaryActionText}
+                  ariaLabel={`${primaryActionText} vaikeustaso`}
+                  rightMeta={
+                    primaryScore ? (
                       <span className="text-[12px] font-medium tabular-nums max-[480px]:text-[11px]">
                         {primaryScore.score}/{primaryScore.total}
                       </span>
-                    )}
-                    <ArrowRight size={16} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
-                  </span>
-                </Button>
+                    ) : null
+                  }
+                />
 
                 <div
                   className={cn(
@@ -353,33 +359,45 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                         aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
                       >
                         <span className={colors.icon}>{icon}</span>
-                        <span className="truncate">{difficultyLabels[difficulty]}</span>
+                        {difficulty === 'aikahaaste' ? (
+                          <span className="truncate">
+                            <span className="max-[390px]:hidden">Aikahaaste</span>
+                            <span className="hidden max-[390px]:inline">Aika</span>
+                          </span>
+                        ) : (
+                          <span className="truncate">{difficultyLabels[difficulty]}</span>
+                        )}
                       </Button>
                     );
                   })}
                 </div>
 
-                <div className="flex items-center justify-between gap-2 border-t border-gray-200/80 pt-1 dark:border-gray-700/80">
+                <div className="flex min-h-8 items-center justify-between gap-2 border-t border-gray-200/80 py-1 dark:border-gray-700/80">
                   {reviewCandidate ? (
                     <Button
                       onClick={() => router.push(`/play/${reviewCandidate.set.code}?mode=review`)}
                       mode="review"
                       variant="ghost"
                       size="sm"
-                      className="h-auto min-h-0 gap-1 rounded-md px-0.5 py-0.5 text-[12px] font-semibold text-rose-700 hover:bg-rose-50 hover:text-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/25"
+                      className="h-6 min-h-0 gap-1 rounded-md px-0.5 py-0 text-[12px] font-semibold leading-none text-rose-700 hover:bg-rose-50 hover:text-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/25"
                       aria-label="Virheet"
                     >
                       <ArrowCounterClockwise size={14} weight="duotone" className="inline" />
                       Virheet ({reviewCandidate.count})
                     </Button>
                   ) : (
-                    <span className="text-[12px] font-medium text-gray-500 dark:text-gray-400">↻ Virheet (0)</span>
+                    <span
+                      className="pointer-events-none inline-flex h-6 items-center text-[12px] font-medium leading-none text-gray-600 opacity-40 dark:text-gray-300"
+                      aria-disabled="true"
+                    >
+                      ↻ Virheet (0)
+                    </span>
                   )}
 
-                  <span className="truncate text-right text-[12px] text-gray-500 dark:text-gray-400">
+                  <span className="inline-flex h-6 items-center truncate text-right text-[12px] leading-none text-gray-600 dark:text-gray-300">
                     {latestDifficultyScore
                       ? `${difficultyLabels[latestDifficultyScore.difficulty]} · ${latestDifficultyScore.score.score}/${latestDifficultyScore.score.total} (${latestDifficultyScore.score.percentage}%)`
-                      : 'Ei tuloksia vielä'}
+                      : 'Ei tuloksia'}
                   </span>
                 </div>
               </div>
@@ -387,7 +405,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
               <p className="text-sm text-gray-500 dark:text-gray-400">Ei pelimuotoa saatavilla</p>
             )
           ) : groupHasFlashcards ? (
-            <Button
+            <PrimaryActionButton
               onClick={() => {
                 const flashcardSet = group.sets.find((s) => s.mode === 'flashcard');
                 if (flashcardSet) {
@@ -395,18 +413,10 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                 }
               }}
               mode="study"
-              variant="primary"
-              size="chip"
-              className={cn(
-                playPageButtonShadow,
-                'group h-11 min-w-11 justify-center gap-2 rounded-[14px] px-3 text-[15px] font-semibold whitespace-nowrap active:scale-[0.99] max-[480px]:h-[42px] max-[480px]:text-[14px]'
-              )}
-              aria-label="Opettele korttien avulla"
-            >
-              <Book size={20} weight="duotone" />
-              Opettele
-              <ArrowRight size={18} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
-            </Button>
+              icon={<Book size={20} weight="duotone" />}
+              label="Opettele"
+              ariaLabel="Opettele korttien avulla"
+            />
           ) : (
             <p className="text-sm text-gray-500 dark:text-gray-400">Ei kortteja saatavilla</p>
           )}
@@ -735,7 +745,7 @@ function PlayBrowsePageContent() {
       />
 
       <div className="mx-auto max-w-4xl px-4 pb-10 pt-4 md:p-12">
-        <div className="mb-5 hidden sm:block">
+        <div className="mb-3.5 hidden sm:block">
           <div className="mb-1.5 flex items-center gap-2">
             <BookOpenText size={28} weight="duotone" className="text-indigo-600 dark:text-indigo-400" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 md:text-3xl">Valitse aihealue</h1>
