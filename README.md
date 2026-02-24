@@ -9,8 +9,6 @@ Koekertaaja is an interactive exam preparation application that helps students p
 <img width="551" height="730" alt="image" src="https://github.com/user-attachments/assets/c4d90bd5-d8db-4880-adce-ce764eed4d2d" />
 <img width="620" height="1205" alt="image" src="https://github.com/user-attachments/assets/5b5b083d-aa7e-4a02-8d06-f514ed4e1c0b" />
 
-
-
 ![Made with Next.js](https://img.shields.io/badge/Next.js-14-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)
