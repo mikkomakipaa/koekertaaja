@@ -205,16 +205,16 @@ export function CelebrationModal({ type, onClose, questionSetName, badges = [] }
         )}
       >
         <div role="status" aria-live="polite" className="sr-only">
-          {type === 'perfect-score' && 'Täydellinen suoritus! Sait kaikki kysymykset oikein.'}
-          {type === 'all-badges' && 'Mestari suorittaja! Olet avannut kaikki merkit.'}
+          {type === 'perfect-score' && 'W Pisteet. Sait kaikki kysymykset oikein.'}
+          {type === 'all-badges' && 'Goated Merkit. Olet avannut kaikki merkit.'}
         </div>
 
         {type === 'perfect-score' && (
           <>
             {!prefersReducedMotion && showConfetti && <Confetti count={60} onComplete={() => setShowConfetti(false)} />}
             <div className="text-center">
-              <h2 id={titleId} className="mb-4 text-3xl font-bold text-emerald-600 dark:text-emerald-400 md:text-4xl">
-                💯 TÄYDELLINEN SUORITUS! 💯
+              <h2 id={titleId} className="mb-4 text-3xl font-bold text-indigo-600 dark:text-indigo-400 md:text-4xl">
+                W Pisteet.
               </h2>
               <p id={descriptionId} className="mb-6 text-lg text-slate-900 dark:text-slate-100 md:text-xl">
                 Sait kaikki kysymykset oikein!
@@ -227,7 +227,7 @@ export function CelebrationModal({ type, onClose, questionSetName, badges = [] }
               <Button
                 onClick={handleClose}
                 size="lg"
-                className="min-h-12 speed-quiz-primary focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                className="min-h-12 speed-quiz-primary focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
               >
                 Jatka harjoittelua
               </Button>
@@ -250,7 +250,7 @@ export function CelebrationModal({ type, onClose, questionSetName, badges = [] }
                 </div>
               </div>
               <h2 id={titleId} className="mb-4 text-3xl font-bold text-amber-600 dark:text-amber-400 md:text-4xl">
-                MESTARI SUORITTAJA!
+                Goated Merkit.
               </h2>
               <p id={descriptionId} className="mb-4 text-lg text-slate-900 dark:text-slate-100 md:text-xl">
                 Olet avannut kaikki {allBadgesLabel} merkkiä!

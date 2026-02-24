@@ -358,23 +358,23 @@ export function ResultsScreen({
   const getCelebration = () => {
     if (percentage === 100) return {
       icon: <Star size={48} weight="fill" className="text-yellow-500" />,
-      text: 'Täydelliset pisteet!'
+      text: 'W Pisteet.'
     };
     if (percentage >= 90) return {
       icon: <Rocket size={48} weight="duotone" className="text-purple-500" />,
-      text: 'Erinomaista!'
+      text: 'Sigma Suoritus.'
     };
     if (percentage >= 80) return {
       icon: <Fire size={48} weight="fill" className="text-orange-500" />,
-      text: 'Hienoa työtä!'
+      text: 'Slay Kierros.'
     };
     if (percentage >= 60) return {
       icon: <Target size={48} weight="duotone" className="text-blue-500" />,
-      text: 'Hyvää työtä!'
+      text: 'Vibe Tulos.'
     };
     return {
       icon: <Barbell size={48} weight="bold" className="text-orange-500" />,
-      text: 'Jatka harjoittelua!'
+      text: 'Mid Grindi.'
     };
   };
 
