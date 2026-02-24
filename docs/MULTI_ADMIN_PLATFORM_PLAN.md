@@ -17,6 +17,20 @@ Transform the app into a secure multi-admin platform where:
 - Optional school/tenant isolation can be enabled without breaking single-school deployments.
 - RLS protects data even if an API route has a bug.
 
+## Review Outcome (Updated)
+
+Plan status after review: **conditionally approved**.
+
+Before implementation starts, the following blockers must be resolved because they affect security-critical behavior or migration correctness:
+
+1. **Auth enforcement approach is still undecided** (middleware + route client pattern).
+2. **Legacy owner backfill owner is not yet selected** (blocks `owner_user_id NOT NULL`).
+3. **Public read behavior for published sets must be explicitly preserved** to avoid breaking student game joins.
+4. **API key encryption and rotation strategy must be chosen up front** (Vault/KMS vs libsodium).
+5. **GDPR delivery is mandatory and must be phased as deliverables, not only listed as open questions**.
+
+Implementation should not proceed past Phase 0/1 gates until these are closed in writing.
+
 ## Proposed Architecture
 
 ### 1) Identity and authorization baseline (Supabase Auth)
@@ -64,7 +78,7 @@ Add/extend tables:
   - `key_last4 text not null`
   - `is_active boolean default true`
   - `created_at/updated_at timestamptz`
-  - unique `(user_id, provider, is_active)` partial unique for active rows
+  - partial unique index on `(user_id, provider)` where `is_active = true`
 
 ### 3) RLS policies (critical)
 
@@ -83,8 +97,8 @@ Enable RLS and enforce:
   - user can `select/insert/update/delete` only where `user_id = auth.uid()`.
 
 - `student_profiles`
-  - no direct client RLS via `auth.uid()` — students are not Supabase Auth users.
-  - all reads and writes go through a dedicated server-side route that validates the `join_token` from a signed session cookie before touching the table.
+  - no direct client table access (students are not Supabase Auth users).
+  - all reads/writes go through a dedicated server-side route that validates the `join_token` from a signed session cookie before touching the table.
   - service role used exclusively; no anon key access permitted.
 
 ### 4) API route and service-layer changes
@@ -181,10 +195,9 @@ Explicitly excluded to keep data minimal and reduce GDPR surface:
 Data retention: student profiles with no linked sessions older than the configured retention period (see open question 7) should be deleted by a scheduled job.
 
 RLS for `student_profiles`:
-- `select`: allow via matching `join_token` supplied in a server-validated session cookie or JWT claim — not exposed to other students or admins.
-- `insert`: allow from application service role only (client sends token, server inserts row).
-- `update`: `display_name` only, restricted to matching `join_token` session.
-- `delete`: service role only (for retention job and GDPR deletion).
+- direct RLS policies are intentionally not exposed to browser clients.
+- all operations (`select/insert/update/delete`) are executed by a tightly scoped server-side service layer after join-token validation.
+- no endpoint may return rows across tokens; handlers must always scope by a single validated token.
 
 ## Migration Plan (incremental)
 
@@ -200,11 +213,21 @@ RLS for `student_profiles`:
 - **decide self-signup policy** (gates Phase 1 — open signup without rate limits + per-user budget is equivalent to no rate limiting),
 - **decide legacy data backfill owner** (gates Phase 1 — `NOT NULL` enforcement cannot complete without this).
 
+Exit criteria:
+- security baseline tasks completed and verified,
+- self-signup policy decision documented,
+- legacy backfill owner decision documented.
+
 ### Phase 1 — Auth + ownership columns
 - add `owner_user_id` nullable first,
 - backfill existing rows to bootstrap owner account,
 - enforce NOT NULL once complete,
 - add RLS policies.
+
+Exit criteria:
+- `question_sets.owner_user_id` is non-null for all rows,
+- anonymous read path for published sets is validated with an automated test,
+- cross-owner write attempts fail in tests.
 
 ### Phase 2 — API hardening
 - patch all write routes to use session user — routes to cover (exhaustive list must be verified before this phase closes):
@@ -217,10 +240,20 @@ RLS for `student_profiles`:
 - add Next.js middleware (`middleware.ts`) enforcing session checks before route handlers are reached,
 - add negative tests for cross-owner access.
 
+Exit criteria:
+- write-route inventory is signed off as exhaustive,
+- middleware is enabled for all admin pages and admin API prefixes,
+- route tests confirm unauthenticated requests fail before DB writes are attempted.
+
 ### Phase 3 — API key isolation
 - create `admin_api_keys`, settings UI, encryption service,
 - route provider calls via per-user key resolver,
 - add usage/audit logging.
+
+Exit criteria:
+- encryption/rotation strategy is implemented and documented,
+- full key material is never returned by API responses or logs,
+- per-user token and cost usage is queryable for budget enforcement.
 
 ### Phase 4 — School bonus
 - add `schools` and `admin_profiles.school_id`,
@@ -234,6 +267,11 @@ RLS for `student_profiles`:
 - add teacher profile display in admin UI (display name shown on question set list and dashboard),
 - add student data retention scheduled job (delete profiles with no sessions older than configured period),
 - verify no student PII is stored beyond display name and token.
+
+Exit criteria:
+- student join-token flow works end-to-end without Supabase Auth login,
+- retention cleanup job is deployed with configured retention window,
+- GDPR deletion path covers both admin-owned data and student pseudonymous profiles.
 
 ## Open Questions to Validate (Design Review Checklist)
 
