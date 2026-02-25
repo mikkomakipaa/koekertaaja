@@ -7,7 +7,10 @@ import type { QuestionSet } from '@/types';
 
 export const metadata: Metadata = {
   title: 'Aikahaaste | Koekertaaja',
-  description: 'Nopea haaste - 10 kysymystä, 15 sekuntia',
+  description: 'Nopea aikahaaste – vastaa 10 kysymykseen 15 sekunnissa. Testaa tietosi ja paranna tulostasi!',
+  alternates: {
+    canonical: '/play/speed-quiz',
+  },
 };
 
 const MIN_SPEED_QUIZ_QUESTIONS = 10;
