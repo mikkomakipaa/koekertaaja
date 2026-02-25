@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.png',
   },
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     title: 'Koekertaaja – Kivaa koeharjoittelua',
     description:
@@ -25,6 +29,12 @@ export const metadata: Metadata = {
     siteName: 'Koekertaaja',
     locale: 'fi_FI',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Koekertaaja – Kivaa koeharjoittelua',
+    description:
+      'Harjoittele kokeisiin hauskasti! Luo omista materiaaleista AI-tekoälyn tekemät visat ja muistikortit, kerää pisteitä ja pidä putki käynnissä.',
   },
 };
 
