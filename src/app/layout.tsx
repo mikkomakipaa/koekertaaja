@@ -21,6 +21,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: {
+    google: '9JhD0hqfjr3HYcRFsbZrxRUrkHafo0zXkL3ePvDCmwc',
+  },
   openGraph: {
     title: 'Koekertaaja – Kivaa koeharjoittelua',
     description:
