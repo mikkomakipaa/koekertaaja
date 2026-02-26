@@ -1,6 +1,6 @@
 import { Difficulty } from '@/types';
 import { DIFFICULTY_LEVELS } from '@/config/subjects';
-import { cn } from '@/lib/utils';
+import { SelectableCard, SelectableCardGroup } from '@/components/ui/selectable-card-group';
 
 interface DifficultySelectorProps {
   selectedDifficulty: Difficulty;
@@ -16,23 +16,20 @@ export function DifficultySelector({
       <label className="block text-lg font-bold mb-3 text-gray-800">
         🎯 Valitse vaikeustaso
       </label>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <SelectableCardGroup className="grid-cols-2 md:grid-cols-4">
         {DIFFICULTY_LEVELS.map((level) => (
-          <button
+          <SelectableCard
             key={level.value}
-            onClick={() => onDifficultyChange(level.value as Difficulty)}
-            className={cn(
-              "p-4 rounded-lg border-2 transition-all",
-              selectedDifficulty === level.value
-                ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                : "border-gray-300 bg-white text-gray-700 hover:border-indigo-400"
-            )}
-          >
-            <div className="font-semibold mb-1">{level.label}</div>
-            <div className="text-xs text-gray-600">{level.description}</div>
-          </button>
+            onSelect={() => onDifficultyChange(level.value as Difficulty)}
+            isSelected={selectedDifficulty === level.value}
+            label={level.label}
+            description={level.description}
+            className="p-4"
+            labelClassName="font-semibold mb-1"
+            descriptionClassName="text-xs text-gray-600"
+          />
         ))}
-      </div>
+      </SelectableCardGroup>
     </div>
   );
 }

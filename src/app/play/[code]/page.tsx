@@ -33,6 +33,11 @@ import {
   selectRandomQuestionsForAikahaaste,
   shouldShowAikahaasteTimer,
 } from '@/lib/play/aikahaaste';
+import {
+  buildFlashcardTopicCounts,
+  buildQuestionTopicLookup,
+  filterFlashcardsByTopic,
+} from '@/lib/play/flashcard-topic-lookup';
 import { QuestionSetWithQuestions, StudyMode, Flashcard, type QuestionType, type QuestionFlagReason } from '@/types';
 import { createLogger } from '@/lib/logger';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -185,12 +190,30 @@ export default function PlayPage() {
     return selectRandomQuestionsForAikahaaste(questionSet.questions, AIKAHAASTE_QUESTION_COUNT);
   }, [isAikahaaste, questionSet?.questions]);
 
+  const questionTopicLookup = useMemo(() => {
+    if (!questionSet?.questions) {
+      return new Map<string, string>();
+    }
+    return buildQuestionTopicLookup(questionSet.questions);
+  }, [questionSet?.questions]);
+
+  const flashcardTopicCounts = useMemo(
+    () => buildFlashcardTopicCounts(flashcards, questionTopicLookup),
+    [flashcards, questionTopicLookup]
+  );
+
+  const filteredFlashcards = useMemo(
+    () => filterFlashcardsByTopic(flashcards, selectedTopic, questionTopicLookup),
+    [flashcards, selectedTopic, questionTopicLookup]
+  );
+
   const {
     currentQuestion,
     currentQuestionIndex,
     selectedQuestions,
     userAnswer,
     showExplanation,
+    currentAnswerEvaluation,
     score,
     answers,
     isLastQuestion,
@@ -892,9 +915,7 @@ export default function PlayPage() {
 
               {/* Individual Topic Options */}
               {availableTopics.map((topic) => {
-                const topicCardCount = flashcards.filter(f =>
-                  questionSet?.questions.find(q => q.id === f.questionId)?.topic === topic
-                ).length;
+                const topicCardCount = flashcardTopicCounts.get(topic) ?? 0;
 
                 return (
                   <button
@@ -933,14 +954,6 @@ export default function PlayPage() {
         </div>
       );
     }
-
-    // Filter flashcards by selected topic
-    const filteredFlashcards = selectedTopic && selectedTopic !== 'ALL'
-      ? flashcards.filter(f => {
-          const question = questionSet?.questions.find(q => q.id === f.questionId);
-          return question?.topic === selectedTopic;
-        })
-      : flashcards;
 
     return (
       <FlashcardSession
@@ -1054,18 +1067,12 @@ export default function PlayPage() {
               )}
             </div>
 
-            {/* Progress bar + Percentage (same row) */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 bg-white/30 rounded-full h-2 overflow-hidden">
-                <div
-                  className="bg-white h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(currentQuestionIndex / selectedQuestions.length) * 100}%` }}
-                />
-              </div>
-              <span className="text-sm text-indigo-100 font-medium whitespace-nowrap">
-                {Math.round((currentQuestionIndex / selectedQuestions.length) * 100)}% valmis
-              </span>
-            </div>
+            <ProgressBar
+              current={currentQuestionIndex}
+              total={selectedQuestions.length}
+              mode="quiz"
+              variant="header"
+            />
           </div>
         </div>
       )}
@@ -1122,6 +1129,7 @@ export default function PlayPage() {
               question={currentQuestion}
               userAnswer={userAnswer}
               showExplanation={showExplanation}
+              answerIsCorrect={currentAnswerEvaluation?.isCorrect}
               onAnswerChange={setUserAnswer}
               placeholderHint={placeholderHint}
             />

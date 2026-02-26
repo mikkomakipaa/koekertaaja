@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
 
 const TS_EXTENSIONS = new Set(['.ts', '.tsx']);
+const CSS_EXTENSIONS = new Set(['.css']);
 
 export async function resolve(specifier, context, defaultResolve) {
   if (specifier.startsWith('@/')) {
@@ -46,8 +47,15 @@ export async function resolve(specifier, context, defaultResolve) {
 }
 
 export async function load(url, context, defaultLoad) {
-  const extension = new URL(url).pathname.split('.').pop();
-  if (extension && TS_EXTENSIONS.has(`.${extension}`)) {
+  const extension = `.${new URL(url).pathname.split('.').pop()}`;
+  if (CSS_EXTENSIONS.has(extension)) {
+    return {
+      format: 'module',
+      source: 'export default {};',
+      shortCircuit: true,
+    };
+  }
+  if (TS_EXTENSIONS.has(extension)) {
     const source = await readFile(new URL(url), 'utf8');
     const output = ts.transpileModule(source, {
       compilerOptions: {

@@ -8,6 +8,7 @@ interface FillBlankProps {
   question: FillBlankQuestion;
   userAnswer: string;
   showExplanation: boolean;
+  isAnswerCorrect?: boolean;
   onAnswerChange: (answer: string) => void;
   placeholderHint?: string;
 }
@@ -16,15 +17,11 @@ export function FillBlank({
   question,
   userAnswer,
   showExplanation,
+  isAnswerCorrect = false,
   onAnswerChange,
   placeholderHint,
 }: FillBlankProps) {
-  const isCorrect = showExplanation && (
-    userAnswer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim() ||
-    (question.acceptable_answers?.some(
-      (ans) => ans.toLowerCase().trim() === userAnswer.toLowerCase().trim()
-    ) ?? false)
-  );
+  const isCorrect = showExplanation && isAnswerCorrect;
 
   return (
     <div className="space-y-4">

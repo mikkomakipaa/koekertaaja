@@ -1,13 +1,14 @@
 import { ShortAnswerQuestion } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
 import { MathText } from '@/components/ui/math-text';
-import { CheckCircle, XCircle } from '@phosphor-icons/react';
+import { CheckCircle } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 
 interface ShortAnswerProps {
   question: ShortAnswerQuestion;
   userAnswer: string;
   showExplanation: boolean;
+  isAnswerCorrect?: boolean;
   onAnswerChange: (answer: string) => void;
   placeholderHint?: string;
 }
@@ -16,17 +17,11 @@ export function ShortAnswer({
   question,
   userAnswer,
   showExplanation,
+  isAnswerCorrect = false,
   onAnswerChange,
   placeholderHint,
 }: ShortAnswerProps) {
-  // For short answer questions, we'll do a flexible comparison
-  // Check if user answer contains key parts of the correct answer
-  const isCorrect = showExplanation && (
-    userAnswer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim() ||
-    (question.acceptable_answers?.some(
-      (ans) => ans.toLowerCase().trim() === userAnswer.toLowerCase().trim()
-    ) ?? false)
-  );
+  const isCorrect = showExplanation && isAnswerCorrect;
 
   return (
     <div className="space-y-4">

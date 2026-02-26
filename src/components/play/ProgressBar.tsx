@@ -1,12 +1,13 @@
 interface ProgressBarProps {
   current: number;
   total: number;
-  score: number;
   mode?: 'quiz' | 'flashcard';
+  variant?: 'default' | 'header';
 }
 
-export function ProgressBar({ current, total, score, mode = 'quiz' }: ProgressBarProps) {
-  const progress = (current / total) * 100;
+export function ProgressBar({ current, total, mode = 'quiz', variant = 'default' }: ProgressBarProps) {
+  const safeTotal = total > 0 ? total : 1;
+  const progress = (current / safeTotal) * 100;
   const progressRounded = Math.round(progress);
   const barColor =
     mode === 'flashcard'
@@ -16,6 +17,26 @@ export function ProgressBar({ current, total, score, mode = 'quiz' }: ProgressBa
     mode === 'flashcard'
       ? 'text-teal-600 dark:text-teal-400'
       : 'text-indigo-600 dark:text-indigo-400';
+
+  if (variant === 'header') {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="flex-1 bg-white/30 rounded-full h-2 overflow-hidden">
+          <div
+            className="bg-white h-2 rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          />
+        </div>
+        <span className="text-sm text-indigo-100 font-medium whitespace-nowrap">
+          {progressRounded}% valmis
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-6">

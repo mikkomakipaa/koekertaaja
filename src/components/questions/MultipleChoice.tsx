@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { MultipleChoiceQuestion } from '@/types';
-import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
 import { CheckCircle, XCircle } from '@phosphor-icons/react';
 import { cn, shuffleArray } from '@/lib/utils';

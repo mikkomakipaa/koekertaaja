@@ -11,6 +11,11 @@ const POINTS_PER_CORRECT = 10;
 const STREAK_BONUS = 5;
 const logger = createLogger({ module: 'useGameSession' });
 
+type CurrentAnswerEvaluation = {
+  isCorrect: boolean;
+  correctAnswer: unknown;
+};
+
 export function useGameSession(
   allQuestions: Question[],
   questionsPerSession = DEFAULT_QUESTIONS_PER_SESSION,
@@ -24,6 +29,7 @@ export function useGameSession(
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
   const [userAnswer, setUserAnswer] = useState<any>(null);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [currentAnswerEvaluation, setCurrentAnswerEvaluation] = useState<CurrentAnswerEvaluation | null>(null);
   const [score, setScore] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [totalPoints, setTotalPoints] = useState(0);
@@ -39,6 +45,7 @@ export function useGameSession(
       setCurrentQuestionIndex(0);
       setUserAnswer(null);
       setShowExplanation(false);
+      setCurrentAnswerEvaluation(null);
       setScore(0);
       setAnswers([]);
       setTotalPoints(0);
@@ -139,6 +146,7 @@ export function useGameSession(
     setCurrentQuestionIndex(0);
     setUserAnswer(null);
     setShowExplanation(false);
+    setCurrentAnswerEvaluation(null);
     setScore(0);
     setAnswers([]);
     setTotalPoints(0);
@@ -158,6 +166,7 @@ export function useGameSession(
       grade,
       subject
     );
+    setCurrentAnswerEvaluation({ isCorrect, correctAnswer });
 
     let pointsEarned = 0;
     let newStreak = currentStreak;
@@ -251,6 +260,7 @@ export function useGameSession(
     if (!currentQuestion) return;
 
     const { correctAnswer } = evaluateQuestionAnswer(currentQuestion, '', grade, subject);
+    setCurrentAnswerEvaluation({ isCorrect: false, correctAnswer });
 
     // Skipping always resets the streak
     setCurrentStreak(0);
@@ -300,6 +310,7 @@ export function useGameSession(
     setCurrentQuestionIndex((prev) => prev + 1);
     setUserAnswer(null);
     setShowExplanation(false);
+    setCurrentAnswerEvaluation(null);
   }, []);
 
   const isLastQuestion = currentQuestionIndex >= selectedQuestions.length - 1;
@@ -311,6 +322,7 @@ export function useGameSession(
     selectedQuestions,
     userAnswer,
     showExplanation,
+    currentAnswerEvaluation,
     score,
     answers,
     isLastQuestion,

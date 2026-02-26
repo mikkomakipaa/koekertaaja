@@ -361,8 +361,8 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                         <span className={colors.icon}>{icon}</span>
                         {difficulty === 'aikahaaste' ? (
                           <span className="truncate">
-                            <span className="max-[390px]:hidden">Aikahaaste</span>
-                            <span className="hidden max-[390px]:inline">Aika</span>
+                            <span className="sm:hidden">Aika</span>
+                            <span className="hidden sm:inline">Aikahaaste</span>
                           </span>
                         ) : (
                           <span className="truncate">{difficultyLabels[difficulty]}</span>

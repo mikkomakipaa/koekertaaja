@@ -31,6 +31,24 @@ Before implementation starts, the following blockers must be resolved because th
 
 Implementation should not proceed past Phase 0/1 gates until these are closed in writing.
 
+## Non-Disruption Contract (Mandatory)
+
+The migration must preserve current usage and user journey quality at every phase.
+
+Hard requirements:
+- Student play journey (`/play` -> join by code -> answer flow -> results) must remain publicly accessible with no auth prompt introduced.
+- Existing teacher/admin core flow (create -> publish -> play-test) must remain available during rollout through either legacy or new path (no dead window between migrations and route changes).
+- No phase may be merged unless staging verifies parity for current critical journeys:
+  - Landing -> Play list -> Open set by code -> Complete session,
+  - Create question set -> Publish -> Open in play view,
+  - Review mistakes and results screens load as before.
+- If any phase increases critical journey failure rate or introduces blocking auth/UI friction, rollout pauses and the phase is rolled back.
+
+Release guardrails:
+- Use feature flags for new admin-only surfaces (API key settings, school filters) so they can be disabled without reverting DB migrations.
+- Apply DB changes in expand/contract order: add nullable columns + compatible code first, backfill, enforce constraints, then tighten policies.
+- Keep anonymous published-set read policy active until replacement policy is verified in production-like tests.
+
 ## Proposed Architecture
 
 ### 1) Identity and authorization baseline (Supabase Auth)
@@ -109,6 +127,11 @@ Update server endpoints to always resolve authenticated user first and then scop
 - which Supabase client helper is used in route handlers (`createRouteHandlerClient` vs `createServerActionClient` vs service role),
 - whether a Next.js `middleware.ts` guards admin pages and API routes before handler execution,
 - how admin-only pages (e.g. `/admin/settings/api-keys`) are protected at the page/layout level.
+
+Required middleware scope contract (to avoid journey disruption):
+- Protect only admin surfaces by matcher allowlist (for example: `/create/:path*`, `/admin/:path*`, `/api/admin/:path*`, and explicitly owner-scoped write APIs).
+- Explicitly exclude public/student surfaces from auth middleware (for example: `/`, `/play/:path*`, public published-set read endpoints, static assets, and health checks).
+- Add automated tests for matcher behavior so admin routes reject unauthenticated access while student/public routes stay accessible.
 
 - create question set route:
   - write `owner_user_id` from session, never from client payload.
@@ -224,6 +247,13 @@ Exit criteria:
 - enforce NOT NULL once complete,
 - add RLS policies.
 
+Zero-downtime choreography (mandatory sequence):
+1. Deploy code that can read/write with `owner_user_id` nullable and preserves current public read behavior.
+2. Run backfill for all legacy rows and verify row counts.
+3. Enable NOT NULL constraint only after verification.
+4. Deploy tightened owner-scoped write queries and RLS.
+5. Run post-deploy smoke tests for both admin and student journeys before phase close.
+
 Exit criteria:
 - `question_sets.owner_user_id` is non-null for all rows,
 - anonymous read path for published sets is validated with an automated test,
@@ -259,6 +289,8 @@ Exit criteria:
 - add `schools` and `admin_profiles.school_id`,
 - ship school-scoped filtering (read-only first),
 - decide whether to move to strict tenancy.
+
+**Prerequisite for**: `DWF/USER_JOURNEYS.md` Journey 6 (Aloita → Select school → Play). The school picker, filtered play page, and school-scoped question set discovery cannot be built until `schools` table and `school_id` on `question_sets` exist. Phase 5 (`student_profiles.school_id`) is additionally required for persisting the student's school selection across sessions.
 
 ### Phase 5 — User profiles
 - create `student_profiles` table with `join_token` index,
@@ -365,6 +397,28 @@ The following gaps were identified during implementation review and must be addr
 | Write route inventory incomplete | High | Phase 2 | All write routes must be enumerated and verified before Phase 2 closes |
 | Legacy backfill strategy undefined | High | Phase 1 | `NOT NULL` cannot be enforced until question 2 is answered |
 
+## Full Risk Review (Expanded)
+
+| Risk | Category | Likelihood | Impact | Early signal | Mitigation | Rollback trigger |
+|------|----------|------------|--------|--------------|------------|------------------|
+| Auth middleware accidentally blocks public play paths | UX/Availability | Medium | Critical | Spike in 401/403 on `/play/*` | Strict matcher allowlist + explicit public exclusions + route tests | Any auth prompt or 401 on student play flow |
+| Published-set anonymous read removed by new RLS | UX/Data access | Medium | Critical | Join-by-code failures increase | Preserve current published-read policy until replacement is verified | Join success drops below baseline |
+| `owner_user_id` backfill incomplete before NOT NULL | Migration | Medium | High | Constraint failure / failed writes | Pre-enforcement completeness query + staged enforce | Any failed create/update due to missing owner |
+| Service-role route bypasses owner checks | Security | Low-Medium | Critical | Cross-owner mutation test fails | Prefer user-scoped client; if service role needed, enforce owner predicate in same query | Any cross-owner write success |
+| Open signup abuse increases AI costs | Abuse/Cost | Medium | High | Sudden signup/generation spikes | Rate limits + per-user budgets + anomaly alerts before open signup | Unbounded spend or repeated abuse pattern |
+| API key decryption/logging leak | Security/Compliance | Low | Critical | Secrets appear in logs/trace | Redaction guards + tests + no full-key responses | Any key material exposure |
+| Per-user key strictness breaks generation for existing users | UX | Medium | High | Increase in generation errors after Phase 3 | Grace mode with warning + migration window + clear error UX | Generation completion drops materially |
+| School filter introduces empty-state confusion | UX | Medium | Medium | Higher drop-off from play listing | Keep school features behind flag; default behavior unchanged | Significant funnel drop in play selection |
+| Student token lifecycle regression (lost identity/progress unexpectedly) | UX/Data | Medium | Medium | Repeat visitors treated as new unexpectedly | Signed cookie + localStorage fallback tests + clear recovery UX | Identity restore failure rate above threshold |
+| GDPR deletion/export missing when data model expands | Compliance | Medium | High | Open compliance findings | Phase-assigned GDPR deliverables + retention job + audit logs | Compliance gate fails for release |
+| Migration rollback path untested | Operations | Medium | High | Staging recovery drills fail | Mandatory rollback rehearsal each phase | Inability to restore on staging drill |
+| Performance degradation from new policy/index patterns | Performance | Low-Medium | Medium | API latency regressions on play/create | Add required indexes + baseline comparison tests | P95 latency regression above agreed threshold |
+
+Risk ownership and cadence:
+- Assign one engineering owner per high-risk item before phase kickoff.
+- Re-evaluate risk table at the end of each phase and before production migration.
+- No phase advances if any Critical-impact risk lacks a tested mitigation path.
+
 ## Validation and Testing Strategy
 
 - Unit tests:
@@ -379,6 +433,14 @@ The following gaps were identified during implementation review and must be addr
 - Migration tests:
   - backfill correctness,
   - rollback script for `owner_user_id` migration.
+- UX continuity tests (mandatory):
+  - anonymous student join-by-code remains accessible without auth,
+  - create -> publish -> play-test flow remains functional during and after each phase,
+  - no regression in critical UI states (loading, empty, error, results) for current journeys.
+- Release gating:
+  - define baseline metrics before Phase 1 (join success rate, generation success rate, P95 latency),
+  - compare post-deploy metrics against baseline for every phase,
+  - automatic rollback if critical journey metrics regress beyond agreed thresholds.
 
 ## Recommended Delivery Sequence
 
@@ -389,3 +451,45 @@ The following gaps were identified during implementation review and must be addr
 5. Collaboration roles last (if needed).
 
 This sequence minimizes risk while delivering immediate multi-admin safety.
+
+---
+
+## Branch and Environment Strategy
+
+### Git branching
+
+Use one short-lived feature branch per phase. Merge to `main` before starting the next phase — never let branches run in parallel or accumulate across multiple phases.
+
+```
+main
+ └─ feat/multi-admin-phase-0   (security baseline: rate limiting, CSP, RLS bug, secure code RNG)
+ └─ feat/multi-admin-phase-1   (auth + ownership columns + RLS policies)
+ └─ feat/multi-admin-phase-2   (API hardening + middleware)
+ └─ feat/multi-admin-phase-3   (API key isolation + encryption)
+ └─ feat/multi-admin-phase-4   (school separation)
+ └─ feat/multi-admin-phase-5   (student profiles + session persistence)
+```
+
+Rules:
+- Each branch is created from the current `main` tip, not from a previous phase branch.
+- Branch is deleted after merge.
+- `main` must remain deployable at all times — each phase must be a complete, safe increment.
+- Do not open a new phase branch until the previous phase PR is merged and verified on staging.
+
+### Supabase environments
+
+Run two separate Supabase projects throughout this migration:
+
+| Environment | Supabase project | Purpose |
+|-------------|-----------------|---------|
+| **Development/staging** | `koekertaaja-dev` | Test all migrations, RLS policies, and rollback scripts before touching production |
+| **Production** | `koekertaaja` (existing) | Only receives migrations after they are verified on staging |
+
+This separation is critical for Phases 1–3 which involve irreversible schema changes (`owner_user_id NOT NULL`, new RLS policies, encrypted key storage). A migration that breaks the student anonymous read path on production cannot be easily rolled back.
+
+Workflow per phase:
+1. Develop and test on `koekertaaja-dev`.
+2. Verify rollback script works on staging.
+3. Run automated tests (RLS policy tests, cross-owner rejection tests).
+4. Apply migration to production only after staging sign-off.
+5. Merge feature branch to `main`.

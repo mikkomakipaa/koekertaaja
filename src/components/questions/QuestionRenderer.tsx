@@ -1,5 +1,6 @@
 import { Question } from '@/types';
 import type { ShortAnswerQuestion } from '@/types';
+import { evaluateQuestionAnswer } from '@/lib/questions/answer-evaluation';
 import { MultipleChoice } from './MultipleChoice';
 import { MultipleSelect } from './MultipleSelect';
 import { FillBlank } from './FillBlank';
@@ -12,6 +13,7 @@ interface QuestionRendererProps {
   question: Question;
   userAnswer: any;
   showExplanation: boolean;
+  answerIsCorrect?: boolean;
   onAnswerChange: (answer: any) => void;
   placeholderHint?: string;
 }
@@ -20,9 +22,15 @@ export function QuestionRenderer({
   question,
   userAnswer,
   showExplanation,
+  answerIsCorrect,
   onAnswerChange,
   placeholderHint,
 }: QuestionRendererProps) {
+  const computedIsCorrect = showExplanation
+    ? evaluateQuestionAnswer(question, userAnswer).isCorrect
+    : false;
+  const normalizedIsCorrect = answerIsCorrect ?? computedIsCorrect;
+
   // Store question type for default case (TypeScript exhaustiveness check)
   const questionType = question.question_type;
 
@@ -43,6 +51,7 @@ export function QuestionRenderer({
           question={question}
           userAnswer={userAnswer || ''}
           showExplanation={showExplanation}
+          isAnswerCorrect={normalizedIsCorrect}
           onAnswerChange={onAnswerChange}
           placeholderHint={placeholderHint}
         />
@@ -84,6 +93,7 @@ export function QuestionRenderer({
           question={question}
           userAnswer={userAnswer || ''}
           showExplanation={showExplanation}
+          isAnswerCorrect={normalizedIsCorrect}
           onAnswerChange={onAnswerChange}
           placeholderHint={placeholderHint}
         />
@@ -110,6 +120,7 @@ export function QuestionRenderer({
           question={flashcardAsShortAnswer}
           userAnswer={userAnswer || ''}
           showExplanation={showExplanation}
+          isAnswerCorrect={normalizedIsCorrect}
           onAnswerChange={onAnswerChange}
           placeholderHint={placeholderHint}
         />

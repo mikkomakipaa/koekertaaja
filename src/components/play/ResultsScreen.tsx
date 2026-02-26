@@ -480,7 +480,7 @@ export function ResultsScreen({
             <TabsTrigger value="overview" className="rounded-xl text-sm md:text-base">Yhteenveto</TabsTrigger>
             <TabsTrigger value="answers" className="rounded-xl text-sm md:text-base">Vastaukset</TabsTrigger>
             <TabsTrigger value="badges" className="rounded-xl text-sm md:text-base">
-              Merkit ({unlockedBadgesCount}/12)
+              Merkit ({unlockedBadgesCount}/{badges.length})
             </TabsTrigger>
           </TabsList>
 
@@ -660,24 +660,28 @@ export function ResultsScreen({
                       <BadgeDisplay
                         badge={badge}
                         key={badge.id}
-                        className={`p-3 rounded-lg text-center ${
+                        className={cn(
+                          'rounded-lg p-3 text-center transition-all',
                           badge.unlocked
                             ? `bg-gradient-to-br ${colors.light} ${colors.dark} border-2`
-                            : 'bg-gray-100 dark:bg-gray-800 opacity-50'
-                        }`}
+                            : 'bg-gray-100 opacity-50 dark:bg-gray-800'
+                        )}
                       >
-                        <div className="text-3xl mb-1 flex justify-center">
+                        <div className="mb-1 flex justify-center text-3xl">
                           {badge.unlocked ? (
                             getBadgeIcon(badge.id)
                           ) : (
                             <LockSimple size={32} weight="fill" className="text-gray-400" />
                           )}
                         </div>
-                        {badge.unlocked && (
-                          <div className={`text-xs font-medium leading-tight ${colors.text}`}>
-                            {badge.name}
-                          </div>
-                        )}
+                        <div
+                          className={cn(
+                            'text-xs font-semibold',
+                            badge.unlocked ? colors.text : 'text-gray-500 dark:text-gray-400'
+                          )}
+                        >
+                          {badge.name}
+                        </div>
                       </BadgeDisplay>
                     );
                   })}
