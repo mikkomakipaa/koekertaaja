@@ -7,39 +7,25 @@ import {
   isSameOriginRequest,
   normalizeOrigin,
 } from '@/lib/security/cors';
-import {
-  buildContentSecurityPolicy,
-  CSP_NONCE_HEADER,
-  generateCspNonce,
-} from '@/lib/security/csp';
+import { buildContentSecurityPolicy } from '@/lib/security/csp';
 
 function applySecurityHeaders(
   response: NextResponse,
-  cspValue: string,
-  nonce: string
+  cspValue: string
 ): NextResponse {
   response.headers.set('Content-Security-Policy', cspValue);
-  response.headers.set(CSP_NONCE_HEADER, nonce);
   return response;
 }
 
 export default async function middleware(request: NextRequest) {
-  const nonce = generateCspNonce();
-  const cspValue = buildContentSecurityPolicy(nonce);
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set(CSP_NONCE_HEADER, nonce);
+  const cspValue = buildContentSecurityPolicy();
 
   // Rate limiting for API routes
   if (request.nextUrl.pathname.startsWith('/api/generate-questions')) {
     if (process.env.NODE_ENV === 'development') {
       return applySecurityHeaders(
-        NextResponse.next({
-          request: {
-            headers: requestHeaders,
-          },
-        }),
-        cspValue,
-        nonce
+        NextResponse.next(),
+        cspValue
       );
     }
 
@@ -70,17 +56,12 @@ export default async function middleware(request: NextRequest) {
             },
           }
         ),
-        cspValue,
-        nonce
+        cspValue
       );
     }
 
     // Add rate limit headers to successful requests
-    const response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+    const response = NextResponse.next();
     response.headers.set(
       'X-RateLimit-Limit',
       rateLimitResult.limit.toString()
@@ -94,7 +75,7 @@ export default async function middleware(request: NextRequest) {
       rateLimitResult.reset.toString()
     );
 
-    return applySecurityHeaders(response, cspValue, nonce);
+    return applySecurityHeaders(response, cspValue);
   }
 
   // CORS configuration for API routes
@@ -111,8 +92,7 @@ export default async function middleware(request: NextRequest) {
     if (origin && !isAllowedOrigin) {
       return applySecurityHeaders(
         NextResponse.json({ error: 'CORS: Origin not allowed' }, { status: 403 }),
-        cspValue,
-        nonce
+        cspValue
       );
     }
 
@@ -125,13 +105,13 @@ export default async function middleware(request: NextRequest) {
           response.headers.set(key, value);
         }
       }
-      return applySecurityHeaders(response, cspValue, nonce);
+      return applySecurityHeaders(response, cspValue);
     }
 
     // Add CORS headers to all API responses (not just OPTIONS)
     const response = NextResponse.next({
       request: {
-        headers: requestHeaders,
+        headers: request.headers,
       },
     });
 
@@ -143,17 +123,12 @@ export default async function middleware(request: NextRequest) {
       }
     }
 
-    return applySecurityHeaders(response, cspValue, nonce);
+    return applySecurityHeaders(response, cspValue);
   }
 
   return applySecurityHeaders(
-    NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    }),
-    cspValue,
-    nonce
+    NextResponse.next(),
+    cspValue
   );
 }
 

@@ -59,14 +59,18 @@ test('builds consistent CORS response headers for credentialed requests', () => 
   assert.equal(headers.Vary, 'Origin');
 });
 
-test('treats same-origin API requests as trusted even when not explicitly allowlisted', () => {
+test('treats same-origin request as trusted regardless of explicit allowlist', () => {
   assert.equal(
-    isSameOriginRequest('https://app.custom-domain.fi', 'https://app.custom-domain.fi'),
+    isSameOriginRequest('https://www.koekertaaja.fi', 'https://www.koekertaaja.fi'),
     true
   );
   assert.equal(
     isSameOriginRequest('https://app.custom-domain.fi:443', 'https://app.custom-domain.fi'),
     true
+  );
+  assert.equal(
+    isSameOriginRequest('https://koekertaaja.fi', 'https://www.koekertaaja.fi'),
+    false
   );
   assert.equal(
     isSameOriginRequest('https://other-domain.fi', 'https://app.custom-domain.fi'),

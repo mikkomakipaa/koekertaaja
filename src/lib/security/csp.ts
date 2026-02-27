@@ -1,15 +1,7 @@
-export const CSP_NONCE_HEADER = 'x-nonce';
-
-export function generateCspNonce(): string {
-  const randomBytes = crypto.getRandomValues(new Uint8Array(16));
-  const ascii = String.fromCharCode(...randomBytes);
-  return btoa(ascii);
-}
-
-export function buildContentSecurityPolicy(nonce: string): string {
+export function buildContentSecurityPolicy(): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' https://va.vercel-scripts.com`,
+    "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",

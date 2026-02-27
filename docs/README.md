@@ -28,8 +28,9 @@ This folder contains comprehensive documentation for the Exam Prepper project.
 ## 🔗 Related Files in Root
 
 - **[../README.md](../README.md)** - Project overview and quick start guide
-- **[../CLAUDE.md](../CLAUDE.md)** - Guidelines for Claude Code when working with this codebase
+- **[../AGENTS.md](../AGENTS.md)** - Guidelines for coding agents working with this codebase
 - **[../CONTRIBUTING.md](../CONTRIBUTING.md)** - Complete contributor guidelines
+- **[PERSONALIZATION_GUIDANCE.md](PERSONALIZATION_GUIDANCE.md)** - Recurring collaboration misunderstandings and guardrails
 
 ## 📖 Quick Links
 

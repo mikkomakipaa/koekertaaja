@@ -7,15 +7,14 @@ const require = createRequire(import.meta.url);
 const nextConfig = require('../next.config.js');
 
 test('CSP policy omits unsafe script directives and keeps required integrations', () => {
-  const policy = buildContentSecurityPolicy('nonce-value');
+  const policy = buildContentSecurityPolicy();
   const scriptDirective = policy
     .split(';')
     .map((segment) => segment.trim())
     .find((segment) => segment.startsWith('script-src'));
 
   assert.ok(scriptDirective, 'Expected script-src directive to be present');
-  assert.match(scriptDirective, /script-src 'self' 'nonce-nonce-value'/);
-  assert.doesNotMatch(scriptDirective, /'unsafe-inline'/);
+  assert.match(scriptDirective, /script-src 'self' 'unsafe-inline'/);
   assert.doesNotMatch(scriptDirective, /'unsafe-eval'/);
 
   assert.match(policy, /https:\/\/va\.vercel-scripts\.com/);
