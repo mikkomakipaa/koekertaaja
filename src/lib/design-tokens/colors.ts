@@ -20,6 +20,14 @@ export const colors = {
     ring: 'ring-teal-500 dark:ring-teal-400',
   },
 
+  map: {
+    primary: 'bg-gradient-to-r from-violet-600 to-violet-500 dark:from-violet-500 dark:to-violet-400',
+    hover: 'hover:from-violet-700 hover:to-violet-600 dark:hover:from-violet-600 dark:hover:to-violet-500',
+    light: 'bg-violet-50 dark:bg-violet-900/20',
+    text: 'text-violet-600 dark:text-violet-400',
+    ring: 'ring-violet-500 dark:ring-violet-400',
+  },
+
   review: {
     primary: 'bg-gradient-to-r from-rose-600 to-rose-500 dark:from-rose-500 dark:to-rose-400',
     hover: 'hover:from-rose-700 hover:to-rose-600 dark:hover:from-rose-600 dark:hover:to-rose-500',

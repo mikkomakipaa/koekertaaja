@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createLogger } from '@/lib/logger';
-import { requireAuth } from '@/lib/supabase/server-auth';
+import { requireAuth, resolveAuthError } from '@/lib/supabase/server-auth';
 import {
   identifyTopicsFromMaterial,
   processUploadedFiles,
@@ -10,8 +10,7 @@ import { parseRequestedProvider, validateRequestedProvider } from '@/lib/api/mod
 import { getSimpleTopics } from '@/lib/ai/topicIdentifier';
 import {
   checkRateLimit,
-  getClientIp,
-  buildRateLimitKey,
+  buildServerRateLimitKey,
   createRateLimitHeaders,
 } from '@/lib/ratelimit';
 
@@ -22,36 +21,38 @@ export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
   const logger = createLogger({ requestId, route: '/api/identify-topics' });
   let baseHeaders: Headers | undefined;
+  const respond = (body: unknown, status = 200, headers?: Headers) =>
+    NextResponse.json(body, { status, headers: headers ?? baseHeaders });
 
   logger.info({ method: 'POST' }, 'Topic identification request received');
 
   try {
-    const clientIp = getClientIp(request.headers);
-    const clientId = request.headers.get('x-client-id') || request.headers.get('x-clientid') || undefined;
     let userId: string | undefined;
 
     // Verify authentication
     try {
-      const user = await requireAuth();
+      const user = await requireAuth(request);
       userId = user.id;
       logger.info('Authentication successful');
     } catch (authError) {
-      logger.warn('Authentication failed');
+      const { status, message } = resolveAuthError(authError, {
+        unauthorized: 'Unauthorized. Please log in to identify topics.',
+      });
+      logger.warn({ status, message }, 'Authentication failed');
+      if (status === 403) {
+        return respond({ error: message }, status);
+      }
     }
 
-    const rateLimitKey = buildRateLimitKey({
-      ip: clientIp,
-      userId,
-      clientId,
+    const rateLimitKey = buildServerRateLimitKey(request.headers, {
       prefix: 'identify-topics',
+      userId,
     });
-    const rateLimitResult = checkRateLimit(rateLimitKey, {
+    const rateLimitResult = await checkRateLimit(rateLimitKey, {
       limit: 10,
       windowMs: 60 * 60 * 1000,
     });
     baseHeaders = createRateLimitHeaders(rateLimitResult);
-    const respond = (body: unknown, status = 200, headers?: Headers) =>
-      NextResponse.json(body, { status, headers: headers ?? baseHeaders });
 
     if (!rateLimitResult.success) {
       const retryAfterSeconds = Math.max(

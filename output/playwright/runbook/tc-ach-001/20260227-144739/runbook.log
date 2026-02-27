@@ -1,0 +1,51 @@
+[runbook] case=tc-ach-001 session=tc-ach-001-20260227-144739
+[runbook] output=/Users/mikko.makipaa/koekertaaja/output/playwright/runbook/tc-ach-001/20260227-144739
+### Browser `tc-ach-001-20260227-144739` opened with pid 86786.
+- tc-ach-001-20260227-144739:
+  - browser-type: chrome
+  - user-data-dir: <in-memory>
+  - headed: false
+---
+### Ran Playwright code
+```js
+await page.goto('http://localhost:3000/play');
+```
+### Page
+- Page URL: http://localhost:3000/play
+- Page Title: Harjoittele | Koekertaaja
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T12-48-41-018Z.yml)
+### Page
+- Page URL: http://localhost:3000/play?mode=pelaa
+- Page Title: Harjoittele | Koekertaaja
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T12-48-42-143Z.yml)
+### Error
+SyntaxError: Unexpected token 'const'
+### Error
+SyntaxError: Unexpected token ';'
+### Page
+- Page URL: http://localhost:3000/play?mode=pelaa
+- Page Title: Harjoittele | Koekertaaja
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T12-48-46-407Z.yml)
+### Error
+SyntaxError: Unexpected token ';'
+### Result
+- [Screenshot of viewport](.playwright-cli/page-2026-02-27T12-48-48-403Z.png)
+### Ran Playwright code
+```js
+// Screenshot viewport and save it as .playwright-cli/page-2026-02-27T12-48-48-403Z.png
+await page.screenshot({
+path: '.playwright-cli/page-2026-02-27T12-48-48-403Z.png',
+  scale: 'css',
+  type: 'png'
+});
+```
+### Result
+- [Console](.playwright-cli/console-2026-02-27T12-48-49-425Z.log)
+### Result
+- [Network](.playwright-cli/network-2026-02-27T12-48-50-392Z.log)
+[runbook] PASS tc-ach-001
+Browser 'tc-ach-001-20260227-144739' closed
+

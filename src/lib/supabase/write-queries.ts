@@ -11,59 +11,46 @@ import {
   Question,
   QuestionSet,
   SequentialItem,
+  WriteActorContext,
   isSequentialItemArray,
   isStringArray,
 } from '@/types';
 import { createLogger } from '@/lib/logger';
+import { normalizeSubtopicLabel, normalizeTopicLabel } from '@/lib/topics/normalization';
 
 const logger = createLogger({ module: 'supabase.write-queries' });
 
-/**
- * Create a new question set with questions
- * Uses admin client to bypass RLS for server-side writes
- */
-export async function createQuestionSet(
-  questionSet: Omit<QuestionSet, 'id' | 'created_at' | 'updated_at'>,
-  questions: Omit<Question, 'id' | 'question_set_id'>[]
-): Promise<{ code: string; questionSet: QuestionSet } | null> {
-  const supabaseAdmin = getSupabaseAdmin();
+type MutationFailureReason = 'forbidden' | 'not_found' | 'error';
 
-  const normalizeSequentialItems = (items: unknown): SequentialItem[] => {
-    if (isSequentialItemArray(items)) {
-      return items;
-    }
-    if (isStringArray(items)) {
-      return items.map((text) => ({ text }));
-    }
-    return [];
-  };
+interface MutationResult {
+  success: boolean;
+  reason?: MutationFailureReason;
+}
 
-  // Insert question set using admin client
-  const { data: newSet, error: setError } = await supabaseAdmin
-    .from('question_sets')
-    .insert(questionSet as any)
-    .select()
-    .single();
+interface TopicDeleteResult extends MutationResult {
+  deletedCount?: number;
+  newQuestionCount?: number;
+}
 
-  if (setError || !newSet) {
-    // Log detailed error info (sanitize sensitive data in production)
-    logger.error(
-      {
-      code: setError?.code,
-      message: setError?.message,
-      details: setError?.details,
-      hint: setError?.hint,
-      },
-      'Error creating question set'
-    );
+type CreateQuestionInput = Omit<Question, 'id' | 'question_set_id'>;
 
-    return null;
+const normalizeSequentialItems = (items: unknown): SequentialItem[] => {
+  if (isSequentialItemArray(items)) {
+    return items;
   }
+  if (isStringArray(items)) {
+    return items.map((text) => ({ text }));
+  }
+  return [];
+};
 
-  // Prepare questions for insertion
-  const questionsToInsert = questions.map((q, index) => {
+export function mapQuestionsToInsertRows(
+  questions: CreateQuestionInput[],
+  questionSetId: string
+): any[] {
+  return questions.map((q, index) => {
     const baseQuestion = {
-      question_set_id: (newSet as any).id,
+      question_set_id: questionSetId,
       question_text: q.question_text,
       question_type: q.question_type,
       explanation: q.explanation,
@@ -71,9 +58,39 @@ export async function createQuestionSet(
       image_reference: q.image_reference || null,
       requires_visual: q.requires_visual ?? false,
       order_index: index,
-      topic: (q as any).topic || null,  // REQUIRED: High-level topic for stratified sampling
+      topic: typeof (q as any).topic === 'string' && (q as any).topic.trim().length > 0
+        ? normalizeTopicLabel((q as any).topic, {
+          context: `createQuestionSet.question[${index}].topic`,
+          onUnexpectedEnglish: (event) => {
+            logger.warn(
+              {
+                kind: event.kind,
+                input: event.input,
+                normalized: event.normalized,
+                context: event.context,
+              },
+              'Unexpected unmapped English topic label encountered before DB insert'
+            );
+          },
+        })
+        : 'Yleinen',  // REQUIRED: High-level topic for stratified sampling
       skill: (q as any).skill || null,  // REQUIRED: Skill tag for performance tracking
-      subtopic: (q as any).subtopic || null,  // OPTIONAL: Finer-grained subtopic within topic
+      subtopic: typeof (q as any).subtopic === 'string' && (q as any).subtopic.trim().length > 0
+        ? normalizeSubtopicLabel((q as any).subtopic, {
+          context: `createQuestionSet.question[${index}].subtopic`,
+          onUnexpectedEnglish: (event) => {
+            logger.warn(
+              {
+                kind: event.kind,
+                input: event.input,
+                normalized: event.normalized,
+                context: event.context,
+              },
+              'Unexpected unmapped English topic label encountered before DB insert'
+            );
+          },
+        })
+        : null,  // OPTIONAL: Finer-grained subtopic within topic
     };
 
     switch (q.question_type) {
@@ -154,6 +171,77 @@ export async function createQuestionSet(
         };
     }
   });
+}
+
+/**
+ * Create a new question set with questions
+ * Uses admin client to bypass RLS for server-side writes
+ */
+export async function createQuestionSet(
+  questionSet: Omit<QuestionSet, 'id' | 'created_at' | 'updated_at'>,
+  questions: CreateQuestionInput[]
+): Promise<{ code: string; questionSet: QuestionSet } | null> {
+  const supabaseAdmin = getSupabaseAdmin();
+  const normalizedQuestionSet = {
+    ...questionSet,
+    topic: typeof questionSet.topic === 'string' && questionSet.topic.trim().length > 0
+      ? normalizeTopicLabel(questionSet.topic, {
+        context: 'createQuestionSet.questionSet.topic',
+        onUnexpectedEnglish: (event) => {
+          logger.warn(
+            {
+              kind: event.kind,
+              input: event.input,
+              normalized: event.normalized,
+              context: event.context,
+            },
+            'Unexpected unmapped English topic label encountered before DB insert'
+          );
+        },
+      })
+      : questionSet.topic,
+    subtopic: typeof questionSet.subtopic === 'string' && questionSet.subtopic.trim().length > 0
+      ? normalizeSubtopicLabel(questionSet.subtopic, {
+        context: 'createQuestionSet.questionSet.subtopic',
+        onUnexpectedEnglish: (event) => {
+          logger.warn(
+            {
+              kind: event.kind,
+              input: event.input,
+              normalized: event.normalized,
+              context: event.context,
+            },
+            'Unexpected unmapped English topic label encountered before DB insert'
+          );
+        },
+      })
+      : questionSet.subtopic,
+  };
+
+  // Insert question set using admin client
+  const { data: newSet, error: setError } = await supabaseAdmin
+    .from('question_sets')
+    .insert(normalizedQuestionSet as any)
+    .select()
+    .single();
+
+  if (setError || !newSet) {
+    // Log detailed error info (sanitize sensitive data in production)
+    logger.error(
+      {
+      code: setError?.code,
+      message: setError?.message,
+      details: setError?.details,
+      hint: setError?.hint,
+      },
+      'Error creating question set'
+    );
+
+    return null;
+  }
+
+  // Prepare questions for insertion
+  const questionsToInsert = mapQuestionsToInsertRows(questions, (newSet as any).id);
 
   // Filter out any undefined/null questions and validate
   const validQuestions = questionsToInsert.filter((q) => {
@@ -327,52 +415,60 @@ export async function createQuestionSet(
  *
  * Explicitly deletes questions first, then the question set
  */
-export async function deleteQuestionSet(questionSetId: string): Promise<boolean> {
+export async function deleteQuestionSet(
+  questionSetId: string,
+  actor: WriteActorContext
+): Promise<MutationResult> {
   const supabaseAdmin = getSupabaseAdmin();
 
-  // First, delete all questions for this question set
-  const { error: questionsError } = await supabaseAdmin
-    .from('questions')
-    .delete()
-    .eq('question_set_id', questionSetId);
-
-  if (questionsError) {
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    if (isProduction) {
-      logger.error('Error deleting questions');
-    } else {
-      logger.error(
-        { error: questionsError, questionSetId },
-        'Error deleting questions'
-      );
-    }
-
-    return false;
-  }
-
-  // Then delete the question set
-  const { error: setError } = await supabaseAdmin
+  let deleteQuery = supabaseAdmin
     .from('question_sets')
     .delete()
     .eq('id', questionSetId);
 
-  if (setError) {
+  if (!actor.isAdmin) {
+    deleteQuery = deleteQuery.eq('user_id', actor.userId);
+  }
+
+  const { data: deletedRows, error: deleteError } = await deleteQuery.select('id');
+
+  if (deleteError) {
     const isProduction = process.env.NODE_ENV === 'production';
 
     if (isProduction) {
       logger.error('Error deleting question set');
     } else {
       logger.error(
-        { error: setError, questionSetId },
+        { error: deleteError, questionSetId, actor },
         'Error deleting question set'
       );
     }
 
-    return false;
+    return { success: false, reason: 'error' };
   }
 
-  return true;
+  if ((deletedRows?.length ?? 0) > 0) {
+    return { success: true };
+  }
+
+  const { data: existingSet, error: existingSetError } = await supabaseAdmin
+    .from('question_sets')
+    .select('id')
+    .eq('id', questionSetId);
+
+  if (existingSetError) {
+    logger.error(
+      { error: existingSetError, questionSetId, actor },
+      'Error resolving question set visibility after delete miss'
+    );
+    return { success: false, reason: 'error' };
+  }
+
+  if ((existingSet?.length ?? 0) === 0) {
+    return { success: false, reason: 'not_found' };
+  }
+
+  return { success: false, reason: 'forbidden' };
 }
 
 /**
@@ -381,9 +477,49 @@ export async function deleteQuestionSet(questionSetId: string): Promise<boolean>
  */
 export async function deleteQuestionsByTopic(
   questionSetId: string,
-  topic: string | null
-): Promise<{ deletedCount: number; newQuestionCount: number } | null> {
+  topic: string | null,
+  actor: WriteActorContext
+): Promise<TopicDeleteResult> {
   const supabaseAdmin = getSupabaseAdmin();
+  let ownershipQuery = supabaseAdmin
+    .from('question_sets')
+    .select('id')
+    .eq('id', questionSetId);
+
+  if (!actor.isAdmin) {
+    ownershipQuery = ownershipQuery.eq('user_id', actor.userId);
+  }
+
+  const { data: ownedSetRows, error: ownershipError } = await ownershipQuery;
+
+  if (ownershipError) {
+    logger.error(
+      { error: ownershipError, questionSetId, actor },
+      'Error validating ownership for topic deletion'
+    );
+    return { success: false, reason: 'error' };
+  }
+
+  if ((ownedSetRows?.length ?? 0) === 0) {
+    const { data: existingSet, error: existingSetError } = await supabaseAdmin
+      .from('question_sets')
+      .select('id')
+      .eq('id', questionSetId);
+
+    if (existingSetError) {
+      logger.error(
+        { error: existingSetError, questionSetId, actor },
+        'Error resolving question set visibility for topic deletion'
+      );
+      return { success: false, reason: 'error' };
+    }
+
+    if ((existingSet?.length ?? 0) === 0) {
+      return { success: false, reason: 'not_found' };
+    }
+
+    return { success: false, reason: 'forbidden' };
+  }
 
   // Delete questions matching topic
   let deleteQuery = supabaseAdmin
@@ -391,20 +527,22 @@ export async function deleteQuestionsByTopic(
     .delete({ count: 'exact' })
     .eq('question_set_id', questionSetId);
 
-  if (topic === null) {
+  const normalizedTopic = topic === null ? null : normalizeTopicLabel(topic);
+
+  if (normalizedTopic === null) {
     deleteQuery = deleteQuery.is('topic', null);
   } else {
-    deleteQuery = deleteQuery.eq('topic', topic);
+    deleteQuery = deleteQuery.eq('topic', normalizedTopic);
   }
 
   const { count: deletedCount, error: deleteError } = await deleteQuery;
 
   if (deleteError) {
     logger.error(
-      { error: deleteError, questionSetId, topic },
+      { error: deleteError, questionSetId, topic: normalizedTopic },
       'Error deleting questions by topic'
     );
-    return null;
+    return { success: false, reason: 'error' };
   }
 
   // Get new question count
@@ -418,24 +556,42 @@ export async function deleteQuestionsByTopic(
       { error: countError, questionSetId },
       'Error counting questions after topic deletion'
     );
-    return null;
+    return { success: false, reason: 'error' };
   }
 
   const finalCount = newQuestionCount ?? 0;
 
   // Update question_sets.question_count
-  const { error: updateError } = await supabaseAdmin
+  let updateQuery = supabaseAdmin
     .from('question_sets')
     .update({ question_count: finalCount })
     .eq('id', questionSetId);
 
-  if (updateError) {
-    logger.error(
-      { error: updateError, questionSetId, finalCount },
-      'Error updating question_count after topic deletion'
-    );
-    return null;
+  if (!actor.isAdmin) {
+    updateQuery = updateQuery.eq('user_id', actor.userId);
   }
 
-  return { deletedCount: deletedCount ?? 0, newQuestionCount: finalCount };
+  const { data: updatedRows, error: updateError } = await updateQuery.select('id');
+
+  if (updateError) {
+    logger.error(
+      { error: updateError, questionSetId, finalCount, actor },
+      'Error updating question_count after topic deletion'
+    );
+    return { success: false, reason: 'error' };
+  }
+
+  if ((updatedRows?.length ?? 0) === 0) {
+    logger.warn(
+      { questionSetId, actor },
+      'Ownership predicate prevented question_count update after topic deletion'
+    );
+    return { success: false, reason: 'forbidden' };
+  }
+
+  return {
+    success: true,
+    deletedCount: deletedCount ?? 0,
+    newQuestionCount: finalCount,
+  };
 }

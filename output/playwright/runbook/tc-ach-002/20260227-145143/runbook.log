@@ -1,0 +1,43 @@
+[runbook] case=tc-ach-002 session=tc-ach-002-20260227-145143
+[runbook] output=/Users/mikko.makipaa/koekertaaja/output/playwright/runbook/tc-ach-002/20260227-145143
+### Browser `tc-ach-002-20260227-145143` opened with pid 99167.
+- tc-ach-002-20260227-145143:
+  - browser-type: chrome
+  - user-data-dir: <in-memory>
+  - headed: false
+---
+### Ran Playwright code
+```js
+await page.goto('http://localhost:3000/play/achievements');
+```
+### Page
+- Page URL: http://localhost:3000/play/achievements
+- Page Title: Harjoittele | Koekertaaja
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T12-51-47-494Z.yml)
+### Page
+- Page URL: http://localhost:3000/play/achievements
+- Page Title: Harjoittele | Koekertaaja
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T12-51-48-649Z.yml)
+### Ran Playwright code
+```js
+await (async (page) => { const hasStats = (await page.getByText(/Sessiota|Täydellistä|Ennätys|Merkkejä/i).count()) > 0; const hasEmpty = (await page.getByText(/Aloita harjoittelu/i).count()) > 0; if (!hasStats && !hasEmpty) throw new Error('Achievements state not recognized'); })(page);
+```
+### Result
+- [Screenshot of viewport](.playwright-cli/page-2026-02-27T12-51-52-143Z.png)
+### Ran Playwright code
+```js
+// Screenshot viewport and save it as .playwright-cli/page-2026-02-27T12-51-52-143Z.png
+await page.screenshot({
+path: '.playwright-cli/page-2026-02-27T12-51-52-143Z.png',
+  scale: 'css',
+  type: 'png'
+});
+```
+### Result
+- [Console](.playwright-cli/console-2026-02-27T12-51-53-125Z.log)
+### Result
+- [Network](.playwright-cli/network-2026-02-27T12-51-54-007Z.log)
+[runbook] PASS tc-ach-002
+Browser 'tc-ach-002-20260227-145143' closed

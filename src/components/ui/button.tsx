@@ -29,6 +29,7 @@ const buttonVariants = cva(
       mode: {
         quiz: "",
         study: "",
+        map: "",
         review: "",
         neutral: "",
       },
@@ -88,6 +89,15 @@ const buttonVariants = cva(
         ].join(" "),
       },
       {
+        mode: "map",
+        variant: "primary",
+        class: [
+          colors.map.primary,
+          colors.map.hover,
+          colors.map.ring,
+        ].join(" "),
+      },
+      {
         mode: "review",
         variant: "primary",
         class: [
@@ -121,6 +131,15 @@ const buttonVariants = cva(
           colors.study.primary,
           colors.study.hover,
           colors.study.ring,
+        ].join(" "),
+      },
+      {
+        mode: "map",
+        variant: "default",
+        class: [
+          colors.map.primary,
+          colors.map.hover,
+          colors.map.ring,
         ].join(" "),
       },
       {

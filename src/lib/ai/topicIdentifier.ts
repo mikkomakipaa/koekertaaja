@@ -3,56 +3,10 @@ import type { AIMessageContent, AIProvider } from './providerTypes';
 import { Subject, Difficulty } from '@/types';
 import { createLogger } from '@/lib/logger';
 import { selectModelForTask } from './modelSelector';
+import { normalizeSubtopicLabel, normalizeTopicLabel } from '@/lib/topics/normalization';
 
 const logger = createLogger({ module: 'topicIdentifier' });
 const TOPIC_IDENTIFIER_PROMPT_VERSION = '1.0.0';
-
-const TOPIC_FI_REPLACEMENTS: Array<[RegExp, string]> = [
-  [/\bpractical communication\b/gi, 'käytännön viestintä'],
-  [/\bmodal\s+verbit\b/gi, 'modaaliverbit'],
-  [/\bmodal verbs?\b/gi, 'modaaliverbit'],
-  [/\benglish\b/gi, 'englanti'],
-  [/\bculture\b/gi, 'kulttuuri'],
-  [/\breading comprehension\b/gi, 'luetun ymmärtäminen'],
-  [/\blistening comprehension\b/gi, 'kuullun ymmärtäminen'],
-  [/\bsentence structure\b/gi, 'lauseen rakenne'],
-  [/\bpresent simple\b/gi, 'preesens'],
-  [/\bpast simple\b/gi, 'imperfekti'],
-  [/\bpresent perfect\b/gi, 'perfekti'],
-  [/\bparts of speech\b/gi, 'sanaluokat'],
-  [/\bword order\b/gi, 'sanajärjestys'],
-  [/\bverb tenses\b/gi, 'aikamuodot'],
-  [/\bprepositions\b/gi, 'prepositiot'],
-  [/\bpronouns\b/gi, 'pronominit'],
-  [/\badjectives\b/gi, 'adjektiivit'],
-  [/\bnouns\b/gi, 'substantiivit'],
-  [/\badverbs\b/gi, 'adverbit'],
-  [/\barticles\b/gi, 'artikkelit'],
-  [/\bconjunctions\b/gi, 'konjunktiot'],
-  [/\bvocabulary\b/gi, 'sanasto'],
-  [/\bgrammar\b/gi, 'kielioppi'],
-  [/\bverbs\b/gi, 'verbit'],
-  [/\bverb\b/gi, 'verbi'],
-  [/\btenses\b/gi, 'aikamuodot'],
-  [/\bwriting\b/gi, 'kirjoittaminen'],
-  [/\bspeaking\b/gi, 'puhuminen'],
-  [/\blistening\b/gi, 'kuuntelu'],
-  [/\breading\b/gi, 'lukeminen'],
-  [/\band\b/gi, 'ja'],
-  [/\s*&\s*/g, ' ja '],
-];
-
-function normalizeTopicToFinnish(input: string): string {
-  let normalized = input.trim();
-  for (const [pattern, replacement] of TOPIC_FI_REPLACEMENTS) {
-    normalized = normalized.replace(pattern, replacement);
-  }
-  normalized = normalized
-    .replace(/\s+ja\s+ja\s+/gi, ' ja ')
-    .replace(/\benglanti\s+aikamuodot\b/gi, 'englannin aikamuodot');
-  normalized = normalized.replace(/\s+/g, ' ').trim();
-  return normalized || input;
-}
 
 export interface IdentifyTopicsParams {
   subject: Subject;
@@ -421,11 +375,11 @@ export async function identifyTopics(
 
   // Build enhanced result
   const enhancedTopics: EnhancedTopic[] = result.topics.map(t => ({
-    name: normalizeTopicToFinnish(t.name),
+    name: normalizeTopicLabel(t.name),
     coverage: t.coverage,
     difficulty: t.difficulty as Difficulty,
     keywords: t.keywords,
-    subtopics: t.subtopics.map(normalizeTopicToFinnish),
+    subtopics: t.subtopics.map((subtopic) => normalizeSubtopicLabel(subtopic)),
     importance: t.importance as 'high' | 'medium' | 'low',
   }));
 

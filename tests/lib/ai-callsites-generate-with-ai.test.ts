@@ -36,8 +36,8 @@ test('generateQuestions uses generateWithAI and preserves response parsing/valid
             {
               question: 'Mika on 2 + 2?',
               type: 'multiple_choice',
-              topic: 'Laskut',
-              subtopic: 'Yhteenlasku',
+              topic: 'Nouns and Articles',
+              subtopic: 'Object Pronouns',
               options: ['3', '4'],
               correct_answer: '4',
               explanation: '2 + 2 on 4, koska lasketaan kaksi ja kaksi yhteen.',
@@ -60,7 +60,8 @@ test('generateQuestions uses generateWithAI and preserves response parsing/valid
   assert.doesNotMatch(capturedPromptText, /(anthropic|claude|openai|gpt)/i);
   assert.equal(questions.length, 1);
   assert.equal(questions[0].question_type, 'multiple_choice');
-  assert.equal(questions[0].topic, 'Laskut');
+  assert.equal(questions[0].topic, 'Substantiivit ja artikkelit');
+  assert.equal(questions[0].subtopic, 'Objektipronominit');
   assert.ok(capturedPromptMetadata);
   assert.ok(capturedPromptMetadata?.assembledAt);
   assert.equal(capturedPromptMetadata?.versions['core/format.txt'], '2.0.0');

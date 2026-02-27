@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { requireAdmin } from '@/lib/supabase/server-auth';
+import { requireAdmin, resolveAuthError } from '@/lib/supabase/server-auth';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { createLogger } from '@/lib/logger';
 import { z } from 'zod';
@@ -22,16 +22,14 @@ export async function PATCH(request: NextRequest) {
   try {
     // Verify admin authentication
     try {
-      await requireAdmin();
+      await requireAdmin(request);
       logger.info('Admin authentication successful');
     } catch (authError) {
-      const errorMessage = authError instanceof Error ? authError.message : 'Unauthorized';
-      logger.warn({ error: errorMessage }, 'Authentication failed');
-
-      const status = errorMessage.includes('Forbidden') ? 403 : 401;
-      const message = status === 403
-        ? 'Forbidden. Admin access required to publish question sets.'
-        : 'Unauthorized. Please log in.';
+      const { status, message } = resolveAuthError(authError, {
+        unauthorized: 'Unauthorized. Please log in.',
+        forbidden: 'Forbidden. Admin access required to publish question sets.',
+      });
+      logger.warn({ status, error: message }, 'Authentication failed');
 
       return NextResponse.json({ error: message }, { status });
     }

@@ -7,6 +7,7 @@ import { CollapsibleSearch } from '@/components/ui/collapsible-search';
 import { SearchSuggestions } from '@/components/ui/search-suggestions';
 import { cn } from '@/lib/utils';
 import { getGradeColors } from '@/lib/utils/grade-colors';
+import { colors } from '@/lib/design-tokens';
 import { type StudyMode } from '@/types';
 
 interface ModeClassBarProps {
@@ -37,6 +38,16 @@ const MODE_OPTIONS: Array<{ value: StudyMode; label: string; icon: typeof GameCo
   { value: 'pelaa', label: 'Pelaa', icon: GameController },
   { value: 'opettele', label: 'Opettele', icon: Book },
 ];
+
+const getActiveModeClass = (mode: StudyMode): string => {
+  if (mode === 'pelaa') return `${colors.quiz.primary} ${colors.quiz.ring} ring-2 font-semibold text-white`;
+  return `${colors.study.primary} ${colors.study.ring} ring-2 font-semibold text-white`;
+};
+
+const getModeFocusRingClass = (mode: StudyMode): string => {
+  if (mode === 'pelaa') return 'focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400';
+  return 'focus-visible:ring-teal-500 dark:focus-visible:ring-teal-400';
+};
 
 export function ModeClassBar({
   studyMode,
@@ -184,16 +195,18 @@ export function ModeClassBar({
                   ref={(element) => {
                     modeRefs.current[index] = element;
                   }}
-                  type="button"
-                  role="radio"
-                  aria-checked={isActive}
-                  tabIndex={isActive ? 0 : -1}
-                  onClick={() => onStudyModeChange(mode.value)}
-                  onKeyDown={(event) => handleModeKeyDown(index, event)}
-                  className={cn(
-                    'inline-flex h-9 min-w-11 items-center justify-center rounded-[14px] px-2.5 text-[14px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900',
+                    type="button"
+                    role="radio"
+                    aria-checked={isActive}
+                    aria-label={mode.label}
+                    tabIndex={isActive ? 0 : -1}
+                    onClick={() => onStudyModeChange(mode.value)}
+                    onKeyDown={(event) => handleModeKeyDown(index, event)}
+                    className={cn(
+                    'inline-flex h-12 min-w-12 items-center justify-center rounded-[14px] px-2.5 text-[14px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900',
+                    getModeFocusRingClass(mode.value),
                     isActive
-                      ? 'bg-indigo-600 font-semibold text-white'
+                      ? getActiveModeClass(mode.value)
                       : 'bg-transparent text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700'
                   )}
                 >
@@ -212,7 +225,7 @@ export function ModeClassBar({
                   type="button"
                   onClick={() => onSelectedGradeChange(isActive ? null : grade)}
                   className={cn(
-                    'inline-flex h-9 min-w-11 items-center justify-center rounded-[14px] px-2.5 text-[14px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900',
+                    'inline-flex h-12 min-w-12 items-center justify-center rounded-[14px] px-2.5 text-[14px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900',
                     isActive
                       ? `border border-current/60 bg-transparent font-semibold ${colors.text}`
                       : 'bg-transparent text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700'
@@ -303,15 +316,15 @@ export function ModeClassBar({
                       type="button"
                       role="radio"
                       aria-checked={isActive}
+                      aria-label={mode.label}
                       tabIndex={isActive ? 0 : -1}
                       onClick={() => onStudyModeChange(mode.value)}
                       onKeyDown={(event) => handleModeKeyDown(index, event)}
                       className={cn(
-                        'inline-flex h-10 min-w-[44px] items-center justify-center gap-2 rounded-[14px] px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900',
+                        'inline-flex h-12 min-w-12 items-center justify-center gap-2 rounded-[14px] px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900',
+                        getModeFocusRingClass(mode.value),
                         isActive
-                          ? mode.value === 'pelaa'
-                            ? 'bg-indigo-600 font-semibold text-white'
-                            : 'bg-teal-600 font-semibold text-white'
+                          ? getActiveModeClass(mode.value)
                           : 'text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700'
                       )}
                     >
@@ -331,7 +344,7 @@ export function ModeClassBar({
                       type="button"
                       onClick={() => onSelectedGradeChange(isActive ? null : grade)}
                       className={cn(
-                        'inline-flex h-10 min-w-[44px] items-center justify-center gap-2 rounded-[14px] px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900',
+                        'inline-flex h-12 min-w-12 items-center justify-center gap-2 rounded-[14px] px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900',
                         isActive
                           ? `border border-current/60 bg-transparent font-semibold ${colors.text}`
                           : 'text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700'

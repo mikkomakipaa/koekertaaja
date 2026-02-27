@@ -38,11 +38,12 @@ export async function GET(request: Request) {
 
     const questionsClient =
       userIsAdmin && includeDrafts ? getSupabaseAdmin() : supabase;
-    const { data: dbQuestions, error: questionsError } = await questionsClient
+    const questionsQuery = questionsClient
       .from('questions')
       .select('*')
       .eq('question_set_id', (questionSet as any).id)
       .order('order_index', { ascending: true });
+    const { data: dbQuestions, error: questionsError } = await questionsQuery;
 
     if (questionsError || !dbQuestions) {
       return NextResponse.json(

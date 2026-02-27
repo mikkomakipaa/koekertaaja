@@ -7,8 +7,39 @@ import { supabase } from './client';
 import { QuestionSet, QuestionSetWithQuestions } from '@/types';
 import { parseDatabaseQuestion } from '@/types/database';
 import { createLogger } from '@/lib/logger';
+import { normalizeTopicLabel } from '@/lib/topics/normalization';
 
 const logger = createLogger({ module: 'supabase.queries' });
+
+export function normalizeUniqueQuestionTopics(
+  rows: Array<{ topic?: string | null }>,
+  options?: { context?: string; questionSetId?: string }
+): string[] {
+  return [
+    ...new Set(
+      rows
+        .map((q) => q.topic)
+        .filter((topic): topic is string => typeof topic === 'string' && topic.trim().length > 0)
+        .map((topic, index) =>
+          normalizeTopicLabel(topic, {
+            context: options?.context ?? `queries.getQuestionSetTopics[${index}]`,
+            onUnexpectedEnglish: (event) => {
+              logger.warn(
+                {
+                  kind: event.kind,
+                  input: event.input,
+                  normalized: event.normalized,
+                  context: event.context,
+                  questionSetId: options?.questionSetId,
+                },
+                'Unexpected unmapped English topic label encountered when reading topics'
+              );
+            },
+          })
+        ),
+    ),
+  ];
+}
 
 /**
  * Get a question set by its code
@@ -150,9 +181,10 @@ export async function getQuestionSetTopics(questionSetId: string): Promise<strin
     return [];
   }
 
-  // Extract unique topics
-  const topics = [...new Set((data || []).map((q: any) => q.topic).filter(Boolean))];
-  return topics as string[];
+  return normalizeUniqueQuestionTopics(data || [], {
+    context: 'queries.getQuestionSetTopics',
+    questionSetId,
+  });
 }
 
 /**

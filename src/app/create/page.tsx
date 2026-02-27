@@ -57,6 +57,7 @@ import { CapacityWarningDialog } from '@/components/create/CapacityWarningDialog
 import { MetricsTab } from '@/components/metrics/MetricsTab';
 import { useAuth } from '@/hooks/useAuth';
 import { createLogger } from '@/lib/logger';
+import { withCsrfHeaders } from '@/lib/security/csrf-client';
 import { SUBJECT_GROUPS, getSubjectById, subjectRequiresGrade } from '@/config/subjects';
 import type { MaterialCapacity, QuestionCountValidation } from '@/lib/utils/materialAnalysis';
 
@@ -508,6 +509,7 @@ export default function CreatePage() {
         try {
           const topicsResponse = await fetch('/api/identify-topics', {
             method: 'POST',
+            headers: withCsrfHeaders(),
             body: buildGenerationFormData({
               questionCountOverride: requestedQuestionCount,
               bypassCapacityCheck: true,
@@ -582,6 +584,7 @@ export default function CreatePage() {
         try {
           const quizResponse = await fetch('/api/generate-questions/quiz', {
             method: 'POST',
+            headers: withCsrfHeaders(),
             body: buildGenerationFormData({
               questionCountOverride: requestedQuestionCount,
               bypassCapacityCheck: true,
@@ -619,6 +622,7 @@ export default function CreatePage() {
         try {
           const flashcardResponse = await fetch('/api/generate-questions/flashcard', {
             method: 'POST',
+            headers: withCsrfHeaders(),
             body: buildGenerationFormData({
               questionCountOverride: requestedQuestionCount,
               bypassCapacityCheck: true,
@@ -1065,7 +1069,7 @@ export default function CreatePage() {
 
       const response = await fetch(`/api/questions/${editingFlag.questionId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: withCsrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
 
@@ -1106,7 +1110,7 @@ export default function CreatePage() {
     try {
       const response = await fetch('/api/question-flags/manage', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: withCsrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ questionId: flag.questionId }),
       });
       const payload = await response.json();
@@ -1137,7 +1141,7 @@ export default function CreatePage() {
       // Make a test call to the publish endpoint to check if user is admin
       const response = await fetch('/api/question-sets/publish', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: withCsrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ questionSetId: '00000000-0000-0000-0000-000000000000', status: 'published' }),
       });
 
@@ -1163,7 +1167,7 @@ export default function CreatePage() {
     try {
       const response = await fetch('/api/question-sets/publish', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: withCsrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ questionSetId, status: newStatus }),
       });
 
@@ -1194,9 +1198,9 @@ export default function CreatePage() {
     try {
       const response = await fetch('/api/delete-question-set', {
         method: 'DELETE',
-        headers: {
+        headers: withCsrfHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
         credentials: 'same-origin', // Ensure cookies are sent
         body: JSON.stringify({ questionSetId }),
       });
@@ -1234,7 +1238,7 @@ export default function CreatePage() {
     try {
       const response = await fetch('/api/questions/delete-by-topic', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: withCsrfHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'same-origin',
         body: JSON.stringify({ questionSetId: setId, topic }),
       });
@@ -1288,6 +1292,7 @@ export default function CreatePage() {
       // Call API
       const response = await fetch('/api/extend-question-set', {
         method: 'POST',
+        headers: withCsrfHeaders(),
         body: formData,
       });
 

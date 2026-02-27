@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "secrets:scan": "sh -c 'if rg -n \"(\\bsk-[A-Za-z0-9]{16,}|SUPABASE_SERVICE_ROLE_KEY=eyJ|ANTHROPIC_API_KEY=sk-|OPENAI_API_KEY=sk-)\" .env.example README.md docs/SECURITY_REVIEW.md --hidden; then echo \"Potential secret pattern detected.\"; exit 1; else echo \"No secret patterns found in sample/doc files.\"; fi'",
     "test": "node --test --loader ./scripts/ts-node-loader.mjs \"tests/**/*.test.ts\"",
     "analyze": "ANALYZE=true npm run build"
   },

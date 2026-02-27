@@ -1,10 +1,14 @@
 import { useCallback } from 'react';
 import { createLogger } from '@/lib/logger';
+import {
+  getTopicMasteryStorageKey,
+  normalizeTopicMasteryStats,
+  readTopicMasteryFromStorage,
+} from '@/lib/mindMap/storage';
+import { normalizeTopicLabel } from '@/lib/topics/normalization';
+import type { TopicMasteryStats } from '@/types/mindMap';
 
-export interface TopicMasteryStats {
-  correct: number;
-  total: number;
-}
+export { getTopicMasteryStorageKey, readTopicMasteryFromStorage } from '@/lib/mindMap/storage';
 
 export interface TopicMasteryRecord {
   [topic: string]: {
@@ -25,40 +29,6 @@ const getStorage = (): Storage | null => {
   return fallback ?? null;
 };
 
-export const getTopicMasteryStorageKey = (questionSetCode?: string): string | null => {
-  if (!questionSetCode) return null;
-  return `topic_mastery_${questionSetCode}`;
-};
-
-export const readTopicMasteryFromStorage = (questionSetCode?: string): Record<string, TopicMasteryStats> => {
-  const storageKey = getTopicMasteryStorageKey(questionSetCode);
-  if (!storageKey) return {};
-
-  const storage = getStorage();
-  if (!storage) return {};
-
-  try {
-    const raw = storage.getItem(storageKey);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as Record<string, TopicMasteryStats> | null;
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      return {};
-    }
-
-    const sanitized: Record<string, TopicMasteryStats> = {};
-    for (const [topic, stats] of Object.entries(parsed)) {
-      const correct = typeof stats?.correct === 'number' ? stats.correct : 0;
-      const total = typeof stats?.total === 'number' ? stats.total : 0;
-      sanitized[topic] = { correct, total };
-    }
-
-    return sanitized;
-  } catch (error) {
-    logger.warn({ error }, 'Unable to read topic mastery from storage');
-    return {};
-  }
-};
-
 export const writeTopicMasteryToStorage = (
   questionSetCode: string | undefined,
   stats: Record<string, TopicMasteryStats>
@@ -70,7 +40,7 @@ export const writeTopicMasteryToStorage = (
   if (!storage) return false;
 
   try {
-    storage.setItem(storageKey, JSON.stringify(stats));
+    storage.setItem(storageKey, JSON.stringify(normalizeTopicMasteryStats(stats)));
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(STORAGE_EVENT, { detail: { key: storageKey } }));
     }
@@ -104,13 +74,19 @@ const buildTopicMasteryRecord = (stats: Record<string, TopicMasteryStats>): Topi
   const withPercentages: TopicMasteryRecord = {};
 
   for (const [topic, rawStats] of Object.entries(stats)) {
+    const normalizedTopic = normalizeTopicLabel(topic);
+    if (!normalizedTopic) continue;
+
     const total = rawStats.total > 0 ? rawStats.total : 0;
     const correct = rawStats.correct > 0 ? rawStats.correct : 0;
-    const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const existing = withPercentages[normalizedTopic];
+    const mergedCorrect = (existing?.correct ?? 0) + correct;
+    const mergedTotal = (existing?.total ?? 0) + total;
+    const percentage = mergedTotal > 0 ? Math.round((mergedCorrect / mergedTotal) * 100) : 0;
 
-    withPercentages[topic] = {
-      correct,
-      total,
+    withPercentages[normalizedTopic] = {
+      correct: mergedCorrect,
+      total: mergedTotal,
       percentage,
     };
   }
@@ -131,7 +107,7 @@ export const updateTopicMasteryInStorage = (
   const storageKey = getTopicMasteryStorageKey(questionSetCode);
   if (!storageKey) return null;
 
-  const normalizedTopic = topic?.trim();
+  const normalizedTopic = typeof topic === 'string' ? normalizeTopicLabel(topic) : '';
   if (!normalizedTopic) return null;
 
   const current = readTopicMasteryFromStorage(questionSetCode);

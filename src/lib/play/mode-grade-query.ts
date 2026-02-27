@@ -1,7 +1,11 @@
 import { type StudyMode } from '@/types';
 
 export function parseStudyModeParam(value: string | null | undefined): StudyMode {
-  return value === 'opettele' ? 'opettele' : 'pelaa';
+  if (value === 'opettele') {
+    return value;
+  }
+
+  return 'pelaa';
 }
 
 export function parseGradeParam(value: string | null | undefined): number | null {

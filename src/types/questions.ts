@@ -22,6 +22,11 @@ export type QuestionSetStatus = 'created' | 'published';
 
 export type QuestionFlagReason = 'wrong_answer' | 'ambiguous' | 'typo' | 'other';
 
+export interface WriteActorContext {
+  userId: string;
+  isAdmin: boolean;
+}
+
 export interface QuestionFlag {
   id: string;
   question_id: string;
@@ -130,6 +135,7 @@ export type Question =
 // Question Set
 export interface QuestionSet {
   id: string;
+  user_id?: string | null;
   code: string;
   name: string;
   subject: Subject;

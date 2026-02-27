@@ -38,6 +38,7 @@ import { extractMaterialWithVisuals, parseImageReference, type ExtractedVisual }
 import { selectModelForTask } from './modelSelector';
 import { calculateCost } from './costCalculator';
 import { logPromptMetricsFireAndForget, type PromptMetricsInsert } from '@/lib/metrics/logPromptMetrics';
+import { normalizeSubtopicLabel, normalizeTopicLabel } from '@/lib/topics/normalization';
 
 const logger = createLogger({ module: 'questionGenerator' });
 const VISUAL_QUESTION_SUPPORT_ENABLED = false;
@@ -384,9 +385,41 @@ function normalizeAIQuestionShape(
   if (typeof question.topic !== 'string' || question.topic.trim().length === 0) {
     question.topic = context.fallbackTopic || 'Yleinen';
   }
+  if (typeof question.topic === 'string') {
+    question.topic = normalizeTopicLabel(question.topic, {
+      context: `questionGenerator.question[${context.index}].topic`,
+      onUnexpectedEnglish: (event) => {
+        logger.warn(
+          {
+            kind: event.kind,
+            input: event.input,
+            normalized: event.normalized,
+            context: event.context,
+          },
+          'Unexpected unmapped English topic label encountered during AI post-processing'
+        );
+      },
+    });
+  }
 
   if ((typeof question.subtopic !== 'string' || question.subtopic.trim().length === 0) && context.fallbackSubtopic) {
     question.subtopic = context.fallbackSubtopic;
+  }
+  if (typeof question.subtopic === 'string') {
+    question.subtopic = normalizeSubtopicLabel(question.subtopic, {
+      context: `questionGenerator.question[${context.index}].subtopic`,
+      onUnexpectedEnglish: (event) => {
+        logger.warn(
+          {
+            kind: event.kind,
+            input: event.input,
+            normalized: event.normalized,
+            context: event.context,
+          },
+          'Unexpected unmapped English topic label encountered during AI post-processing'
+        );
+      },
+    });
   }
 
   if (context.mode === 'flashcard') {

@@ -13,7 +13,7 @@ interface ExtendQuestionSetRequestLike {
 }
 
 export interface ExtendQuestionSetDeps {
-  requireAuthFn?: () => Promise<{ id: string }>;
+  requireAuthFn?: (request?: unknown) => Promise<{ id: string }>;
   getQuestionSetByIdFn?: typeof getQuestionSetById;
   identifyTopicsFn?: typeof identifyTopics;
   generateQuestionsFn?: typeof generateQuestions;
@@ -25,9 +25,11 @@ export async function handleExtendQuestionSetRequest(
   request: ExtendQuestionSetRequestLike,
   deps: ExtendQuestionSetDeps = {}
 ): Promise<Response> {
-  const requireAuthFn =
+  const authModule = await import('@/lib/supabase/server-auth');
+  const requireAuthFn: (request?: unknown) => Promise<{ id: string }> =
     deps.requireAuthFn ??
-    (await import('@/lib/supabase/server-auth')).requireAuth;
+    ((authRequest?: unknown) => authModule.requireAuth(authRequest as any));
+  const resolveAuthErrorFn = authModule.resolveAuthError;
   const getQuestionSetByIdFn = deps.getQuestionSetByIdFn ?? getQuestionSetById;
   const identifyTopicsFn = deps.identifyTopicsFn ?? identifyTopics;
   const generateQuestionsFn = deps.generateQuestionsFn ?? generateQuestions;
@@ -43,14 +45,17 @@ export async function handleExtendQuestionSetRequest(
     // Verify authentication
     let userId = '';
     try {
-      const user = await requireAuthFn();
+      const user = await requireAuthFn(request);
       userId = user.id;
       logger.info('Authentication successful');
     } catch (authError) {
-      logger.warn('Authentication failed');
+      const { status, message } = resolveAuthErrorFn(authError, {
+        unauthorized: 'Unauthorized. Please log in to extend question sets.',
+      });
+      logger.warn({ status, message }, 'Authentication failed');
       return Response.json(
-        { error: 'Unauthorized. Please log in to extend question sets.' },
-        { status: 401 }
+        { error: message },
+        { status }
       );
     }
 

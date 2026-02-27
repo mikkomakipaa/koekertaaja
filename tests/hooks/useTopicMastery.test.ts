@@ -74,6 +74,15 @@ describe('useTopicMastery storage helpers', () => {
     assert.strictEqual(statsB.Historia.correct, 0);
   });
 
+  it('stores canonical Finnish topic key when update receives an English alias', () => {
+    updateTopicMasteryInStorage('ALIAS01', 'Nouns and Articles', true);
+    const stats = readTopicMasteryFromStorage('ALIAS01');
+
+    assert.deepStrictEqual(stats, {
+      'Substantiivit ja artikkelit': { correct: 1, total: 1 },
+    });
+  });
+
   it('clears mastery data', () => {
     updateTopicMasteryInStorage('ABC123', 'Fysiikka', true);
     const cleared = clearTopicMasteryFromStorage('ABC123');

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { createLogger } from '@/lib/logger';
-import { requireAdmin } from '@/lib/supabase/server-auth';
+import { requireAdmin, resolveAuthError } from '@/lib/supabase/server-auth';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 const baseSchema = z.object({
@@ -22,12 +22,16 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   try {
     try {
-      await requireAdmin();
+      await requireAdmin(request);
     } catch (authError) {
-      logger.warn({ authError }, 'Admin access denied');
+      const { status, message } = resolveAuthError(authError, {
+        unauthorized: 'Unauthorized. Please log in.',
+        forbidden: 'Forbidden. Admin access required to edit questions.',
+      });
+      logger.warn({ authError: message, status }, 'Admin access denied');
       return NextResponse.json(
-        { error: 'Forbidden. Admin access required to edit questions.' },
-        { status: 403 }
+        { error: message },
+        { status }
       );
     }
 

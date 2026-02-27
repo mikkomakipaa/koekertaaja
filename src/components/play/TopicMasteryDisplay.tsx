@@ -3,6 +3,7 @@
 import { Brain } from '@phosphor-icons/react';
 import { useMemo } from 'react';
 import { useTopicMastery } from '@/hooks/useTopicMastery';
+import { normalizeTopicLabel } from '@/lib/topics/normalization';
 
 interface TopicMasteryDisplayProps {
   questionSetCode: string;
@@ -17,7 +18,26 @@ export function TopicMasteryDisplay({ questionSetCode, className = '' }: TopicMa
       return null;
     }
     const stats = getMasteryStats();
-    const sorted = Object.entries(stats).sort((a, b) => b[1].percentage - a[1].percentage);
+    const mergedByCanonical = Object.entries(stats).reduce<Record<string, { correct: number; total: number; percentage: number }>>(
+      (acc, [topic, value]) => {
+        const canonicalTopic = normalizeTopicLabel(topic);
+        if (!canonicalTopic) return acc;
+
+        const current = acc[canonicalTopic] ?? { correct: 0, total: 0, percentage: 0 };
+        const total = current.total + value.total;
+        const correct = current.correct + value.correct;
+        const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+        acc[canonicalTopic] = {
+          correct,
+          total,
+          percentage,
+        };
+        return acc;
+      },
+      {}
+    );
+    const sorted = Object.entries(mergedByCanonical).sort((a, b) => b[1].percentage - a[1].percentage);
     return sorted;
   }, [getMasteryStats, hasMasteryData]);
 

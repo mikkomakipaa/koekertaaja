@@ -638,6 +638,7 @@ export async function generateQuizSets(
      dbResult = await createQuestionSet(
         {
           code,
+          user_id: request.userId ?? null,
           name: setName,
           subject: request.subject as Subject,
           difficulty,
@@ -927,6 +928,7 @@ export async function generateFlashcardSet(
     dbResult = await createQuestionSet(
       {
         code,
+        user_id: request.userId ?? null,
         name: setName,
         subject: request.subject as Subject,
         difficulty: 'normaali',

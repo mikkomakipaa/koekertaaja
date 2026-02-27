@@ -7,6 +7,37 @@
 
 ---
 
+## Status Update (2026-02-27)
+
+The abuse-control hardening from SEC-006/SEC-007 has been implemented:
+
+- `/api/question-flags` no longer trusts client-provided `clientId` for throttling.
+- Abuse identity is now server-derived (`IP + cookie/user-agent fingerprint`, or authenticated `userId`).
+- Added anti-spam controls for flags:
+  - Max `3` flags per identity per 24 hours.
+  - Max `1` flag for the same question per identity per 6-hour window.
+- Rate limiting now supports a pluggable backend:
+  - Default: in-memory backend.
+  - Production shared-state path: Upstash REST backend with `RATE_LIMIT_BACKEND=upstash`.
+  - Fallback behavior: if Upstash env vars are missing, service logs a warning and falls back to in-memory.
+
+Operational environment variables:
+
+```bash
+RATE_LIMIT_BACKEND=upstash
+UPSTASH_REDIS_REST_URL=...
+UPSTASH_REDIS_REST_TOKEN=...
+```
+
+Secret hygiene follow-up from SEC-001:
+
+- `.env.example` was sanitized to placeholder-only values (no usable tokens).
+- `.gitignore` was hardened to ignore local env variants (`.env.local`, `.env.production`, `.env.*`) while explicitly keeping `.env.example`.
+- Required operational action: rotate any Supabase, Anthropic, OpenAI, and Upstash keys that were previously exposed in git history, screenshots, or logs.
+- Developer workflow check: run `npm run secrets:scan` (or the equivalent `rg` command) before push/merge.
+
+---
+
 ## Executive Summary
 
 This security review identifies **16 security issues** across multiple severity levels in the exam-prepper application. The most critical findings include outdated Next.js framework with known vulnerabilities, missing rate limiting controls, insufficient input validation, and weak random number generation for access codes.
@@ -722,9 +753,9 @@ if (isProduction) {
 The following security controls are properly implemented:
 
 ✅ **Environment Variable Management**
-- `.gitignore` properly excludes `.env` and `.env*.local`
+- `.gitignore` excludes `.env`, `.env.local`, and `.env.*` (while allowing `.env.example`)
 - Secrets stored server-side only (ANTHROPIC_API_KEY, SUPABASE_SERVICE_ROLE_KEY)
-- `.env.example` provided for documentation
+- `.env.example` uses placeholder-only sample values
 
 ✅ **Database Security**
 - Row Level Security (RLS) enabled on all tables
@@ -835,4 +866,3 @@ However, the application demonstrates good practices in:
 
 **Review Status:** ✅ Complete
 **Next Review:** Recommended after Phase 1 remediation
-

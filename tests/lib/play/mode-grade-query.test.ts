@@ -6,6 +6,7 @@ describe('mode-grade-query', () => {
   it('parses study mode with safe fallback', () => {
     assert.strictEqual(parseStudyModeParam('pelaa'), 'pelaa');
     assert.strictEqual(parseStudyModeParam('opettele'), 'opettele');
+    assert.strictEqual(parseStudyModeParam('aihekartta'), 'pelaa');
     assert.strictEqual(parseStudyModeParam('invalid'), 'pelaa');
     assert.strictEqual(parseStudyModeParam(null), 'pelaa');
   });

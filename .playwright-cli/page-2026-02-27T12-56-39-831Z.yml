@@ -1,0 +1,53 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e49]:
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - img [ref=e54]
+            - generic [ref=e56]:
+              - heading "Englanti 27.2" [level=2] [ref=e57]
+              - paragraph [ref=e58]: Kysymys 1 / 15
+          - button "Lopeta harjoitus" [ref=e59] [cursor=pointer]:
+            - img [ref=e60]
+            - text: Lopeta
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - progressbar
+          - generic [ref=e64]: 0% valmis
+      - generic [ref=e65]:
+        - generic [ref=e67]:
+          - 'heading "Täydennä lause: He ___ a lot in January. (hiihto)" [level=2] [ref=e68]'
+          - generic [ref=e69]:
+            - generic [ref=e70]:
+              - 'textbox "Esim: sana, termi tai lyhyt vastaus" [disabled] [ref=e71]': testivastaus
+              - img [ref=e88]
+            - paragraph [ref=e92]:
+              - text: "Oikea vastaus:"
+              - generic [ref=e93]: skis
+        - generic [ref=e94]:
+          - paragraph [ref=e96]: ✗ Ei aivan oikein
+          - generic [ref=e97]:
+            - paragraph [ref=e98]: "Selitys:"
+            - paragraph [ref=e99]: "Verbi 'ski' saa yksikön kolmannessa persoonassa -s-päätteen: 'He skis'. Muista, että tämä kertoo toistuvasta toiminnasta talvella. Saatat helposti unohtaa -s-päätteen, vaikka tekijänä on 'he'."
+        - generic [ref=e79]:
+          - button "Seuraava kysymys →" [ref=e100] [cursor=pointer]
+          - generic [ref=e101]:
+            - generic [ref=e103]:
+              - generic [ref=e104]:
+                - paragraph [ref=e105]: Valitse eri aihealue
+                - paragraph [ref=e106]: Selaa muita kysymyssarjoja.
+              - button "Valitse" [ref=e107] [cursor=pointer]:
+                - img [ref=e108]
+                - text: Valitse
+            - generic [ref=e112]:
+              - generic [ref=e113]:
+                - paragraph [ref=e114]: Huomasitko virheen?
+                - paragraph [ref=e115]: Kysymykset ovat tekoälyn laatimia, niissä saattaa esiintyä virheitä.
+              - button "Ilmoita virhe" [ref=e116] [cursor=pointer]:
+                - img [ref=e117]
+                - text: Ilmoita virhe
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e44] [cursor=pointer]:
+    - img [ref=e45]
+  - alert [ref=e48]

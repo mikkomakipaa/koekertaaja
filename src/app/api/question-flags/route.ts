@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { z } from 'zod';
 import { createLogger } from '@/lib/logger';
+import { verifyAuth } from '@/lib/supabase/server-auth';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-
-const flagSchema = z.object({
-  questionId: z.string().uuid({ message: 'Invalid questionId' }),
-  questionSetId: z.string().uuid({ message: 'Invalid questionSetId' }),
-  reason: z.enum(['wrong_answer', 'ambiguous', 'typo', 'other'], {
-    errorMap: () => ({ message: 'Invalid reason' }),
-  }),
-  note: z.string().max(1000, 'Note must be 1000 characters or less').optional(),
-  clientId: z.string().min(8, 'Invalid clientId').max(200, 'Invalid clientId'),
-});
+import { buildServerRateLimitKey } from '@/lib/ratelimit';
+import {
+  flagSchema,
+  PER_QUESTION_WINDOW_MS,
+  getFlagAbuseRejection,
+} from '@/lib/question-flags/abuse-controls';
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
@@ -33,29 +29,58 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { questionId, questionSetId, reason, note, clientId } = validationResult.data;
+    const { questionId, questionSetId, reason, note } = validationResult.data;
     const admin = getSupabaseAdmin();
+    const user = await verifyAuth();
+    const abuseIdentity = buildServerRateLimitKey(request.headers, {
+      prefix: 'question-flags',
+      userId: user?.id,
+    });
 
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const questionWindowCutoff = new Date(Date.now() - PER_QUESTION_WINDOW_MS).toISOString();
 
-    const { count, error: countError } = await admin
+    const { count: dailyCount, error: dailyCountError } = await admin
       .from('question_flags')
       .select('id', { count: 'exact', head: true })
-      .eq('client_id', clientId)
+      .eq('client_id', abuseIdentity)
       .gte('created_at', cutoff);
 
-    if (countError) {
-      logger.error({ error: countError }, 'Failed to check flag rate limit');
+    if (dailyCountError) {
+      logger.error({ error: dailyCountError }, 'Failed to check daily flag rate limit');
       return NextResponse.json(
         { error: 'Failed to validate flagging limit' },
         { status: 500 }
       );
     }
 
-    if ((count ?? 0) >= 3) {
-      logger.warn({ clientId, count }, 'Flagging rate limit exceeded');
+    const { count: questionWindowCount, error: questionWindowError } = await admin
+      .from('question_flags')
+      .select('id', { count: 'exact', head: true })
+      .eq('client_id', abuseIdentity)
+      .eq('question_id', questionId)
+      .gte('created_at', questionWindowCutoff);
+
+    if (questionWindowError) {
+      logger.error({ error: questionWindowError }, 'Failed to check per-question spam window');
       return NextResponse.json(
-        { error: 'Flagging limit reached. Try again later.' },
+        { error: 'Failed to validate flagging limit' },
+        { status: 500 }
+      );
+    }
+
+    const rejection = getFlagAbuseRejection({
+      dailyCount: dailyCount ?? 0,
+      questionWindowCount: questionWindowCount ?? 0,
+    });
+
+    if (rejection) {
+      logger.warn(
+        { abuseIdentity, questionId, dailyCount, questionWindowCount },
+        'Flagging abuse control blocked request'
+      );
+      return NextResponse.json(
+        rejection,
         { status: 429 }
       );
     }
@@ -69,7 +94,7 @@ export async function POST(request: NextRequest) {
         question_set_id: questionSetId,
         reason,
         note: trimmedNote ? trimmedNote : null,
-        client_id: clientId,
+        client_id: abuseIdentity,
       })
       .select('id')
       .single();

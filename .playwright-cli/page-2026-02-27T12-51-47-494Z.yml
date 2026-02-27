@@ -1,0 +1,17 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Aloita harjoittelu" [level=1] [ref=e10]
+      - paragraph [ref=e11]: Suorita ensimmäinen harjoituskierros avataksesi ensimmäisen merkin ja nähdäksesi tilastosi!
+      - generic [ref=e12]:
+        - link "Aloita harjoittelu" [ref=e13] [cursor=pointer]:
+          - /url: /play
+          - img [ref=e14]
+          - text: Aloita harjoittelu
+        - link "Takaisin valikkoon" [ref=e16] [cursor=pointer]:
+          - /url: /
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e22] [cursor=pointer]:
+    - img [ref=e23]
+  - alert [ref=e26]

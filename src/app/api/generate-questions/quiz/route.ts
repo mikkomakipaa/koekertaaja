@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createLogger } from '@/lib/logger';
-import { requireAuth } from '@/lib/supabase/server-auth';
+import { requireAuth, resolveAuthError } from '@/lib/supabase/server-auth';
 import { createQuestionSetSchema } from '@/lib/validation/schemas';
 import {
   identifyTopicsFromMaterial,
@@ -28,14 +28,17 @@ export async function POST(request: NextRequest) {
     // Verify authentication
     let userId = '';
     try {
-      const user = await requireAuth();
+      const user = await requireAuth(request);
       userId = user.id;
       logger.info('Authentication successful');
     } catch (authError) {
-      logger.warn('Authentication failed');
+      const { status, message } = resolveAuthError(authError, {
+        unauthorized: 'Unauthorized. Please log in to generate quiz questions.',
+      });
+      logger.warn({ status, message }, 'Authentication failed');
       return NextResponse.json(
-        { error: 'Unauthorized. Please log in to generate quiz questions.' },
-        { status: 401 }
+        { error: message },
+        { status }
       );
     }
 

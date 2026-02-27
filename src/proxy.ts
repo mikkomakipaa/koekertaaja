@@ -1,43 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, getClientIp } from '@/lib/ratelimit';
+import {
+  buildCorsHeaders,
+  getAllowedCorsOrigins,
+  isAllowedCorsOrigin,
+  normalizeOrigin,
+} from '@/lib/security/cors';
+import {
+  buildContentSecurityPolicy,
+  CSP_NONCE_HEADER,
+  generateCspNonce,
+} from '@/lib/security/csp';
 
-export default function middleware(request: NextRequest) {
+function applySecurityHeaders(
+  response: NextResponse,
+  cspValue: string,
+  nonce: string
+): NextResponse {
+  response.headers.set('Content-Security-Policy', cspValue);
+  response.headers.set(CSP_NONCE_HEADER, nonce);
+  return response;
+}
+
+export default async function middleware(request: NextRequest) {
+  const nonce = generateCspNonce();
+  const cspValue = buildContentSecurityPolicy(nonce);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(CSP_NONCE_HEADER, nonce);
+
   // Rate limiting for API routes
   if (request.nextUrl.pathname.startsWith('/api/generate-questions')) {
     if (process.env.NODE_ENV === 'development') {
-      return NextResponse.next();
+      return applySecurityHeaders(
+        NextResponse.next({
+          request: {
+            headers: requestHeaders,
+          },
+        }),
+        cspValue,
+        nonce
+      );
     }
 
     const ip = getClientIp(request.headers);
 
     // Very strict rate limit: 5 requests per hour (expensive AI operations)
-    const rateLimitResult = checkRateLimit(ip, {
+    const rateLimitResult = await checkRateLimit(ip, {
       limit: 5,
       windowMs: 60 * 60 * 1000, // 1 hour
     });
 
     if (!rateLimitResult.success) {
-      return NextResponse.json(
-        {
-          error: 'Too many requests. Please try again later.',
-          retryAfter: new Date(rateLimitResult.reset).toISOString(),
-        },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
-            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': rateLimitResult.reset.toString(),
-            'Retry-After': Math.ceil(
-              (rateLimitResult.reset - Date.now()) / 1000
-            ).toString(),
+      return applySecurityHeaders(
+        NextResponse.json(
+          {
+            error: 'Too many requests. Please try again later.',
+            retryAfter: new Date(rateLimitResult.reset).toISOString(),
           },
-        }
+          {
+            status: 429,
+            headers: {
+              'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+              'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+              'X-RateLimit-Reset': rateLimitResult.reset.toString(),
+              'Retry-After': Math.ceil(
+                (rateLimitResult.reset - Date.now()) / 1000
+              ).toString(),
+            },
+          }
+        ),
+        cspValue,
+        nonce
       );
     }
 
     // Add rate limit headers to successful requests
-    const response = NextResponse.next();
+    const response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
     response.headers.set(
       'X-RateLimit-Limit',
       rateLimitResult.limit.toString()
@@ -51,77 +93,68 @@ export default function middleware(request: NextRequest) {
       rateLimitResult.reset.toString()
     );
 
-    return response;
+    return applySecurityHeaders(response, cspValue, nonce);
   }
 
   // CORS configuration for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const origin = request.headers.get('origin');
-    const allowedOrigins = [
-      'https://koekertaaja.vercel.app', // Production URL
-      'http://localhost:3000',          // Local development
-      process.env.NEXT_PUBLIC_APP_URL,  // Custom URL if set
-    ].filter(Boolean); // Remove undefined values
+    const normalizedOrigin = normalizeOrigin(origin ?? '');
+    const allowedOrigins = getAllowedCorsOrigins(process.env);
+    const isAllowedOrigin = isAllowedCorsOrigin(origin, allowedOrigins);
 
-    const safeParseUrl = (value: string | null | undefined) => {
-      if (!value) return null;
-      try {
-        return new URL(value);
-      } catch {
-        return null;
-      }
-    };
-
-    const originUrl = safeParseUrl(origin);
-    const requestOrigin = `${request.nextUrl.protocol}//${request.nextUrl.host}`;
-    const requestOriginUrl = safeParseUrl(requestOrigin);
-    const allowedHosts = allowedOrigins
-      .map((value) => safeParseUrl(value)?.host)
-      .filter(Boolean) as string[];
-    const isVercelPreview = originUrl ? originUrl.hostname.endsWith('.vercel.app') : false;
-    const isSameOrigin = originUrl && requestOriginUrl && originUrl.host === requestOriginUrl.host;
-    const isAllowedHost = originUrl ? allowedHosts.some((host) => originUrl.host === host) : false;
-
-    // For same-origin requests, origin will be null - allow these
-    // Only block if origin exists and is not in allowed list
-    if (origin && !allowedOrigins.includes(origin) && !isVercelPreview && !isSameOrigin && !isAllowedHost) {
-      return NextResponse.json(
-        { error: 'CORS: Origin not allowed' },
-        { status: 403 }
+    // Same-origin requests typically omit Origin and are allowed by default.
+    if (origin && !isAllowedOrigin) {
+      return applySecurityHeaders(
+        NextResponse.json({ error: 'CORS: Origin not allowed' }, { status: 403 }),
+        cspValue,
+        nonce
       );
     }
 
     // Handle OPTIONS preflight requests
     if (request.method === 'OPTIONS') {
-      return new NextResponse(null, {
-        status: 204,
-        headers: {
-          'Access-Control-Allow-Origin': origin || '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          'Access-Control-Allow-Credentials': 'true',
-          'Access-Control-Max-Age': '86400',
-        },
-      });
+      const response = new NextResponse(null, { status: 204 });
+      if (normalizedOrigin) {
+        const headers = buildCorsHeaders(normalizedOrigin);
+        for (const [key, value] of Object.entries(headers)) {
+          response.headers.set(key, value);
+        }
+      }
+      return applySecurityHeaders(response, cspValue, nonce);
     }
 
     // Add CORS headers to all API responses (not just OPTIONS)
-    const response = NextResponse.next();
+    const response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
 
-    // Set CORS headers for all responses
-    if (origin) {
-      response.headers.set('Access-Control-Allow-Origin', origin);
-      response.headers.set('Access-Control-Allow-Credentials', 'true');
-      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    // Set CORS headers only for trusted cross-origin requests.
+    if (normalizedOrigin) {
+      const headers = buildCorsHeaders(normalizedOrigin);
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value);
+      }
     }
 
-    return response;
+    return applySecurityHeaders(response, cspValue, nonce);
   }
 
-  return NextResponse.next();
+  return applySecurityHeaders(
+    NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    }),
+    cspValue,
+    nonce
+  );
 }
 
 export const config = {
-  matcher: '/api/:path*',
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|svg|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml|woff|woff2)$).*)',
+  ],
 };

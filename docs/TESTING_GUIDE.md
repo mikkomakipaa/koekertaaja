@@ -302,6 +302,68 @@ For prompt-specific gates and rollback thresholds, use:
 
 ---
 
+## Topic Normalization Rollout Checklist (Task 217)
+
+Run regression tests:
+
+```bash
+npm test -- tests/lib/topics/normalization-regression-matrix.test.ts
+npm test -- tests/integration/topic-normalization-flow.test.ts
+npm test -- tests/api/question-sets-submit-normalization.test.ts tests/lib/supabase/write-queries-normalization.test.ts tests/hooks/useTopicMastery.test.ts tests/lib/mindMap/storage.test.ts
+```
+
+Run Supabase MCP verification queries (via `mcp__supabase__execute_sql`):
+
+1. Check duplicate topic keys:
+```sql
+SELECT LOWER(TRIM(topic)) AS topic_key, COUNT(*)
+FROM public.questions
+WHERE topic IS NOT NULL
+GROUP BY 1
+ORDER BY 2 DESC;
+```
+2. Check known English alias leftovers:
+```sql
+SELECT topic, subtopic, COUNT(*)
+FROM public.questions
+WHERE topic ~* '(nouns|articles|vocabulary|grammar|communicative|functions)'
+   OR subtopic ~* '(object pronouns|clothing vocabulary|present simple)'
+GROUP BY 1, 2
+ORDER BY 3 DESC;
+```
+3. Check canonical contract coverage:
+```sql
+SELECT
+  COUNT(*) FILTER (
+    WHERE topic IN (
+      'Substantiivit ja artikkelit',
+      'Sanasto ja temaattinen sisältö',
+      'Viestinnälliset funktiot ja tekstit',
+      'Preesensin kielioppi',
+      'Keskeiset verbit: olla ja omistaa'
+    )
+  ) AS canonical_rows,
+  COUNT(*) AS total_rows
+FROM public.questions;
+```
+
+Pass criteria:
+
+- Regression tests above pass.
+- English alias leftovers query returns `0` rows.
+- No duplicate English/Finnish topic pair is visible in tested generation, submit/write, read, and mastery UI flows.
+
+Rollback guidance for taxonomy collisions:
+
+- Soft rollback:
+  - Add temporary alias mapping in `src/lib/topics/normalization.ts` (`TOPIC_CANONICAL_ALIAS_ENTRIES`).
+  - Re-run migration verification queries and regression tests.
+- Hard rollback:
+  - Revert canonical mapping to previous commit and re-run backfill migration SQL.
+  - Pause release until collision cause and updated mapping/tests are reviewed.
+
+---
+
 ## Known Issues / Warnings
 
 ### Non-Critical:

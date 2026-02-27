@@ -1,0 +1,82 @@
+[runbook] case=tc-play-002 session=tc-play-002-20260227-145445
+[runbook] output=/Users/mikko.makipaa/koekertaaja/output/playwright/runbook/tc-play-002/20260227-145445
+### Browser `tc-play-002-20260227-145445` opened with pid 9552.
+- tc-play-002-20260227-145445:
+  - browser-type: chrome
+  - user-data-dir: <in-memory>
+  - headed: false
+---
+### Ran Playwright code
+```js
+await page.goto('http://localhost:3000/play');
+```
+### Page
+- Page URL: http://localhost:3000/play
+- Page Title: Harjoittele | Koekertaaja
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T12-54-49-519Z.yml)
+### Ran Playwright code
+```js
+await (async (page) => { const btn = page.getByRole('button', { name: /Aloita|Jatka/i }).first(); if (await btn.count() === 0) throw new Error('No Aloita/Jatka button found'); await btn.click(); })(page);
+```
+### Page
+- Page URL: http://localhost:3000/play/27BQCY?mode=pelaa
+- Page Title: Harjoittele | Koekertaaja
+- Console: 0 errors, 1 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-02-27T12-54-49-139Z.log#L1
+### Ran Playwright code
+```js
+await (async (page) => { await page.waitForURL(/\/play\/[^\/?]+/); })(page);
+```
+### Page
+- Page URL: http://localhost:3000/play/27BQCY?mode=pelaa
+- Page Title: Harjoittele | Koekertaaja
+- Console: 0 errors, 1 warnings
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T12-55-00-721Z.yml)
+### Ran Playwright code
+```js
+await (async (page) => { if (await page.locator('input[type=radio]').count() > 0) { await page.locator('input[type=radio]').first().check({ force: true }); } else if (await page.locator('input[type=checkbox]').count() > 0) { await page.locator('input[type=checkbox]').first().check({ force: true }); } else if (await page.locator('textarea').count() > 0) { await page.locator('textarea').first().fill('testivastaus'); } else if (await page.locator('input[type=text]').count() > 0) { await page.locator('input[type=text]').first().fill('testivastaus'); } })(page);
+```
+### Ran Playwright code
+```js
+await (async (page) => { const checkBtn = page.getByRole('button', { name: /Tarkista vastaus/i }); if (await checkBtn.count() === 0) throw new Error('Missing Tarkista vastaus button'); await checkBtn.click(); })(page);
+```
+### Ran Playwright code
+```js
+await (async (page) => { await page.getByRole('button', { name: /Seuraava kysymys/i }).waitFor({ timeout: 5000 }); })(page);
+```
+### Page
+- Page URL: http://localhost:3000/play/27BQCY?mode=pelaa
+- Page Title: Harjoittele | Koekertaaja
+- Console: 0 errors, 1 warnings
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T12-55-07-984Z.yml)
+### Ran Playwright code
+```js
+await (async (page) => { await page.getByRole('button', { name: /Seuraava kysymys/i }).click(); })(page);
+```
+### Page
+- Page URL: http://localhost:3000/play/27BQCY?mode=pelaa
+- Page Title: Harjoittele | Koekertaaja
+- Console: 0 errors, 1 warnings
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T12-55-11-131Z.yml)
+### Result
+- [Screenshot of viewport](.playwright-cli/page-2026-02-27T12-55-12-224Z.png)
+### Ran Playwright code
+```js
+// Screenshot viewport and save it as .playwright-cli/page-2026-02-27T12-55-12-224Z.png
+await page.screenshot({
+path: '.playwright-cli/page-2026-02-27T12-55-12-224Z.png',
+  scale: 'css',
+  type: 'png'
+});
+```
+### Result
+- [Console](.playwright-cli/console-2026-02-27T12-55-13-336Z.log)
+### Result
+- [Network](.playwright-cli/network-2026-02-27T12-55-14-321Z.log)
+[runbook] PASS tc-play-002
+Browser 'tc-play-002-20260227-145445' closed

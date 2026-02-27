@@ -5,7 +5,9 @@ import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty, Mode } from '@/types';
 import { aiQuestionArraySchema } from '@/lib/validation/schemas';
 import { createLogger } from '@/lib/logger';
-import { requireAuth } from '@/lib/supabase/server-auth';
+import { requireAuth, resolveAuthError } from '@/lib/supabase/server-auth';
+import { normalizeSubtopicLabel, normalizeTopicLabel } from '@/lib/topics/normalization';
+import { normalizeSubmissionTopics } from '@/lib/topics/submitNormalization';
 import { z } from 'zod';
 
 // Configure route segment for Vercel deployment
@@ -27,14 +29,19 @@ export async function POST(request: NextRequest) {
 
   try {
     // Verify authentication
+    let authenticatedUserId: string | null = null;
     try {
-      await requireAuth();
+      const user = await requireAuth(request);
+      authenticatedUserId = user.id;
       logger.info('Authentication successful');
     } catch (authError) {
-      logger.warn('Authentication failed');
+      const { status, message } = resolveAuthError(authError, {
+        unauthorized: 'Unauthorized. Please log in to submit question sets.',
+      });
+      logger.warn({ status, message }, 'Authentication failed');
       return NextResponse.json(
-        { error: 'Unauthorized. Please log in to submit question sets.' },
-        { status: 401 }
+        { error: message },
+        { status }
       );
     }
 
@@ -132,13 +139,49 @@ export async function POST(request: NextRequest) {
       );
 
       // Assign default topic to questions missing topics
-      const defaultTopic = subject;
+      const defaultTopic = 'Yleinen';
       questions.forEach(q => {
         if (!q.topic || q.topic.trim().length === 0) {
           q.topic = defaultTopic;
         }
       });
     }
+
+    const normalizedTopic = typeof topic === 'string' && topic.trim().length > 0
+      ? normalizeTopicLabel(topic, {
+        context: 'submit.questionSet.topic',
+        onUnexpectedEnglish: (event) => {
+          logger.warn(
+            {
+              kind: event.kind,
+              input: event.input,
+              normalized: event.normalized,
+              context: event.context,
+            },
+            'Unexpected unmapped English topic label encountered in submit payload'
+          );
+        },
+      })
+      : undefined;
+
+    const normalizedSubtopic = typeof subtopic === 'string' && subtopic.trim().length > 0
+      ? normalizeSubtopicLabel(subtopic, {
+        context: 'submit.questionSet.subtopic',
+        onUnexpectedEnglish: (event) => {
+          logger.warn(
+            {
+              kind: event.kind,
+              input: event.input,
+              normalized: event.normalized,
+              context: event.context,
+            },
+            'Unexpected unmapped English topic label encountered in submit payload'
+          );
+        },
+      })
+      : undefined;
+
+    const normalizedQuestions = normalizeSubmissionTopics(questions, logger);
 
     logger.info(
       {
@@ -152,7 +195,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Transform questions from API format to database format
-    const transformedQuestions = questions.map((q, index) => ({
+    const transformedQuestions = normalizedQuestions.map((q, index) => ({
       question_text: q.question,
       question_type: q.type,
       topic: q.topic,
@@ -180,15 +223,16 @@ export async function POST(request: NextRequest) {
       dbResult = await createQuestionSet(
         {
           code,
+          user_id: authenticatedUserId,
           name: questionSetName,
           subject: subject as Subject,
           difficulty: difficulty as Difficulty,
           mode: mode as Mode,
           grade,
-          topic,
-          subtopic,
-          question_count: questions.length,
-          exam_length: questions.length,
+          topic: normalizedTopic,
+          subtopic: normalizedSubtopic,
+          question_count: normalizedQuestions.length,
+          exam_length: normalizedQuestions.length,
           exam_date: examDate ?? null,
           status: 'created',  // New question sets default to unpublished
         },

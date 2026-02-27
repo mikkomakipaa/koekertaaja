@@ -404,21 +404,23 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
             ) : (
               <p className="text-sm text-gray-500 dark:text-gray-400">Ei pelimuotoa saatavilla</p>
             )
-          ) : groupHasFlashcards ? (
-            <PrimaryActionButton
-              onClick={() => {
-                const flashcardSet = group.sets.find((s) => s.mode === 'flashcard');
-                if (flashcardSet) {
-                  router.push(`/play/${flashcardSet.code}?mode=opettele`);
-                }
-              }}
-              mode="study"
-              icon={<Book size={20} weight="duotone" />}
-              label="Opettele"
-              ariaLabel="Opettele korttien avulla"
-            />
           ) : (
-            <p className="text-sm text-gray-500 dark:text-gray-400">Ei kortteja saatavilla</p>
+            groupHasFlashcards ? (
+              <PrimaryActionButton
+                onClick={() => {
+                  const flashcardSet = group.sets.find((s) => s.mode === 'flashcard');
+                  if (flashcardSet) {
+                    router.push(`/play/${flashcardSet.code}?mode=opettele`);
+                  }
+                }}
+                mode="study"
+                icon={<Book size={20} weight="duotone" />}
+                label="Opettele"
+                ariaLabel="Opettele korttien avulla"
+              />
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Ei kortteja saatavilla</p>
+            )
           )}
 
         </div>

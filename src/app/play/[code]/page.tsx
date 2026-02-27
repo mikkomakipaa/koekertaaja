@@ -40,6 +40,7 @@ import {
 } from '@/lib/play/flashcard-topic-lookup';
 import { QuestionSetWithQuestions, StudyMode, Flashcard, type QuestionType, type QuestionFlagReason } from '@/types';
 import { createLogger } from '@/lib/logger';
+import { withCsrfHeaders } from '@/lib/security/csrf-client';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   ListBullets,
@@ -314,7 +315,7 @@ export default function PlayPage() {
               try {
                 const response = await fetch('/api/question-sets/publish', {
                   method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: withCsrfHeaders({ 'Content-Type': 'application/json' }),
                   credentials: 'same-origin',
                   body: JSON.stringify({
                     questionSetId: '00000000-0000-0000-0000-000000000000',

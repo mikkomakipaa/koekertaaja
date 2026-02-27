@@ -1,6 +1,7 @@
 'use client';
 
-import Link from 'next/link';
+import type { ComponentProps } from 'react';
+import Link from 'next/link.js';
 import {
   Trophy,
   Medal,
@@ -14,6 +15,7 @@ import {
 import { BadgeDisplay } from '@/components/badges/BadgeDisplay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AchievementsMapSection } from '@/components/mindMap/AchievementsMapSection';
 import { getBadgeColors, getBadgeIcon } from '@/lib/utils/badgeStyles';
 import { cn } from '@/lib/utils';
 import { getBadgeDefinitionCount, useBadges } from '@/hooks/useBadges';
@@ -36,6 +38,20 @@ export default function AchievementsPage() {
     return null;
   }
 
+  return <AchievementsPageContent badges={badges} stats={stats} />;
+}
+
+interface AchievementsPageContentProps {
+  badges: Badge[];
+  stats: BadgeStats;
+  mapSectionProps?: ComponentProps<typeof AchievementsMapSection>;
+}
+
+export function AchievementsPageContent({
+  badges,
+  stats,
+  mapSectionProps,
+}: AchievementsPageContentProps) {
   const unlockedCount = badges.filter((badge) => badge.unlocked).length;
   const hasProgress = stats.totalSessions > 0;
 
@@ -68,6 +84,7 @@ export default function AchievementsPage() {
       <div className="mx-auto max-w-4xl space-y-6 p-6 pb-24">
         <StatsSection stats={stats} unlockedCount={unlockedCount} />
         <BadgesSection badges={badges} unlockedCount={unlockedCount} />
+        <AchievementsMapSection {...mapSectionProps} />
 
         <div className="pt-6 text-center">
           <Button

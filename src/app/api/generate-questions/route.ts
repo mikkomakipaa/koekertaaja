@@ -8,11 +8,10 @@ import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty } from '@/types';
 import { createQuestionSetSchema } from '@/lib/validation/schemas';
 import { createLogger } from '@/lib/logger';
-import { requireAuth } from '@/lib/supabase/server-auth';
+import { requireAuth, resolveAuthError } from '@/lib/supabase/server-auth';
 import {
   checkRateLimit,
-  getClientIp,
-  buildRateLimitKey,
+  buildServerRateLimitKey,
   createRateLimitHeaders,
 } from '@/lib/ratelimit';
 import { analyzeQuestionSetQuality, orchestrateQuestionSet } from '@/lib/utils/questionOrdering';
@@ -33,28 +32,32 @@ export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
   const logger = createLogger({ requestId, route: '/api/generate-questions' });
   let baseHeaders: Headers | undefined;
+  const respond = (body: unknown, status = 200, headers?: Headers) =>
+    NextResponse.json(body, { status, headers: headers ?? baseHeaders });
 
   logger.info({ method: 'POST' }, 'Request received');
 
   try {
-    const clientIp = getClientIp(request.headers);
-    const clientId = request.headers.get('x-client-id') || request.headers.get('x-clientid') || undefined;
     let userId: string | undefined;
 
     // Verify authentication
     try {
-      const user = await requireAuth();
+      const user = await requireAuth(request);
       userId = user.id;
       logger.info('Authentication successful');
     } catch (authError) {
-      logger.warn('Authentication failed');
+      const { status, message } = resolveAuthError(authError, {
+        unauthorized: 'Unauthorized. Please log in to create question sets.',
+      });
+      logger.warn({ status, message }, 'Authentication failed');
+      if (status === 403) {
+        return respond({ error: message }, status);
+      }
     }
 
-    const rateLimitKey = buildRateLimitKey({
-      ip: clientIp,
-      userId,
-      clientId,
+    const rateLimitKey = buildServerRateLimitKey(request.headers, {
       prefix: 'generate-questions',
+      userId,
     });
     const rateLimitResult = process.env.NODE_ENV === 'development'
       ? {
@@ -63,13 +66,11 @@ export async function POST(request: NextRequest) {
           remaining: Number.MAX_SAFE_INTEGER,
           reset: Date.now(),
         }
-      : checkRateLimit(rateLimitKey, {
+      : await checkRateLimit(rateLimitKey, {
           limit: 5,
           windowMs: 60 * 60 * 1000,
         });
     baseHeaders = createRateLimitHeaders(rateLimitResult);
-    const respond = (body: unknown, status = 200, headers?: Headers) =>
-      NextResponse.json(body, { status, headers: headers ?? baseHeaders });
 
     if (!rateLimitResult.success) {
       const retryAfterSeconds = Math.max(
@@ -577,6 +578,7 @@ export async function POST(request: NextRequest) {
           dbResult = await createQuestionSet(
             {
               code,
+              user_id: authenticatedUserId,
               name: setName,
               subject: subject as Subject,
               difficulty: difficulty || 'normaali',

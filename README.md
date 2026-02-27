@@ -107,16 +107,19 @@ Koekertaaja is an interactive exam preparation application that helps students p
 3. **Configure environment variables**:
    - Copy `.env.example` → `.env.local`
    - Open `.env.local` in a text editor
-   - Add your Supabase details:
+   - Add your runtime secrets and local values:
      ```env
      NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
      NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
-     SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+     SUPABASE_SERVICE_ROLE_KEY=your_supabase_srvrole_key_here
      ANTHROPIC_API_KEY=your_anthropic_api_key_here
      OPENAI_API_KEY=your_openai_api_key_here
      AI_ENABLE_OPENAI=true
-     AI_PROVIDER_DEFAULT=anthropic
+     CORS_ALLOWED_ORIGINS=http://localhost:3000,https://your-app.example.com
      ```
+
+   - Configure `CORS_ALLOWED_ORIGINS` as a comma-separated list of exact origins that are allowed to make credentialed browser API requests. Do not use wildcards.
+   - Never commit `.env.local`, `.env`, or cloud dashboard secrets.
 
 ### Step 3: Initialize Database
 
@@ -186,6 +189,9 @@ npm run dev
 # Type checking
 npm run typecheck
 
+# Scan docs/sample env files for secret-like patterns
+npm run secrets:scan
+
 # Production build
 npm run build
 
@@ -207,6 +213,7 @@ npm start
    - Click "Import Project"
    - Select your GitHub repository
    - Add environment variables (same as `.env.local`)
+   - Set `CORS_ALLOWED_ORIGINS` per environment (Preview/Production) to exact trusted frontend origins for that environment
    - Click "Deploy"
 
 3. **Done!** Your app is now online
@@ -254,6 +261,12 @@ Modals:   rounded-xl + shadow-xl + backdrop-blur
 - **RLS Policies**: Row-level security in Supabase
 - **Server-Side API**: API keys not visible in browser
 - **No Cookies**: Privacy-first approach
+
+### Secrets Hygiene
+- `.env.example` must contain placeholders only.
+- Use `.env.local` for local development secrets and keep it untracked.
+- If any key was ever committed or shared in logs, rotate it immediately in the provider dashboard (Supabase, Anthropic, OpenAI, Upstash), then update local and hosted env vars.
+- Run `npm run secrets:scan` before commits or in CI to catch secret-like tokens in tracked docs/sample env files.
 
 ## 📝 License
 

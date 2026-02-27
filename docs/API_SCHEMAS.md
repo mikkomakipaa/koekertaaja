@@ -346,6 +346,20 @@ Example:
 
 ## API Endpoint Schema
 
+### CORS Policy (Credentialed Browser Requests)
+
+- Credentialed cross-origin API calls are allowed only from explicit origins in `CORS_ALLOWED_ORIGINS` (comma-separated exact origins).
+- No wildcard origins are used for credentialed requests.
+- Requests with unknown `Origin` headers receive `403` with `{ "error": "CORS: Origin not allowed" }`.
+- Requests without an `Origin` header keep same-origin default behavior.
+- Allowed origins receive consistent CORS headers on both `OPTIONS` preflight and regular API responses:
+  - `Access-Control-Allow-Origin: <trusted-origin>`
+  - `Access-Control-Allow-Credentials: true`
+  - `Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS`
+  - `Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token`
+  - `Access-Control-Max-Age: 86400`
+  - `Vary: Origin`
+
 ### POST /api/question-sets/submit
 
 Submit generated questions to Koekertaaja from external workflow.
