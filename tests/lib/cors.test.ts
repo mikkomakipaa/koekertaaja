@@ -4,6 +4,7 @@ import {
   buildCorsHeaders,
   getAllowedCorsOrigins,
   isAllowedCorsOrigin,
+  isSameOriginRequest,
 } from '../../src/lib/security/cors';
 
 test('builds explicit CORS allowlist from environment values', () => {
@@ -56,4 +57,19 @@ test('builds consistent CORS response headers for credentialed requests', () => 
   );
   assert.equal(headers['Access-Control-Max-Age'], '86400');
   assert.equal(headers.Vary, 'Origin');
+});
+
+test('treats same-origin API requests as trusted even when not explicitly allowlisted', () => {
+  assert.equal(
+    isSameOriginRequest('https://app.custom-domain.fi', 'https://app.custom-domain.fi'),
+    true
+  );
+  assert.equal(
+    isSameOriginRequest('https://app.custom-domain.fi:443', 'https://app.custom-domain.fi'),
+    true
+  );
+  assert.equal(
+    isSameOriginRequest('https://other-domain.fi', 'https://app.custom-domain.fi'),
+    false
+  );
 });

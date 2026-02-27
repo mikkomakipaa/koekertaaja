@@ -1,0 +1,82 @@
+[runbook] case=tc-flash-002 session=tc-flash-002-20260227-182818
+[runbook] output=/Users/mikko.makipaa/koekertaaja/output/playwright/runbook/tc-flash-002/20260227-182818
+### Browser `tc-flash-002-20260227-182818` opened with pid 37456.
+- tc-flash-002-20260227-182818:
+  - browser-type: chrome
+  - user-data-dir: <in-memory>
+  - headed: false
+---
+### Ran Playwright code
+```js
+await page.goto('http://localhost:3000/play?mode=opettele');
+```
+### Page
+- Page URL: http://localhost:3000/play?mode=opettele
+- Page Title: Harjoittele | Koekertaaja
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T16-30-04-005Z.yml)
+### Ran Playwright code
+```js
+await (async (page) => { const startStudy = page.getByRole('button', { name: /Opettele/i }).first(); if (await startStudy.count() === 0) throw new Error('No Opettele button found'); await startStudy.click(); })(page);
+```
+### Page
+- Page URL: http://localhost:3000/play/SK4N95?mode=opettele
+- Page Title: Harjoittele | Koekertaaja
+- Console: 0 errors, 1 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-02-27T16-30-03-696Z.log#L1
+### Ran Playwright code
+```js
+await (async (page) => { await page.waitForURL(/mode=opettele/); })(page);
+```
+### Ran Playwright code
+```js
+await (async (page) => { const allTopics = page.getByRole('button', { name: /Harjoittele kaikkia aiheita/i }); if (await allTopics.count() > 0) await allTopics.first().click(); })(page);
+```
+### Page
+- Page URL: http://localhost:3000/play/SK4N95?mode=opettele
+- Page Title: Harjoittele | Koekertaaja
+- Console: 0 errors, 1 warnings
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T16-30-12-002Z.yml)
+### Ran Playwright code
+```js
+await (async (page) => { const showAnswer = page.getByRole('button', { name: /Näytä vastaus/i }).first(); if (await showAnswer.count() === 0) throw new Error('Näytä vastaus button not found'); await showAnswer.click(); })(page);
+```
+### Ran Playwright code
+```js
+await (async (page) => { await page.getByText(/Oikea vastaus/i).waitFor({ timeout: 5000 }); })(page);
+```
+### Page
+- Page URL: http://localhost:3000/play/SK4N95?mode=opettele
+- Page Title: Harjoittele | Koekertaaja
+- Console: 0 errors, 1 warnings
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T16-30-17-176Z.yml)
+### Ran Playwright code
+```js
+await (async (page) => { await page.getByRole('button', { name: /^Seuraava$/i }).click(); })(page);
+```
+### Page
+- Page URL: http://localhost:3000/play/SK4N95?mode=opettele
+- Page Title: Harjoittele | Koekertaaja
+- Console: 0 errors, 1 warnings
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T16-30-20-384Z.yml)
+### Result
+- [Screenshot of viewport](.playwright-cli/page-2026-02-27T16-30-21-427Z.png)
+### Ran Playwright code
+```js
+// Screenshot viewport and save it as .playwright-cli/page-2026-02-27T16-30-21-427Z.png
+await page.screenshot({
+path: '.playwright-cli/page-2026-02-27T16-30-21-427Z.png',
+  scale: 'css',
+  type: 'png'
+});
+```
+### Result
+- [Console](.playwright-cli/console-2026-02-27T16-30-22-443Z.log)
+### Result
+- [Network](.playwright-cli/network-2026-02-27T16-30-23-336Z.log)
+[runbook] PASS tc-flash-002
+Browser 'tc-flash-002-20260227-182818' closed

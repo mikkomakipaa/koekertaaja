@@ -4,6 +4,7 @@ import {
   buildCorsHeaders,
   getAllowedCorsOrigins,
   isAllowedCorsOrigin,
+  isSameOriginRequest,
   normalizeOrigin,
 } from '@/lib/security/cors';
 import {
@@ -99,9 +100,12 @@ export default async function middleware(request: NextRequest) {
   // CORS configuration for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const origin = request.headers.get('origin');
+    const requestOrigin = request.nextUrl.origin;
     const normalizedOrigin = normalizeOrigin(origin ?? '');
     const allowedOrigins = getAllowedCorsOrigins(process.env);
-    const isAllowedOrigin = isAllowedCorsOrigin(origin, allowedOrigins);
+    const isAllowedOrigin =
+      isSameOriginRequest(origin, requestOrigin) ||
+      isAllowedCorsOrigin(origin, allowedOrigins);
 
     // Same-origin requests typically omit Origin and are allowed by default.
     if (origin && !isAllowedOrigin) {

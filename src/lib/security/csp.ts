@@ -11,7 +11,7 @@ export function buildContentSecurityPolicy(nonce: string): string {
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' https://va.vercel-scripts.com`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https:",
+    "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
     "connect-src 'self' https://*.supabase.co https://va.vercel-scripts.com https://vitals.vercel-insights.com",
     "object-src 'none'",

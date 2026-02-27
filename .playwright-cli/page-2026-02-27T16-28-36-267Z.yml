@@ -1,0 +1,39 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e504]:
+      - generic [ref=e506]:
+        - generic [ref=e507]:
+          - generic [ref=e508]:
+            - img [ref=e509]
+            - generic [ref=e511]:
+              - heading "Englanti 27.2" [level=2] [ref=e512]
+              - paragraph [ref=e513]: Kysymys 1 / 15
+          - button "Lopeta harjoitus" [ref=e514] [cursor=pointer]:
+            - img [ref=e515]
+            - text: Lopeta
+        - generic [ref=e517]:
+          - generic [ref=e518]:
+            - progressbar
+          - generic [ref=e519]: 0% valmis
+      - generic [ref=e520]:
+        - generic [ref=e522]:
+          - 'heading "Täydennä lause: I ___ a giant castle cake. (haluan saada)" [level=2] [ref=e523]'
+          - 'textbox "Esim: sana, termi tai lyhyt vastaus" [ref=e526]'
+          - generic [ref=e527]:
+            - generic [ref=e528]:
+              - generic [ref=e529]: Enter
+              - generic [ref=e530]: lähettää vastauksen
+            - generic [ref=e531]:
+              - generic [ref=e532]: Esc
+              - generic [ref=e533]: tyhjentää
+        - generic [ref=e534]:
+          - generic [ref=e535]:
+            - button "Ohita kysymys" [ref=e536] [cursor=pointer]: Ohita
+            - button "Tarkista vastaus" [disabled]
+          - button "Valitse eri aihealue" [ref=e537] [cursor=pointer]:
+            - img [ref=e538]
+            - text: Valitse eri aihealue
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e44] [cursor=pointer]:
+    - img [ref=e45]
+  - alert [ref=e48]

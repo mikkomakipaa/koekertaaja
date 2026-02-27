@@ -1,0 +1,44 @@
+[runbook] case=tc-ach-001 session=tc-ach-001-20260227-182818
+[runbook] output=/Users/mikko.makipaa/koekertaaja/output/playwright/runbook/tc-ach-001/20260227-182818
+### Browser `tc-ach-001-20260227-182818` opened with pid 37883.
+- tc-ach-001-20260227-182818:
+  - browser-type: chrome
+  - user-data-dir: <in-memory>
+  - headed: false
+---
+### Ran Playwright code
+```js
+await page.goto('http://localhost:3000/play');
+```
+### Page
+- Page URL: http://localhost:3000/play
+- Page Title: Harjoittele | Koekertaaja
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T16-30-43-674Z.yml)
+### Page
+- Page URL: http://localhost:3000/play?mode=pelaa
+- Page Title: Harjoittele | Koekertaaja
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T16-30-44-566Z.yml)
+### Ran Playwright code
+```js
+await (async (page) => { const achievements = page.getByRole('link', { name: /Saavutukset/i }).first(); if (await achievements.count() === 0) throw new Error('Saavutukset link not found'); await achievements.click(); })(page);
+```
+### Page
+- Page URL: http://localhost:3000/play/achievements
+- Page Title: Harjoittele | Koekertaaja
+### Ran Playwright code
+```js
+await (async (page) => { await page.waitForURL(/\/play\/achievements$/); })(page);
+```
+### Page
+- Page URL: http://localhost:3000/play/achievements
+- Page Title: Harjoittele | Koekertaaja
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T16-30-50-757Z.yml)
+### Error
+TimeoutError: locator.waitFor: Timeout 5000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('heading', { name: /Saavutukset/i }) to be visible[22m
+[runbook] command failed: run-code async (page) => { await page.getByRole('heading', { name: /Saavutukset/i }).waitFor({ timeout: 5000 }); }
+Browser 'tc-ach-001-20260227-182818' closed

@@ -49,6 +49,23 @@ export function isAllowedCorsOrigin(
   return normalized !== null && allowedOrigins.includes(normalized);
 }
 
+export function isSameOriginRequest(
+  origin: string | null,
+  requestOrigin: string
+): boolean {
+  if (!origin) {
+    return false;
+  }
+
+  const normalizedOrigin = normalizeOrigin(origin);
+  const normalizedRequestOrigin = normalizeOrigin(requestOrigin);
+  if (!normalizedOrigin || !normalizedRequestOrigin) {
+    return false;
+  }
+
+  return normalizedOrigin === normalizedRequestOrigin;
+}
+
 export function buildCorsHeaders(origin: string): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': origin,

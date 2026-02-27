@@ -1,0 +1,67 @@
+[runbook] case=tc-play-001 session=tc-play-001-20260227-182428
+[runbook] output=/Users/mikko.makipaa/koekertaaja/output/playwright/runbook/tc-play-001/20260227-182428
+### Browser `tc-play-001-20260227-182428` opened with pid 35609.
+- tc-play-001-20260227-182428:
+  - browser-type: chrome
+  - user-data-dir: <in-memory>
+  - headed: false
+---
+### Ran Playwright code
+```js
+await page.goto('http://localhost:3000/play');
+```
+### Page
+- Page URL: http://localhost:3000/play
+- Page Title: Harjoittele | Koekertaaja
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T16-24-41-076Z.yml)
+### Page
+- Page URL: http://localhost:3000/play?mode=pelaa
+- Page Title: Harjoittele | Koekertaaja
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T16-24-42-246Z.yml)
+### Ran Playwright code
+```js
+await (async (page) => { await page.getByRole('radio', { name: 'Pelaa' }).click().catch(() => {}); })(page);
+```
+### Ran Playwright code
+```js
+await (async (page) => { const btn = page.getByRole('button', { name: /Aloita|Jatka/i }).first(); if (await btn.count() === 0) throw new Error('No Aloita/Jatka button found'); await btn.click(); })(page);
+```
+### Page
+- Page URL: http://localhost:3000/play/27BQCY?mode=pelaa
+- Page Title: Harjoittele | Koekertaaja
+- Console: 0 errors, 1 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-02-27T16-24-40-536Z.log#L1
+### Ran Playwright code
+```js
+await (async (page) => { await page.waitForURL(/\/play\/[^\/?]+/); })(page);
+```
+### Page
+- Page URL: http://localhost:3000/play/27BQCY?mode=pelaa
+- Page Title: Harjoittele | Koekertaaja
+- Console: 0 errors, 1 warnings
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-27T16-24-55-476Z.yml)
+### Ran Playwright code
+```js
+await (async (page) => { const hasCheck = await page.getByRole('button', { name: /Tarkista vastaus/i }).count(); if (!hasCheck) throw new Error('Quiz screen did not load'); })(page);
+```
+### Result
+- [Screenshot of viewport](.playwright-cli/page-2026-02-27T16-24-58-550Z.png)
+### Ran Playwright code
+```js
+// Screenshot viewport and save it as .playwright-cli/page-2026-02-27T16-24-58-550Z.png
+await page.screenshot({
+path: '.playwright-cli/page-2026-02-27T16-24-58-550Z.png',
+  scale: 'css',
+  type: 'png'
+});
+```
+### Result
+- [Console](.playwright-cli/console-2026-02-27T16-24-59-525Z.log)
+### Result
+- [Network](.playwright-cli/network-2026-02-27T16-25-00-624Z.log)
+[runbook] PASS tc-play-001
+Browser 'tc-play-001-20260227-182428' closed

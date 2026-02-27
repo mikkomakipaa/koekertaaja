@@ -1,0 +1,53 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e49]:
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - img [ref=e54]
+            - generic [ref=e56]:
+              - heading "Englanti 27.2" [level=2] [ref=e57]
+              - paragraph [ref=e58]: Kysymys 1 / 15
+          - button "Lopeta harjoitus" [ref=e59] [cursor=pointer]:
+            - img [ref=e60]
+            - text: Lopeta
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - progressbar
+          - generic [ref=e64]: 0% valmis
+      - generic [ref=e65]:
+        - generic [ref=e67]:
+          - 'heading "Täydennä lause: Can I have ___ banana, please?" [level=2] [ref=e68]'
+          - generic [ref=e70]:
+            - 'textbox "Esim: sana, termi tai lyhyt vastaus" [disabled] [ref=e71]': testivastaus
+            - img [ref=e87]
+        - generic [ref=e90]:
+          - generic [ref=e91]:
+            - paragraph [ref=e93]: ✓ Oikein! +10 pistettä
+            - generic [ref=e94]:
+              - img [ref=e95]
+              - generic [ref=e98]: 10 pistettä yhteensä
+          - generic [ref=e99]:
+            - paragraph [ref=e100]: "Selitys:"
+            - paragraph [ref=e101]: Konsonantilla alkavan sanan edessä käytät artikkelia 'a'. Banana alkaa äänteellä 'b', joten oikea vastaus on 'a banana'. Saatat helposti sekoittaa, milloin käyttää 'a' ja milloin 'an'.
+        - generic [ref=e79]:
+          - button "Seuraava kysymys →" [ref=e102] [cursor=pointer]
+          - generic [ref=e103]:
+            - generic [ref=e105]:
+              - generic [ref=e106]:
+                - paragraph [ref=e107]: Valitse eri aihealue
+                - paragraph [ref=e108]: Selaa muita kysymyssarjoja.
+              - button "Valitse" [ref=e109] [cursor=pointer]:
+                - img [ref=e110]
+                - text: Valitse
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - paragraph [ref=e116]: Huomasitko virheen?
+                - paragraph [ref=e117]: Kysymykset ovat tekoälyn laatimia, niissä saattaa esiintyä virheitä.
+              - button "Ilmoita virhe" [ref=e118] [cursor=pointer]:
+                - img [ref=e119]
+                - text: Ilmoita virhe
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e44] [cursor=pointer]:
+    - img [ref=e45]
+  - alert [ref=e48]

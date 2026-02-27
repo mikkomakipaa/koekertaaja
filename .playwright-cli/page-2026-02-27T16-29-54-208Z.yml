@@ -1,0 +1,47 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e217]:
+      - generic [ref=e219]:
+        - generic [ref=e220]:
+          - generic [ref=e221]:
+            - img [ref=e222]
+            - generic [ref=e224]:
+              - heading "Pinta-alat - Kortit" [level=2] [ref=e225]
+              - paragraph [ref=e226]: Kortti 1 / 8
+          - button "Lopeta opettelu" [ref=e227] [cursor=pointer]:
+            - img [ref=e228]
+            - text: Lopeta
+        - generic [ref=e233]: 13% valmis
+      - generic [ref=e234]:
+        - button "Käännä kortti nähdäksesi vastaus" [ref=e236] [cursor=pointer]:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+          - generic [ref=e237]:
+            - img [ref=e239]
+            - generic [ref=e242]:
+              - generic [ref=e243]: Mikä on kuution tilavuuden kaava?
+              - button "Näytä vastaus" [ref=e244]
+        - generic [ref=e245]:
+          - button "Edellinen" [disabled]:
+            - img
+            - text: Edellinen
+          - button "Seuraava" [ref=e246] [cursor=pointer]:
+            - text: Seuraava
+            - img [ref=e247]
+        - generic [ref=e249]:
+          - generic [ref=e250]:
+            - generic [ref=e251]: Enter
+            - text: kääntää kortin
+          - generic [ref=e252]:
+            - generic [ref=e253]: ←
+            - text: edellinen
+          - generic [ref=e254]:
+            - generic [ref=e255]: →
+            - text: seuraava
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e44] [cursor=pointer]:
+    - img [ref=e45]
+  - alert [ref=e48]

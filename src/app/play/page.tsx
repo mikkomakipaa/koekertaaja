@@ -588,7 +588,11 @@ function PlayBrowsePageContent() {
         setState('loaded');
       } catch (err) {
         logger.error({ error: err }, 'Error loading question sets');
-        setError('Kysymyssarjojen lataaminen epäonnistui');
+        const message =
+          err instanceof Error && err.message
+            ? err.message
+            : 'Kysymyssarjojen lataaminen epäonnistui';
+        setError(message);
         setState('error');
       }
     };

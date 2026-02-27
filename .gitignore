@@ -4,10 +4,7 @@
 /DWF/
 /results/
 /todo/
-.agents.md
-.claude.md
-AGENTS.md
-CLAUDE.md
+
 
 # Personal workflow scripts
 scripts/run-tasks.sh
