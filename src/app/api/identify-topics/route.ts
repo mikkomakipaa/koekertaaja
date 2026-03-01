@@ -168,6 +168,7 @@ export async function POST(request: NextRequest) {
     // Log full error server-side
     logger.error(
       {
+        err: error,
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: isProduction ? undefined : error instanceof Error ? error.stack : undefined,
       },

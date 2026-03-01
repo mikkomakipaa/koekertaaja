@@ -44,6 +44,22 @@ const normalizeSequentialItems = (items: unknown): SequentialItem[] => {
   return [];
 };
 
+export function shouldRetryQuestionSetInsertWithoutPromptMetadata(error: {
+  code?: string | null;
+  message?: string | null;
+  details?: string | null;
+} | null | undefined): boolean {
+  if (!error) {
+    return false;
+  }
+
+  const errorText = `${error.message ?? ''} ${error.details ?? ''}`;
+  return (
+    (error.code === 'PGRST204' || error.code === '42703') &&
+    /prompt_metadata/i.test(errorText)
+  );
+}
+
 export function mapQuestionsToInsertRows(
   questions: CreateQuestionInput[],
   questionSetId: string
@@ -225,14 +241,40 @@ export async function createQuestionSet(
     .select()
     .single();
 
-  if (setError || !newSet) {
+  let createdSet = newSet;
+  let createSetError = setError;
+
+  if (shouldRetryQuestionSetInsertWithoutPromptMetadata(createSetError)) {
+    logger.warn(
+      {
+        code: createSetError?.code,
+        message: createSetError?.message,
+        details: createSetError?.details,
+      },
+      'question_sets missing prompt_metadata column, retrying insert without prompt metadata'
+    );
+
+    const { prompt_metadata: _promptMetadata, ...fallbackQuestionSet } = normalizedQuestionSet as typeof normalizedQuestionSet & {
+      prompt_metadata?: unknown;
+    };
+    const fallbackResult = await supabaseAdmin
+      .from('question_sets')
+      .insert(fallbackQuestionSet as any)
+      .select()
+      .single();
+
+    createdSet = fallbackResult.data;
+    createSetError = fallbackResult.error;
+  }
+
+  if (createSetError || !createdSet) {
     // Log detailed error info (sanitize sensitive data in production)
     logger.error(
       {
-      code: setError?.code,
-      message: setError?.message,
-      details: setError?.details,
-      hint: setError?.hint,
+      code: createSetError?.code,
+      message: createSetError?.message,
+      details: createSetError?.details,
+      hint: createSetError?.hint,
       },
       'Error creating question set'
     );
@@ -241,7 +283,7 @@ export async function createQuestionSet(
   }
 
   // Prepare questions for insertion
-  const questionsToInsert = mapQuestionsToInsertRows(questions, (newSet as any).id);
+  const questionsToInsert = mapQuestionsToInsertRows(questions, (createdSet as any).id);
 
   // Filter out any undefined/null questions and validate
   const validQuestions = questionsToInsert.filter((q) => {
@@ -291,7 +333,7 @@ export async function createQuestionSet(
   if (validQuestions.length === 0) {
     logger.error('No valid questions to insert');
     const admin = getSupabaseAdmin();
-    await admin.from('question_sets').delete().eq('id', (newSet as any).id);
+    await admin.from('question_sets').delete().eq('id', (createdSet as any).id);
     return null;
   }
 
@@ -359,7 +401,7 @@ export async function createQuestionSet(
         message: questionsError?.message,
         details: questionsError?.details,
         hint: questionsError?.hint,
-        questionSetId: (newSet as any).id,
+        questionSetId: (createdSet as any).id,
         questionCount: questionsToInsert.length,
       },
       'Error creating questions'
@@ -380,7 +422,7 @@ export async function createQuestionSet(
 
     // Rollback: delete the question set
     const admin = getSupabaseAdmin();
-    await admin.from('question_sets').delete().eq('id', (newSet as any).id);
+    await admin.from('question_sets').delete().eq('id', (createdSet as any).id);
     return null;
   }
 
@@ -390,22 +432,22 @@ export async function createQuestionSet(
       {
         from: questionSet.question_count,
         to: validQuestions.length,
-        questionSetId: (newSet as any).id,
+        questionSetId: (createdSet as any).id,
       },
       'Updating question_count after insert'
     );
     await (supabaseAdmin as any)
       .from('question_sets')
       .update({ question_count: validQuestions.length })
-      .eq('id', (newSet as any).id);
+      .eq('id', (createdSet as any).id);
 
     // Update the returned newSet object with correct count
-    (newSet as any).question_count = validQuestions.length;
+    (createdSet as any).question_count = validQuestions.length;
   }
 
   return {
-    code: (newSet as any).code,
-    questionSet: newSet as QuestionSet,
+    code: (createdSet as any).code,
+    questionSet: createdSet as QuestionSet,
   };
 }
 

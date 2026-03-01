@@ -1,131 +1,114 @@
-# Security Best Practices Report
+# Security Best Practices Review (Post-Fix)
+
+Date: 2026-02-27
+Reviewer: Codex (`security-best-practices` skill)
+Scope: Next.js + TypeScript + Supabase server/client paths under `src/app/api`, `src/lib/security`, `src/lib/supabase`, and auth-related frontend routing.
 
 ## Executive Summary
-The codebase has several strong foundations (Zod validation on many inputs, authenticated admin routes, and explicit file-type checks), but there are critical security gaps that should be prioritized immediately:
 
-1. Secret material is present in local `.env` files and in `.env.example` values that look like real credentials.
-2. Authorization is too coarse for destructive service-role write paths (authenticated users can trigger admin-power deletes/updates by resource ID).
-3. Cookie-authenticated state-changing endpoints do not implement explicit CSRF defenses.
+A new post-fix review found that earlier critical areas (notably CSRF enforcement on authenticated mutating routes and ownership checks in delete flows) are improved, but **two high-impact authorization issues remain**:
 
-Addressing these first will materially reduce takeover, data-loss, and abuse risk.
+1. **Critical**: Any authenticated user can extend any question set by ID via a service-role write path.
+2. **High**: Any authenticated user can read the global unpublished/created question set inventory.
 
-## Scope and Method
-- Stack reviewed: Next.js (App Router), TypeScript/React frontend, Supabase backend.
-- Security guidance used: `security-best-practices` skill references for Next.js + React.
-- Focus: secret handling, authn/authz, CSRF/CORS, headers/CSP, abuse resistance.
+There is also one **medium** browser-hardening gap in CSP (`unsafe-inline`) that increases impact if any XSS primitive is introduced.
+
+---
 
 ## Critical Findings
 
-### SEC-001 (Critical): Real secrets present in repository-local env files and sample env
-- Impact: Compromised keys can allow database compromise (service role), paid API abuse, and account takeover workflows.
-- Locations:
-  - `.env`: lines 1-3, 20
-  - `.env.local`: lines 5, 9-10, 16
-  - `.env.example`: lines 2-3, 6, 20
-- Evidence:
-  - API keys/tokens and service-role secrets are stored in plaintext env files.
-  - `.env.example` contains credential-looking values instead of placeholders.
-- Why this matters:
-  - `.env.example` is tracked and likely copied to other environments; sample files must not carry live credentials.
-  - Even if `.env`/`.env.local` are gitignored, plaintext credentials in workspaces/logs are high risk.
-- Secure-by-default fix:
-  1. Immediately rotate all exposed credentials (Supabase service role, Anthropic/OpenAI keys).
-  2. Replace `.env.example` values with clear non-secret placeholders.
-  3. Add/keep secret scanning in CI (e.g., Gitleaks/TruffleHog) and pre-commit hooks.
-  4. Keep secrets only in deployment secret manager / CI env vars.
+### SEC-001 (Critical): Missing ownership/role authorization in `extend-question-set` service-role mutation path
 
-### SEC-002 (Critical): Broken authorization boundary on destructive service-role paths
-- Impact: Any authenticated user can perform high-privilege destructive operations on arbitrary question sets when they know IDs (IDOR + privilege escalation).
-- Locations:
-  - [`src/app/api/delete-question-set/route.ts`](src/app/api/delete-question-set/route.ts):22, 56
-  - [`src/app/api/questions/delete-by-topic/route.ts`](src/app/api/questions/delete-by-topic/route.ts):27, 52
-  - [`src/lib/supabase/write-queries.ts`](src/lib/supabase/write-queries.ts):330-358, 382-430
-  - [`src/app/api/question-sets/play/route.ts`](src/app/api/question-sets/play/route.ts):17, 35 (returns set rows including IDs)
+- Rule ID: `NEXT-AUTHZ-001`
+- Severity: Critical
+- Location:
+  - `src/lib/api/extendQuestionSet.ts:48`
+  - `src/lib/api/extendQuestionSet.ts:96`
+  - `src/lib/api/extendQuestionSet.ts:235`
+  - `src/lib/api/extendQuestionSet.ts:268`
 - Evidence:
-  - Routes require only `requireAuth()` then call service-role helpers that execute deletes/updates by `questionSetId` without ownership/admin checks.
-  - Public/authenticated listing endpoints expose IDs needed to target these operations.
-- Why this matters:
-  - Service role bypasses RLS, so endpoint-level authorization must enforce ownership/role strictly.
-- Secure-by-default fix:
-  1. Enforce per-resource authorization before service-role writes.
-  2. Add `created_by_user_id` (or equivalent owner column) if absent, and require:
-     - owner OR admin for mutate/delete,
-     - owner-only for user-scoped manage endpoints.
-  3. In service-role write helpers, include owner predicate in the mutation query (not just pre-check):
-     - e.g., `.eq('id', questionSetId).eq('created_by_user_id', user.id)` for non-admin.
-  4. Add tests for horizontal privilege escalation (user A cannot mutate user B resources).
+  - Endpoint only requires authentication (`requireAuthFn`) and stores `userId`, but does not verify the target `questionSetId` belongs to that user (or admin).
+  - `existingSet` is loaded by ID without actor binding, then writes are performed with `getSupabaseAdmin()`.
+- Impact:
+  - Any logged-in non-admin account can append AI-generated questions to another user's/admin's set if they can obtain a set ID.
+  - This is a direct integrity violation on privileged service-role writes.
+- Fix:
+  - Enforce explicit authorization before mutation:
+    - Require `actor = toWriteActorContext(user)`.
+    - Fetch `question_sets.id,user_id` by ID via admin client and reject unless `actor.isAdmin || set.user_id === actor.userId`.
+  - Prefer moving this flow into `src/lib/supabase/write-queries.ts` with the same actor-guard model used by delete handlers.
+- Mitigation:
+  - Add integration tests for cross-user extension attempts (`403` expected).
+- False positive notes:
+  - None; authorization check is absent in the handler path.
+
+---
 
 ## High Findings
 
-### SEC-003 (High): Missing CSRF protection on cookie-authenticated state-changing endpoints
-- Impact: A victim’s browser can be tricked into executing authenticated state-changing requests from attacker-controlled pages.
-- Locations (examples):
-  - [`src/app/api/generate-questions/quiz/route.ts`](src/app/api/generate-questions/quiz/route.ts):21, 31
-  - [`src/app/api/question-sets/submit/route.ts`](src/app/api/question-sets/submit/route.ts):22, 31
-  - [`src/app/api/delete-question-set/route.ts`](src/app/api/delete-question-set/route.ts):14, 22
-  - [`src/app/api/questions/delete-by-topic/route.ts`](src/app/api/questions/delete-by-topic/route.ts):20, 27
-- Evidence:
-  - Endpoints rely on cookie-based auth (`requireAuth`) but do not validate CSRF token and do not enforce strict `Origin/Referer` checks.
-- Secure-by-default fix:
-  1. Add centralized CSRF middleware for POST/PUT/PATCH/DELETE on cookie-auth APIs.
-  2. Enforce strict same-origin `Origin` (and fallback `Referer`) allowlist.
-  3. Add double-submit or synchronizer CSRF token for mutation endpoints.
-  4. Keep session cookies `SameSite=Lax` or `Strict` in production.
+### SEC-002 (High): Over-broad data access in `/api/question-sets/created`
 
-### SEC-004 (High): CORS policy is overly permissive for credentialed APIs
-- Impact: Broad cross-origin access with credentials increases risk of cross-origin abuse and misconfiguration-induced data exposure.
+- Rule ID: `NEXT-AUTHZ-002`
+- Severity: High
 - Location:
-  - [`src/proxy.ts`](src/proxy.ts):81, 99-103, 113-116
+  - `src/app/api/question-sets/created/route.ts:8`
+  - `src/app/api/question-sets/created/route.ts:10`
+  - `src/app/api/question-sets/created/route.ts:13`
 - Evidence:
-  - Any `*.vercel.app` origin is accepted.
-  - `Access-Control-Allow-Origin` reflects request origin and enables credentials.
-  - OPTIONS can return `Access-Control-Allow-Origin: *` with credentials flag.
-- Secure-by-default fix:
-  1. Remove wildcard-style preview acceptance; use explicit environment-derived allowlist.
-  2. Never combine `Allow-Credentials: true` with broad or dynamic untrusted origins.
-  3. For APIs that do not need cross-origin browser access, disable CORS entirely (same-origin only).
+  - Route uses `requireAuth()` (not `requireAdmin()`), then queries all `question_sets` via `getSupabaseAdmin()` with no `user_id`/role scoping.
+- Impact:
+  - Any authenticated account can enumerate all created question sets and associated per-set distributions, exposing non-public study content metadata.
+- Fix:
+  - If this is an admin-only management endpoint: switch to `requireAdmin(request)`.
+  - If non-admin access is intended: scope results by `user_id = authenticatedUser.id`.
+- Mitigation:
+  - Add regression tests:
+    - non-admin receives `403` (admin-only model), or
+    - non-admin sees only own rows (owner-scoped model).
+- False positive notes:
+  - If Supabase Auth signups are fully closed and only admin users can authenticate, exploitability is reduced; still a policy/defense gap.
 
-### SEC-005 (High): CSP allows `'unsafe-inline'` and `'unsafe-eval'` globally
-- Impact: XSS exploitability and post-XSS impact are significantly increased.
-- Location:
-  - [`next.config.js`](next.config.js):25-26
-- Evidence:
-  - `script-src` includes both `'unsafe-inline'` and `'unsafe-eval'`.
-- Secure-by-default fix:
-  1. Migrate inline script to nonce/hash-based policy.
-  2. Remove `'unsafe-eval'` unless a hard dependency requires it (documented exception).
-  3. Keep CSP tight per route if needed (e.g., analytics exceptions only where required).
+---
 
 ## Medium Findings
 
-### SEC-006 (Medium): Client-controlled `clientId` used as abuse-control identity in flag endpoint
-- Impact: Rate limiting can be trivially bypassed by rotating `clientId`, enabling spam/abuse against moderation workflows.
-- Location:
-  - [`src/app/api/question-flags/route.ts`](src/app/api/question-flags/route.ts):14, 36, 44-45, 72
-- Evidence:
-  - Daily flag cap is keyed only by user-supplied `clientId` value.
-- Secure-by-default fix:
-  1. Bind limits to server-derived identity (IP/device fingerprint hash + optional auth user ID).
-  2. Keep `clientId` as advisory metadata only, not authoritative throttle key.
-  3. Add per-question/per-set anti-spam constraints in DB.
+### SEC-003 (Medium): CSP allows inline script/style (`unsafe-inline`)
 
-### SEC-007 (Medium): In-memory rate limiter is not robust in distributed/serverless production
-- Impact: Attackers can bypass throttling across instances/restarts; expensive endpoints remain abuse-prone.
+- Rule ID: `NEXT-CSP-001`
+- Severity: Medium
 - Location:
-  - [`src/lib/ratelimit.ts`](src/lib/ratelimit.ts):11, 54-57
+  - `src/lib/security/csp.ts:4`
+  - `src/lib/security/csp.ts:5`
+  - `src/app/layout.tsx:52`
 - Evidence:
-  - Rate-limit state stored in process memory (`Map`) only.
-- Secure-by-default fix:
-  1. Move to shared backend (Redis/Upstash) with atomic counters and TTL.
-  2. Keep per-IP + per-user dimensions and enforce at edge + app layers.
+  - CSP includes `script-src 'unsafe-inline'` and `style-src 'unsafe-inline'`.
+  - App injects an inline `<script>` block in layout head.
+- Impact:
+  - If any script injection path appears, CSP will provide weaker containment than nonce/hash-based policies.
+- Fix:
+  - Replace inline script with nonce-based script policy, or remove inline script and use a non-inline initialization strategy.
+  - Remove `unsafe-inline` from `script-src`; keep `style-src` strict where feasible.
+- Mitigation:
+  - Add CSP report-only rollout before enforcing stricter policy.
+- False positive notes:
+  - Current inline script is static and not attacker-controlled; this is a hardening issue, not proof of active XSS.
+
+---
+
+## Verified Improvements Since Previous Review
+
+- CSRF protections are present for authenticated mutating routes via `requireAuth(request)` and CSRF validation in `validateCsrfRequest`:
+  - `src/lib/supabase/server-auth.ts:112`
+  - `src/lib/security/csrf.ts:11`
+  - `src/lib/security/csrf-core.ts:48`
+- Ownership-aware delete logic is implemented in write queries:
+  - `src/lib/supabase/write-queries.ts:418`
+  - `src/lib/supabase/write-queries.ts:478`
+- Draft access by code is admin-gated when `includeDrafts=1`:
+  - `src/app/api/question-sets/by-code/route.ts:25`
 
 ## Recommended Remediation Order
-1. Rotate all leaked secrets and sanitize `.env.example` (SEC-001).
-2. Patch authz on all service-role write paths and add authorization tests (SEC-002).
-3. Add CSRF defense and strict origin checks for mutating cookie-auth APIs (SEC-003).
-4. Restrict CORS allowlist and remove broad preview-origin trust (SEC-004).
-5. Tighten CSP by removing `unsafe-*` where possible (SEC-005).
-6. Harden abuse controls for moderation + expensive endpoints (SEC-006, SEC-007).
 
-## Notes
-- Some protections may exist in infrastructure (CDN/WAF/platform) and are not visible in app code; validate runtime behavior in production.
+1. Fix `SEC-001` immediately (critical integrity risk on service-role writes).
+2. Fix `SEC-002` next (data exposure via over-broad admin-client read).
+3. Harden CSP per `SEC-003` as defense in depth.

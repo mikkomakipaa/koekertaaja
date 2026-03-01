@@ -327,7 +327,13 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (err) {
-    logger.error({ error: err }, 'Error generating flashcards');
+    logger.error(
+      {
+        err,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      },
+      'Error generating flashcards'
+    );
 
     const errorMessage = err instanceof Error ? err.message : 'Muistikorttien luonti epäonnistui';
     const diagnostics =
