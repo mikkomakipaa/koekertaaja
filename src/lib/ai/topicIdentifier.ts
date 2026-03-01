@@ -133,6 +133,7 @@ export async function identifyTopics(
     [
       'SÄÄNNÖT:',
       '- Luo 3-5 korkeantason aihealuetta.',
+      `- Aihealueet on PAKKO olla suoraan kyseisen oppiaineen (${subject}) sisältöalueet. Älä luo aiheita muista oppiaineista.`,
       '- coverage on 0..1 ja topicien summa = 1.0 (sallittu pyöristysvirhe).',
       '- Suurin coverage >= 0.25, pienin >= 0.15.',
       '- difficulty vain: "helppo" | "normaali".',
