@@ -64,7 +64,24 @@ const normalizeSkillTag = (value: unknown): string | undefined => {
   return trimmed.toLowerCase().replace(/[^a-z_]/g, '_');
 };
 
-const sanitizeJsonString = (input: string): string => {
+function shouldPreserveJsonEscape(
+  next: string,
+  following: string | undefined
+): boolean {
+  if ('"\\/'.includes(next)) {
+    return true;
+  }
+
+  // Preserve JSON control escapes only when they are not the prefix of a LaTeX command
+  // such as \frac, \text, \right, \begin, etc.
+  if ('bfnrt'.includes(next)) {
+    return !following || !/[A-Za-z]/.test(following);
+  }
+
+  return false;
+}
+
+export const sanitizeJsonString = (input: string): string => {
   let output = '';
   let inString = false;
 
@@ -87,6 +104,7 @@ const sanitizeJsonString = (input: string): string => {
 
     if (char === '\\') {
       const next = input[i + 1];
+      const following = input[i + 2];
       if (next === undefined) {
         output += '\\\\';
         continue;
@@ -101,7 +119,7 @@ const sanitizeJsonString = (input: string): string => {
         }
       }
 
-      if ('"\\/bfnrt'.includes(next)) {
+      if (shouldPreserveJsonEscape(next, following)) {
         output += `\\${next}`;
         i += 1;
         continue;
@@ -274,6 +292,136 @@ function toAnswerString(value: unknown): string {
   if (typeof value === 'string') return value;
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   return '';
+}
+
+function parseFractionValue(input: string): number | null {
+  const latexMatch = input.match(/\\frac\s*\{(-?\d+)\}\s*\{(-?\d+)\}/);
+  if (latexMatch) {
+    const numerator = Number(latexMatch[1]);
+    const denominator = Number(latexMatch[2]);
+    if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator === 0) {
+      return null;
+    }
+    return numerator / denominator;
+  }
+
+  const plainMatch = input.match(/\b(-?\d+)\s*\/\s*(-?\d+)\b/);
+  if (plainMatch) {
+    const numerator = Number(plainMatch[1]);
+    const denominator = Number(plainMatch[2]);
+    if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator === 0) {
+      return null;
+    }
+    return numerator / denominator;
+  }
+
+  return null;
+}
+
+function extractFractionValues(input: string): number[] {
+  const values: number[] = [];
+
+  for (const match of input.matchAll(/\\frac\s*\{(-?\d+)\}\s*\{(-?\d+)\}/g)) {
+    const numerator = Number(match[1]);
+    const denominator = Number(match[2]);
+    if (Number.isFinite(numerator) && Number.isFinite(denominator) && denominator !== 0) {
+      values.push(numerator / denominator);
+    }
+  }
+
+  if (values.length >= 2) {
+    return values;
+  }
+
+  for (const match of input.matchAll(/\b(-?\d+)\s*\/\s*(-?\d+)\b/g)) {
+    const numerator = Number(match[1]);
+    const denominator = Number(match[2]);
+    if (Number.isFinite(numerator) && Number.isFinite(denominator) && denominator !== 0) {
+      values.push(numerator / denominator);
+    }
+  }
+
+  return values;
+}
+
+export function validateQuestionSemantics(question: {
+  question?: string;
+  type?: string;
+  options?: unknown;
+  correct_answer?: unknown;
+}): { valid: boolean; reason?: string } {
+  if (question.type !== 'multiple_choice') {
+    return { valid: true };
+  }
+
+  if (!Array.isArray(question.options) || question.options.some((option) => typeof option !== 'string')) {
+    return { valid: true };
+  }
+
+  if (typeof question.correct_answer === 'string' && !question.options.includes(question.correct_answer)) {
+    return {
+      valid: false,
+      reason: 'Multiple choice correct_answer is not present in options',
+    };
+  }
+
+  if (typeof question.question !== 'string') {
+    return { valid: true };
+  }
+
+  const questionText = question.question.toLowerCase();
+  const optionValues = question.options.map((option) => parseFractionValue(option));
+
+  if (optionValues.some((value) => value === null)) {
+    return { valid: true };
+  }
+
+  if (
+    question.options.length === 2 &&
+    typeof question.correct_answer === 'string' &&
+    (questionText.includes('kumpi on suurempi') || questionText.includes('kumpi on pienempi'))
+  ) {
+    const [left, right] = optionValues as [number, number];
+    const expectedAnswer =
+      questionText.includes('kumpi on suurempi')
+        ? left > right
+          ? question.options[0]
+          : question.options[1]
+        : left < right
+          ? question.options[0]
+          : question.options[1];
+
+    if (question.correct_answer !== expectedAnswer) {
+      return {
+        valid: false,
+        reason: 'Multiple choice fraction comparison correct_answer contradicts the question values',
+      };
+    }
+  }
+
+  if (
+    question.options.length >= 3 &&
+    typeof question.correct_answer === 'string' &&
+    question.options.includes('<') &&
+    question.options.includes('>') &&
+    question.options.includes('=') &&
+    questionText.includes('?')
+  ) {
+    const fractions = extractFractionValues(question.question);
+    if (fractions.length >= 2) {
+      const [left, right] = fractions;
+      const expectedAnswer = left < right ? '<' : left > right ? '>' : '=';
+
+      if (question.correct_answer !== expectedAnswer) {
+        return {
+          valid: false,
+          reason: 'Multiple choice fraction relation correct_answer contradicts the question values',
+        };
+      }
+    }
+  }
+
+  return { valid: true };
 }
 
 function normalizeQuestionType(rawType: unknown, mode: 'quiz' | 'flashcard'): string | undefined {
@@ -835,6 +983,24 @@ export async function generateQuestions(
 
     const result = aiQuestionSchema.safeParse(question);
     if (result.success) {
+      const semanticValidation = validateQuestionSemantics(result.data);
+      if (!semanticValidation.valid) {
+        invalidQuestions.push({
+          index,
+          errors: [
+            {
+              path: 'semantic',
+              message: semanticValidation.reason ?? 'Question failed semantic validation',
+            },
+          ],
+          question: {
+            type: question.type,
+            questionPreview: question.question?.substring(0, 50),
+          },
+        });
+        return;
+      }
+
       validQuestions.push(result.data);
     } else {
       invalidQuestions.push({

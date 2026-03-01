@@ -2,9 +2,60 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { GenerateWithAIOptions } from '../../src/lib/ai/providerRouter';
 import type { AIMessageContent } from '../../src/lib/ai/providerTypes';
-import { generateQuestions } from '../../src/lib/ai/questionGenerator';
+import {
+  generateQuestions,
+  sanitizeJsonString,
+  validateQuestionSemantics,
+} from '../../src/lib/ai/questionGenerator';
 import { identifyTopics } from '../../src/lib/ai/topicIdentifier';
 import type { PromptMetadata } from '../../src/lib/prompts/promptVersion';
+
+test('sanitizeJsonString re-escapes LaTeX commands inside JSON strings', () => {
+  const invalidJson = `[
+    {
+      "type": "flashcard",
+      "question": "Miten määritellään murtoluku?",
+      "answer": "Murtoluku on muotoa \\frac{a}{b} ja 25\\%.",
+      "explanation": "Esimerkki: \\text{kolme neljäsosaa} ja \\cdot merkki."
+    }
+  ]`;
+
+  const sanitized = sanitizeJsonString(invalidJson);
+  const parsed = JSON.parse(sanitized) as Array<{
+    answer: string;
+    explanation: string;
+  }>;
+
+  assert.equal(parsed[0].answer, 'Murtoluku on muotoa \\frac{a}{b} ja 25\\%.');
+  assert.equal(
+    parsed[0].explanation,
+    'Esimerkki: \\text{kolme neljäsosaa} ja \\cdot merkki.'
+  );
+});
+
+test('validateQuestionSemantics rejects contradictory fraction comparison answers', () => {
+  const result = validateQuestionSemantics({
+    type: 'multiple_choice',
+    question: 'Kumpi on suurempi: $$\\frac{5}{6}$$ vai $$\\frac{4}{5}$$?',
+    options: ['$$\\frac{5}{6}$$', '$$\\frac{4}{5}$$'],
+    correct_answer: '$$\\frac{4}{5}$$',
+  });
+
+  assert.equal(result.valid, false);
+  assert.match(result.reason ?? '', /contradicts/i);
+});
+
+test('validateQuestionSemantics rejects multiple choice answers missing from options', () => {
+  const result = validateQuestionSemantics({
+    type: 'multiple_choice',
+    question: 'Mikä on oikein?',
+    options: ['A', 'B', 'C'],
+    correct_answer: 'D',
+  });
+
+  assert.equal(result.valid, false);
+  assert.match(result.reason ?? '', /not present in options/i);
+});
 
 test('generateQuestions uses generateWithAI and preserves response parsing/validation', async () => {
   let capturedOptions: { provider?: string; model?: string; maxTokens?: number } | undefined;
