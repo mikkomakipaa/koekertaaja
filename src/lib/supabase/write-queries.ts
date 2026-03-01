@@ -393,6 +393,34 @@ export async function createQuestionSet(
     questionsError = fallbackResult.error;
   }
 
+  // Backward compatibility: some environments have a question_type CHECK that
+  // does not include 'multiple_select' (added in migration 20260301).
+  // Drop those rows and retry so the remaining questions are still saved.
+  if (
+    questionsError?.code === '23514' &&
+    /question_type|questions_type_check/i.test(
+      `${questionsError.message || ''} ${questionsError.details || ''}`
+    ) &&
+    (validQuestions as any[]).some((row) => row.question_type === 'multiple_select')
+  ) {
+    const droppedCount = (validQuestions as any[]).filter((row) => row.question_type === 'multiple_select').length;
+    logger.warn(
+      {
+        code: questionsError.code,
+        message: questionsError.message,
+        details: questionsError.details,
+        droppedCount,
+      },
+      'questions_type_check rejected multiple_select type, retrying without multiple_select rows — apply migration 20260301'
+    );
+
+    const fallbackRows = (validQuestions as any[]).filter((row) => row.question_type !== 'multiple_select');
+    if (fallbackRows.length > 0) {
+      const fallbackResult = await insertQuestions(fallbackRows);
+      questionsError = fallbackResult.error;
+    }
+  }
+
   if (questionsError) {
     // Log detailed error info to help diagnose issues
     logger.error(
