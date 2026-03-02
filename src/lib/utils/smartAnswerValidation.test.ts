@@ -27,6 +27,8 @@ test('smartValidateAnswer: numerical equivalence', () => {
   const pairs: Array<[string, string]> = [
     ['0.5', '1/2'],
     ['1/2', '0,5'],
+    ['1 1/3', '4/3'],
+    ['4/3', '1 1/3'],
     ['25%', '0.25'],
     ['0.25', '25%'],
     ['3,14', '3.14'],

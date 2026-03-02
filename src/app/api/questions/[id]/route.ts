@@ -266,3 +266,88 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     );
   }
 }
+
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const requestId = crypto.randomUUID();
+  const logger = createLogger({ requestId, route: '/api/questions/[id]' });
+
+  const { id } = await context.params;
+
+  logger.info({ method: 'DELETE', questionId: id }, 'Request received');
+
+  try {
+    try {
+      await requireAdmin(request);
+    } catch (authError) {
+      const { status, message } = resolveAuthError(authError, {
+        unauthorized: 'Unauthorized. Please log in.',
+        forbidden: 'Forbidden. Admin access required to delete questions.',
+      });
+      logger.warn({ authError: message, status }, 'Admin access denied');
+      return NextResponse.json({ error: message }, { status });
+    }
+
+    const admin = getSupabaseAdmin();
+
+    const { data: existingQuestion, error: fetchError } = await admin
+      .from('questions')
+      .select('id, question_set_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existingQuestion) {
+      logger.error({ error: fetchError }, 'Question not found');
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+
+    const questionSetId = (existingQuestion as { question_set_id: string }).question_set_id;
+
+    const { error: deleteFlagsError } = await admin
+      .from('question_flags')
+      .delete()
+      .eq('question_id', id);
+
+    if (deleteFlagsError) {
+      logger.error({ error: deleteFlagsError, questionId: id }, 'Failed to delete question flags');
+      return NextResponse.json({ error: 'Failed to delete question flags' }, { status: 500 });
+    }
+
+    const { error: deleteQuestionError } = await admin
+      .from('questions')
+      .delete()
+      .eq('id', id);
+
+    if (deleteQuestionError) {
+      logger.error({ error: deleteQuestionError, questionId: id }, 'Failed to delete question');
+      return NextResponse.json({ error: 'Failed to delete question' }, { status: 500 });
+    }
+
+    const { count: remainingCount, error: countError } = await admin
+      .from('questions')
+      .select('*', { count: 'exact', head: true })
+      .eq('question_set_id', questionSetId);
+
+    if (countError) {
+      logger.error({ error: countError, questionSetId }, 'Failed to count remaining questions');
+      return NextResponse.json({ error: 'Failed to update question set count' }, { status: 500 });
+    }
+
+    const { error: updateError } = await admin
+      .from('question_sets')
+      .update({ question_count: remainingCount ?? 0 })
+      .eq('id', questionSetId);
+
+    if (updateError) {
+      logger.error({ error: updateError, questionSetId }, 'Failed to update question set count');
+      return NextResponse.json({ error: 'Failed to update question set count' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, questionId: id, questionSetId, questionCount: remainingCount ?? 0 });
+  } catch (error) {
+    logger.error({ error }, 'Unhandled error in question deletion');
+    return NextResponse.json(
+      { error: 'Failed to delete question', details: error instanceof Error ? error.message : error },
+      { status: 500 }
+    );
+  }
+}

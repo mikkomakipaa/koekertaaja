@@ -34,6 +34,29 @@ interface TopicDeleteResult extends MutationResult {
 
 type CreateQuestionInput = Omit<Question, 'id' | 'question_set_id'>;
 
+export type CreateQuestionSetFailureReason =
+  | 'duplicate_code'
+  | 'insert_failed'
+  | 'no_valid_questions'
+  | 'question_insert_failed';
+
+export type CreateQuestionSetResult =
+  | {
+      success: true;
+      code: string;
+      questionSet: QuestionSet;
+    }
+  | {
+      success: false;
+      reason: CreateQuestionSetFailureReason;
+      error?: {
+        code?: string | null;
+        message?: string | null;
+        details?: string | null;
+        hint?: string | null;
+      };
+    };
+
 const normalizeSequentialItems = (items: unknown): SequentialItem[] => {
   if (isSequentialItemArray(items)) {
     return items;
@@ -58,6 +81,35 @@ export function shouldRetryQuestionSetInsertWithoutPromptMetadata(error: {
     (error.code === 'PGRST204' || error.code === '42703') &&
     /prompt_metadata/i.test(errorText)
   );
+}
+
+export function shouldRetryQuestionSetInsertWithoutUserId(error: {
+  code?: string | null;
+  message?: string | null;
+  details?: string | null;
+} | null | undefined): boolean {
+  if (!error) {
+    return false;
+  }
+
+  const errorText = `${error.message ?? ''} ${error.details ?? ''}`;
+  return (
+    (error.code === 'PGRST204' || error.code === '42703') &&
+    /user_id/i.test(errorText)
+  );
+}
+
+export function isQuestionSetCodeDuplicateError(error: {
+  code?: string | null;
+  message?: string | null;
+  details?: string | null;
+} | null | undefined): boolean {
+  if (!error) {
+    return false;
+  }
+
+  const errorText = `${error.message ?? ''} ${error.details ?? ''}`;
+  return error.code === '23505' && /question_sets.*code|question_sets_code_key|key \(code\)/i.test(errorText);
 }
 
 export function mapQuestionsToInsertRows(
@@ -196,7 +248,7 @@ export function mapQuestionsToInsertRows(
 export async function createQuestionSet(
   questionSet: Omit<QuestionSet, 'id' | 'created_at' | 'updated_at'>,
   questions: CreateQuestionInput[]
-): Promise<{ code: string; questionSet: QuestionSet } | null> {
+): Promise<CreateQuestionSetResult> {
   const supabaseAdmin = getSupabaseAdmin();
   const normalizedQuestionSet = {
     ...questionSet,
@@ -243,23 +295,44 @@ export async function createQuestionSet(
 
   let createdSet = newSet;
   let createSetError = setError;
+  let insertPayload: Record<string, unknown> = normalizedQuestionSet as Record<string, unknown>;
 
-  if (shouldRetryQuestionSetInsertWithoutPromptMetadata(createSetError)) {
-    logger.warn(
-      {
-        code: createSetError?.code,
-        message: createSetError?.message,
-        details: createSetError?.details,
-      },
-      'question_sets missing prompt_metadata column, retrying insert without prompt metadata'
-    );
+  while (
+    createSetError &&
+    (shouldRetryQuestionSetInsertWithoutPromptMetadata(createSetError) ||
+      shouldRetryQuestionSetInsertWithoutUserId(createSetError))
+  ) {
+    if (shouldRetryQuestionSetInsertWithoutPromptMetadata(createSetError) && 'prompt_metadata' in insertPayload) {
+      logger.warn(
+        {
+          code: createSetError.code,
+          message: createSetError.message,
+          details: createSetError.details,
+        },
+        'question_sets missing prompt_metadata column, retrying insert without prompt metadata'
+      );
 
-    const { prompt_metadata: _promptMetadata, ...fallbackQuestionSet } = normalizedQuestionSet as typeof normalizedQuestionSet & {
-      prompt_metadata?: unknown;
-    };
+      const { prompt_metadata: _promptMetadata, ...fallbackQuestionSet } = insertPayload;
+      insertPayload = fallbackQuestionSet;
+    }
+
+    if (shouldRetryQuestionSetInsertWithoutUserId(createSetError) && 'user_id' in insertPayload) {
+      logger.warn(
+        {
+          code: createSetError.code,
+          message: createSetError.message,
+          details: createSetError.details,
+        },
+        'question_sets missing user_id column, retrying insert without user_id'
+      );
+
+      const { user_id: _userId, ...fallbackQuestionSet } = insertPayload;
+      insertPayload = fallbackQuestionSet;
+    }
+
     const fallbackResult = await supabaseAdmin
       .from('question_sets')
-      .insert(fallbackQuestionSet as any)
+      .insert(insertPayload as any)
       .select()
       .single();
 
@@ -268,18 +341,26 @@ export async function createQuestionSet(
   }
 
   if (createSetError || !createdSet) {
-    // Log detailed error info (sanitize sensitive data in production)
     logger.error(
       {
-      code: createSetError?.code,
-      message: createSetError?.message,
-      details: createSetError?.details,
-      hint: createSetError?.hint,
+        code: createSetError?.code,
+        message: createSetError?.message,
+        details: createSetError?.details,
+        hint: createSetError?.hint,
       },
       'Error creating question set'
     );
 
-    return null;
+    return {
+      success: false,
+      reason: isQuestionSetCodeDuplicateError(createSetError) ? 'duplicate_code' : 'insert_failed',
+      error: {
+        code: createSetError?.code,
+        message: createSetError?.message,
+        details: createSetError?.details,
+        hint: createSetError?.hint,
+      },
+    };
   }
 
   // Prepare questions for insertion
@@ -334,7 +415,10 @@ export async function createQuestionSet(
     logger.error('No valid questions to insert');
     const admin = getSupabaseAdmin();
     await admin.from('question_sets').delete().eq('id', (createdSet as any).id);
-    return null;
+    return {
+      success: false,
+      reason: 'no_valid_questions',
+    };
   }
 
   const insertQuestions = async (rows: unknown[]) =>
@@ -451,7 +535,16 @@ export async function createQuestionSet(
     // Rollback: delete the question set
     const admin = getSupabaseAdmin();
     await admin.from('question_sets').delete().eq('id', (createdSet as any).id);
-    return null;
+    return {
+      success: false,
+      reason: 'question_insert_failed',
+      error: {
+        code: questionsError?.code,
+        message: questionsError?.message,
+        details: questionsError?.details,
+        hint: questionsError?.hint,
+      },
+    };
   }
 
   // Update question_count with actual number of questions inserted
@@ -474,6 +567,7 @@ export async function createQuestionSet(
   }
 
   return {
+    success: true,
     code: (createdSet as any).code,
     questionSet: createdSet as QuestionSet,
   };

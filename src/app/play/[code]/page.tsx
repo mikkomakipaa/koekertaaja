@@ -22,6 +22,7 @@ import { useGameSession } from '@/hooks/useGameSession';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 import { useSessionProgress } from '@/hooks/useSessionProgress';
 import { useSpeedQuizTimer } from '@/hooks/useSpeedQuizTimer';
+import { getAnswerEntryConfig } from '@/lib/questions/answer-entry';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
 import { shuffleArray } from '@/lib/utils';
@@ -109,26 +110,6 @@ const getQuestionTypeInfo = (type: QuestionType): { label: string; icon: ReactNo
   };
 };
 
-const getPlaceholderHint = (questionType: QuestionType, questionText: string): string => {
-  const baseHints: Record<QuestionType, string> = {
-    fill_blank: 'Esim: sana, termi tai lyhyt vastaus',
-    short_answer: 'Kirjoita omin sanoin (1-3 lausetta)',
-    multiple_choice: 'Valitse yksi vaihtoehto',
-    multiple_select: 'Valitse kaikki oikeat vaihtoehdot',
-    true_false: 'Valitse totta tai tarua',
-    matching: 'Yhdistä oikeat parit',
-    sequential: 'Järjestä kohteet oikeaan järjestykseen',
-    flashcard: 'Näytä vastaus ja arvioi muistaminen',
-  };
-
-  const lowerText = questionText.toLowerCase();
-  if (questionType === 'fill_blank' && lowerText.includes('miksi')) {
-    return 'Vinkki: aloita sanalla koska...';
-  }
-
-  return baseHints[questionType];
-};
-
 const flagReasons: Array<{ value: QuestionFlagReason; label: string; description: string }> = [
   { value: 'wrong_answer', label: 'Vastaus on väärin', description: 'Oikea vastaus ei pidä paikkaansa' },
   { value: 'ambiguous', label: 'Kysymys on epäselvä', description: 'Useampi tulkinta mahdollinen' },
@@ -145,9 +126,7 @@ export default function PlayPage() {
   const difficultyParam = searchParams.get('difficulty');
   const draftParam = searchParams.get('draft') === '1';
   const isReviewMode = modeParam === 'review';
-  const studyMode: StudyMode = modeParam === 'opettele' ? 'opettele' : 'pelaa';
-  const isFlashcardMode = studyMode === 'opettele';
-  const isAikahaaste = isAikahaasteMode({ difficultyParam, studyMode, isReviewMode });
+  const requestedStudyMode: StudyMode = modeParam === 'opettele' ? 'opettele' : 'pelaa';
   const allCodes = searchParams.get('all'); // Comma-separated codes for study mode
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -166,11 +145,19 @@ export default function PlayPage() {
   const [flagFeedback, setFlagFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [flaggedQuestionIds, setFlaggedQuestionIds] = useState<string[]>([]);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [showIntro, setShowIntro] = useState(isAikahaaste);
+  const [showIntro, setShowIntro] = useState(
+    isAikahaasteMode({ difficultyParam, studyMode: requestedStudyMode, isReviewMode })
+  );
   const [skippedQuestions, setSkippedQuestions] = useState<string[]>([]);
   const [currentQuestionStartTime, setCurrentQuestionStartTime] = useState<number>(Date.now());
+  const [answerEditCount, setAnswerEditCount] = useState(0);
+  const [answerClearCount, setAnswerClearCount] = useState(0);
   const lastModeRef = useRef<string | null>(null);
+  const lastAnswerActionRef = useRef<'submit' | 'skip' | null>(null);
   const onTimeoutRef = useRef<() => void>(() => {});
+  const studyMode: StudyMode = questionSet?.mode === 'flashcard' ? 'opettele' : requestedStudyMode;
+  const isFlashcardMode = studyMode === 'opettele';
+  const isAikahaaste = isAikahaasteMode({ difficultyParam, studyMode, isReviewMode });
   const { getMistakes, removeMistake, mistakeCount, error: mistakesError } = useReviewMistakes(code);
   const { updateProgress, clearProgress } = useSessionProgress(questionSet?.code ?? code);
 
@@ -181,15 +168,39 @@ export default function PlayPage() {
     return questionSet.questions.filter(question => mistakeIds.has(question.id));
   }, [isReviewMode, questionSet?.questions, getMistakes, mistakeCount]);
 
+  const quizSafeQuestions = useMemo(() => {
+    if (!questionSet?.questions) return [];
+    if (isFlashcardMode) return questionSet.questions;
+
+    const filtered = questionSet.questions.filter((question) => question.question_type !== 'flashcard');
+    const excludedCount = questionSet.questions.length - filtered.length;
+
+    if (excludedCount > 0) {
+      logger.warn(
+        {
+          questionSetCode: questionSet.code,
+          excludedCount,
+        },
+        'Excluded flashcard questions from quiz-mode play session'
+      );
+    }
+
+    return filtered;
+  }, [isFlashcardMode, questionSet?.code, questionSet?.questions]);
+
   const sessionQuestionPool = useMemo(() => {
     if (!questionSet?.questions) return [];
 
+    const sourceQuestions = (isReviewMode ? mistakeQuestions : quizSafeQuestions).filter(
+      (question) => isFlashcardMode || question.question_type !== 'flashcard'
+    );
+
     if (!isAikahaaste) {
-      return questionSet.questions;
+      return sourceQuestions;
     }
 
-    return selectRandomQuestionsForAikahaaste(questionSet.questions, AIKAHAASTE_QUESTION_COUNT);
-  }, [isAikahaaste, questionSet?.questions]);
+    return selectRandomQuestionsForAikahaaste(sourceQuestions, AIKAHAASTE_QUESTION_COUNT);
+  }, [isAikahaaste, isReviewMode, mistakeQuestions, questionSet?.questions, quizSafeQuestions]);
 
   const questionTopicLookup = useMemo(() => {
     if (!questionSet?.questions) {
@@ -241,6 +252,7 @@ export default function PlayPage() {
     AIKAHAASTE_TIME_LIMIT_SECONDS,
     () => onTimeoutRef.current()
   );
+  const answerEntryConfig = currentQuestion ? getAnswerEntryConfig(currentQuestion) : undefined;
 
   useEffect(() => {
     try {
@@ -264,6 +276,12 @@ export default function PlayPage() {
     setFlagReason('');
     setFlagNote('');
     setFlagDialogOpen(false);
+  }, [currentQuestion?.id]);
+
+  useEffect(() => {
+    setAnswerEditCount(0);
+    setAnswerClearCount(0);
+    lastAnswerActionRef.current = null;
   }, [currentQuestion?.id]);
 
   useEffect(() => {
@@ -369,7 +387,7 @@ export default function PlayPage() {
         };
 
         // If allCodes parameter exists, load all question sets for study mode
-        if (allCodes && studyMode === 'opettele') {
+        if (allCodes && requestedStudyMode === 'opettele') {
           const codes = allCodes.split(',');
           const allSets = await Promise.all(
             codes.map(async (c) => {
@@ -456,7 +474,17 @@ export default function PlayPage() {
     if (code) {
       loadQuestionSet();
     }
-  }, [code, allCodes, studyMode, draftParam]);
+  }, [code, allCodes, requestedStudyMode, draftParam]);
+
+  useEffect(() => {
+    if (!questionSet || questionSet.mode !== 'flashcard' || modeParam === 'opettele') {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.set('mode', 'opettele');
+    router.replace(`/play/${code}?${nextParams.toString()}`);
+  }, [code, modeParam, questionSet, router, searchParams]);
 
   // Start new session when question set loads
   useEffect(() => {
@@ -561,6 +589,9 @@ export default function PlayPage() {
 
   const clearAnswer = useCallback(() => {
     if (showExplanation) return;
+    if (!isAnswerEmpty(userAnswer)) {
+      setAnswerClearCount((prev) => prev + 1);
+    }
     if (typeof userAnswer === 'string') {
       setUserAnswer('');
       return;
@@ -574,13 +605,22 @@ export default function PlayPage() {
       return;
     }
     setUserAnswer(null);
-  }, [showExplanation, userAnswer, setUserAnswer]);
+  }, [showExplanation, isAnswerEmpty, userAnswer, setUserAnswer]);
+
+  const handleAnswerChange = useCallback((answer: unknown) => {
+    if (showExplanation) {
+      return;
+    }
+    setAnswerEditCount((prev) => prev + 1);
+    setUserAnswer(answer);
+  }, [setUserAnswer, showExplanation]);
 
   const handleSubmitAnswer = useCallback(() => {
     if (isAikahaaste && isAnswerEmpty(userAnswer)) {
       return;
     }
 
+    lastAnswerActionRef.current = 'submit';
     submitAnswer();
 
     if (!isAikahaaste) {
@@ -614,6 +654,7 @@ export default function PlayPage() {
       );
     }
 
+    lastAnswerActionRef.current = 'skip';
     skipQuestion();
 
     if (!isAikahaaste) {
@@ -765,6 +806,53 @@ export default function PlayPage() {
     clearAnswer,
     isAnswerEmpty,
     handleSubmitAnswer,
+  ]);
+
+  useEffect(() => {
+    if (!showExplanation || !currentQuestion || !answerEntryConfig || lastAnswerActionRef.current !== 'submit') {
+      return;
+    }
+
+    const diagnostics = currentAnswerEvaluation?.diagnostics;
+    if (!diagnostics?.isStructuredMath) {
+      lastAnswerActionRef.current = null;
+      return;
+    }
+
+    logger.info(
+      {
+        questionId: currentQuestion.id,
+        questionType: currentQuestion.question_type,
+        questionSetCode: questionSet?.code,
+        grade: questionSet?.grade,
+        subject: questionSet?.subject,
+        submitLatencyMs: Math.max(0, Date.now() - currentQuestionStartTime),
+        answerEditCount,
+        answerClearCount,
+        notationHintShown: Boolean(answerEntryConfig.notationHint),
+        acceptedFormats: answerEntryConfig.acceptedFormats ?? [],
+        isCorrect: currentAnswerEvaluation?.isCorrect ?? false,
+        matchType: currentAnswerEvaluation?.matchType ?? 'none',
+        notationFrictionSignal: diagnostics.notationFrictionSignal,
+        acceptedEquivalentForm: diagnostics.acceptedEquivalentForm,
+        userNotation: diagnostics.userNotation,
+        expectedNotations: diagnostics.expectedNotations,
+      },
+      'Structured math answer submission'
+    );
+
+    lastAnswerActionRef.current = null;
+  }, [
+    answerClearCount,
+    answerEditCount,
+    answerEntryConfig,
+    currentAnswerEvaluation,
+    currentQuestion,
+    currentQuestionStartTime,
+    questionSet?.code,
+    questionSet?.grade,
+    questionSet?.subject,
+    showExplanation,
   ]);
 
   const handlePlayAgain = () => {
@@ -1021,7 +1109,6 @@ export default function PlayPage() {
   const lastPointsEarned = lastAnswer?.pointsEarned ?? 0;
   const lastStreakAtAnswer = lastAnswer?.streakAtAnswer ?? 0;
   const questionTypeInfo = getQuestionTypeInfo(currentQuestion.question_type);
-  const placeholderHint = getPlaceholderHint(currentQuestion.question_type, currentQuestion.question_text);
   const difficulty = questionSet?.difficulty;
   const difficultyLabel = difficulty === 'helppo' ? 'Helppo' : difficulty === 'normaali' ? 'Normaali' : difficulty;
   const difficultyBadgeClass =
@@ -1036,6 +1123,7 @@ export default function PlayPage() {
   const canSubmit = !isAnswerEmpty(userAnswer);
   const showKeyboardHint = currentQuestion.question_type === 'fill_blank' && !showExplanation;
   const hasFlaggedCurrent = flaggedQuestionIds.includes(currentQuestion.id);
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <div ref={topRef} />
@@ -1131,8 +1219,8 @@ export default function PlayPage() {
               userAnswer={userAnswer}
               showExplanation={showExplanation}
               answerIsCorrect={currentAnswerEvaluation?.isCorrect}
-              onAnswerChange={setUserAnswer}
-              placeholderHint={placeholderHint}
+              onAnswerChange={handleAnswerChange}
+              answerEntryConfig={answerEntryConfig}
             />
 
             {showKeyboardHint && (
@@ -1189,6 +1277,11 @@ export default function PlayPage() {
             ) : (
               <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg p-4">
                 <p className="text-red-900 dark:text-red-100 font-semibold">✗ Ei aivan oikein</p>
+                {answerEntryConfig?.feedbackHint && (
+                  <div className="mt-1 text-sm text-red-800 dark:text-red-200">
+                    <MathText>{answerEntryConfig.feedbackHint}</MathText>
+                  </div>
+                )}
               </div>
             )}
 

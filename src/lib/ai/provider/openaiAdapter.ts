@@ -185,17 +185,6 @@ function extractText(response: OpenAIResponsesCreateResponse): string {
   return textParts.join('\n');
 }
 
-function getModelTuning(model: string): Pick<OpenAIResponsesCreateParams, 'reasoning' | 'text'> {
-  if (model.startsWith('gpt-5')) {
-    return {
-      reasoning: { effort: 'minimal' },
-      text: { verbosity: 'low' },
-    };
-  }
-
-  return {};
-}
-
 function getOpenAIAPIKey(): string {
   const key = process.env.OPENAI_API_KEY;
   if (!key) {
@@ -301,7 +290,6 @@ export function createOpenAIAdapter(dependencies: OpenAIAdapterDependencies = {}
     const maxOutputTokens = options.maxTokens ?? 16000;
     const inputContent = mapMessagesToInput(messages);
     const startedAt = Date.now();
-    const modelTuning = getModelTuning(model);
 
     try {
       logger.info(
@@ -318,7 +306,6 @@ export function createOpenAIAdapter(dependencies: OpenAIAdapterDependencies = {}
       const response = await client.responses.create({
         model,
         max_output_tokens: maxOutputTokens,
-        ...modelTuning,
         input: [
           {
             role: 'user',

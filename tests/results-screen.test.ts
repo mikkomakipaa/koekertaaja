@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { createElement } from 'react';
+import { renderToString } from 'react-dom/server';
+import { QuestionDetailCard } from '@/components/play/ResultsScreen';
 import {
   buildQuestionDetails,
+  formatResultAnswer,
   getCelebrationQueue,
   getNextCelebration,
   getResultsBreakdown,
@@ -77,6 +81,179 @@ describe('ResultsScreen', () => {
     assert.deepEqual(details[0]?.questionOptions, ['2', '3', '4', '8', '9']);
     assert.deepEqual(details[0]?.rawCorrectAnswer, ['2', '3']);
     assert.deepEqual(details[0]?.rawUserAnswer, ['2', '4']);
+  });
+
+  it('formats latex-heavy string answers without escaping them', () => {
+    assert.equal(formatResultAnswer('$$\\frac{2}{3}$$'), '$$\\frac{2}{3}$$');
+  });
+
+  it('formats multiple_select arrays as readable answer lists', () => {
+    assert.equal(
+      formatResultAnswer(['$$\\frac{1}{2}$$', '$$\\frac{2}{3}$$'], 'multiple_select'),
+      '$$\\frac{1}{2}$$, $$\\frac{2}{3}$$'
+    );
+  });
+
+  it('formats structured multiple_select answer objects without leaking escaped json', () => {
+    assert.equal(
+      formatResultAnswer(
+        {
+          selected: ['$$\\frac{1}{2}$$', '$$\\frac{2}{3}$$'],
+          explanation: 'Valitse samannimiset murtoluvut',
+        },
+        'multiple_select'
+      ),
+      'selected: $$\\frac{1}{2}$$, $$\\frac{2}{3}$$; explanation: Valitse samannimiset murtoluvut'
+    );
+  });
+
+  it('formats fraction summary objects as readable labels instead of object dumps', () => {
+    assert.equal(
+      formatResultAnswer(
+        {
+          numerator: 3,
+          denominator: 4,
+          latex: '$$\\frac{3}{4}$$',
+        }
+      ),
+      'numerator: 3; denominator: 4; latex: $$\\frac{3}{4}$$'
+    );
+  });
+
+  it('formats matching answers without exposing raw json', () => {
+    assert.equal(
+      formatResultAnswer({ Suomi: 'Helsinki', Ruotsi: 'Tukholma' }, 'matching'),
+      'Suomi → Helsinki; Ruotsi → Tukholma'
+    );
+    assert.equal(
+      formatResultAnswer(
+        [
+          { left: '1/2', right: '$$\\frac{1}{2}$$' },
+          { left: '2/3', right: '$$\\frac{2}{3}$$' },
+        ],
+        'matching'
+      ),
+      '1/2 → $$\\frac{1}{2}$$; 2/3 → $$\\frac{2}{3}$$'
+    );
+  });
+
+  it('formats sequential answers as ordered flows', () => {
+    assert.equal(formatResultAnswer([2, 0, 1], 'sequential'), '3 → 1 → 2');
+    assert.equal(
+      formatResultAnswer(
+        {
+          items: [
+            { text: '$$\\frac{1}{2}$$' },
+            { text: '$$\\frac{2}{3}$$' },
+            { text: '$$\\frac{3}{4}$$' },
+          ],
+          correct_order: [1, 2, 0],
+        },
+        'sequential'
+      ),
+      '$$\\frac{2}{3}$$ → $$\\frac{3}{4}$$ → $$\\frac{1}{2}$$'
+    );
+  });
+
+  it('degrades gracefully for unsupported nested objects', () => {
+    assert.equal(
+      formatResultAnswer({ vastaus: { osa: 'arvo' }, pisteet: 2 }),
+      'vastaus: osa: arvo; pisteet: 2'
+    );
+  });
+
+  it('uses the shared formatter in question details for structured answers', () => {
+    const structuredAnswers: Answer[] = [
+      {
+        questionId: 'm1',
+        questionText: 'Yhdistä murtoluvut',
+        userAnswer: { '1/2': '$$\\frac{2}{3}$$' },
+        correctAnswer: { '1/2': '$$\\frac{1}{2}$$' },
+        questionType: 'matching',
+        isCorrect: false,
+        explanation: 'Parit pitää yhdistää oikein.',
+      },
+      {
+        questionId: 's1',
+        questionText: 'Järjestä luvut',
+        userAnswer: [2, 0, 1],
+        correctAnswer: [0, 1, 2],
+        questionType: 'sequential',
+        isCorrect: false,
+        explanation: 'Järjestys on pienimmästä suurimpaan.',
+      },
+    ];
+
+    const details = buildQuestionDetails(structuredAnswers);
+    assert.equal(details[0]?.userAnswer, '1/2 → $$\\frac{2}{3}$$');
+    assert.equal(details[0]?.correctAnswer, '1/2 → $$\\frac{1}{2}$$');
+    assert.equal(details[1]?.userAnswer, '3 → 1 → 2');
+    assert.equal(details[1]?.correctAnswer, '1 → 2 → 3');
+  });
+
+  it('renders wrong-answer summaries for latex multiple_select answers without raw json escapes', () => {
+    const details = buildQuestionDetails([
+      {
+        questionId: 'ms-latex',
+        questionText: 'Valitse murtoluvut, jotka ovat suurempia kuin 1/3.',
+        userAnswer: ['$$\\frac{1}{4}$$'],
+        correctAnswer: ['$$\\frac{1}{2}$$', '$$\\frac{2}{3}$$'],
+        questionType: 'multiple_select',
+        questionOptions: [
+          '$$\\frac{1}{4}$$',
+          '$$\\frac{1}{3}$$',
+          '$$\\frac{1}{2}$$',
+          '$$\\frac{2}{3}$$',
+          '$$\\frac{1}{5}$$',
+        ],
+        isCorrect: false,
+        explanation: '1/2 ja 2/3 ovat suurempia kuin 1/3.',
+      },
+    ]);
+
+    const html = renderToString(
+      createElement(QuestionDetailCard, {
+        question: details[0]!,
+        status: 'wrong',
+        userAnswer: details[0]!.userAnswer,
+        isExpanded: true,
+        onToggle: () => {},
+        MathRenderer: ({ children }: { children: string }) => createElement('span', null, children),
+      })
+    );
+
+    assert.ok(html.includes('Valitsit:'));
+    assert.ok(html.includes('Oikea vastaus:'));
+    assert.ok(html.includes('$$\\frac{1}{4}$$'));
+    assert.ok(html.includes('$$\\frac{1}{2}$$, $$\\frac{2}{3}$$'));
+    assert.ok(!html.includes('[&quot;$$\\\\frac{1}{2}$$&quot;'));
+    assert.ok(!html.includes('{&quot;selected&quot;'));
+  });
+
+  it('renders fraction correct-answer summaries without object-json output', () => {
+    const html = renderToString(
+      createElement(QuestionDetailCard, {
+        question: {
+          id: 'fraction-summary',
+          question: 'Muunna murtoluku sekalukuna.',
+          correctAnswer: formatResultAnswer({
+            numerator: 7,
+            denominator: 4,
+            latex: '$$\\frac{7}{4}$$',
+            mixed: '1 3/4',
+          }),
+        },
+        status: 'wrong',
+        userAnswer: '1 1/4',
+        isExpanded: true,
+        onToggle: () => {},
+        MathRenderer: ({ children }: { children: string }) => createElement('span', null, children),
+      })
+    );
+
+    assert.ok(html.includes('numerator: 7; denominator: 4; latex: $$\\frac{7}{4}$$; mixed: 1 3/4'));
+    assert.ok(!html.includes('[object Object]'));
+    assert.ok(!html.includes('{&quot;numerator&quot;'));
   });
 
   it('treats all incorrect answers as wrong when skippedQuestions is omitted', () => {

@@ -344,78 +344,243 @@ function extractFractionValues(input: string): number[] {
   return values;
 }
 
+function normalizeComparableText(input: string): string {
+  return input.replace(/\$\$/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function parseDecimalValue(input: string): number | null {
+  const normalized = input.replace(',', '.').trim();
+  if (!/^-?\d+(?:\.\d+)?$/.test(normalized)) {
+    return null;
+  }
+
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : null;
+}
+
+function parsePercentValue(input: string): number | null {
+  const match = input.trim().match(/^(-?\d+(?:[.,]\d+)?)\s*%$/);
+  if (!match) {
+    return null;
+  }
+
+  const value = Number(match[1].replace(',', '.'));
+  return Number.isFinite(value) ? value / 100 : null;
+}
+
+function parseMixedNumberValue(input: string): number | null {
+  const match = normalizeComparableText(input).match(/^(-?\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+  if (!match) {
+    return null;
+  }
+
+  const whole = Number(match[1]);
+  const numerator = Number(match[2]);
+  const denominator = Number(match[3]);
+  if (!Number.isFinite(whole) || !Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator === 0) {
+    return null;
+  }
+
+  const sign = whole < 0 ? -1 : 1;
+  return whole + sign * (numerator / denominator);
+}
+
+function parseComparableMathValue(input: string): number | null {
+  return (
+    parseMixedNumberValue(input) ??
+    parseFractionValue(input) ??
+    parsePercentValue(input) ??
+    parseDecimalValue(input)
+  );
+}
+
+function nearlyEqual(left: number, right: number, epsilon = 0.0005): boolean {
+  return Math.abs(left - right) <= epsilon;
+}
+
+function extractQuestionExpressionValues(input: string): number[] {
+  const values = extractFractionValues(input);
+  if (values.length > 0) {
+    return values;
+  }
+
+  const decimals: number[] = [];
+  for (const match of input.matchAll(/\b-?\d+(?:[.,]\d+)?\b/g)) {
+    const value = parseDecimalValue(match[0]);
+    if (value !== null) {
+      decimals.push(value);
+    }
+  }
+  return decimals;
+}
+
+function extractFirstComparableValue(input: string): number | null {
+  const fractionValues = extractFractionValues(input);
+  if (fractionValues.length > 0) {
+    return fractionValues[0];
+  }
+
+  const percentMatch = input.match(/-?\d+(?:[.,]\d+)?\s*%/);
+  if (percentMatch) {
+    return parsePercentValue(percentMatch[0]);
+  }
+
+  const decimalMatch = input.match(/\b-?\d+(?:[.,]\d+)?\b/);
+  if (decimalMatch) {
+    return parseDecimalValue(decimalMatch[0]);
+  }
+
+  return null;
+}
+
 export function validateQuestionSemantics(question: {
   question?: string;
   type?: string;
   options?: unknown;
   correct_answer?: unknown;
+  acceptable_answers?: unknown;
 }): { valid: boolean; reason?: string } {
-  if (question.type !== 'multiple_choice') {
-    return { valid: true };
-  }
-
-  if (!Array.isArray(question.options) || question.options.some((option) => typeof option !== 'string')) {
-    return { valid: true };
-  }
-
-  if (typeof question.correct_answer === 'string' && !question.options.includes(question.correct_answer)) {
-    return {
-      valid: false,
-      reason: 'Multiple choice correct_answer is not present in options',
-    };
-  }
-
   if (typeof question.question !== 'string') {
     return { valid: true };
   }
 
   const questionText = question.question.toLowerCase();
-  const optionValues = question.options.map((option) => parseFractionValue(option));
 
-  if (optionValues.some((value) => value === null)) {
-    return { valid: true };
-  }
+  if (question.type === 'multiple_choice') {
+    if (!Array.isArray(question.options) || question.options.some((option) => typeof option !== 'string')) {
+      return { valid: true };
+    }
 
-  if (
-    question.options.length === 2 &&
-    typeof question.correct_answer === 'string' &&
-    (questionText.includes('kumpi on suurempi') || questionText.includes('kumpi on pienempi'))
-  ) {
-    const [left, right] = optionValues as [number, number];
-    const expectedAnswer =
-      questionText.includes('kumpi on suurempi')
-        ? left > right
-          ? question.options[0]
-          : question.options[1]
-        : left < right
-          ? question.options[0]
-          : question.options[1];
-
-    if (question.correct_answer !== expectedAnswer) {
+    const normalizedOptions = question.options.map((option) => normalizeComparableText(option));
+    const duplicateOptions = new Set<string>();
+    normalizedOptions.forEach((option, index) => {
+      if (normalizedOptions.indexOf(option) !== index) {
+        duplicateOptions.add(option);
+      }
+    });
+    if (duplicateOptions.size > 0) {
       return {
         valid: false,
-        reason: 'Multiple choice fraction comparison correct_answer contradicts the question values',
+        reason: 'Multiple choice options contain duplicate values',
+      };
+    }
+
+    if (typeof question.correct_answer === 'string' && !question.options.includes(question.correct_answer)) {
+      return {
+        valid: false,
+        reason: 'Multiple choice correct_answer is not present in options',
+      };
+    }
+
+    const optionValues = question.options.map((option) => parseFractionValue(option));
+
+    if (optionValues.some((value) => value === null)) {
+      return { valid: true };
+    }
+
+    if (
+      question.options.length === 2 &&
+      typeof question.correct_answer === 'string' &&
+      (questionText.includes('kumpi on suurempi') || questionText.includes('kumpi on pienempi'))
+    ) {
+      const [left, right] = optionValues as [number, number];
+      const expectedAnswer =
+        questionText.includes('kumpi on suurempi')
+          ? left > right
+            ? question.options[0]
+            : question.options[1]
+          : left < right
+            ? question.options[0]
+            : question.options[1];
+
+      if (question.correct_answer !== expectedAnswer) {
+        return {
+          valid: false,
+          reason: 'Multiple choice fraction comparison correct_answer contradicts the question values',
+        };
+      }
+    }
+
+    if (
+      question.options.length >= 3 &&
+      typeof question.correct_answer === 'string' &&
+      question.options.includes('<') &&
+      question.options.includes('>') &&
+      question.options.includes('=') &&
+      questionText.includes('?')
+    ) {
+      const fractions = extractFractionValues(question.question);
+      if (fractions.length >= 2) {
+        const [left, right] = fractions;
+        const expectedAnswer = left < right ? '<' : left > right ? '>' : '=';
+
+        if (question.correct_answer !== expectedAnswer) {
+          return {
+            valid: false,
+            reason: 'Multiple choice fraction relation correct_answer contradicts the question values',
+          };
+        }
+      }
+    }
+  }
+
+  const expectedQuestionValue = (() => {
+    if (!/[+-]/.test(question.question) || typeof question.correct_answer !== 'string') {
+      return null;
+    }
+
+    const values = extractQuestionExpressionValues(question.question);
+    if (values.length < 2) {
+      return null;
+    }
+
+    if (question.question.includes('+')) {
+      return values[0] + values[1];
+    }
+
+    if (question.question.includes('-')) {
+      return values[0] - values[1];
+    }
+
+    return null;
+  })();
+
+  if (expectedQuestionValue !== null && typeof question.correct_answer === 'string') {
+    const parsedCorrectAnswer = parseComparableMathValue(question.correct_answer);
+    if (parsedCorrectAnswer !== null && !nearlyEqual(parsedCorrectAnswer, expectedQuestionValue)) {
+      return {
+        valid: false,
+        reason: 'Arithmetic correct_answer contradicts the question values',
       };
     }
   }
 
   if (
-    question.options.length >= 3 &&
     typeof question.correct_answer === 'string' &&
-    question.options.includes('<') &&
-    question.options.includes('>') &&
-    question.options.includes('=') &&
-    questionText.includes('?')
+    (questionText.includes('muunna murtoluvuksi') || questionText.includes('mikä murtoluku vastaa desimaalia'))
   ) {
-    const fractions = extractFractionValues(question.question);
-    if (fractions.length >= 2) {
-      const [left, right] = fractions;
-      const expectedAnswer = left < right ? '<' : left > right ? '>' : '=';
+    const sourceValue = extractFirstComparableValue(question.question);
+    const answerValue = parseComparableMathValue(question.correct_answer);
+    if (sourceValue !== null && answerValue !== null && !nearlyEqual(sourceValue, answerValue)) {
+      return {
+        valid: false,
+        reason: 'Fraction-decimal conversion correct_answer contradicts the question value',
+      };
+    }
+  }
 
-      if (question.correct_answer !== expectedAnswer) {
+  if (
+    typeof question.correct_answer === 'string' &&
+    questionText.includes('prosent')
+  ) {
+    const percentMatch = question.question.match(/(\d+(?:[.,]\d+)?)\s*%/);
+    if (percentMatch) {
+      const expectedValue = parsePercentValue(percentMatch[0]);
+      const answerValue = parseComparableMathValue(question.correct_answer);
+      if (expectedValue !== null && answerValue !== null && !nearlyEqual(expectedValue, answerValue)) {
         return {
           valid: false,
-          reason: 'Multiple choice fraction relation correct_answer contradicts the question values',
+          reason: 'Percent conversion correct_answer contradicts the question value',
         };
       }
     }
@@ -455,6 +620,22 @@ function normalizeQuestionType(rawType: unknown, mode: 'quiz' | 'flashcard'): st
   return typeMap[normalized] ?? normalized;
 }
 
+const QUESTION_TYPE_TITLE_PREFIX_PATTERN =
+  /^\s*(flashcard|fill[\s-]?in|multiple choice|multiple select|short answer|true or false|matching|sequential)\s*:\s*/i;
+
+function stripQuestionTypePrefix(questionText: unknown): string | undefined {
+  if (typeof questionText !== 'string') {
+    return undefined;
+  }
+
+  const trimmed = questionText.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  return trimmed.replace(QUESTION_TYPE_TITLE_PREFIX_PATTERN, '').trim();
+}
+
 function normalizeAIQuestionShape(
   rawQuestion: any,
   context: {
@@ -473,6 +654,7 @@ function normalizeAIQuestionShape(
   if (typeof question.question !== 'string') {
     question.question = question.question_text ?? question.prompt ?? question.front ?? question.title;
   }
+  question.question = stripQuestionTypePrefix(question.question);
 
   const normalizedType = normalizeQuestionType(
     question.type ?? question.question_type ?? question.kind,
@@ -881,6 +1063,7 @@ export async function generateQuestions(
   const validQuestions: any[] = [];
   const invalidQuestions: Array<{ index: number; errors: any[]; question: any }> = [];
   const excludedFlashcardTypes: Array<{ index: number; type: string; question: any }> = [];
+  const excludedQuizFlashcards: Array<{ index: number; type: string; question: any }> = [];
   const excludedRuleBasedFormat: Array<{ index: number; reason: string; question: any }> = [];
   const normalizedSubject = subject.trim().toLowerCase();
 
@@ -970,6 +1153,25 @@ export async function generateQuestions(
       }
     }
 
+    if (mode === 'quiz' && question.type === 'flashcard') {
+      excludedQuizFlashcards.push({
+        index,
+        type: question.type,
+        question: {
+          questionPreview: question.question?.substring(0, 50),
+        },
+      });
+      logger.warn(
+        {
+          questionIndex: index,
+          questionType: question.type,
+          mode,
+        },
+        'Excluded flashcard question type from quiz mode'
+      );
+      return;
+    }
+
     if (question.skill) {
       const normalizedSkill = normalizeSkillTag(question.skill);
       if (normalizedSkill && normalizedSkill !== question.skill) {
@@ -1026,6 +1228,20 @@ export async function generateQuestions(
         excludedTypes: excludedFlashcardTypes.map(({ type }) => type),
       },
       'Excluded invalid flashcard formats/types'
+    );
+  }
+
+  if (excludedQuizFlashcards.length > 0) {
+    logger.warn(
+      {
+        count: excludedQuizFlashcards.length,
+        excluded: excludedQuizFlashcards.map(q => ({
+          index: q.index,
+          type: q.type,
+          preview: q.question.questionPreview,
+        })),
+      },
+      'Excluded invalid flashcard questions from quiz mode'
     );
   }
 

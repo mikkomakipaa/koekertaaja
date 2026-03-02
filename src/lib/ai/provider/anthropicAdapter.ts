@@ -1,6 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createLogger } from '@/lib/logger';
-import { getServerEnv } from '@/lib/env';
 import type { ClaudeModel } from '../modelSelector';
 import { AIProviderError, type AIErrorCategory, type AIMessageContent, type AIResponse } from '../providerTypes';
 
@@ -16,6 +15,7 @@ type AnthropicMessagesClient = {
 interface AnthropicAdapterDependencies {
   client?: AnthropicMessagesClient;
   logger?: ReturnType<typeof createLogger>;
+  apiKey?: string;
 }
 
 const defaultLogger = createLogger({ module: 'anthropic' });
@@ -23,13 +23,22 @@ const PROVIDER = 'anthropic' as const;
 
 let defaultClient: AnthropicMessagesClient | undefined;
 
-function getDefaultClient(): AnthropicMessagesClient {
+export function getAnthropicApiKey(): string {
+  const key = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!key) {
+    throw new Error('Invalid API key. Please check your ANTHROPIC_API_KEY environment variable.');
+  }
+
+  return key;
+}
+
+function getDefaultClient(apiKey: string): AnthropicMessagesClient {
   if (defaultClient) {
     return defaultClient;
   }
 
   defaultClient = new Anthropic({
-    apiKey: getServerEnv().ANTHROPIC_API_KEY,
+    apiKey,
     timeout: 290000, // ~4.8 minutes to align with 5 minute route maxDuration
     maxRetries: 2, // Retry failed requests twice
   });
@@ -44,7 +53,9 @@ export function createAnthropicAdapter(dependencies: AnthropicAdapterDependencie
     messages: AIMessageContent[],
     options: AnthropicAdapterOptions = {}
   ): Promise<AIResponse> {
-    const client = dependencies.client ?? getDefaultClient();
+    const client =
+      dependencies.client ??
+      getDefaultClient(dependencies.apiKey ?? getAnthropicApiKey());
     const model = options.model ?? 'claude-sonnet-4-6-20250514';
     const maxTokens = options.maxTokens ?? 16000;
     const startedAt = Date.now();
@@ -135,7 +146,12 @@ function categorizeAnthropicError(error: unknown): AIErrorCategory {
 
     if (status === 401) return 'auth';
     if (status === 429) return 'rate_limit';
-    if (status === 400) return 'invalid_request';
+    if (status === 400) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('credit balance') || msg.includes('plans & billing')) return 'billing';
+      return 'invalid_request';
+    }
+    if (status === 402) return 'billing';
     if (status === 413) return 'request_too_large';
     if (status === 500 || status === 502 || status === 503 || status === 504) return 'provider_unavailable';
   }
@@ -153,6 +169,9 @@ function categorizeAnthropicError(error: unknown): AIErrorCategory {
 function toUserSafeErrorMessage(category: AIErrorCategory, fallback: string): string {
   if (category === 'auth') {
     return 'Invalid API key. Please check your ANTHROPIC_API_KEY environment variable.';
+  }
+  if (category === 'billing') {
+    return 'Anthropic API credit balance is too low. Please top up your account at console.anthropic.com → Plans & Billing.';
   }
   if (category === 'rate_limit') {
     return 'Rate limit exceeded. Please try again in a few moments.';

@@ -57,6 +57,115 @@ test('validateQuestionSemantics rejects multiple choice answers missing from opt
   assert.match(result.reason ?? '', /not present in options/i);
 });
 
+test('validateQuestionSemantics rejects duplicate multiple choice options', () => {
+  const result = validateQuestionSemantics({
+    type: 'multiple_choice',
+    question: 'Mikä on saman nimittäjän murtolukujen summa?',
+    options: ['7/6', '1 1/6', '1 1/6', '3/6'],
+    correct_answer: '1 1/6',
+  });
+
+  assert.equal(result.valid, false);
+  assert.match(result.reason ?? '', /duplicate/i);
+});
+
+test('validateQuestionSemantics rejects contradictory fraction arithmetic answers', () => {
+  const result = validateQuestionSemantics({
+    type: 'short_answer',
+    question: 'Laske: $$\\frac{1}{5}+\\frac{2}{10}$$.',
+    correct_answer: '$$\\frac{3}{5}$$',
+  });
+
+  assert.equal(result.valid, false);
+  assert.match(result.reason ?? '', /arithmetic/i);
+});
+
+test('validateQuestionSemantics rejects contradictory decimal-to-fraction answers', () => {
+  const result = validateQuestionSemantics({
+    type: 'fill_blank',
+    question: 'Muunna murtoluvuksi: 0,4.',
+    correct_answer: '$$\\frac{1}{5}$$',
+  });
+
+  assert.equal(result.valid, false);
+  assert.match(result.reason ?? '', /conversion/i);
+});
+
+test('generateQuestions excludes flashcard items when running in quiz mode', async () => {
+  const questions = await generateQuestions(
+    {
+      subject: 'matematiikka',
+      subjectType: 'math',
+      difficulty: 'helppo',
+      questionCount: 1,
+      materialText: 'Murtoluvut, laventaminen ja supistaminen.',
+      mode: 'quiz',
+    },
+    {
+      generateWithAI: async () => ({
+        content: JSON.stringify([
+          {
+            question: 'Flashcard: mikä on laventamisen tarkoitus murtoluvuissa?',
+            type: 'flashcard',
+            topic: 'Murtoluvut',
+            correct_answer: 'Laventaminen säilyttää arvon mutta muuttaa nimittäjän.',
+            explanation: 'Laventamisessa kerrotaan osoittaja ja nimittäjä samalla luvulla.',
+          },
+          {
+            question: 'Mikä on supistettu muoto luvusta $$\\frac{14}{21}$$?',
+            type: 'fill_blank',
+            topic: 'Murtoluvut',
+            correct_answer: '$$\\frac{2}{3}$$',
+            explanation: 'Jaa osoittaja ja nimittäjä 7:llä.',
+          },
+        ]),
+      }),
+    }
+  );
+
+  assert.equal(questions.length, 1);
+  assert.equal(questions[0].question_type, 'fill_blank');
+  assert.doesNotMatch(questions[0].question_text, /Flashcard:/i);
+});
+
+test('generateQuestions strips question type prefixes from saved question text', async () => {
+  const questions = await generateQuestions(
+    {
+      subject: 'matematiikka',
+      subjectType: 'math',
+      difficulty: 'helppo',
+      questionCount: 2,
+      materialText: 'Murtoluvut, laventaminen ja supistaminen.',
+      mode: 'quiz',
+    },
+    {
+      generateWithAI: async () => ({
+        content: JSON.stringify([
+          {
+            question: 'Multiple choice: Mikä on supistettu muoto luvusta $$\\frac{14}{21}$$?',
+            type: 'multiple_choice',
+            topic: 'Murtoluvut',
+            options: ['$$\\frac{2}{3}$$', '$$\\frac{3}{4}$$'],
+            correct_answer: '$$\\frac{2}{3}$$',
+            explanation: 'Jaa osoittaja ja nimittäjä 7:llä.',
+          },
+          {
+            question: 'Fill in: Muunna $$\\frac{3}{20}$$ desimaaliksi.',
+            type: 'fill_blank',
+            topic: 'Murtoluvut',
+            correct_answer: '0,15',
+            explanation: '3/20 = 0,15.',
+          },
+        ]),
+      }),
+    }
+  );
+
+  assert.equal(questions.length, 2);
+  assert.equal(questions[0].question_text, 'Mikä on supistettu muoto luvusta $$\\frac{14}{21}$$?');
+  assert.equal(questions[1].question_text, 'Muunna $$\\frac{3}{20}$$ desimaaliksi.');
+});
+
 test('generateQuestions uses generateWithAI and preserves response parsing/validation', async () => {
   let capturedOptions: { provider?: string; model?: string; maxTokens?: number } | undefined;
   let capturedMessageCount = 0;

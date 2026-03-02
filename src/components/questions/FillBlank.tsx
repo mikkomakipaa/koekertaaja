@@ -1,4 +1,5 @@
 import { FillBlankQuestion } from '@/types';
+import type { AnswerEntryConfig } from '@/lib/questions/answer-entry';
 import { Input } from '@/components/ui/input';
 import { MathText } from '@/components/ui/math-text';
 import { CheckCircle, XCircle } from '@phosphor-icons/react';
@@ -10,7 +11,7 @@ interface FillBlankProps {
   showExplanation: boolean;
   isAnswerCorrect?: boolean;
   onAnswerChange: (answer: string) => void;
-  placeholderHint?: string;
+  answerEntryConfig?: AnswerEntryConfig;
 }
 
 export function FillBlank({
@@ -19,21 +20,36 @@ export function FillBlank({
   showExplanation,
   isAnswerCorrect = false,
   onAnswerChange,
-  placeholderHint,
+  answerEntryConfig,
 }: FillBlankProps) {
   const isCorrect = showExplanation && isAnswerCorrect;
+  const placeholder = answerEntryConfig?.placeholder ?? 'Kirjoita vastauksesi tähän...';
 
   return (
     <div className="space-y-4">
+      {!showExplanation && answerEntryConfig?.notationHint && (
+        <div
+          data-testid="answer-notation-hint"
+          className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-100"
+        >
+          <p className="font-semibold">Kirjoitusvinkki</p>
+          <div className="mt-1">
+            <MathText>{answerEntryConfig.notationHint}</MathText>
+          </div>
+        </div>
+      )}
+
       <div className="relative">
         <Input
+          data-testid="compact-answer-input"
           type="text"
+          inputMode="text"
           value={userAnswer}
           onChange={(e) => !showExplanation && onAnswerChange(e.target.value)}
           disabled={showExplanation}
-          placeholder={placeholderHint ?? 'Kirjoita vastauksesi tähän...'}
+          placeholder={placeholder}
           className={cn(
-            "text-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700",
+            "min-h-12 text-lg px-4 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700",
             showExplanation && isCorrect && "border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-400",
             showExplanation && !isCorrect && "border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-400"
           )}
@@ -65,6 +81,15 @@ export function FillBlank({
                 </span>
               ))}
             </p>
+          )}
+          {answerEntryConfig?.feedbackHint && (
+            <div
+              data-testid="answer-feedback-hint"
+              className="mt-2 text-sm leading-relaxed text-blue-800 dark:text-blue-200"
+            >
+              <span className="font-semibold">Kirjoitusapu:</span>{' '}
+              <MathText>{answerEntryConfig.feedbackHint}</MathText>
+            </div>
           )}
         </div>
       )}

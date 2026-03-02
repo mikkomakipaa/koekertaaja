@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Question, Answer } from '@/types';
 import { shuffleArray } from '@/lib/utils';
-import { evaluateQuestionAnswer } from '@/lib/questions/answer-evaluation';
+import { evaluateQuestionAnswer, type AnswerFormatDiagnostics } from '@/lib/questions/answer-evaluation';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 import { useTopicMastery } from '@/hooks/useTopicMastery';
 import { createLogger } from '@/lib/logger';
@@ -14,6 +14,8 @@ const logger = createLogger({ module: 'useGameSession' });
 type CurrentAnswerEvaluation = {
   isCorrect: boolean;
   correctAnswer: unknown;
+  matchType?: string;
+  diagnostics?: AnswerFormatDiagnostics;
 };
 
 export function useGameSession(
@@ -160,13 +162,13 @@ export function useGameSession(
     }
 
     const currentQuestion = selectedQuestions[currentQuestionIndex];
-    const { isCorrect, correctAnswer, matchType } = evaluateQuestionAnswer(
+    const { isCorrect, correctAnswer, matchType, diagnostics } = evaluateQuestionAnswer(
       currentQuestion,
       userAnswer,
       grade,
       subject
     );
-    setCurrentAnswerEvaluation({ isCorrect, correctAnswer });
+    setCurrentAnswerEvaluation({ isCorrect, correctAnswer, matchType, diagnostics });
 
     let pointsEarned = 0;
     let newStreak = currentStreak;
@@ -227,6 +229,20 @@ export function useGameSession(
         matchType,
       },
     ]);
+
+    if (diagnostics?.isStructuredMath && diagnostics.notationFrictionSignal !== 'none') {
+      logger.info(
+        {
+          questionId: currentQuestion.id,
+          questionType: currentQuestion.question_type,
+          notationFrictionSignal: diagnostics.notationFrictionSignal,
+          userNotation: diagnostics.userNotation,
+          expectedNotations: diagnostics.expectedNotations,
+          acceptedEquivalentForm: diagnostics.acceptedEquivalentForm,
+        },
+        'Structured math answer diagnostics'
+      );
+    }
 
     if (isCorrect && matchType && matchType !== 'exact' && matchType !== 'none') {
       logger.debug(

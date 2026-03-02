@@ -1,5 +1,6 @@
 import { Question } from '@/types';
 import type { ShortAnswerQuestion } from '@/types';
+import type { AnswerEntryConfig } from '@/lib/questions/answer-entry';
 import { evaluateQuestionAnswer } from '@/lib/questions/answer-evaluation';
 import { MultipleChoice } from './MultipleChoice';
 import { MultipleSelect } from './MultipleSelect';
@@ -15,7 +16,7 @@ interface QuestionRendererProps {
   showExplanation: boolean;
   answerIsCorrect?: boolean;
   onAnswerChange: (answer: any) => void;
-  placeholderHint?: string;
+  answerEntryConfig?: AnswerEntryConfig;
 }
 
 export function QuestionRenderer({
@@ -24,7 +25,7 @@ export function QuestionRenderer({
   showExplanation,
   answerIsCorrect,
   onAnswerChange,
-  placeholderHint,
+  answerEntryConfig,
 }: QuestionRendererProps) {
   const computedIsCorrect = showExplanation
     ? evaluateQuestionAnswer(question, userAnswer).isCorrect
@@ -53,7 +54,7 @@ export function QuestionRenderer({
           showExplanation={showExplanation}
           isAnswerCorrect={normalizedIsCorrect}
           onAnswerChange={onAnswerChange}
-          placeholderHint={placeholderHint}
+          answerEntryConfig={answerEntryConfig}
         />
       );
 
@@ -95,7 +96,7 @@ export function QuestionRenderer({
           showExplanation={showExplanation}
           isAnswerCorrect={normalizedIsCorrect}
           onAnswerChange={onAnswerChange}
-          placeholderHint={placeholderHint}
+          answerEntryConfig={answerEntryConfig}
         />
       );
 
@@ -122,7 +123,7 @@ export function QuestionRenderer({
           showExplanation={showExplanation}
           isAnswerCorrect={normalizedIsCorrect}
           onAnswerChange={onAnswerChange}
-          placeholderHint={placeholderHint}
+          answerEntryConfig={answerEntryConfig}
         />
       );
     }

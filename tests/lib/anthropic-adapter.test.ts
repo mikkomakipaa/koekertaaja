@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import Anthropic from '@anthropic-ai/sdk';
-import { createAnthropicAdapter } from '../../src/lib/ai/provider/anthropicAdapter';
+import { createAnthropicAdapter, getAnthropicApiKey } from '../../src/lib/ai/provider/anthropicAdapter';
 import type { AIMessageContent } from '../../src/lib/ai/providerTypes';
 
 test('anthropic adapter maps response usage and text content with parity', async () => {
@@ -71,4 +71,25 @@ test('anthropic adapter preserves user-safe API error mapping', async () => {
     () => adapter([{ type: 'text', text: 'test' }]),
     /Rate limit exceeded\. Please try again in a few moments\./
   );
+});
+
+test('getAnthropicApiKey does not depend on unrelated OpenAI env settings', () => {
+  const previousAnthropicKey = process.env.ANTHROPIC_API_KEY;
+  const previousOpenAIKey = process.env.OPENAI_API_KEY;
+  const previousOpenAIFlag = process.env.AI_ENABLE_OPENAI;
+  const previousProviderDefault = process.env.AI_PROVIDER_DEFAULT;
+
+  process.env.ANTHROPIC_API_KEY = 'anthropic-test-key';
+  delete process.env.OPENAI_API_KEY;
+  process.env.AI_ENABLE_OPENAI = 'true';
+  process.env.AI_PROVIDER_DEFAULT = 'openai';
+
+  try {
+    assert.equal(getAnthropicApiKey(), 'anthropic-test-key');
+  } finally {
+    process.env.ANTHROPIC_API_KEY = previousAnthropicKey;
+    process.env.OPENAI_API_KEY = previousOpenAIKey;
+    process.env.AI_ENABLE_OPENAI = previousOpenAIFlag;
+    process.env.AI_PROVIDER_DEFAULT = previousProviderDefault;
+  }
 });

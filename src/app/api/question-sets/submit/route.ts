@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { createQuestionSet } from '@/lib/supabase/write-queries';
+import { createQuestionSet, type CreateQuestionSetResult } from '@/lib/supabase/write-queries';
 import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty, Mode } from '@/types';
 import { aiQuestionArraySchema } from '@/lib/validation/schemas';
@@ -217,10 +217,11 @@ export async function POST(request: NextRequest) {
     let code = generateCode();
     let attempts = 0;
     const maxAttempts = 50;
-    let dbResult = null;
+    let dbResult: Extract<CreateQuestionSetResult, { success: true }> | null = null;
+    let saveResult: CreateQuestionSetResult | null = null;
 
     while (attempts < maxAttempts && !dbResult) {
-      dbResult = await createQuestionSet(
+      saveResult = await createQuestionSet(
         {
           code,
           user_id: authenticatedUserId,
@@ -239,22 +240,36 @@ export async function POST(request: NextRequest) {
         transformedQuestions as any
       );
 
-      if (!dbResult) {
-        attempts++;
-        code = generateCode();
+      if (saveResult.success) {
+        dbResult = saveResult;
+        break;
+      }
 
-        if (attempts % 10 === 0) {
-          logger.warn({ attempts }, 'Code collision detected');
-        }
+      if (saveResult.reason !== 'duplicate_code') {
+        break;
+      }
 
-        if (attempts > 30) {
-          logger.error({ attempts }, 'High collision rate detected');
-        }
+      attempts++;
+      code = generateCode();
+
+      if (attempts % 10 === 0) {
+        logger.warn({ attempts }, 'Code collision detected');
+      }
+
+      if (attempts > 30) {
+        logger.error({ attempts }, 'High collision rate detected');
       }
     }
 
     if (!dbResult) {
-      logger.error({ maxAttempts }, 'Failed to generate unique code');
+      logger.error(
+        {
+          maxAttempts,
+          saveFailureReason: saveResult && !saveResult.success ? saveResult.reason : null,
+          saveFailureMessage: saveResult && !saveResult.success ? saveResult.error?.message : null,
+        },
+        'Failed to save question set'
+      );
       return NextResponse.json(
         { error: `Failed to create question set. Please try again.` },
         { status: 500 }

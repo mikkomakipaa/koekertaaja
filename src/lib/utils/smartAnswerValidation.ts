@@ -88,7 +88,7 @@ export interface SmartValidationInput {
 
 interface ParsedNumber {
   value: number;
-  source: 'number' | 'fraction' | 'percent';
+  source: 'number' | 'fraction' | 'mixed_number' | 'percent';
 }
 
 interface ParsedUnitValue {
@@ -105,8 +105,18 @@ function normalizeSubscriptsAndSuperscripts(value: string): string {
     .replace(/[\u2070\u00b9\u00b2\u00b3\u2074-\u2079]/g, (char) => SUPERSCRIPT_TO_DIGIT[char] ?? char);
 }
 
-function normalizeText(value: string): string {
+function normalizeLatexMath(value: string): string {
   return normalizeSubscriptsAndSuperscripts(value)
+    .replace(/\$\$\s*([-+]?\d+)\s*\\frac\s*{([^}]*)}\s*{([^}]*)}\s*\$\$/g, '$1 $2/$3')
+    .replace(/\$\$\s*\\frac\s*{([^}]*)}\s*{([^}]*)}\s*\$\$/g, '$1/$2')
+    .replace(/\$\$\s*/g, '')
+    .replace(/\\left|\\right/g, '')
+    .replace(/[{}]/g, '')
+    .trim();
+}
+
+function normalizeText(value: string): string {
+  return normalizeLatexMath(value)
     .toLowerCase()
     .trim()
     .replace(/\s+/g, ' ')
@@ -122,7 +132,7 @@ function normalizeUnitToken(value: string): string {
 }
 
 function normalizeNumericInput(value: string): string {
-  return normalizeSubscriptsAndSuperscripts(value)
+  return normalizeLatexMath(value)
     .trim()
     .replace(/\s+/g, '')
     .replace(/,/g, '.');
@@ -136,6 +146,34 @@ function parseNumber(value: string): ParsedNumber | null {
   const key = normalizeNumericInput(value);
   if (numberCache.has(key)) {
     return numberCache.get(key) ?? null;
+  }
+
+  const mixedNumberInput = normalizeSubscriptsAndSuperscripts(value)
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/,/g, '.');
+  const mixedNumberMatch = mixedNumberInput.match(/^([-+]?\d+)\s+(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/);
+  if (mixedNumberMatch) {
+    const whole = parseFloat(mixedNumberMatch[1]);
+    const numerator = parseFloat(mixedNumberMatch[2]);
+    const denominator = parseFloat(mixedNumberMatch[3]);
+    if (
+      !Number.isFinite(whole) ||
+      !Number.isFinite(numerator) ||
+      !Number.isFinite(denominator) ||
+      Math.abs(denominator) < EPSILON
+    ) {
+      numberCache.set(key, null);
+      return null;
+    }
+
+    const sign = whole < 0 ? -1 : 1;
+    const parsed = {
+      value: whole + sign * (numerator / denominator),
+      source: 'mixed_number' as const,
+    };
+    numberCache.set(key, parsed);
+    return parsed;
   }
 
   const fractionMatch = key.match(/^([-+]?\d+(?:\.\d+)?)\/([-+]?\d+(?:\.\d+)?)$/);
@@ -373,6 +411,14 @@ export function getAlternativeRepresentations(answer: string): string[] {
       const numerator = scaled / divisor;
       const reducedDenominator = denominator / divisor;
       alternatives.add(`${numerator}/${reducedDenominator}`);
+
+      if (numerator > reducedDenominator) {
+        const whole = Math.trunc(numerator / reducedDenominator);
+        const remainder = numerator % reducedDenominator;
+        if (remainder !== 0) {
+          alternatives.add(`${whole} ${remainder}/${reducedDenominator}`);
+        }
+      }
     }
   }
 

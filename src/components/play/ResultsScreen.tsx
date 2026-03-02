@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentType } from 'react';
 import { Answer } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { getBadgeIcon, getBadgeColors } from '@/lib/utils/badgeStyles';
 import {
   buildQuestionDetails,
+  formatResultAnswer,
   getCelebrationQueue,
   getNextCelebration,
   getResultsBreakdown,
@@ -56,13 +57,12 @@ interface ResultsScreenProps {
   onBackToMenu: () => void;
 }
 
-function QuestionDetailCard({
-  question,
-  status,
-  userAnswer,
-  isExpanded,
-  onToggle,
-}: {
+interface MathRendererProps {
+  children: string;
+  className?: string;
+}
+
+interface QuestionDetailCardProps {
   question: {
     id: string;
     question: string;
@@ -76,7 +76,17 @@ function QuestionDetailCard({
   userAnswer?: string;
   isExpanded: boolean;
   onToggle: () => void;
-}) {
+  MathRenderer?: ComponentType<MathRendererProps>;
+}
+
+export function QuestionDetailCard({
+  question,
+  status,
+  userAnswer,
+  isExpanded,
+  onToggle,
+  MathRenderer = MathText,
+}: QuestionDetailCardProps) {
   const statusIcon = {
     correct: <CheckCircle size={20} weight="fill" className="text-emerald-600 dark:text-emerald-400" />,
     wrong: <X size={20} weight="bold" className="text-red-600 dark:text-red-400" />,
@@ -119,7 +129,7 @@ function QuestionDetailCard({
         {isExpanded && (
           <div className="mt-4 space-y-2 border-t border-gray-200 pt-4 dark:border-gray-700">
             <p className="text-sm text-gray-900 dark:text-gray-100">
-              <MathText>{question.question}</MathText>
+              <MathRenderer>{question.question}</MathRenderer>
             </p>
 
             {question.questionType === 'multiple_select'
@@ -161,7 +171,7 @@ function QuestionDetailCard({
                         )}
                       >
                         {icon && <span className="mr-2 font-bold">{icon}</span>}
-                        <MathText>{option}</MathText>
+                        <MathRenderer>{option}</MathRenderer>
                       </div>
                     );
                   })}
@@ -179,7 +189,7 @@ function QuestionDetailCard({
                   Oikea vastaus:
                 </p>
                 <p className="text-sm text-emerald-800 dark:text-emerald-200">
-                  <MathText>{question.correctAnswer}</MathText>
+                  <MathRenderer>{question.correctAnswer}</MathRenderer>
                 </p>
               </div>
             )}
@@ -191,7 +201,7 @@ function QuestionDetailCard({
                     Valitsit:
                   </p>
                   <p className="text-sm text-red-800 dark:text-red-200">
-                    <MathText>{userAnswer || 'Ei vastausta'}</MathText>
+                    <MathRenderer>{userAnswer || 'Ei vastausta'}</MathRenderer>
                   </p>
                 </div>
                 <div className="rounded bg-emerald-50 p-3 dark:bg-emerald-900/20">
@@ -199,7 +209,7 @@ function QuestionDetailCard({
                     Oikea vastaus:
                   </p>
                   <p className="text-sm text-emerald-800 dark:text-emerald-200">
-                    <MathText>{question.correctAnswer}</MathText>
+                    <MathRenderer>{question.correctAnswer}</MathRenderer>
                   </p>
                 </div>
               </>
@@ -553,6 +563,10 @@ export function ResultsScreen({
                               id: detail.id,
                               question: detail.question,
                               correctAnswer: detail.correctAnswer,
+                              questionType: detail.questionType,
+                              questionOptions: detail.questionOptions,
+                              rawCorrectAnswer: detail.rawCorrectAnswer,
+                              rawUserAnswer: detail.rawUserAnswer,
                             }}
                             status={detail.status}
                             userAnswer={detail.userAnswer}
@@ -593,13 +607,13 @@ export function ResultsScreen({
                 )}
                 {!skippedQuestions || skippedQuestions.length === 0 ? (
                   <div className="space-y-2 max-h-[420px] md:max-h-[520px] overflow-y-auto pr-1">
-                    {answers.filter(answer => showAllAnswers || !answer.isCorrect).map((answer, index) => {
-                      const isSkipped = answer.userAnswer === null && !answer.isCorrect;
+                    {questionDetails.filter(detail => showAllAnswers || detail.status !== 'correct').map((detail) => {
+                      const isSkipped = detail.status === 'skipped' || (detail.rawUserAnswer === null && detail.status === 'wrong');
                       return (
                         <div
-                          key={index}
+                          key={detail.id}
                           className={`p-4 rounded-lg border-l-4 ${
-                            answer.isCorrect
+                            detail.status === 'correct'
                               ? 'bg-green-50 border-green-500'
                               : isSkipped
                                 ? 'bg-amber-50 border-amber-500'
@@ -607,7 +621,7 @@ export function ResultsScreen({
                           }`}
                         >
                           <div className="flex items-start gap-2">
-                            {answer.isCorrect ? (
+                            {detail.status === 'correct' ? (
                               <CheckCircle weight="duotone" className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                             ) : isSkipped ? (
                               <ArrowCounterClockwise weight="duotone" className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
@@ -616,20 +630,16 @@ export function ResultsScreen({
                             )}
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-900">
-                                <MathText>{answer.questionText}</MathText>
+                                <MathText>{detail.question}</MathText>
                               </p>
                               {isSkipped && (
                                 <p className="text-sm text-amber-700 mt-1">Tämä kysymys ohitettiin aikarajan vuoksi.</p>
                               )}
-                              {!answer.isCorrect && !isSkipped && (
+                              {detail.status !== 'correct' && !isSkipped && (
                                 <p className="text-sm text-gray-600 mt-1">
                                   Oikea vastaus:{' '}
                                   <span className="font-semibold">
-                                    {typeof answer.correctAnswer === 'object' ? (
-                                      JSON.stringify(answer.correctAnswer)
-                                    ) : (
-                                      <MathText>{String(answer.correctAnswer)}</MathText>
-                                    )}
+                                    <MathText>{detail.correctAnswer || formatResultAnswer(detail.rawCorrectAnswer, detail.questionType)}</MathText>
                                   </span>
                                 </p>
                               )}

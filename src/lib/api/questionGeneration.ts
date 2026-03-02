@@ -8,13 +8,17 @@
 import { fileTypeFromBuffer } from 'file-type';
 import { generateQuestions } from '@/lib/ai/questionGenerator';
 import { identifyTopics, getSimpleTopics, type EnhancedTopic } from '@/lib/ai/topicIdentifier';
-import { createQuestionSet } from '@/lib/supabase/write-queries';
+import { createQuestionSet, type CreateQuestionSetResult } from '@/lib/supabase/write-queries';
 import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty, QuestionSet, Question } from '@/types';
 import { createLogger } from '@/lib/logger';
 import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
 import type { PromptMetadata } from '@/lib/prompts/promptVersion';
-import { calculateDistribution, formatDistributionForPrompt } from '@/lib/utils/questionDistribution';
+import {
+  calculateDistribution,
+  formatDistributionForPrompt,
+  type TopicDistribution,
+} from '@/lib/utils/questionDistribution';
 import { validateCoverage, formatCoverageReport } from '@/lib/utils/coverageValidation';
 import { isLanguageSubject, isRuleBasedSubject } from '@/lib/utils/subjectClassification';
 import {
@@ -448,10 +452,9 @@ export async function generateQuizSets(
   options: QuestionGenerationOptions = { orchestrate: true }
 ): Promise<QuestionSetResult[]> {
   const logger = createLogger({ module: 'generateQuizSets' });
-  const results: QuestionSetResult[] = [];
 
   // Calculate distribution if enhanced topics provided
-  let distribution;
+  let distribution: TopicDistribution[] | undefined;
   if (enhancedTopics && enhancedTopics.length > 0) {
     distribution = calculateDistribution(enhancedTopics, request.questionCount);
 
@@ -487,7 +490,9 @@ export async function generateQuizSets(
     'Prepared visual assets for quiz generation'
   );
 
-  for (const difficulty of request.difficulties) {
+  const generateQuizSetForDifficulty = async (
+    difficulty: Difficulty
+  ): Promise<QuestionSetResult> => {
     logger.info({ difficulty }, `Generating quiz questions for difficulty`);
 
     let promptMetadata: PromptMetadata | undefined;
@@ -631,11 +636,12 @@ export async function generateQuizSets(
     let attempts = 0;
     const maxAttempts = 50;
     let dbResult: QuestionSetResult | null = null;
+    let saveResult: CreateQuestionSetResult | null = null;
 
     const setName = `${request.questionSetName} - ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`;
 
     while (attempts < maxAttempts && !dbResult) {
-     dbResult = await createQuestionSet(
+      saveResult = await createQuestionSet(
         {
           code,
           user_id: request.userId ?? null,
@@ -656,17 +662,30 @@ export async function generateQuizSets(
         visualizedQuestions
       );
 
-      if (!dbResult) {
-        attempts++;
-        code = generateCode();
+      if (saveResult.success) {
+        dbResult = saveResult;
+        break;
+      }
 
-        if (attempts % 10 === 0) {
-          logger.warn({ attempts, difficulty }, 'Code collision detected');
-        }
+      if (saveResult.reason !== 'duplicate_code') {
+        break;
+      }
+
+      attempts++;
+      code = generateCode();
+
+      if (attempts % 10 === 0) {
+        logger.warn({ attempts, difficulty }, 'Code collision detected');
       }
     }
 
     if (!dbResult) {
+      if (saveResult && !saveResult.success) {
+        throw new Error(
+          `Failed to save quiz set for difficulty ${difficulty}: ${saveResult.error?.message ?? saveResult.reason}`
+        );
+      }
+
       throw new Error(
         `Failed to generate unique code after ${maxAttempts} attempts for difficulty: ${difficulty}`
       );
@@ -681,8 +700,12 @@ export async function generateQuizSets(
       'Quiz set saved successfully'
     );
 
-    results.push(dbResult);
-  }
+    return dbResult;
+  };
+
+  const results = await Promise.all(
+    request.difficulties.map((difficulty) => generateQuizSetForDifficulty(difficulty))
+  );
 
   logger.info(
     { setsCreated: results.length, difficulties: request.difficulties },
@@ -921,11 +944,12 @@ export async function generateFlashcardSet(
   let attempts = 0;
   const maxAttempts = 50;
   let dbResult: QuestionSetResult | null = null;
+  let saveResult: CreateQuestionSetResult | null = null;
 
   const setName = `${request.questionSetName} - Kortit`;
 
   while (attempts < maxAttempts && !dbResult) {
-    dbResult = await createQuestionSet(
+    saveResult = await createQuestionSet(
       {
         code,
         user_id: request.userId ?? null,
@@ -946,17 +970,30 @@ export async function generateFlashcardSet(
       dependencyOrderedQuestions
     );
 
-    if (!dbResult) {
-      attempts++;
-      code = generateCode();
+    if (saveResult.success) {
+      dbResult = saveResult;
+      break;
+    }
 
-      if (attempts % 10 === 0) {
-        logger.warn({ attempts }, 'Code collision detected');
-      }
+    if (saveResult.reason !== 'duplicate_code') {
+      break;
+    }
+
+    attempts++;
+    code = generateCode();
+
+    if (attempts % 10 === 0) {
+      logger.warn({ attempts }, 'Code collision detected');
     }
   }
 
   if (!dbResult) {
+    if (saveResult && !saveResult.success) {
+      throw new Error(
+        `Failed to save flashcard set: ${saveResult.error?.message ?? saveResult.reason}`
+      );
+    }
+
     throw new Error(
       `Failed to generate unique code after ${maxAttempts} attempts for flashcard set`
     );

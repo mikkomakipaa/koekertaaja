@@ -3,7 +3,7 @@ import { fileTypeFromBuffer } from 'file-type';
 import crypto from 'crypto';
 import { generateQuestions } from '@/lib/ai/questionGenerator';
 import { identifyTopics, getSimpleTopics } from '@/lib/ai/topicIdentifier';
-import { createQuestionSet } from '@/lib/supabase/write-queries';
+import { createQuestionSet, type CreateQuestionSetResult } from '@/lib/supabase/write-queries';
 import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty } from '@/types';
 import { createQuestionSetSchema } from '@/lib/validation/schemas';
@@ -567,7 +567,8 @@ export async function POST(request: NextRequest) {
         let code = generateCode();
         let attempts = 0;
         const maxAttempts = 50;
-        let dbResult = null;
+        let dbResult: Extract<CreateQuestionSetResult, { success: true }> | null = null;
+        let saveResult: CreateQuestionSetResult | null = null;
 
         // Determine set name based on mode and difficulty
         const setName = mode === 'flashcard'
@@ -575,7 +576,7 @@ export async function POST(request: NextRequest) {
           : `${questionSetName} - ${difficulty!.charAt(0).toUpperCase() + difficulty!.slice(1)}`;
 
         while (attempts < maxAttempts && !dbResult) {
-          dbResult = await createQuestionSet(
+          saveResult = await createQuestionSet(
             {
               code,
               user_id: authenticatedUserId,
@@ -595,22 +596,41 @@ export async function POST(request: NextRequest) {
             questionsForSave
           );
 
-          if (!dbResult) {
-            attempts++;
-            code = generateCode();
+          if (saveResult.success) {
+            dbResult = saveResult;
+            break;
+          }
 
-            if (attempts % 10 === 0) {
-              logger.warn({ attempts, mode, difficulty }, 'Code collision detected');
-            }
+          if (saveResult.reason !== 'duplicate_code') {
+            break;
+          }
+
+          attempts++;
+          code = generateCode();
+
+          if (attempts % 10 === 0) {
+            logger.warn({ attempts, mode, difficulty }, 'Code collision detected');
           }
         }
 
         if (!dbResult) {
-          logger.error({ maxAttempts, mode, difficulty }, 'Failed to generate unique code');
+          logger.error(
+            {
+              maxAttempts,
+              mode,
+              difficulty,
+              saveFailureReason: saveResult && !saveResult.success ? saveResult.reason : null,
+              saveFailureMessage: saveResult && !saveResult.success ? saveResult.error?.message : null,
+            },
+            'Failed to save generated question set'
+          );
           dbFailures.push({
             mode,
             difficulty,
-            error: 'Failed to generate unique code after 50 attempts',
+            error:
+              saveResult && !saveResult.success
+                ? `Failed to save question set: ${saveResult.error?.message ?? saveResult.reason}`
+                : 'Failed to generate unique code after 50 attempts',
           });
           continue;
         }

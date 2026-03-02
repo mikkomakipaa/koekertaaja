@@ -196,6 +196,65 @@ Right column: talo, koira, kissa
 
 ---
 
+### 6b. Fraction Answer Entry Regression Test
+
+Use a math question set that contains open answers with fractions, mixed numbers, decimals, or percentages.
+
+**Regression matrix:**
+- [ ] `4/3` expected, answer `1 1/3` → should be accepted
+- [ ] `1 1/3` expected, answer `4/3` → should be accepted
+- [ ] `0,25` expected, answer `25%` → should be accepted
+- [ ] `25%` expected, answer `1/4` → should be accepted
+- [ ] `3/4` expected, answer `0.75` → should be accepted
+- [ ] `4/3` expected, answer `1//3` → should be rejected and keep notation help visible
+- [ ] `4/3` expected, answer `5/3` → should be rejected as a math mistake, not a formatting acceptance
+
+**Pre-submit hint checks:**
+- [ ] Fraction-like short answers use a single-line input, not a large textarea
+- [ ] A visible `Kirjoitusvinkki` hint appears before submit
+- [ ] If both improper and mixed-number forms are accepted, both are shown before submit
+- [ ] Use a conversion prompt such as `Muunna sekaluku 1 1/3 murtoluvuksi.` and confirm the helper copy shows readable math like `4/3` and `1 1/3`, never raw `$$...$$`
+
+**Post-submit feedback checks:**
+- [ ] Wrong structured-math answers still show `Kirjoitusapu`
+- [ ] Correct equivalent notation does not show the answer as wrong
+- [ ] The example answer area still renders the canonical answer and acceptable alternatives clearly
+- [ ] Submit a wrong answer for the same conversion prompt and confirm `Kirjoitusapu`, `Esimerkkivastaus`, and acceptable-answer panels still render math cleanly without raw LaTeX
+
+**Mobile / iPad QA checklist:**
+- [ ] Test on iPad portrait: `/` is easy to enter and the field stays visible above the keyboard
+- [ ] Test on iPad landscape: hint, input, and submit button fit without awkward scrolling
+- [ ] Test on iPhone-sized viewport: the compact input stays single-line and touch targets remain usable
+- [ ] On iPad, repeat the `1 1/3` → `4/3` conversion flow and verify the helper hint remains readable before submit and after an incorrect attempt
+- [ ] Test decimal entry with both comma and period keyboards
+- [ ] Test clearing and rewriting an answer once before submit
+- [ ] Test VoiceOver or another screen reader: the notation hint is announced before the answer input
+
+**Instrumentation checks (dev console / server logs):**
+- [ ] A structured math submission logs `Structured math answer submission`
+- [ ] Equivalent accepted answers log `notationFrictionSignal: accepted_equivalent`
+- [ ] Malformed notation logs `notationFrictionSignal: likely_format_issue`
+- [ ] Wrong numeric value with valid notation logs `notationFrictionSignal: content_misunderstanding`
+
+### 6c. Results Page LaTeX Regression Test
+
+Use the same math-heavy set after finishing a play session with at least one wrong answer and one skipped answer.
+
+**Wrong-answer summary checks:**
+- [ ] Expand a wrong `multiple_select` result card that uses LaTeX answers such as `$$\\frac{1}{2}$$`
+- [ ] "Valitsit" and "Oikea vastaus" show readable comma-separated math answers, not escaped JSON or object dumps
+- [ ] Confirm the card never shows raw payload fragments like `{\"selected\":`, `[object Object]`, or quoted array syntax
+
+**Fraction summary checks:**
+- [ ] Review a wrong fraction or mixed-number result and confirm the correct-answer summary stays human-readable
+- [ ] If the source answer includes multiple math forms, each form remains visible in the summary instead of collapsing into raw JSON
+- [ ] Verify skipped math questions also show the correct answer cleanly on the results page
+
+**Manual QA note:**
+- [ ] Include at least one math/fraction session in results-page smoke testing whenever answer formatting code changes
+
+---
+
 ### 7. Error Handling Test
 
 **Test Invalid Inputs:**

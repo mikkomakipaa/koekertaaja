@@ -55,6 +55,7 @@ import { CreationProgressStepper } from '@/components/create/CreationProgressSte
 import { TestQuestionsTab } from '@/components/create/TestQuestionsTab';
 import { CapacityWarningDialog } from '@/components/create/CapacityWarningDialog';
 import { MetricsTab } from '@/components/metrics/MetricsTab';
+import { MathText } from '@/components/ui/math-text';
 import { useAuth } from '@/hooks/useAuth';
 import { createLogger } from '@/lib/logger';
 import { withCsrfHeaders } from '@/lib/security/csrf-client';
@@ -2296,6 +2297,7 @@ export default function CreatePage() {
                 allQuestionSets={allQuestionSets}
                 loadingQuestionSets={loadingQuestionSets}
                 onRefreshSets={loadQuestionSets}
+                isAdmin={isAdmin}
               />
             </div>
           )}
@@ -2351,9 +2353,9 @@ export default function CreatePage() {
                                   </div>
                                   <div className="space-y-2">
                                     <div>
-                                      <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                                        {flag.questionText}
-                                      </p>
+                                      <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                                        <MathText>{flag.questionText}</MathText>
+                                      </div>
                                       <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 space-y-1">
                                         <div>
                                           {flag.questionSetName ?? 'Tuntematon sarja'}

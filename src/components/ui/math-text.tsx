@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
+import { Fragment } from 'react';
 
 interface MathTextProps {
   children: string;
@@ -16,43 +16,38 @@ interface MathTextProps {
  * Example: "Laske: $$7000 \div 1000$$ = ____"
  */
 export function MathText({ children, className = '' }: MathTextProps) {
-  const containerRef = useRef<HTMLSpanElement>(null);
+  const parts = parseLatex(children);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    // Parse text and render LaTeX formulas
-    const parts = parseLatex(children);
-
-    // Clear container
-    containerRef.current.innerHTML = '';
-
-    // Render each part
-    parts.forEach((part) => {
-      if (part.type === 'text') {
-        const textNode = document.createTextNode(part.content);
-        containerRef.current!.appendChild(textNode);
-      } else if (part.type === 'math') {
-        const mathSpan = document.createElement('span');
-        mathSpan.className = 'math-inline';
-
-        try {
-          katex.render(part.content, mathSpan, {
-            throwOnError: false,
-            displayMode: false,
-          });
-        } catch (error) {
-          // If rendering fails, show the original text
-          mathSpan.textContent = `$$${part.content}$$`;
-          mathSpan.className = 'text-red-500';
+  return (
+    <span className={className}>
+      {parts.map((part, index) => {
+        if (part.type === 'text') {
+          return <Fragment key={`text-${index}`}>{part.content}</Fragment>;
         }
 
-        containerRef.current!.appendChild(mathSpan);
-      }
-    });
-  }, [children]);
-
-  return <span ref={containerRef} className={className} />;
+        try {
+          return (
+            <span
+              key={`math-${index}`}
+              className="math-inline"
+              dangerouslySetInnerHTML={{
+                __html: katex.renderToString(part.content, {
+                  throwOnError: false,
+                  displayMode: false,
+                }),
+              }}
+            />
+          );
+        } catch {
+          return (
+            <span key={`math-error-${index}`} className="text-red-500">
+              {`$$${part.content}$$`}
+            </span>
+          );
+        }
+      })}
+    </span>
+  );
 }
 
 /**

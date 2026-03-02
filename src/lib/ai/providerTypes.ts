@@ -1,6 +1,7 @@
 export type AIProvider = 'anthropic' | 'openai';
 export type AIErrorCategory =
   | 'auth'
+  | 'billing'
   | 'rate_limit'
   | 'invalid_request'
   | 'request_too_large'
