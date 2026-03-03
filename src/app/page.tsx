@@ -74,13 +74,13 @@ export default function HomePage() {
         Siirry sisältöön
       </a>
 
-      <main id="main-content" tabIndex={-1} className="flex-1 p-4 md:p-8">
-        <div className="mx-auto max-w-3xl">
-          <header className="hero-fade">
-            <section
-              aria-labelledby="dashboard-heading"
-              className="rounded-[24px] border border-black/10 bg-[linear-gradient(180deg,rgba(98,94,255,0.10),rgba(98,94,255,0.05))] px-4 py-3 text-slate-950 shadow-none dark:rounded-[28px] dark:border-slate-900/90 dark:bg-[linear-gradient(155deg,#3a38d2_0%,#2c2a9f_52%,#17194f_100%)] dark:text-white dark:shadow-sm dark:shadow-black/20 md:px-5 md:py-3"
-            >
+      <main id="main-content" tabIndex={-1} className="flex-1">
+        <header className="hero-fade">
+          <section
+            aria-labelledby="dashboard-heading"
+            className="bg-[linear-gradient(180deg,rgba(98,94,255,0.085),rgba(98,94,255,0.04))] text-slate-950 dark:bg-[linear-gradient(155deg,rgba(58,56,210,0.88)_0%,rgba(44,42,159,0.88)_52%,rgba(23,25,79,0.88)_100%)] dark:text-white"
+          >
+            <div className="mx-auto max-w-3xl px-4 pt-4 pb-3 md:px-8 md:pt-5 md:pb-3">
               <div className="flex items-start gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/80 ring-1 ring-indigo-200/80 backdrop-blur dark:bg-white/12 dark:ring-white/15">
                   <Image
@@ -96,7 +96,7 @@ export default function HomePage() {
                   <h1 id="dashboard-heading" className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white md:text-4xl">
                     Koekertaaja
                   </h1>
-                  <p className="mt-2 max-w-xl text-base font-medium text-[rgba(0,0,0,0.72)] dark:text-white/90 md:text-[17px]">
+                  <p className="mt-2 max-w-xl text-base font-medium text-[rgba(0,0,0,0.78)] dark:text-white/90 md:text-[17px]">
                     Harjoittele kokeisiin ja opi uutta.
                   </p>
                 </div>
@@ -118,11 +118,13 @@ export default function HomePage() {
                   className="h-[52px] w-full rounded-2xl px-4 text-base"
                 />
               </div>
-            </section>
-          </header>
+            </div>
+          </section>
+        </header>
 
+        <div className="mx-auto max-w-3xl px-4 pb-4 md:px-8 md:pb-8">
           <section
-            className="mt-3 border-t border-gray-100/70 pt-4 transition-colors dark:border-slate-800/70 md:mt-4 md:pt-5"
+            className="mt-2 border-t border-gray-100/70 pt-3 transition-colors dark:border-slate-800/70"
             aria-labelledby="modes-heading"
           >
             <div className="scroll-fade space-y-1" data-scroll>
@@ -141,7 +143,7 @@ export default function HomePage() {
                 data-scroll
                 style={{ '--stagger': '60ms' } as CSSProperties}
               >
-                <Card className="h-full rounded-2xl border border-slate-200/90 bg-white/95 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_4px_10px_rgba(15,23,42,0.06)] dark:border-slate-700/80 dark:bg-slate-900/70 dark:shadow-[0_1px_2px_rgba(0,0,0,0.18)] dark:group-hover:shadow-[0_4px_10px_rgba(0,0,0,0.24)]">
+                <Card className="h-full rounded-2xl border border-slate-200/90 bg-white/95 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_3px_8px_rgba(15,23,42,0.05)] dark:border-slate-700/80 dark:bg-slate-900/70 dark:shadow-[0_1px_2px_rgba(0,0,0,0.13)] dark:group-hover:shadow-[0_3px_8px_rgba(0,0,0,0.18)]">
                   <CardHeader className="space-y-4">
                     <div className="flex items-start gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 transition-colors dark:bg-indigo-500/15">
@@ -171,7 +173,7 @@ export default function HomePage() {
                 data-scroll
                 style={{ '--stagger': '140ms' } as CSSProperties}
               >
-                <Card className="h-full rounded-2xl border border-slate-200/90 bg-white/95 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_4px_10px_rgba(15,23,42,0.06)] dark:border-slate-700/80 dark:bg-slate-900/70 dark:shadow-[0_1px_2px_rgba(0,0,0,0.18)] dark:group-hover:shadow-[0_4px_10px_rgba(0,0,0,0.24)]">
+                <Card className="h-full rounded-2xl border border-slate-200/90 bg-white/95 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_3px_8px_rgba(15,23,42,0.05)] dark:border-slate-700/80 dark:bg-slate-900/70 dark:shadow-[0_1px_2px_rgba(0,0,0,0.13)] dark:group-hover:shadow-[0_3px_8px_rgba(0,0,0,0.18)]">
                   <CardHeader className="space-y-4">
                     <div className="flex items-start gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50 transition-colors dark:bg-teal-500/15">
