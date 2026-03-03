@@ -651,36 +651,26 @@ export default function CreatePage() {
         }
       }
 
-      // Step 4: Handle overall result
+      // Step 4: Redirect to results page
       const allSets = [...results.quizSets, ...(results.flashcardSet ? [results.flashcardSet] : [])];
-      if (allSets.length > 0) {
-        // At least some sets created
-        const totalQuestions = allSets.reduce((sum, set) => sum + set.questionCount, 0);
-        if (results.errors.length === 0) {
-          // Full success
-          toast.success(`Luotiin ${allSets.length} kysymyssarjaa!`, { description: `Yhteensä ${totalQuestions} kysymystä`, duration: 5000 });
-        } else {
-          // Partial success
-          const failureSummary = results.errors.map(e => `${e.mode === 'flashcard' ? 'Kortit' : 'Visa'}: Epäonnistui`).join('\n');
-          toast.warning(`Luotiin ${allSets.length} sarjaa, ${results.errors.length} epäonnistui`, { description: failureSummary, duration: 8000 });
-        }
-        // Show success confirmation screen and wait for user confirmation
-        setQuestionSetsCreated(allSets);
-        setTotalQuestionsCreated(totalQuestions);
-        setState('success');
-      } else {
-        // Total failure
-        const errorDetails = results.errors.map(e => `${e.mode === 'flashcard' ? 'Kortit' : 'Visa'}: ${e.error}`).join('\n');
-        toast.error('Kysymyssarjojen luonti epäonnistui', { description: errorDetails, duration: 10000 });
-        setState('form');
-      }
+      const totalQuestions = allSets.reduce((sum, set) => sum + set.questionCount, 0);
+      setState('form'); // Reset before navigation so cached page doesn't flash the loading overlay
+      sessionStorage.setItem('creation_results', JSON.stringify({
+        createdSets: allSets,
+        errors: results.errors,
+        totalQuestions,
+      }));
+      router.push('/create/results');
     } catch (err) {
       logger.error({ error: err }, 'Error generating questions');
       const errorMessage = err instanceof Error ? err.message : 'Kysymysten luonti epäonnistui';
-      toast.error('Yhteysongelma', {
-        description: errorMessage,
-      });
       setState('form');
+      sessionStorage.setItem('creation_results', JSON.stringify({
+        createdSets: [],
+        errors: [{ mode: 'quiz', error: errorMessage }],
+        totalQuestions: 0,
+      }));
+      router.push('/create/results');
     }
   };
 
@@ -2131,6 +2121,12 @@ export default function CreatePage() {
                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                                           <span className="font-medium">Monivalinta</span>
                                           <span className="text-blue-600 dark:text-blue-400">{getPercentage(set.type_distribution.multiple_choice)}%</span>
+                                        </span>
+                                      )}
+                                      {(set.type_distribution.multiple_select || 0) > 0 && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                          <span className="font-medium">Monivalinta+</span>
+                                          <span className="text-indigo-600 dark:text-indigo-400">{getPercentage(set.type_distribution.multiple_select)}%</span>
                                         </span>
                                       )}
                                       {(set.type_distribution.fill_blank || 0) > 0 && (

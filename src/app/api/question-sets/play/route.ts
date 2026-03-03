@@ -9,12 +9,15 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const limitParam = url.searchParams.get('limit');
     const limit = limitParam ? Number(limitParam) : 100;
+    const modeParam = url.searchParams.get('mode');
+    const mode = modeParam === 'flashcard' ? 'flashcard' : 'quiz';
 
     const userIsAdmin = user ? isAdmin(user.email || '') : false;
     const supabase = userIsAdmin ? getSupabaseAdmin() : await createServerClient();
     const query = supabase
       .from('question_sets')
       .select('*')
+      .eq('mode', mode)
       .order('exam_date', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
       .limit(Number.isFinite(limit) && limit > 0 ? limit : 100);

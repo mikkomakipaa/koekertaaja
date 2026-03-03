@@ -507,6 +507,12 @@ TÄRKEÄÄ:
     }
 
     if (normalized === 'math' || normalized === 'matematiikka') {
+      if (grade === 4) {
+        return `\nKysymysten tulee olla sopivan haastavuustason 4. luokkalaiselle (9–10-vuotiaille). Käytä kokonaislukuja 0–10 000, perusmurtolukuja (1/2, 1/4, 3/4) ja desimaaleja kymmenesosiin/sadasosiin. Negatiiviset luvut ja koordinaatisto (1. neljännes) vain perustason tutustumisena. Maksimissaan 1–2 operaatiota, arkikielen sanasto. Ei prosentteja, suhde/verranto, pinta-ala/tilavuus kaavoilla tai muodollista algebraa.`;
+      }
+      if (grade === 5) {
+        return `\nKysymysten tulee olla sopivan haastavuustason 5. luokkalaiselle ja perustua 5. luokan opetussuunnitelman sisältöön. Salli desimaaliluvut, perusmurtoluvut (1/2, 1/4, 1/3) ja prosenttikäsite. Maksimissaan 2–3 laskuvaihetta.`;
+      }
       return `\nKysymysten tulee olla sopivan haastavuustason ${grade}. luokkalaiselle ja perustua ${grade}. luokan opetussuunnitelman sisältöön.`;
     }
 

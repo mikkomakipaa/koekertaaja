@@ -12,6 +12,7 @@ import { ModeClassBar } from '@/components/play/ModeClassBar';
 import { PrimaryActionButton } from '@/components/play/PrimaryActionButton';
 import { cn } from '@/lib/utils';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
+import { SUBJECTS, SUBJECTS_BY_ID } from '@/config/subjects';
 import { getGradeColors } from '@/lib/utils/grade-colors';
 import { buildModeGradeQuery, parseGradeParam, parseStudyModeParam } from '@/lib/play/mode-grade-query';
 import {
@@ -44,6 +45,16 @@ import {
   MagnifyingGlass,
   Leaf,
   MapTrifold,
+  Translate,
+  Atom,
+  Flask,
+  Plant,
+  Star,
+  Scales,
+  PaintBrush,
+  MusicNotes,
+  Lightning,
+  Scissors,
 } from '@phosphor-icons/react';
 
 type BrowseState = 'loading' | 'loaded' | 'error';
@@ -61,6 +72,11 @@ interface GroupedQuestionSets {
 interface SubjectConfig {
   icon: ReactNode;
   label: string;
+  color: string;
+}
+
+interface SubjectIconConfig {
+  icon: ReactNode;
   color: string;
 }
 
@@ -116,52 +132,42 @@ const difficultyIcons: Record<string, ReactNode> = {
   aikahaaste: <Timer size={20} weight="duotone" className="inline" />,
 };
 
-const subjectConfigs: Record<string, SubjectConfig> = {
-  english: {
-    icon: <GlobeHemisphereWest size={20} weight="duotone" />,
-    label: 'Englanti',
-    color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
-  },
-  math: {
-    icon: <MathOperations size={20} weight="duotone" />,
-    label: 'Matematiikka',
-    color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
-  },
-  history: {
-    icon: <Scroll size={20} weight="duotone" />,
-    label: 'Historia',
-    color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400',
-  },
-  society: {
-    icon: <Bank size={20} weight="duotone" />,
-    label: 'Yhteiskuntaoppi',
-    color: 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
-  },
-  biology: {
-    icon: <Leaf size={20} weight="duotone" />,
-    label: 'Biologia',
-    color: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400',
-  },
-  geography: {
-    icon: <MapTrifold size={20} weight="duotone" />,
-    label: 'Maantiede',
-    color: 'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400',
-  },
-  finnish: {
-    icon: <BookOpenText size={20} weight="duotone" />,
-    label: 'Äidinkieli',
-    color: 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400',
-  },
+const subjectIconConfigs: Record<string, SubjectIconConfig> = {
+  english:                { icon: <GlobeHemisphereWest size={20} weight="duotone" />, color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' },
+  swedish:                { icon: <Translate size={20} weight="duotone" />,           color: 'bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400' },
+  finnish:                { icon: <BookOpenText size={20} weight="duotone" />,        color: 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' },
+  math:                   { icon: <MathOperations size={20} weight="duotone" />,      color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400' },
+  physics:                { icon: <Atom size={20} weight="duotone" />,                color: 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400' },
+  chemistry:              { icon: <Flask size={20} weight="duotone" />,               color: 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400' },
+  biology:                { icon: <Leaf size={20} weight="duotone" />,                color: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' },
+  'environmental-studies':{ icon: <Plant size={20} weight="duotone" />,               color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' },
+  history:                { icon: <Scroll size={20} weight="duotone" />,              color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400' },
+  society:                { icon: <Bank size={20} weight="duotone" />,                color: 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400' },
+  geography:              { icon: <MapTrifold size={20} weight="duotone" />,          color: 'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400' },
+  religion:               { icon: <Star size={20} weight="duotone" />,                color: 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400' },
+  ethics:                 { icon: <Scales size={20} weight="duotone" />,              color: 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400' },
+  art:                    { icon: <PaintBrush size={20} weight="duotone" />,          color: 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400' },
+  music:                  { icon: <MusicNotes size={20} weight="duotone" />,          color: 'bg-fuchsia-50 dark:bg-fuchsia-900/20 text-fuchsia-600 dark:text-fuchsia-400' },
+  pe:                     { icon: <Lightning size={20} weight="duotone" />,           color: 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400' },
+  crafts:                 { icon: <Scissors size={20} weight="duotone" />,            color: 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400' },
 };
 
 const getSubjectConfig = (subject: string): SubjectConfig => {
-  return (
-    subjectConfigs[subject] ?? {
-      icon: <BookOpenText size={20} weight="duotone" />,
-      label: subject,
-      color: 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
-    }
-  );
+  // Resolve legacy Finnish names (e.g. 'matematiikka') to canonical subject IDs (e.g. 'math')
+  const subjectDef =
+    SUBJECTS_BY_ID[subject] ??
+    SUBJECTS.find((s) => s.name.toLowerCase() === subject.toLowerCase());
+
+  const canonicalId = subjectDef?.id ?? subject;
+
+  const iconConfig = subjectIconConfigs[canonicalId] ?? {
+    icon: <BookOpenText size={20} weight="duotone" />,
+    color: 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+  };
+  return {
+    ...iconConfig,
+    label: subjectDef?.name ?? subject,
+  };
 };
 
 const getSubjectHeaderMeta = (subject: string, formattedDate: string | null) => {
@@ -498,18 +504,19 @@ function PlayBrowsePageContent() {
       try {
         setState('loading');
         let sets: QuestionSet[] = [];
-        const response = await fetch('/api/question-sets/play?limit=100', {
-          method: 'GET',
-          credentials: 'same-origin',
-        });
+        const [quizResponse, flashcardResponse] = await Promise.all([
+          fetch('/api/question-sets/play?limit=100&mode=quiz', { method: 'GET', credentials: 'same-origin' }),
+          fetch('/api/question-sets/play?limit=100&mode=flashcard', { method: 'GET', credentials: 'same-origin' }),
+        ]);
 
-        if (response.ok) {
-          const payload = await response.json();
-          sets = payload.data || [];
-        } else if (response.status === 401) {
+        if (quizResponse.status === 401) {
           sets = await getRecentQuestionSets(100);
+        } else if (quizResponse.ok) {
+          const quizPayload = await quizResponse.json();
+          const flashcardPayload = flashcardResponse.ok ? await flashcardResponse.json() : { data: [] };
+          sets = [...(quizPayload.data || []), ...(flashcardPayload.data || [])];
         } else {
-          const payload = await response.json();
+          const payload = await quizResponse.json();
           const message = payload?.error || 'Kysymyssarjojen lataaminen epäonnistui';
           throw new Error(message);
         }

@@ -20,6 +20,29 @@ import { normalizeSubtopicLabel, normalizeTopicLabel } from '@/lib/topics/normal
 
 const logger = createLogger({ module: 'supabase.write-queries' });
 
+function isTransientNetworkError(error: { code?: string | null; message?: string | null } | null | undefined): boolean {
+  if (!error) return false;
+  const msg = (error.message ?? '').toLowerCase();
+  return (
+    error.code === '' &&
+    (msg.includes('fetch failed') || msg.includes('enotfound') || msg.includes('econnreset') || msg.includes('econnrefused'))
+  );
+}
+
+async function retryOnNetworkError(
+  fn: () => PromiseLike<{ data: any; error: any }>,
+  maxRetries = 2,
+  delayMs = 1500
+): Promise<{ data: any; error: any }> {
+  let lastResult = await fn();
+  for (let attempt = 1; attempt <= maxRetries && isTransientNetworkError(lastResult.error); attempt++) {
+    logger.warn({ attempt, message: lastResult.error?.message }, 'Transient network error on Supabase write, retrying');
+    await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
+    lastResult = await fn();
+  }
+  return lastResult;
+}
+
 type MutationFailureReason = 'forbidden' | 'not_found' | 'error';
 
 interface MutationResult {
@@ -286,12 +309,14 @@ export async function createQuestionSet(
       : questionSet.subtopic,
   };
 
-  // Insert question set using admin client
-  const { data: newSet, error: setError } = await supabaseAdmin
-    .from('question_sets')
-    .insert(normalizedQuestionSet as any)
-    .select()
-    .single();
+  // Insert question set using admin client (with network-error retry)
+  const { data: newSet, error: setError } = await retryOnNetworkError(() =>
+    supabaseAdmin
+      .from('question_sets')
+      .insert(normalizedQuestionSet as any)
+      .select()
+      .single()
+  );
 
   let createdSet = newSet;
   let createSetError = setError;
@@ -422,7 +447,7 @@ export async function createQuestionSet(
   }
 
   const insertQuestions = async (rows: unknown[]) =>
-    supabaseAdmin.from('questions').insert(rows as any);
+    retryOnNetworkError(() => supabaseAdmin.from('questions').insert(rows as any));
 
   const stripMissingVisualColumns = (rows: any[]): any[] =>
     rows.map(({ image_reference: _imageReference, requires_visual: _requiresVisual, ...rest }) => rest);

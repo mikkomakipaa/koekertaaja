@@ -252,7 +252,27 @@ export async function handleExtendQuestionSetRequest(
     logger.info({ maxOrderIndex }, 'Found max order_index');
 
     // STEP 4: Insert new questions with correct order_index
-    const questionsToInsert = newQuestions.map((q, index) => ({
+    const setMode = existingSet.mode || 'quiz';
+    const sanitizedQuestions = newQuestions.filter((q) => {
+      const isFlashcard = q.question_type === 'flashcard';
+      if (setMode === 'quiz' && isFlashcard) {
+        logger.warn(
+          { questionPreview: q.question_text?.substring(0, 50) },
+          'Skipping flashcard question type when extending a quiz set'
+        );
+        return false;
+      }
+      if (setMode === 'flashcard' && !isFlashcard) {
+        logger.warn(
+          { questionType: q.question_type, questionPreview: q.question_text?.substring(0, 50) },
+          'Skipping non-flashcard question type when extending a flashcard set'
+        );
+        return false;
+      }
+      return true;
+    });
+
+    const questionsToInsert = sanitizedQuestions.map((q, index) => ({
       question_set_id: questionSetId,
       question_text: q.question_text,
       question_type: q.question_type,
@@ -280,7 +300,7 @@ export async function handleExtendQuestionSetRequest(
     );
 
     // STEP 5: Update question_count in question_sets
-    const newQuestionCount = existingSet.question_count + newQuestions.length;
+    const newQuestionCount = existingSet.question_count + questionsToInsert.length;
 
     const { error: updateError } = await (supabaseAdmin as any)
       .from('question_sets')
@@ -296,27 +316,28 @@ export async function handleExtendQuestionSetRequest(
       {
         oldCount: existingSet.question_count,
         newCount: newQuestionCount,
-        added: newQuestions.length,
+        added: questionsToInsert.length,
+        skipped: newQuestions.length - sanitizedQuestions.length,
       },
       'Question count updated successfully'
     );
 
     const response = {
       success: true,
-      message: `Added ${newQuestions.length} questions to ${existingSet.name}`,
+      message: `Added ${questionsToInsert.length} questions to ${existingSet.name}`,
       questionSet: {
         id: existingSet.id,
         code: existingSet.code,
         name: existingSet.name,
         question_count: newQuestionCount,
       },
-      questionsAdded: newQuestions.length,
+      questionsAdded: questionsToInsert.length,
     };
 
     logger.info(
       {
         questionSetId,
-        questionsAdded: newQuestions.length,
+        questionsAdded: questionsToInsert.length,
         newTotal: newQuestionCount,
         provider: targetProvider ?? 'anthropic',
       },
