@@ -18,21 +18,88 @@ export interface TopicDistribution {
   subtopics: string[];
   difficulty: string;
   importance: string;
+  questionCapacity?: number;
+  flashcardCapacity?: number;
+}
+
+export interface OptimalQuestionCounts {
+  /** Optimal quiz question count based on content capacity and topic priority */
+  quizCount: number;
+  /** Optimal flashcard count based on content capacity and topic priority */
+  flashcardCount: number;
+}
+
+const IMPORTANCE_WEIGHT: Record<'high' | 'medium' | 'low', number> = {
+  high: 1.0,
+  medium: 0.8,
+  low: 0.6,
+};
+
+/**
+ * Calculate optimal question and flashcard counts from topic capacities.
+ *
+ * Each topic's capacity is weighted by its importance so high-priority topics
+ * contribute more to the total. The result is capped at `requestedTotal` so
+ * we never generate more than the user asked for.
+ */
+export function calculateOptimalCounts(
+  topics: EnhancedTopic[],
+  requestedTotal: number
+): OptimalQuestionCounts {
+  if (topics.length === 0) {
+    return { quizCount: requestedTotal, flashcardCount: requestedTotal };
+  }
+
+  let totalQuizCapacity = 0;
+  let totalFlashcardCapacity = 0;
+
+  for (const topic of topics) {
+    const weight = IMPORTANCE_WEIGHT[topic.importance] ?? 0.8;
+    // Fall back to keyword/subtopic estimate when capacity not provided
+    const qCap = topic.questionCapacity
+      ?? Math.min(50, Math.max(3, topic.keywords.length * 4 + topic.subtopics.length * 3));
+    const fCap = topic.flashcardCapacity
+      ?? Math.min(30, Math.max(2, topic.keywords.length * 3 + topic.subtopics.length * 2));
+    totalQuizCapacity += Math.round(qCap * weight);
+    totalFlashcardCapacity += Math.round(fCap * weight);
+  }
+
+  logger.info(
+    {
+      topics: topics.map(t => ({
+        name: t.name,
+        importance: t.importance,
+        questionCapacity: t.questionCapacity,
+        flashcardCapacity: t.flashcardCapacity,
+      })),
+      totalQuizCapacity,
+      totalFlashcardCapacity,
+      requestedTotal,
+    },
+    'Calculated optimal question counts from topic capacities'
+  );
+
+  return {
+    quizCount: Math.min(totalQuizCapacity, requestedTotal),
+    flashcardCount: Math.min(totalFlashcardCapacity, requestedTotal),
+  };
 }
 
 /**
- * Calculate question distribution based on topic coverage percentages
+ * Calculate question distribution based on topic coverage percentages.
  *
  * Uses coverage to determine how many questions should be generated for each topic.
- * Ensures total exactly matches requested count (adjusts for rounding).
+ * Ensures total exactly matches the actual generation count (adjusts for rounding).
  *
  * @param topics - Enhanced topics with coverage percentages
- * @param totalQuestions - Total number of questions to generate
+ * @param totalQuestions - User-requested total (used for coverage math if actualTotal omitted)
+ * @param actualTotal - Optimal/capped total to distribute (defaults to totalQuestions)
  * @returns Distribution array with target counts per topic
  */
 export function calculateDistribution(
   topics: EnhancedTopic[],
-  totalQuestions: number
+  totalQuestions: number,
+  actualTotal: number = totalQuestions
 ): TopicDistribution[] {
   if (topics.length === 0) {
     logger.warn('No topics provided for distribution calculation');
@@ -41,7 +108,7 @@ export function calculateDistribution(
 
   // Calculate target count for each topic based on coverage
   const distribution = topics.map(topic => {
-    const targetCount = Math.round(totalQuestions * topic.coverage);
+    const targetCount = Math.round(actualTotal * topic.coverage);
 
     return {
       topic: topic.name,
@@ -51,18 +118,21 @@ export function calculateDistribution(
       subtopics: topic.subtopics,
       difficulty: topic.difficulty,
       importance: topic.importance,
+      questionCapacity: topic.questionCapacity,
+      flashcardCapacity: topic.flashcardCapacity,
     };
   });
 
   // Verify total matches (rounding may cause ±1 difference)
   const distributedTotal = distribution.reduce((sum, d) => sum + d.targetCount, 0);
 
-  if (distributedTotal !== totalQuestions) {
-    const difference = totalQuestions - distributedTotal;
+  if (distributedTotal !== actualTotal) {
+    const difference = actualTotal - distributedTotal;
 
     logger.warn(
       {
         requested: totalQuestions,
+        actual: actualTotal,
         distributed: distributedTotal,
         difference,
       },
@@ -94,17 +164,18 @@ export function calculateDistribution(
 
   // Final verification
   const finalTotal = distribution.reduce((sum, d) => sum + d.targetCount, 0);
-  if (finalTotal !== totalQuestions) {
+  if (finalTotal !== actualTotal) {
     logger.error(
       {
         requested: totalQuestions,
+        actual: actualTotal,
         calculated: finalTotal,
         distribution,
       },
       'Failed to match total questions after adjustment'
     );
     throw new Error(
-      `Distribution total (${finalTotal}) does not match requested (${totalQuestions})`
+      `Distribution total (${finalTotal}) does not match actual target (${actualTotal})`
     );
   }
 

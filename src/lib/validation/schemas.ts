@@ -237,8 +237,8 @@ export const aiQuestionSchema = z.object({
     }
   }
 
-  // Validate that non-sequential questions have an answer payload
-  if (data.type !== 'sequential' && data.type !== 'multiple_select' && !data.correct_answer && !data.answer) {
+  // Validate that non-sequential, non-matching questions have an answer payload
+  if (data.type !== 'sequential' && data.type !== 'multiple_select' && data.type !== 'matching' && !data.correct_answer && !data.answer) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Question must have a correct_answer',

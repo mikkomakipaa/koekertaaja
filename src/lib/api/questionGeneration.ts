@@ -16,6 +16,7 @@ import type { SubjectType } from '@/lib/prompts/subjectTypeMapping';
 import type { PromptMetadata } from '@/lib/prompts/promptVersion';
 import {
   calculateDistribution,
+  calculateOptimalCounts,
   formatDistributionForPrompt,
   type TopicDistribution,
 } from '@/lib/utils/questionDistribution';
@@ -453,10 +454,30 @@ export async function generateQuizSets(
 ): Promise<QuestionSetResult[]> {
   const logger = createLogger({ module: 'generateQuizSets' });
 
-  // Calculate distribution if enhanced topics provided
+  // Calculate optimal counts and distribution if enhanced topics provided
   let distribution: TopicDistribution[] | undefined;
+  let effectiveQuizCount = request.questionCount;
+
   if (enhancedTopics && enhancedTopics.length > 0) {
-    distribution = calculateDistribution(enhancedTopics, request.questionCount);
+    const optimalCounts = calculateOptimalCounts(enhancedTopics, request.questionCount);
+    effectiveQuizCount = optimalCounts.quizCount;
+
+    if (effectiveQuizCount < request.questionCount) {
+      logger.info(
+        {
+          requested: request.questionCount,
+          optimal: effectiveQuizCount,
+          topics: enhancedTopics.map(t => ({
+            name: t.name,
+            questionCapacity: t.questionCapacity,
+            importance: t.importance,
+          })),
+        },
+        'Capping quiz count to content capacity to avoid repetition'
+      );
+    }
+
+    distribution = calculateDistribution(enhancedTopics, request.questionCount, effectiveQuizCount);
 
     logger.info(
       {
@@ -464,6 +485,7 @@ export async function generateQuizSets(
           topic: d.topic,
           count: d.targetCount,
           percentage: Math.round(d.coverage * 100),
+          questionCapacity: d.questionCapacity,
         })),
       },
       'Using intelligent distribution from coverage data'
@@ -474,7 +496,8 @@ export async function generateQuizSets(
     {
       subject: request.subject,
       difficulties: request.difficulties,
-      questionCount: request.questionCount,
+      requestedQuestionCount: request.questionCount,
+      effectiveQuizCount,
       hasTopics: !!request.identifiedTopics,
       hasEnhancedTopics: !!enhancedTopics,
       useDistribution: !!distribution,
@@ -500,7 +523,7 @@ export async function generateQuizSets(
       subject: request.subject,
       subjectType: request.subjectType as SubjectType | undefined,
       difficulty,
-      questionCount: request.questionCount,
+      questionCount: effectiveQuizCount,
       grade: request.grade,
       topic: request.topic,
       subtopic: request.subtopic,
@@ -509,8 +532,8 @@ export async function generateQuizSets(
       mode: 'quiz',
       identifiedTopics: request.identifiedTopics,
       targetWords: request.targetWords,
-      enhancedTopics, // NEW: Pass enhanced topics
-      distribution, // NEW: Pass calculated distribution
+      enhancedTopics,
+      distribution,
       visuals,
       targetProvider: request.targetProvider,
       metricsContext: {
@@ -729,10 +752,30 @@ export async function generateFlashcardSet(
 ): Promise<QuestionSetResult> {
   const logger = createLogger({ module: 'generateFlashcardSet' });
 
-  // Calculate distribution if enhanced topics provided
-  let distribution;
+  // Calculate optimal counts and distribution if enhanced topics provided
+  let distribution: TopicDistribution[] | undefined;
+  let effectiveFlashcardCount = request.questionCount;
+
   if (enhancedTopics && enhancedTopics.length > 0) {
-    distribution = calculateDistribution(enhancedTopics, request.questionCount);
+    const optimalCounts = calculateOptimalCounts(enhancedTopics, request.questionCount);
+    effectiveFlashcardCount = optimalCounts.flashcardCount;
+
+    if (effectiveFlashcardCount < request.questionCount) {
+      logger.info(
+        {
+          requested: request.questionCount,
+          optimal: effectiveFlashcardCount,
+          topics: enhancedTopics.map(t => ({
+            name: t.name,
+            flashcardCapacity: t.flashcardCapacity,
+            importance: t.importance,
+          })),
+        },
+        'Capping flashcard count to content capacity to avoid repetition'
+      );
+    }
+
+    distribution = calculateDistribution(enhancedTopics, request.questionCount, effectiveFlashcardCount);
 
     logger.info(
       {
@@ -740,6 +783,7 @@ export async function generateFlashcardSet(
           topic: d.topic,
           count: d.targetCount,
           percentage: Math.round(d.coverage * 100),
+          flashcardCapacity: d.flashcardCapacity,
         })),
       },
       'Using intelligent distribution from coverage data'
@@ -749,7 +793,8 @@ export async function generateFlashcardSet(
   logger.info(
     {
       subject: request.subject,
-      questionCount: request.questionCount,
+      requestedQuestionCount: request.questionCount,
+      effectiveFlashcardCount,
       hasTopics: !!request.identifiedTopics,
       hasEnhancedTopics: !!enhancedTopics,
       useDistribution: !!distribution,
@@ -770,7 +815,7 @@ export async function generateFlashcardSet(
     subject: request.subject,
     subjectType: request.subjectType as SubjectType | undefined,
     difficulty: 'normaali', // Flashcards use normaali as placeholder
-    questionCount: request.questionCount,
+    questionCount: effectiveFlashcardCount,
     grade: request.grade,
     topic: request.topic,
     subtopic: request.subtopic,
@@ -780,8 +825,8 @@ export async function generateFlashcardSet(
     identifiedTopics: request.identifiedTopics,
     targetWords: request.targetWords,
     contentType: request.contentType,
-    enhancedTopics, // NEW: Pass enhanced topics
-    distribution, // NEW: Pass calculated distribution
+    enhancedTopics,
+    distribution,
     visuals,
     targetProvider: request.targetProvider,
     metricsContext: {

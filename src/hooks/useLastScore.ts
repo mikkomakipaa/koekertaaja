@@ -12,6 +12,43 @@ export interface LastScore {
 const buildKey = (questionSetCode: string) => `last_score_${questionSetCode}`;
 const logger = createLogger({ module: 'useLastScore' });
 
+export function readLastScoreFromStorage(questionSetCode?: string): LastScore | null {
+  if (!questionSetCode) return null;
+
+  try {
+    const stored = localStorage.getItem(buildKey(questionSetCode));
+
+    if (!stored) {
+      return null;
+    }
+
+    const data = JSON.parse(stored) as Partial<LastScore>;
+
+    if (
+      typeof data.score === 'number' &&
+      typeof data.total === 'number' &&
+      typeof data.timestamp === 'number'
+    ) {
+      const percentage =
+        typeof data.percentage === 'number'
+          ? data.percentage
+          : Math.round((data.score / data.total) * 100);
+
+      return {
+        score: data.score,
+        total: data.total,
+        timestamp: data.timestamp,
+        difficulty: data.difficulty,
+        percentage,
+      };
+    }
+  } catch (error) {
+    logger.error({ error }, 'Error reading last score');
+  }
+
+  return null;
+}
+
 export function useLastScore(questionSetCode?: string) {
   const [lastScore, setLastScore] = useState<LastScore | null>(null);
 
@@ -26,41 +63,8 @@ export function useLastScore(questionSetCode?: string) {
       return;
     }
 
-    try {
-      const stored = localStorage.getItem(storageKey);
-
-      if (!stored) {
-        setLastScore(null);
-        return;
-      }
-
-      const data = JSON.parse(stored) as Partial<LastScore>;
-
-      if (
-        typeof data.score === 'number' &&
-        typeof data.total === 'number' &&
-        typeof data.timestamp === 'number'
-      ) {
-        const percentage =
-          typeof data.percentage === 'number'
-            ? data.percentage
-            : Math.round((data.score / data.total) * 100);
-
-        setLastScore({
-          score: data.score,
-          total: data.total,
-          timestamp: data.timestamp,
-          difficulty: data.difficulty,
-          percentage,
-        });
-      } else {
-        setLastScore(null);
-      }
-    } catch (error) {
-      logger.error({ error }, 'Error reading last score');
-      setLastScore(null);
-    }
-  }, [storageKey]);
+    setLastScore(readLastScoreFromStorage(questionSetCode));
+  }, [questionSetCode, storageKey]);
 
   const saveLastScore = useCallback(
     (score: number, total: number, difficulty?: string) => {

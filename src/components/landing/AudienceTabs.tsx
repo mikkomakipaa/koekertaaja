@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { useId, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Target,
@@ -69,9 +69,9 @@ function AudienceGrid({ items }: { items: typeof pupilItems }) {
         return (
           <div
             key={item.title}
-            className="flex gap-3 rounded-2xl border border-emerald-100/70 bg-white/95 p-3 shadow-sm transition-all duration-200 motion-reduce:transition-none dark:border-emerald-400/40 dark:bg-slate-900/70 dark:shadow-[0_0_0_1px_rgba(148,163,184,0.12)]"
+            className="flex gap-3 rounded-2xl border border-slate-200/85 bg-slate-50/85 p-3 transition-colors duration-200 motion-reduce:transition-none dark:border-slate-700/75 dark:bg-slate-900/55"
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-emerald-600 ring-1 ring-slate-200/80 dark:bg-slate-900 dark:text-emerald-300 dark:ring-slate-700/75">
               <Icon size={24} weight="duotone" aria-hidden="true" />
             </div>
             <div className="space-y-1">
@@ -93,6 +93,10 @@ function MobileAccordion({
   onAudienceChange: (value: AudienceKey) => void;
 }) {
   const baseId = useId();
+  const buttonRefs = useRef<Record<AudienceKey, HTMLButtonElement | null>>({
+    oppilaille: null,
+    huoltajille: null,
+  });
 
   const sections = [
     {
@@ -109,6 +113,10 @@ function MobileAccordion({
     },
   ];
 
+  const focusSectionButton = (sectionId: AudienceKey) => {
+    buttonRefs.current[sectionId]?.focus();
+  };
+
   return (
     <div className="flex flex-col gap-3 md:hidden">
       {sections.map((section, index) => {
@@ -123,6 +131,9 @@ function MobileAccordion({
           >
             <button
               type="button"
+              ref={(node) => {
+                buttonRefs.current[section.id] = node;
+              }}
               id={buttonId}
               aria-controls={panelId}
               aria-expanded={isOpen}
@@ -132,20 +143,27 @@ function MobileAccordion({
                 if (event.key === 'ArrowDown') {
                   event.preventDefault();
                   const nextIndex = (index + 1) % sections.length;
-                  onAudienceChange(sections[nextIndex].id);
+                  const nextSectionId = sections[nextIndex].id;
+                  onAudienceChange(nextSectionId);
+                  focusSectionButton(nextSectionId);
                 }
                 if (event.key === 'ArrowUp') {
                   event.preventDefault();
                   const prevIndex = (index - 1 + sections.length) % sections.length;
-                  onAudienceChange(sections[prevIndex].id);
+                  const previousSectionId = sections[prevIndex].id;
+                  onAudienceChange(previousSectionId);
+                  focusSectionButton(previousSectionId);
                 }
                 if (event.key === 'Home') {
                   event.preventDefault();
                   onAudienceChange(sections[0].id);
+                  focusSectionButton(sections[0].id);
                 }
                 if (event.key === 'End') {
                   event.preventDefault();
-                  onAudienceChange(sections[sections.length - 1].id);
+                  const lastSectionId = sections[sections.length - 1].id;
+                  onAudienceChange(lastSectionId);
+                  focusSectionButton(lastSectionId);
                 }
               }}
               className="flex min-h-[48px] w-full items-center justify-between gap-3 px-4 py-3 text-left text-base font-semibold text-gray-900 transition-colors duration-200 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-gray-100 dark:focus-visible:ring-emerald-300 dark:focus-visible:ring-offset-gray-950"
@@ -197,17 +215,17 @@ export function AudienceTabs({
       </div>
 
       <div className="mt-3 hidden md:block">
-        <Tabs value={activeAudience} onValueChange={(value) => onAudienceChange(value as AudienceKey)}>
-          <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-gradient-to-b from-slate-100 to-white p-1 shadow-inner shadow-slate-200/60 ring-1 ring-slate-200/80 transition-colors duration-200 motion-reduce:transition-none dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 dark:ring-slate-700/60 dark:shadow-none">
+          <Tabs value={activeAudience} onValueChange={(value) => onAudienceChange(value as AudienceKey)}>
+          <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-slate-100/90 p-1 ring-1 ring-slate-200/80 transition-colors duration-200 motion-reduce:transition-none dark:bg-slate-900/80 dark:ring-slate-700/60">
             <TabsTrigger
               value="oppilaille"
-              className="rounded-xl border border-transparent px-4 py-3 text-base font-semibold text-slate-500 transition-all duration-200 motion-reduce:transition-none hover:bg-white/70 hover:text-slate-800 data-[state=active]:border-emerald-200 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-emerald-100 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 dark:data-[state=active]:border-emerald-700/50 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-emerald-300 dark:data-[state=active]:ring-emerald-800/40"
+              className="rounded-xl border border-transparent px-4 py-3 text-base font-semibold text-slate-500 transition-all duration-200 motion-reduce:transition-none hover:bg-white/70 hover:text-slate-800 data-[state=active]:border-slate-200 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:ring-1 data-[state=active]:ring-slate-200/80 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 dark:data-[state=active]:border-slate-700 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-slate-100 dark:data-[state=active]:ring-slate-700"
             >
               Oppilaille
             </TabsTrigger>
             <TabsTrigger
               value="huoltajille"
-              className="rounded-xl border border-transparent px-4 py-3 text-base font-semibold text-slate-500 transition-all duration-200 motion-reduce:transition-none hover:bg-white/70 hover:text-slate-800 data-[state=active]:border-emerald-200 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-emerald-100 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 dark:data-[state=active]:border-emerald-700/50 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-emerald-300 dark:data-[state=active]:ring-emerald-800/40"
+              className="rounded-xl border border-transparent px-4 py-3 text-base font-semibold text-slate-500 transition-all duration-200 motion-reduce:transition-none hover:bg-white/70 hover:text-slate-800 data-[state=active]:border-slate-200 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:ring-1 data-[state=active]:ring-slate-200/80 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 dark:data-[state=active]:border-slate-700 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-slate-100 dark:data-[state=active]:ring-slate-700"
             >
               Huoltajille
             </TabsTrigger>

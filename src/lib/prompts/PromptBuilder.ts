@@ -516,6 +516,19 @@ TÄRKEÄÄ:
       return `\nKysymysten tulee olla sopivan haastavuustason ${grade}. luokkalaiselle ja perustua ${grade}. luokan opetussuunnitelman sisältöön.`;
     }
 
+    if (normalized === 'finnish' || normalized === 'suomi') {
+      if (grade === 4) {
+        return `\nKysymysten tulee olla sopivan haastavuustason 4. luokkalaiselle (9–10-vuotiaille) ja perustua POPS 2014:n äidinkielen ja kirjallisuuden oppimäärään (vuosiluokat 4–6). Keskity sanaluokkiin, perustaivutukseen, lauseen rakenteeseen, oikeinkirjoitukseen ja kertoviin/kuvaileviin tekstilajeihin. Käytä arkikieltä ja konkreettisia esimerkkejä.`;
+      }
+      if (grade === 5) {
+        return `\nKysymysten tulee olla sopivan haastavuustason 5. luokkalaiselle ja perustua POPS 2014:n äidinkielen ja kirjallisuuden oppimäärään. Salli sijamuodot, aikamuodot, mielipiteellinen kirjoittaminen ja medialukutaito ikäryhmälle sopivalla tasolla.`;
+      }
+      if (grade === 6) {
+        return `\nKysymysten tulee olla sopivan haastavuustason 6. luokkalaiselle ja perustua POPS 2014:n äidinkielen ja kirjallisuuden oppimäärään. Salli lauseenjäsennys, argumentoiva kirjoittaminen, eri tekstilajien vertailu ja kirjallisuuden peruskäsitteet.`;
+      }
+      return `\nKysymysten tulee olla sopivan haastavuustason ${grade}. luokkalaiselle ja perustua POPS 2014:n äidinkielen ja kirjallisuuden opetussuunnitelmaan.`;
+    }
+
     return `\nKysymysten tulee olla sopivan haastavuustason ${grade}. luokkalaiselle.`;
   }
 
@@ -610,6 +623,10 @@ TÄRKEÄÄ:
 
     if (normalized === 'math' || normalized === 'matematiikka') {
       return instructions.math?.[difficulty] ?? '';
+    }
+
+    if (normalized === 'finnish' || normalized === 'suomi') {
+      return instructions.finnish?.[difficulty] ?? instructions.generic?.[difficulty] ?? '';
     }
 
     if (subjectType === 'language') {

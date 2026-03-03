@@ -341,6 +341,16 @@ export function createOpenAIAdapter(dependencies: OpenAIAdapterDependencies = {}
         'OpenAI Responses API call successful'
       );
 
+      // Detect truncated response before attempting to use the content
+      if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens') {
+        throw new AIProviderError({
+          provider: PROVIDER,
+          model,
+          category: 'request_too_large',
+          message: 'OpenAI response was truncated due to the output token limit. Reduce the question count or increase maxTokens.',
+        });
+      }
+
       if (!content) {
         logger.warn(
           {
@@ -358,16 +368,11 @@ export function createOpenAIAdapter(dependencies: OpenAIAdapterDependencies = {}
           'OpenAI response did not contain extractable text content'
         );
 
-        const incompleteDueToLimit =
-          response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens';
-
         throw new AIProviderError({
           provider: PROVIDER,
           model,
-          category: incompleteDueToLimit ? 'timeout' : 'unknown',
-          message: incompleteDueToLimit
-            ? 'OpenAI response was incomplete due to output token limit. Please retry.'
-            : 'OpenAI returned no assistant text content.',
+          category: 'unknown',
+          message: 'OpenAI returned no assistant text content.',
         });
       }
 

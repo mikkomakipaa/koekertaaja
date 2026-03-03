@@ -10,6 +10,30 @@ export interface SessionProgress {
 const buildKey = (questionSetCode: string) => `session_progress_${questionSetCode}`;
 const logger = createLogger({ module: 'useSessionProgress' });
 
+export function readSessionProgressFromStorage(questionSetCode?: string): SessionProgress | null {
+  if (!questionSetCode) return null;
+
+  try {
+    const stored = localStorage.getItem(buildKey(questionSetCode));
+
+    if (!stored) {
+      return null;
+    }
+
+    const data = JSON.parse(stored) as Partial<SessionProgress>;
+
+    if (typeof data.answered === 'number' && typeof data.total === 'number' && data.total > 0) {
+      const answered = Math.min(Math.max(data.answered, 0), data.total);
+      const percentage = Math.round((answered / data.total) * 100);
+      return { answered, total: data.total, percentage };
+    }
+  } catch (error) {
+    logger.error({ error }, 'Error reading session progress');
+  }
+
+  return null;
+}
+
 export function useSessionProgress(questionSetCode?: string) {
   const [progress, setProgress] = useState<SessionProgress | null>(null);
 
@@ -24,28 +48,8 @@ export function useSessionProgress(questionSetCode?: string) {
       return;
     }
 
-    try {
-      const stored = localStorage.getItem(storageKey);
-
-      if (!stored) {
-        setProgress(null);
-        return;
-      }
-
-      const data = JSON.parse(stored) as Partial<SessionProgress>;
-
-      if (typeof data.answered === 'number' && typeof data.total === 'number' && data.total > 0) {
-        const answered = Math.min(Math.max(data.answered, 0), data.total);
-        const percentage = Math.round((answered / data.total) * 100);
-        setProgress({ answered, total: data.total, percentage });
-      } else {
-        setProgress(null);
-      }
-    } catch (error) {
-      logger.error({ error }, 'Error reading session progress');
-      setProgress(null);
-    }
-  }, [storageKey]);
+    setProgress(readSessionProgressFromStorage(questionSetCode));
+  }, [questionSetCode, storageKey]);
 
   const updateProgress = useCallback(
     (answered: number, total: number) => {

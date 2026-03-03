@@ -950,6 +950,7 @@ export async function generateQuestions(
   let response = await generateWithAI(messageContent, {
     provider: selectedModel.provider,
     model: selectedModel.model,
+    maxTokens: 32000,
   });
   logger.info(
     {
@@ -980,7 +981,7 @@ export async function generateQuestions(
     response = await generateWithAI(messageContent, {
       provider: 'openai',
       model: 'gpt-5.1',
-      maxTokens: 16000,
+      maxTokens: 32000,
     });
     cleanContent = response.content.replace(/```json|```/g, '').trim();
   }

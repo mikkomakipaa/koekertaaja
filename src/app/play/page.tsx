@@ -15,6 +15,7 @@ import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { SUBJECTS, SUBJECTS_BY_ID } from '@/config/subjects';
 import { getGradeColors } from '@/lib/utils/grade-colors';
 import { buildModeGradeQuery, parseGradeParam, parseStudyModeParam } from '@/lib/play/mode-grade-query';
+import { difficultyLabels, getQuizPrimaryActionLabel } from '@/lib/play/primary-action';
 import {
   buildDifficultyHref,
   getAvailableDifficulties,
@@ -81,18 +82,6 @@ interface SubjectIconConfig {
 }
 
 const logger = createLogger({ module: 'play.page' });
-
-const difficultyLabels: Record<string, string> = {
-  helppo: 'Helppo',
-  normaali: 'Normaali',
-  aikahaaste: 'Aikahaaste',
-};
-
-const difficultyPartitiveLabels: Record<string, string> = {
-  helppo: 'Helppoa',
-  normaali: 'Normaalia',
-  aikahaaste: 'Aikahaastetta',
-};
 
 const difficultyColors: Record<
   string,
@@ -244,11 +233,11 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
   const hasInProgressPrimary = Boolean(
     primaryProgress && primaryProgress.answered > 0 && primaryProgress.answered < primaryProgress.total
   );
-  const primaryActionText = hasInProgressPrimary
-    ? 'Jatka'
-    : primaryScore
-      ? `Jatka ${difficultyPartitiveLabels[primaryDifficulty] ?? difficultyLabels[primaryDifficulty]}`
-      : `Aloita ${difficultyLabels[primaryDifficulty]}`;
+  const primaryActionText = getQuizPrimaryActionLabel({
+    difficulty: primaryDifficulty,
+    hasInProgress: hasInProgressPrimary,
+    hasScore: Boolean(primaryScore),
+  });
   const latestDifficultyScore = getLatestDifficultyScore(availableDifficulties, difficultyScores);
 
   const difficultyOrder: Difficulty[] = ['helppo', 'normaali'];

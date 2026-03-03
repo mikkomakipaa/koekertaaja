@@ -34,6 +34,8 @@ export interface EnhancedTopic {
   keywords: string[];              // ["pinta-ala", "piiri", "suorakulmio"]
   subtopics: string[];             // ["Pinta-alat", "Geometriset muodot"]
   importance: 'high' | 'medium' | 'low';
+  questionCapacity?: number;       // Max unique quiz questions without repetition (3–50)
+  flashcardCapacity?: number;      // Max unique flashcard pairs (2–30)
 }
 
 /**
@@ -119,7 +121,9 @@ export async function identifyTopics(
       "difficulty": "helppo",
       "keywords": ["k1", "k2", "k3"],
       "subtopics": ["ala-aihe 1", "ala-aihe 2"],
-      "importance": "high"
+      "importance": "high",
+      "questionCapacity": 18,
+      "flashcardCapacity": 10
     }
   ],
   "metadata": {
@@ -140,6 +144,8 @@ export async function identifyTopics(
       '- keywords: 3-5 konkreettista käsitettä per topic.',
       '- subtopics: 2-4 aliaihetta per topic.',
       '- importance vain: "high" | "medium" | "low".',
+      '- questionCapacity: kuinka monta uniikkia, ei-toistavaa monivalinta-/täydennys-/lyhytvastauskysymystä tästä aiheesta voidaan luoda materiaalin pohjalta. Laske jokainen erillinen tietoyksikkö, käsite ja sovellus. Kokonaisluku väliltä 3-50.',
+      '- flashcardCapacity: kuinka monta uniikkia flashcard-paria (termi↔määritelmä tai käsite↔esimerkki) tästä aiheesta voidaan luoda. Kokonaisluku väliltä 2-30.',
       '- metadata.materialType vain: "textbook" | "worksheet" | "notes" | "mixed".',
       '- metadata.recommendedQuestionPoolSize on kokonaisluku väliltä 20-200.',
       '- recommendedQuestionPoolSize on ensisijainen suositus kysymyspoolin koolle tämän materiaalin laajuuden perusteella.',
@@ -211,6 +217,8 @@ export async function identifyTopics(
       keywords: string[];
       subtopics: string[];
       importance: string;
+      questionCapacity?: number;
+      flashcardCapacity?: number;
     }>;
     metadata?: {
       totalConcepts: number;
@@ -382,6 +390,8 @@ export async function identifyTopics(
     keywords: t.keywords,
     subtopics: t.subtopics.map((subtopic) => normalizeSubtopicLabel(subtopic)),
     importance: t.importance as 'high' | 'medium' | 'low',
+    questionCapacity: normalizeCapacity(t.questionCapacity, 'question', t.keywords, t.subtopics),
+    flashcardCapacity: normalizeCapacity(t.flashcardCapacity, 'flashcard', t.keywords, t.subtopics),
   }));
 
   const metadata: TopicAnalysisMetadata = {
@@ -402,6 +412,8 @@ export async function identifyTopics(
         coverage: t.coverage,
         keywords: t.keywords.length,
         subtopics: t.subtopics.length,
+        questionCapacity: t.questionCapacity,
+        flashcardCapacity: t.flashcardCapacity,
       })),
       metadata,
     },
@@ -432,4 +444,37 @@ function normalizeRecommendedQuestionPoolSize(value: unknown): number | undefine
 
   const rounded = Math.round(parsed);
   return Math.max(20, Math.min(200, rounded));
+}
+
+/**
+ * Normalize a per-topic capacity value returned by the AI.
+ * Falls back to an estimate from keyword/subtopic count if the AI omitted or gave an invalid value.
+ */
+function normalizeCapacity(
+  value: unknown,
+  kind: 'question' | 'flashcard',
+  keywords: string[],
+  subtopics: string[]
+): number {
+  const [min, max] = kind === 'question' ? [3, 50] : [2, 30];
+
+  if (value !== null && value !== undefined) {
+    const parsed = typeof value === 'number'
+      ? value
+      : typeof value === 'string'
+        ? Number.parseInt(value, 10)
+        : NaN;
+
+    if (Number.isFinite(parsed) && parsed >= min) {
+      return Math.min(max, Math.round(parsed));
+    }
+  }
+
+  // Fallback: estimate from keyword and subtopic count
+  // Each keyword supports ~3-4 quiz angles or ~2-3 flashcard pairs
+  const estimate = kind === 'question'
+    ? keywords.length * 4 + subtopics.length * 3
+    : keywords.length * 3 + subtopics.length * 2;
+
+  return Math.max(min, Math.min(max, estimate));
 }
