@@ -97,7 +97,7 @@ export default function HomePage() {
                     Koekertaaja
                   </h1>
                   <p className="mt-2 max-w-xl text-base font-medium text-[rgba(0,0,0,0.72)] dark:text-white/90 md:text-[17px]">
-                    Valitse tapa harjoitella ja jatka siitä, mihin viimeksi jäit.
+                    Harjoittele kokeisiin ja opi uutta.
                   </p>
                 </div>
               </div>
