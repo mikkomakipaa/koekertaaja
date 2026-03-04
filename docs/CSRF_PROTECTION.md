@@ -35,7 +35,7 @@ Use `withCsrfHeaders(...)` for mutating same-origin `fetch` requests:
 ```ts
 import { withCsrfHeaders } from '@/lib/security/csrf-client';
 
-await fetch('/api/question-sets/publish', {
+await fetch('/api/question-sets', {
   method: 'PATCH',
   headers: withCsrfHeaders({ 'Content-Type': 'application/json' }),
   body: JSON.stringify(payload),

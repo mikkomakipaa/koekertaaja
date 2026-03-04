@@ -37,7 +37,7 @@ const formatExamDateLabel = (examDate?: string | null): string | null => {
 
 const defaultLoadQuestionSetByCode = async (code: string): Promise<QuestionSetWithQuestions | null> => {
   try {
-    const response = await fetch(`/api/question-sets/by-code?code=${encodeURIComponent(code)}`, {
+    const response = await fetch(`/api/question-sets?code=${encodeURIComponent(code)}`, {
       method: 'GET',
       headers: { Accept: 'application/json' },
       cache: 'no-store',

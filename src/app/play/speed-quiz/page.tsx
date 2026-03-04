@@ -138,7 +138,7 @@ export function SpeedQuizModePageContent({ eligibleSets, ineligibleSets }: Speed
                 const questionCount = getQuestionCount(set);
 
                 return (
-                  <a key={set.id} href={`/play/speed-quiz/${set.code}`} className="block">
+                  <a key={set.id} href={`/play/${set.code}?difficulty=aikahaaste`} className="block">
                     <Card className="h-full border-amber-200 bg-white/95 p-4 transition-all hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md dark:border-amber-900/60 dark:bg-gray-900/95 dark:hover:border-amber-700">
                       <div className="mb-3 flex items-start justify-between gap-3">
                         <div>

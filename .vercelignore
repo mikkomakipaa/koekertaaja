@@ -48,3 +48,6 @@ Thumbs.db
 # Other
 *.md.backup
 .eslintcache
+
+# Dev-only routes (keep local, exclude from Vercel production builds)
+src/app/dev/visual-regression

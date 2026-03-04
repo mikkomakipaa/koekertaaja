@@ -283,8 +283,11 @@ export interface Answer {
 
 ## API Routes
 
-### POST /api/generate-questions
-Server-side endpoint to call Anthropic API securely.
+### POST /api/generate-questions/quiz
+Server-side endpoint to generate quiz question sets securely.
+
+### POST /api/generate-questions/flashcard
+Server-side endpoint to generate flashcard sets securely.
 
 **Rate limiting:** 5 requests/hour per user (IP + session). Returns `429` with `Retry-After`, `X-RateLimit-Limit`, and `X-RateLimit-Remaining` headers when exceeded.
 
@@ -293,7 +296,6 @@ Server-side endpoint to call Anthropic API securely.
 {
   subject: Subject;
   grade: number;
-  difficulty: Difficulty;
   questionCount: number;
   material: {
     text?: string;
@@ -422,7 +424,7 @@ export interface QuestionSet {
 
 ### API Endpoint
 
-**`PATCH /api/question-sets/publish`**
+**`PATCH /api/question-sets`**
 
 Admin-only endpoint to publish or unpublish question sets.
 
@@ -526,7 +528,7 @@ npm test
 See also:
 - ADR-001 Decision 9: Publishing Status Workflow (`DWF/adr/ADR-001-core-architecture.md`)
 - Migration: `supabase/migrations/20250219_add_status_to_question_sets.sql`
-- API Route: `src/app/api/question-sets/publish/route.ts`
+- API Route: `src/app/api/question-sets/route.ts`
 - Types: `src/types/questions.ts`
 
 ## Environment Variables

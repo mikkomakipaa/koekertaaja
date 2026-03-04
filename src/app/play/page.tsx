@@ -164,16 +164,12 @@ const getSubjectHeaderMeta = (subject: string, formattedDate: string | null) => 
 
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${config.color}`}>{config.icon}</div>
-      <div className="min-w-0">
-        <span className="truncate text-[14px] font-semibold text-gray-800 dark:text-gray-100">{config.label}</span>
-        {formattedDate && (
-          <>
-            <span className="mx-1.5 text-sm text-gray-500 dark:text-gray-400">•</span>
-            <span className="text-sm text-gray-600 dark:text-gray-300">{formattedDate}</span>
-          </>
-        )}
-      </div>
+      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${config.color}`}>{config.icon}</div>
+      {formattedDate && (
+        <span className="truncate text-[12px] font-medium text-slate-500 dark:text-slate-400">
+          {formattedDate}
+        </span>
+      )}
     </div>
   );
 };
@@ -259,21 +255,37 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
 
   const formattedDate = formatQuestionSetDate(newestExamDate);
   const gradeColors = group.grade ? getGradeColors(group.grade) : null;
-  const titleLabel = [group.topic, group.subtopic].filter(Boolean).join(' • ') || group.name;
+  const titleLabel = getSubjectConfig(group.subject).label;
+  const primaryActionLabel =
+    studyMode === 'pelaa'
+      ? hasInProgressPrimary
+        ? 'Jatka peliä'
+        : primaryScore
+          ? 'Pelaa uudelleen'
+          : 'Pelaa nyt'
+      : '';
+  const primaryActionMeta =
+    studyMode === 'pelaa'
+      ? hasInProgressPrimary && primaryProgress
+        ? `${difficultyLabels[primaryDifficulty]} · ${primaryProgress.answered}/${primaryProgress.total}`
+        : primaryScore
+          ? `${difficultyLabels[primaryDifficulty]} · ${primaryScore.score}/${primaryScore.total}`
+          : difficultyLabels[primaryDifficulty]
+      : null;
 
   return (
     <Card
       variant="standard"
       padding="none"
-      className="overflow-hidden rounded-xl border-slate-200 bg-white shadow-none dark:border-slate-800 dark:bg-slate-900"
+      className="overflow-hidden rounded-xl border-slate-200 bg-white shadow-none transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_10px_24px_rgba(15,23,42,0.06)] active:translate-y-0 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:shadow-[0_12px_28px_rgba(2,6,23,0.34)]"
     >
-      <CardHeader className="space-y-3 p-4 pb-3">
+      <CardHeader className="space-y-2.5 p-4 pb-3">
         <div className="grid grid-cols-[1fr_auto] items-start gap-3">
-          <div className="min-w-0 space-y-2">
+          <div className="min-w-0 space-y-1.5">
             <div className="min-w-0">
               {getSubjectHeaderMeta(group.subject, formattedDate)}
             </div>
-            <CardTitle className="line-clamp-2 text-[15px] font-medium leading-snug text-slate-800 dark:text-slate-100 md:text-base">
+            <CardTitle className="line-clamp-2 text-[17px] font-semibold leading-tight text-slate-900 dark:text-slate-100">
               {titleLabel}
             </CardTitle>
           </div>
@@ -283,34 +295,34 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
               semantic="grade"
               size="xs"
               className={cn(
-                'text-[13px] font-semibold bg-white/60 dark:bg-gray-900/45 border-current/40 dark:border-current/30 ring-current/10',
+                'h-6 self-start border-current/25 bg-white/75 px-2 text-[11px] font-medium tracking-[0.01em] dark:bg-slate-950/50 dark:border-current/20',
                 gradeColors.text,
                 gradeColors.border
               )}
             >
-              Luokka: {group.grade}
+              {group.grade}. lk
             </Badge>
           )}
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3 border-t border-slate-200 p-4 pt-3 dark:border-slate-800">
+      <CardContent className="space-y-3 border-t border-slate-100 p-4 pt-3 dark:border-white/[0.08]">
         <div className="space-y-3">
           {studyMode === 'pelaa' ? (
             availableDifficulties.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <PrimaryActionButton
                   onClick={() =>
                     primarySet && router.push(buildDifficultyHref(primarySet.code, studyMode, primaryDifficulty))
                   }
                   mode="quiz"
                   icon={difficultyIcons[primaryDifficulty]}
-                  label={primaryActionText}
+                  label={primaryActionLabel}
                   ariaLabel={`${primaryActionText} vaikeustaso`}
                   rightMeta={
-                    primaryScore ? (
-                      <span className="text-[12px] font-medium tabular-nums max-[480px]:text-[11px]">
-                        {primaryScore.score}/{primaryScore.total}
+                    primaryActionMeta ? (
+                      <span className="text-[12px] font-medium tabular-nums text-white/85 max-[480px]:text-[11px]">
+                        {primaryActionMeta}
                       </span>
                     ) : null
                   }
@@ -326,8 +338,6 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                     const set = getDifficultyTargetSet(group.sets, difficulty);
                     const colors = difficultyColors[difficulty];
                     const icon = difficultyIcons[difficulty];
-                    const isNormaali = difficulty === 'normaali';
-
                     return (
                       <Button
                         key={difficulty}
@@ -337,19 +347,23 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                         variant="secondary"
                         size="chip"
                         className={cn(
-                          colors.bg,
-                          colors.hover,
-                          colors.text,
-                          colors.focus,
-                          colors.border,
-                          isNormaali
-                            ? 'bg-white/90 hover:bg-amber-50/60 dark:bg-gray-900/30 dark:hover:bg-amber-900/25 border-amber-300/80 text-amber-800 shadow-none dark:border-amber-700/60 dark:text-amber-200'
-                            : playPageButtonShadow,
-                          'h-12 min-h-12 min-w-12 justify-center gap-1.5 rounded-[12px] px-2.5 text-[13px] font-semibold max-[480px]:text-[12px]'
+                          'h-10 min-h-10 min-w-10 justify-center gap-1.5 rounded-lg border px-2.5 text-[12px] font-medium shadow-none max-[480px]:text-[11px]',
+                          difficulty === primaryDifficulty
+                            ? cn(
+                                colors.bg,
+                                colors.text,
+                                colors.focus,
+                                colors.border,
+                                'ring-1 ring-inset ring-current/12'
+                              )
+                            : 'border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100'
                         )}
                         aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
+                        aria-pressed={difficulty === primaryDifficulty}
                       >
-                        <span className={colors.icon}>{icon}</span>
+                        <span className={cn('shrink-0', difficulty === primaryDifficulty ? colors.icon : 'text-slate-400 dark:text-slate-500')}>
+                          {icon}
+                        </span>
                         {difficulty === 'aikahaaste' ? (
                           <span className="truncate">
                             <span className="sm:hidden">Aika</span>
@@ -363,31 +377,31 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                   })}
                 </div>
 
-                <div className="flex min-h-8 items-center justify-between gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
+                <div className="mt-3 flex min-h-8 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-slate-100 pt-3 dark:border-white/[0.08]">
                   {reviewCandidate ? (
                     <Button
                       onClick={() => router.push(`/play/${reviewCandidate.set.code}?mode=review`)}
                       mode="review"
                       variant="ghost"
                       size="sm"
-                      className="h-6 min-h-0 gap-1 rounded-md px-0.5 py-0 text-[12px] font-semibold leading-none text-rose-700 hover:bg-rose-50 hover:text-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/25"
+                      className="h-7 min-h-0 gap-1 rounded-full border border-rose-200/80 bg-rose-50/70 px-2.5 py-0 text-[11px] font-medium leading-none text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-900/30"
                       aria-label="Virheet"
                     >
                       <ArrowCounterClockwise size={14} weight="duotone" className="inline" />
-                      Virheet ({reviewCandidate.count})
+                      Kertaa virheet ({reviewCandidate.count})
                     </Button>
                   ) : (
                     <span
-                      className="pointer-events-none inline-flex h-6 items-center text-[12px] font-medium leading-none text-gray-600 opacity-40 dark:text-gray-300"
+                      className="pointer-events-none inline-flex h-7 items-center rounded-full border border-transparent bg-slate-100/70 px-2.5 text-[11px] font-medium leading-none text-slate-500 opacity-70 dark:bg-slate-800/70 dark:text-slate-400"
                       aria-disabled="true"
                     >
-                      ↻ Virheet (0)
+                      Ei virheitä tallessa
                     </span>
                   )}
 
-                  <span className="inline-flex h-6 items-center truncate text-right text-[12px] leading-none text-gray-600 dark:text-gray-300">
+                  <span className="inline-flex items-center truncate text-right text-[11px] leading-none text-slate-500 dark:text-slate-400">
                     {latestDifficultyScore
-                      ? `${difficultyLabels[latestDifficultyScore.difficulty]} · ${latestDifficultyScore.score.score}/${latestDifficultyScore.score.total} (${latestDifficultyScore.score.percentage}%)`
+                      ? `Viimeisin: ${latestDifficultyScore.score.score}/${latestDifficultyScore.score.total} (${difficultyLabels[latestDifficultyScore.difficulty]})`
                       : 'Ei tuloksia'}
                   </span>
                 </div>
@@ -488,8 +502,8 @@ function PlayBrowsePageContent() {
         setState('loading');
         let sets: QuestionSet[] = [];
         const [quizResponse, flashcardResponse] = await Promise.all([
-          fetch('/api/question-sets/play?limit=100&mode=quiz', { method: 'GET', credentials: 'same-origin' }),
-          fetch('/api/question-sets/play?limit=100&mode=flashcard', { method: 'GET', credentials: 'same-origin' }),
+          fetch('/api/question-sets?scope=play&limit=100&mode=quiz', { method: 'GET', credentials: 'same-origin' }),
+          fetch('/api/question-sets?scope=play&limit=100&mode=flashcard', { method: 'GET', credentials: 'same-origin' }),
         ]);
 
         if (quizResponse.status === 401) {

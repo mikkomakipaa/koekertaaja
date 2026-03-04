@@ -33,8 +33,8 @@ return NextResponse.next();
 ### 2. API Routes Don't Add CORS Headers to Responses
 **Affected endpoints**:
 1. `/api/delete-question-set` - No CORS headers at all
-2. `/api/question-sets/submit` - No CORS headers at all
-3. `/api/generate-questions` - No CORS headers at all
+2. Historical note: `/api/question-sets/submit` previously had no CORS headers; the route has since been removed from the active app surface
+3. `/api/generate-questions/quiz` and `/api/generate-questions/flashcard` - generation endpoints
 4. `/api/extend-question-set` - Has CORS headers (recently fixed)
 
 ### 3. Frontend Uses `credentials: 'same-origin'`
@@ -65,10 +65,10 @@ Even for same-origin requests, when using `credentials`, browsers enforce strict
 
 | Endpoint | Has CORS Headers | Has OPTIONS Handler | Uses Auth |
 |----------|------------------|---------------------|-----------|
-| `/api/generate-questions` | ❌ No | ❌ No | ✅ Yes |
+| `/api/generate-questions/quiz` | ❌ No | ❌ No | ✅ Yes |
+| `/api/generate-questions/flashcard` | ❌ No | ❌ No | ✅ Yes |
 | `/api/extend-question-set` | ✅ Yes | ✅ Yes | ✅ Yes |
 | `/api/delete-question-set` | ❌ No | ❌ No | ✅ Yes |
-| `/api/question-sets/submit` | ❌ No | ❌ No | ✅ Yes |
 
 ## Why extend-question-set Worked After Our Fix
 

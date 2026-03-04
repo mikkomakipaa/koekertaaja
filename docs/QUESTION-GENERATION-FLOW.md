@@ -32,7 +32,7 @@
                                   │ • generationMode: 'quiz' | 'flashcard' | 'both'
                                   ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    API ROUTE: /api/generate-questions                │
+│      API ROUTES: /api/generate-questions/quiz + /flashcard          │
 │                         (Server-side)                                │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                       │
@@ -542,7 +542,8 @@ src/config/prompt-templates/
 ---
 
 **Related Files**:
-- `/src/app/api/generate-questions/route.ts` - Main API orchestration
+- `/src/app/api/generate-questions/quiz/route.ts` - Quiz generation orchestration
+- `/src/app/api/generate-questions/flashcard/route.ts` - Flashcard generation orchestration
 - `/src/lib/ai/topicIdentifier.ts` - Step 1: Topic identification
 - `/src/lib/ai/questionGenerator.ts` - Step 2: Question generation
 - `/src/lib/ai/anthropic.ts` - Claude API wrapper

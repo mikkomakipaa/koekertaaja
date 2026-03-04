@@ -397,7 +397,7 @@ Exit criteria:
 ### Phase 2 — API hardening
 - patch all write routes to use session user — routes to cover (exhaustive list must be verified before this phase closes):
   - `POST /api/generate-questions`
-  - `PATCH /api/question-sets/publish`
+  - `PATCH /api/question-sets`
   - `POST /api/identify-topics`
   - flag/unflag routes
   - any routes that accept a `question_set_id` or owner-scoped resource ID

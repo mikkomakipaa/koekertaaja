@@ -69,6 +69,8 @@ bash scripts/check-dev.sh
 #### `run-badge-visual-validation.sh`
 **Purpose**: Capture deterministic badge screenshots for Results and Achievements layouts
 
+**Scope**: Local-only. The `/dev/visual-regression/badges` route is excluded from Vercel production builds via `.vercelignore`.
+
 **Usage**:
 ```bash
 # Start the app in another terminal first

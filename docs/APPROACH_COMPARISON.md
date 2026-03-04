@@ -160,8 +160,9 @@ This document compares two approaches for question generation in Koekertaaja, wi
 const ENABLE_WORKFLOW_METHOD = process.env.ENABLE_WORKFLOW_METHOD === 'true';
 
 // Allow both methods
-app.post('/api/generate-questions', internalApiHandler);  // Current
-app.post('/api/question-sets/submit', mcpSubmitHandler);   // New (MCP workflow)
+app.post('/api/generate-questions/quiz', internalApiQuizHandler);  // Current
+app.post('/api/generate-questions/flashcard', internalApiFlashcardHandler);  // Current
+// Direct `/api/question-sets/submit` import route removed from the active app surface.
 ```
 
 ---

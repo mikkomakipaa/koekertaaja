@@ -251,6 +251,8 @@ Use the deterministic badge harness instead of ad hoc `localStorage` setup when 
 - `http://localhost:3000/dev/visual-regression/badges?theme=light`
 - `http://localhost:3000/dev/visual-regression/badges?theme=dark`
 
+This fixture route is local-only and excluded from Vercel production builds via `.vercelignore`.
+
 **Automated capture:**
 ```bash
 bash scripts/run-badge-visual-validation.sh

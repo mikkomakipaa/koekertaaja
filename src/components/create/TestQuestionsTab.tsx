@@ -97,7 +97,7 @@ export function TestQuestionsTab({
       if (!questionSet) throw new Error('Question set not found');
 
       const response = await fetch(
-        `/api/question-sets/by-code?code=${questionSet.code}&includeDrafts=1`,
+        `/api/question-sets?code=${questionSet.code}&includeDrafts=1`,
         { credentials: 'same-origin' }
       );
 

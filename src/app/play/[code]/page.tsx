@@ -331,7 +331,7 @@ export default function PlayPage() {
           if (!adminCheckPromise) {
             adminCheckPromise = (async () => {
               try {
-                const response = await fetch('/api/question-sets/publish', {
+                const response = await fetch('/api/question-sets', {
                   method: 'PATCH',
                   headers: withCsrfHeaders({ 'Content-Type': 'application/json' }),
                   credentials: 'same-origin',
@@ -350,7 +350,7 @@ export default function PlayPage() {
         };
 
         const fetchByCode = async (codeValue: string, includeDrafts: boolean) => {
-          const byCodeUrl = new URL('/api/question-sets/by-code', window.location.origin);
+          const byCodeUrl = new URL('/api/question-sets', window.location.origin);
           byCodeUrl.searchParams.set('code', codeValue.trim());
           if (includeDrafts) {
             byCodeUrl.searchParams.set('includeDrafts', '1');

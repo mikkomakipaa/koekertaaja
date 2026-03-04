@@ -52,6 +52,15 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/play/speed-quiz/:code',
+        destination: '/play/:code?difficulty=aikahaaste',
+        permanent: false,
+      },
+    ];
+  },
 }
 
 module.exports = withBundleAnalyzer(nextConfig)

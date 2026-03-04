@@ -52,7 +52,7 @@ describe('/play/speed-quiz route', () => {
     assert.equal(isSpeedQuizEligible(createQuestionSet({ question_count: 20, mode: 'flashcard' })), false);
   });
 
-  it('renders eligible cards with speed-quiz navigation links', () => {
+  it('renders eligible cards with shared play route aikahaaste links', () => {
     const html = renderToString(
       createElement(SpeedQuizModePageContent, {
         eligibleSets: [
@@ -71,7 +71,7 @@ describe('/play/speed-quiz route', () => {
 
     assert.ok(html.includes('Aikahaaste'));
     assert.ok(html.includes('Murtoluvut'));
-    assert.ok(html.includes('href="/play/speed-quiz/SPD010"'));
+    assert.ok(html.includes('href="/play/SPD010?difficulty=aikahaaste"'));
     assert.ok(html.includes('kysymystä'));
     assert.ok(html.includes('5<!-- -->. lk'));
   });

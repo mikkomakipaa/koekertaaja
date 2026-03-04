@@ -158,7 +158,7 @@ This document consolidates all development roadmaps, showing what's been complet
 - `20250219_backfill_published_status.sql`
 
 **Files Created**:
-- `/src/app/api/question-sets/publish/route.ts`
+- `/src/app/api/question-sets/route.ts`
 - Tests in `/tests/admin-publish-api.test.ts`
 - Tests in `/tests/question-set-status-filtering.test.ts`
 

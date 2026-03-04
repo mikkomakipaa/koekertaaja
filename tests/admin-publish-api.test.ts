@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test, describe } from 'node:test';
 
 /**
- * Tests for /api/question-sets/publish endpoint
+ * Tests for /api/question-sets PATCH endpoint
  *
  * These tests verify:
  * - Admin authorization checks (403 for non-admins)
@@ -14,7 +14,7 @@ import { test, describe } from 'node:test';
  * Full integration tests with Supabase would require test database setup.
  */
 
-describe('/api/question-sets/publish validation', () => {
+describe('/api/question-sets PATCH validation', () => {
   test('request schema requires questionSetId', () => {
     const invalidRequest = {
       status: 'published',
@@ -90,7 +90,7 @@ describe('/api/question-sets/publish validation', () => {
   });
 });
 
-describe('/api/question-sets/publish authorization', () => {
+describe('/api/question-sets PATCH authorization', () => {
   test('non-admin users should receive 403', () => {
     // In actual API:
     // - User authenticated but not in ADMIN_EMAILS allowlist
@@ -129,7 +129,7 @@ describe('/api/question-sets/publish authorization', () => {
   });
 });
 
-describe('/api/question-sets/publish response format', () => {
+describe('/api/question-sets PATCH response format', () => {
   test('success response includes question set details', () => {
     const successResponse = {
       success: true,
@@ -171,7 +171,7 @@ describe('/api/question-sets/publish response format', () => {
   });
 });
 
-describe('/api/question-sets/publish status transitions', () => {
+describe('/api/question-sets PATCH status transitions', () => {
   test('publishing transition: created → published', () => {
     const initialStatus = 'created';
     const targetStatus = 'published';
@@ -230,7 +230,7 @@ describe('/api/question-sets/publish status transitions', () => {
   });
 });
 
-describe('/api/question-sets/publish permissions model', () => {
+describe('/api/question-sets PATCH permissions model', () => {
   test('only admin emails can publish question sets', () => {
     const adminEmails = (process.env.ADMIN_EMAILS || 'admin@example.com')
       .split(',')

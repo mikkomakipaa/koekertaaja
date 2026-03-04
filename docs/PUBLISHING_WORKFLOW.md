@@ -47,7 +47,8 @@ CREATE POLICY "Enable read access for published question sets" ON question_sets
 
 ### Current Behavior
 - **GET /api/question-sets**: Returns all published sets (RLS enforces this)
-- **POST /api/generate-questions**: Creates sets with `status = 'created'` by default
+- **POST /api/generate-questions/quiz**: Creates quiz sets with `status = 'created'` by default
+- **POST /api/generate-questions/flashcard**: Creates flashcard sets with `status = 'created'` by default
 
 ### Future Admin Endpoints (to be implemented)
 - **PUT /api/question-sets/:id/publish**: Set `status = 'published'` (admin only)

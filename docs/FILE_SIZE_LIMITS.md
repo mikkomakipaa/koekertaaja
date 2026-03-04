@@ -53,7 +53,7 @@ Since the application targets the Hobby tier for accessibility, all file upload 
 
 ### Server-Side Validation
 
-**Location**: `src/app/api/generate-questions/route.ts`
+**Location**: `src/app/api/generate-questions/quiz/route.ts`, `src/app/api/generate-questions/flashcard/route.ts`
 
 - Double-checks all file size constraints
 - Validates total request size before processing
@@ -93,7 +93,7 @@ api: {
 ```json
 {
   "functions": {
-    "src/app/api/generate-questions/route.ts": {
+    "src/app/api/generate-questions/quiz/route.ts": {
       "maxDuration": 300,  // 5 minutes for AI processing
       "memory": 1024       // 1GB RAM
     }
@@ -112,7 +112,7 @@ If you upgrade to Vercel Pro, you can increase the limits:
    const MAX_TOTAL_SIZE = 45 * 1024 * 1024; // 45MB total
    ```
 
-2. **Update server-side constants** in `src/app/api/generate-questions/route.ts`:
+2. **Update server-side constants** in `src/app/api/generate-questions/quiz/route.ts` and `src/app/api/generate-questions/flashcard/route.ts`:
    ```typescript
    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
    const MAX_FILES = 5;
@@ -123,7 +123,7 @@ If you upgrade to Vercel Pro, you can increase the limits:
    ```json
    {
      "functions": {
-       "src/app/api/generate-questions/route.ts": {
+       "src/app/api/generate-questions/quiz/route.ts": {
          "maxDuration": 300,
          "memory": 3008,
          "maxRequestBodySize": 52428800  // 50MB in bytes
@@ -200,7 +200,8 @@ A typical request includes:
 ## Related Files
 
 - `src/components/create/MaterialUpload.tsx` - Client-side validation
-- `src/app/api/generate-questions/route.ts` - Server-side validation
+- `src/app/api/generate-questions/quiz/route.ts` - Server-side validation
+- `src/app/api/generate-questions/flashcard/route.ts` - Server-side validation
 - `src/lib/validation/schemas.ts` - Input validation schemas
 - `next.config.js` - Next.js configuration
 - `vercel.json` - Vercel deployment configuration

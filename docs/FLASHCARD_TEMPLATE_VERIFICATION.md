@@ -76,7 +76,7 @@ if (mode === 'flashcard') {
 
 ### 5. API Integration ✅
 
-The API route (src/app/api/generate-questions/route.ts:255) correctly passes `mode: 'flashcard'`:
+The flashcard route (`src/app/api/generate-questions/flashcard/route.ts`) correctly handles flashcard generation:
 
 ```typescript
 if (generationMode === 'flashcard' || generationMode === 'both') {
@@ -168,7 +168,7 @@ However, these are **not required** - the current implementation is working corr
 
 ## Files Modified
 
-1. `src/app/api/generate-questions/route.ts` - Fixed undefined CARDS_PER_TOPIC constant
+1. `src/app/api/generate-questions/flashcard/route.ts` - Flashcard generation route
 2. `tests/flashcard-template-verification.test.ts` - Added comprehensive test suite
 3. `Documentation/FLASHCARD_TEMPLATE_VERIFICATION.md` - This report
 

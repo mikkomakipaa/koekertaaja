@@ -6,7 +6,8 @@ This guide explains how to enable and configure Supabase Authentication for the 
 
 Authentication is **required** for:
 - `/create` page (creating question sets)
-- `/api/generate-questions` (API route)
+- `/api/generate-questions/quiz` (API route)
+- `/api/generate-questions/flashcard` (API route)
 - `/api/delete-question-set` (API route)
 
 Public access (no auth required):
@@ -90,7 +91,7 @@ npm run dev
 With browser DevTools open:
 1. Log in to `/create`
 2. Try creating a question set
-3. Check Network tab - `/api/generate-questions` should return 200 (not 401)
+3. Check Network tab - `/api/generate-questions/quiz` or `/api/generate-questions/flashcard` should return 200 (not 401)
 4. Log out
 5. Try creating again - should fail with 401 Unauthorized
 
@@ -178,7 +179,8 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 **Modified Files**:
 - `src/app/create/page.tsx` - Added AuthGuard and UserMenu
-- `src/app/api/generate-questions/route.ts` - Added auth check
+- `src/app/api/generate-questions/quiz/route.ts` - Added auth check for quiz generation
+- `src/app/api/generate-questions/flashcard/route.ts` - Added auth check for flashcard generation
 - `src/app/api/delete-question-set/route.ts` - Added auth check
 
 ### Architecture

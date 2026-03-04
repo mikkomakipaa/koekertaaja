@@ -788,7 +788,7 @@ export default function CreatePage() {
   const loadQuestionSets = async () => {
     setLoadingQuestionSets(true);
     try {
-      const response = await fetch('/api/question-sets/created', {
+      const response = await fetch('/api/question-sets?scope=created', {
         method: 'GET',
         credentials: 'same-origin',
       });
@@ -813,7 +813,7 @@ export default function CreatePage() {
     setFlagLoadError('');
 
     try {
-      const response = await fetch('/api/question-flags/manage', {
+      const response = await fetch('/api/question-flags', {
         method: 'GET',
         credentials: 'same-origin',
       });
@@ -1101,7 +1101,7 @@ export default function CreatePage() {
     setFlagLoadError('');
 
     try {
-      const response = await fetch('/api/question-flags/manage', {
+      const response = await fetch('/api/question-flags', {
         method: 'DELETE',
         headers: withCsrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ questionId: flag.questionId }),
@@ -1132,7 +1132,7 @@ export default function CreatePage() {
   const checkAdminStatus = async () => {
     try {
       // Make a test call to the publish endpoint to check if user is admin
-      const response = await fetch('/api/question-sets/publish', {
+      const response = await fetch('/api/question-sets', {
         method: 'PATCH',
         headers: withCsrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ questionSetId: '00000000-0000-0000-0000-000000000000', status: 'published' }),
@@ -1158,7 +1158,7 @@ export default function CreatePage() {
 
     setPublishingId(questionSetId);
     try {
-      const response = await fetch('/api/question-sets/publish', {
+      const response = await fetch('/api/question-sets', {
         method: 'PATCH',
         headers: withCsrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ questionSetId, status: newStatus }),
