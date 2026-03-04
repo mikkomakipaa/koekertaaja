@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react';
 import { Answer } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { MathText } from '@/components/ui/math-text';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TopicMasteryDisplay } from '@/components/play/TopicMasteryDisplay';
-import { BadgeDisplay } from '@/components/badges/BadgeDisplay';
+import { BadgeCollectionCard } from '@/components/badges/BadgeCollectionCard';
 import { useBadges } from '@/hooks/useBadges';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
+import { difficultyLabels } from '@/lib/play/primary-action';
 import { cn } from '@/lib/utils';
-import { getBadgeIcon, getBadgeColors } from '@/lib/utils/badgeStyles';
 import {
   buildQuestionDetails,
   formatResultAnswer,
@@ -37,7 +37,6 @@ import {
   Barbell,
   Target,
   Rocket,
-  LockSimple
 } from '@phosphor-icons/react';
 
 interface ResultsScreenProps {
@@ -367,23 +366,23 @@ export function ResultsScreen({
   // Determine celebration level
   const getCelebration = () => {
     if (percentage === 100) return {
-      icon: <Star size={48} weight="fill" className="text-yellow-500" />,
+      icon: <Star size={34} weight="fill" className="text-yellow-500" />,
       text: 'W Pisteet.'
     };
     if (percentage >= 90) return {
-      icon: <Rocket size={48} weight="duotone" className="text-purple-500" />,
+      icon: <Rocket size={34} weight="duotone" className="text-purple-500" />,
       text: 'Sigma Suoritus.'
     };
     if (percentage >= 80) return {
-      icon: <Fire size={48} weight="fill" className="text-orange-500" />,
+      icon: <Fire size={34} weight="fill" className="text-orange-500" />,
       text: 'Slay Kierros.'
     };
     if (percentage >= 60) return {
-      icon: <Target size={48} weight="duotone" className="text-blue-500" />,
+      icon: <Target size={34} weight="duotone" className="text-blue-500" />,
       text: 'Vibe Tulos.'
     };
     return {
-      icon: <Barbell size={48} weight="bold" className="text-orange-500" />,
+      icon: <Barbell size={34} weight="bold" className="text-orange-500" />,
       text: 'Mid Grindi.'
     };
   };
@@ -407,72 +406,88 @@ export function ResultsScreen({
   const displayPersonalBest = personalBest > 0 ? (isNewRecord ? totalPoints : personalBest) : null;
   const unlockedBadgesCount = badges.filter(b => b.unlocked).length;
   const newlyUnlockedBadges = badges.filter(badge => newlyUnlocked.includes(badge.id));
+  const difficultyLabel =
+    difficulty && difficulty in difficultyLabels
+      ? difficultyLabels[difficulty as keyof typeof difficultyLabels]
+      : difficulty;
+  const normalizedQuestionSetName = questionSetName?.trim();
+  const questionSetAlreadyIncludesDifficulty = Boolean(
+    normalizedQuestionSetName
+      && difficultyLabel
+      && normalizedQuestionSetName.toLocaleLowerCase('fi-FI').endsWith(`- ${difficultyLabel.toLocaleLowerCase('fi-FI')}`)
+  );
+  const resultsPrimaryMeta = [
+    normalizedQuestionSetName,
+    questionSetAlreadyIncludesDifficulty ? null : difficultyLabel,
+  ].filter(Boolean).join(' • ');
+  const resultsSecondaryMeta = `${score} / ${total} oikein (${percentage}%)`;
 
   return (
     <div className={`min-h-screen bg-gradient-to-b ${modeColors.bg} p-4 md:p-8 pb-24 transition-colors`}>
       <div className="max-w-5xl mx-auto">
-        {/* Frosted glass pattern uses darker border (gray-800) for visual depth */}
-        {/* Hero */}
-        <Card variant="frosted" padding="standard" className="mb-6">
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <div className={`${modeColors.iconBg} flex items-center justify-center rounded-xl p-3 flex-shrink-0`}>
-                {celebration.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-                  {celebration.text}
-                </h1>
-                <p className="text-base md:text-lg text-gray-600 dark:text-gray-400">
-                  {score} / {total} oikein ({percentage}%)
-                </p>
-              </div>
+        <section className="mb-4 border-b border-slate-200/80 pb-4 dark:border-white/10">
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-500/15 text-orange-500">
+              {celebration.icon}
             </div>
-          </CardContent>
-        </Card>
+            <div className="min-w-0">
+              <h1 className="text-[22px] font-bold leading-[1.1] tracking-tight text-slate-950 dark:text-slate-50 max-[480px]:text-[19px]">
+                {celebration.text}
+              </h1>
+              {resultsPrimaryMeta ? (
+                <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300">
+                  {resultsPrimaryMeta}
+                </p>
+              ) : null}
+              <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">
+                {resultsSecondaryMeta}
+              </p>
+            </div>
+          </div>
+        </section>
 
         {/* Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <Card variant="frosted" padding="compact">
+        <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
             <CardContent>
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <div className="mb-2 flex items-center gap-2 text-sm text-gray-600/70 dark:text-gray-400/70">
                 <Fire size={18} weight="duotone" className="text-orange-500" />
                 Paras putki
               </div>
-              <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+              <div className="text-[28px] font-bold text-gray-900 dark:text-gray-100 md:text-[28px]">
                 {bestStreak > 0 ? bestStreak : '—'}
               </div>
             </CardContent>
           </Card>
-          <Card variant="frosted" padding="compact">
+          <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
             <CardContent>
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <div className="mb-2 flex items-center gap-2 text-sm text-gray-600/70 dark:text-gray-400/70">
                 <ArrowCounterClockwise size={18} weight="duotone" className="text-amber-500" />
                 Ohitetut
               </div>
-              <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+              <div className="text-[28px] font-bold text-gray-900 dark:text-gray-100 md:text-[28px]">
                 {skippedAnswerCount}
               </div>
             </CardContent>
           </Card>
-          <Card variant="frosted" padding="compact">
+          <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
             <CardContent>
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <div className="mb-2 flex items-center gap-2 text-sm text-gray-600/70 dark:text-gray-400/70">
                 <Medal size={18} weight="duotone" className="text-purple-500" />
                 Uusia merkkejä
               </div>
-              <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+              <div className="text-[28px] font-bold text-gray-900 dark:text-gray-100 md:text-[28px]">
                 {newlyUnlockedBadges.length}
               </div>
             </CardContent>
           </Card>
-          <Card variant="frosted" padding="compact">
+          <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
             <CardContent>
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <div className="mb-2 flex items-center gap-2 text-sm text-gray-600/70 dark:text-gray-400/70">
                 <Sparkle size={18} weight="duotone" className="text-emerald-500" />
                 Henkilökohtainen ennätys
               </div>
-              <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+              <div className="text-[28px] font-bold text-gray-900 dark:text-gray-100 md:text-[28px]">
                 {displayPersonalBest ?? '—'}
               </div>
               {displayPersonalBest && isNewRecord && (
@@ -485,8 +500,8 @@ export function ResultsScreen({
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="overview" className="mb-6">
-          <TabsList className="grid w-full grid-cols-3 rounded-xl bg-white/80 dark:bg-gray-900/70 p-1 shadow-sm border border-white/60 dark:border-gray-800">
+        <Tabs defaultValue="overview" className="mb-5">
+          <TabsList className="grid w-full grid-cols-3 rounded-xl border border-slate-200 bg-white p-1 shadow-none dark:border-slate-800 dark:bg-slate-900">
             <TabsTrigger value="overview" className="rounded-xl text-sm md:text-base">Yhteenveto</TabsTrigger>
             <TabsTrigger value="answers" className="rounded-xl text-sm md:text-base">Vastaukset</TabsTrigger>
             <TabsTrigger value="badges" className="rounded-xl text-sm md:text-base">
@@ -494,8 +509,8 @@ export function ResultsScreen({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="mt-6 space-y-4">
-            <Card variant="frosted" padding="standard">
+          <TabsContent value="overview" className="mt-5 space-y-3">
+            <Card variant="standard" padding="standard" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
               <CardContent>
                 <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   <Target size={18} weight="duotone" className="text-indigo-500" />
@@ -506,9 +521,9 @@ export function ResultsScreen({
             </Card>
 
             <Card
-              variant="frosted"
+              variant="standard"
               padding="standard"
-              className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+              className="flex flex-col gap-4 rounded-xl border-slate-200 shadow-none dark:border-slate-800 md:flex-row md:items-center md:justify-between"
             >
               <div>
                 <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -527,8 +542,8 @@ export function ResultsScreen({
             </Card>
           </TabsContent>
 
-          <TabsContent value="answers" className="mt-6">
-            <Card variant="frosted" padding="standard">
+          <TabsContent value="answers" className="mt-5">
+            <Card variant="standard" padding="standard" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
               <CardContent>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                   <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
@@ -654,56 +669,18 @@ export function ResultsScreen({
             </Card>
           </TabsContent>
 
-          <TabsContent value="badges" className="mt-6 space-y-5">
-            <Card variant="frosted" padding="standard">
-              <CardHeader className="mb-3 space-y-0">
-                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  <Medal weight="duotone" className="w-5 h-5" />
-                  Kaikki merkit ({unlockedBadgesCount}/{badges.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {badges.map(badge => {
-                    const colors = getBadgeColors(badge.id);
-                    return (
-                      <BadgeDisplay
-                        badge={badge}
-                        key={badge.id}
-                        className={cn(
-                          'rounded-lg p-3 text-center transition-all',
-                          badge.unlocked
-                            ? `bg-gradient-to-br ${colors.light} ${colors.dark} border-2`
-                            : 'bg-gray-100 opacity-50 dark:bg-gray-800'
-                        )}
-                      >
-                        <div className="mb-1 flex justify-center text-3xl">
-                          {badge.unlocked ? (
-                            getBadgeIcon(badge.id)
-                          ) : (
-                            <LockSimple size={32} weight="fill" className="text-gray-400" />
-                          )}
-                        </div>
-                        <div
-                          className={cn(
-                            'text-xs font-semibold',
-                            badge.unlocked ? colors.text : 'text-gray-500 dark:text-gray-400'
-                          )}
-                        >
-                          {badge.name}
-                        </div>
-                      </BadgeDisplay>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="badges" className="mt-5 space-y-4">
+            <BadgeCollectionCard
+              badges={badges}
+              highlightedBadgeIds={newlyUnlocked}
+              description="Tästä näet uudet avaukset ja kaikki vielä lukitut tavoitteet."
+            />
           </TabsContent>
         </Tabs>
 
         {/* Actions */}
         <div className="sticky bottom-4 z-10">
-          <div className="rounded-xl bg-white/90 dark:bg-gray-900/85 border border-white/60 dark:border-gray-800 p-4 shadow-lg backdrop-blur-sm">
+          <div className="rounded-xl border border-slate-200 bg-white/95 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)] backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/90">
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 onClick={onPlayAgain}

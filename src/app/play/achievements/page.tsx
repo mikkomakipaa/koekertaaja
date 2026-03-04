@@ -9,15 +9,11 @@ import {
   Fire,
   Star,
   Sparkle,
-  LockSimple,
-  GameController,
 } from '@phosphor-icons/react';
-import { BadgeDisplay } from '@/components/badges/BadgeDisplay';
-import { Button } from '@/components/ui/button';
+import { BadgeCollectionCard } from '@/components/badges/BadgeCollectionCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AchievementsMapSection } from '@/components/mindMap/AchievementsMapSection';
-import { getBadgeColors, getBadgeIcon } from '@/lib/utils/badgeStyles';
-import { cn } from '@/lib/utils';
+import { AppShellHeader } from '@/components/layout/AppShellHeader';
 import { getBadgeDefinitionCount, useBadges } from '@/hooks/useBadges';
 import type { Badge } from '@/types';
 
@@ -60,45 +56,25 @@ export function AchievementsPageContent({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white transition-colors dark:from-gray-900 dark:to-gray-800">
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/90 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/90">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <Link
-            href="/play"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-            aria-label="Takaisin harjoitteluun"
-          >
-            <ArrowLeft size={18} weight="bold" />
-            <span className="hidden sm:inline">Takaisin</span>
-          </Link>
-
-          <h1 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-gray-100">
-            <Trophy size={24} weight="duotone" className="text-amber-600 dark:text-amber-400" />
-            Saavutukset
-          </h1>
-
-          <div className="w-24" />
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-slate-50 transition-colors dark:bg-slate-950">
       <div className="mx-auto max-w-4xl space-y-6 p-6 pb-24">
-        <StatsSection stats={stats} unlockedCount={unlockedCount} />
-        <BadgesSection badges={badges} unlockedCount={unlockedCount} />
-        <AchievementsMapSection {...mapSectionProps} />
-
-        <div className="pt-6 text-center">
-          <Button
-            asChild
-            mode="neutral"
-            size="lg"
-            className="text-white shadow-md transition-all hover:shadow-lg active:shadow-sm"
-          >
-            <Link href="/play">
-              <GameController size={20} weight="fill" />
-              Takaisin harjoitteluun
+        <AppShellHeader
+          icon={<Trophy size={24} weight="duotone" />}
+          title="Saavutukset"
+          description={`Avaat merkkejä harjoittelemalla. Olet avannut ${unlockedCount}/${BADGE_TOTAL} merkkiä.`}
+          leadingAction={
+            <Link
+              href="/play"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-gray-300 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-300 dark:focus-visible:ring-offset-gray-900"
+              aria-label="Takaisin pelaamaan"
+            >
+              <ArrowLeft size={18} weight="bold" />
             </Link>
-          </Button>
-        </div>
+          }
+        />
+        <StatsSection stats={stats} unlockedCount={unlockedCount} />
+        <BadgesSection badges={badges} />
+        <AchievementsMapSection {...mapSectionProps} />
       </div>
     </div>
   );
@@ -106,14 +82,20 @@ export function AchievementsPageContent({
 
 function StatsSection({ stats, unlockedCount }: { stats: BadgeStats; unlockedCount: number }) {
   return (
-    <section>
-      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
-        <Medal size={18} weight="duotone" className="text-purple-500" />
-        TILASTOT
-      </h2>
+    <section className="space-y-3">
+      <div className="space-y-1">
+        <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+          <Medal size={16} weight="duotone" className="text-slate-500 dark:text-slate-300" />
+          Tilastot
+        </p>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Harjoittelun yhteenveto</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Merkit, ennätykset ja pelatut sessiot samassa näkymässä.
+        </p>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card variant="frosted" padding="compact">
+        <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
           <CardContent>
             <div className="mb-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <Fire size={18} weight="duotone" className="text-orange-500" />
@@ -123,7 +105,7 @@ function StatsSection({ stats, unlockedCount }: { stats: BadgeStats; unlockedCou
           </CardContent>
         </Card>
 
-        <Card variant="frosted" padding="compact">
+        <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
           <CardContent>
             <div className="mb-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <Star size={18} weight="fill" className="text-yellow-500" />
@@ -133,7 +115,7 @@ function StatsSection({ stats, unlockedCount }: { stats: BadgeStats; unlockedCou
           </CardContent>
         </Card>
 
-        <Card variant="frosted" padding="compact">
+        <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
           <CardContent>
             <div className="mb-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <Sparkle size={18} weight="duotone" className="text-emerald-500" />
@@ -145,7 +127,7 @@ function StatsSection({ stats, unlockedCount }: { stats: BadgeStats; unlockedCou
           </CardContent>
         </Card>
 
-        <Card variant="frosted" padding="compact">
+        <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
           <CardContent>
             <div className="mb-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <Medal size={18} weight="duotone" className="text-blue-500" />
@@ -161,83 +143,53 @@ function StatsSection({ stats, unlockedCount }: { stats: BadgeStats; unlockedCou
   );
 }
 
-function BadgesSection({ badges, unlockedCount }: { badges: Badge[]; unlockedCount: number }) {
+function BadgesSection({ badges }: { badges: Badge[] }) {
   return (
-    <Card variant="frosted" padding="standard">
-      <CardHeader className="mb-3 space-y-0">
-        <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-          <Medal weight="duotone" className="h-5 w-5" />
-          Kaikki merkit ({unlockedCount}/{badges.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {badges.map((badge) => {
-            const colors = getBadgeColors(badge.id);
-            return (
-              <BadgeDisplay
-                badge={badge}
-                key={badge.id}
-                className={cn(
-                  'rounded-lg p-3 text-center transition-all',
-                  badge.unlocked
-                    ? `bg-gradient-to-br ${colors.light} ${colors.dark} border-2`
-                    : 'bg-gray-100 opacity-50 dark:bg-gray-800'
-                )}
-              >
-                <div className="mb-1 flex justify-center text-3xl">
-                  {badge.unlocked ? getBadgeIcon(badge.id) : <LockSimple size={32} weight="fill" className="text-gray-400" />}
-                </div>
-                <div
-                  className={cn(
-                    'text-xs font-semibold',
-                    badge.unlocked ? colors.text : 'text-gray-500 dark:text-gray-400'
-                  )}
-                >
-                  {badge.name}
-                </div>
-              </BadgeDisplay>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+    <BadgeCollectionCard
+      badges={badges}
+      description="Jokainen merkki avautuu harjoittelemalla. Napauta merkkiä nähdäksesi ehdot."
+    />
   );
 }
 
 function EmptyAchievementsState() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-indigo-50 to-white p-6 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-md text-center">
-        <div className="mb-6 flex justify-center">
-          <div className="rounded-full bg-amber-100 p-6 dark:bg-amber-900/30">
-            <Trophy size={64} weight="duotone" className="text-amber-600 dark:text-amber-400" />
-          </div>
-        </div>
-
-        <h1 className="mb-3 text-2xl font-bold text-gray-900 dark:text-gray-100 md:text-3xl">Aloita harjoittelu</h1>
-
-        <p className="mb-8 text-base text-gray-600 dark:text-gray-400">
-          Suorita ensimmäinen harjoituskierros avataksesi ensimmäisen merkin ja nähdäksesi tilastosi!
-        </p>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button
-            asChild
-            mode="neutral"
-            size="lg"
-            className="w-full text-white shadow-md hover:shadow-lg sm:w-auto"
-          >
-            <Link href="/play">
-              <GameController size={20} weight="fill" />
-              Aloita harjoittelu
+    <div className="min-h-screen bg-slate-50 p-6 dark:bg-slate-950">
+      <div className="mx-auto max-w-4xl space-y-3">
+        <AppShellHeader
+          icon={<Trophy size={24} weight="duotone" />}
+          title="Saavutukset"
+          description="Suorita ensimmäinen harjoituskierros avataksesi ensimmäisen merkin ja nähdäksesi tilastosi."
+          leadingAction={
+            <Link
+              href="/play"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-gray-300 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-300 dark:focus-visible:ring-offset-gray-900"
+              aria-label="Takaisin pelaamaan"
+            >
+              <ArrowLeft size={18} weight="bold" />
             </Link>
-          </Button>
+          }
+        />
 
-          <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-            <Link href="/">Takaisin valikkoon</Link>
-          </Button>
-        </div>
+        <Card variant="standard" padding="none" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800 dark:bg-slate-900">
+          <CardHeader className="space-y-1 border-b border-slate-200 p-5 dark:border-slate-800">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+              Aloita tästä
+            </p>
+            <CardTitle className="text-xl">Ensimmäinen kierros avaa näkymän</CardTitle>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Pelaa yksi harjoituskierros, niin tilastot ja ensimmäiset merkit ilmestyvät tänne.
+            </p>
+          </CardHeader>
+          <CardContent className="p-5 pt-4">
+            <Link
+              href="/"
+              className="text-sm font-semibold text-slate-600 underline-offset-4 transition-colors hover:text-slate-900 hover:underline dark:text-slate-300 dark:hover:text-slate-100"
+            >
+              Takaisin valikkoon
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

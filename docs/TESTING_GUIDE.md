@@ -238,6 +238,36 @@ Use a math question set that contains open answers with fractions, mixed numbers
 
 ### 6c. Results Page LaTeX Regression Test
 
+### 6d. Badge Visual Regression Validation
+
+Use the deterministic badge harness instead of ad hoc `localStorage` setup when validating token spacing, locked-state contrast, and highlight rings.
+
+**Prerequisites:**
+- `npm run dev` running locally on `http://localhost:3000`
+- Google Chrome installed at `/Applications/Google Chrome.app`
+- Playwright Chrome skill available via repo-local `.codex-home` install or exported `PWK`
+
+**Fixture route:**
+- `http://localhost:3000/dev/visual-regression/badges?theme=light`
+- `http://localhost:3000/dev/visual-regression/badges?theme=dark`
+
+**Automated capture:**
+```bash
+bash scripts/run-badge-visual-validation.sh
+```
+
+**Artifacts:**
+- Saved under `output/playwright/badge-visual-regression/<timestamp>/`
+- Captures mobile (`390x1180`) and desktop (`1440x1800`)
+- Captures light and dark themes
+- Writes full-page, Results-only, and Achievements-only screenshots for each theme/viewport pair
+
+**What to inspect:**
+- Locked tokens remain readable and keep a clear lock affordance
+- Highlighted results tokens still show their ring and offset treatment
+- Token density stays at 3 columns on small mobile widths where space allows
+- Results and Achievements use the same round-token layout and label rhythm
+
 Use the same math-heavy set after finishing a play session with at least one wrong answer and one skipped answer.
 
 **Wrong-answer summary checks:**

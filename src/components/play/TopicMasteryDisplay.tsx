@@ -42,7 +42,11 @@ export function TopicMasteryDisplay({ questionSetCode, className = '' }: TopicMa
   }, [getMasteryStats, hasMasteryData]);
 
   if (!masteryStats || masteryStats.length === 0) {
-    return null;
+    return (
+      <div className={`mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 ${className}`}>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Aiheita ei saatavilla.</p>
+      </div>
+    );
   }
 
   const getColor = (percentage: number) => {

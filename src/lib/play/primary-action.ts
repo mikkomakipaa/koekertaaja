@@ -136,7 +136,7 @@ export function resolveDashboardPrimaryAction({
 
   return {
     href: '/play?mode=pelaa',
-    label: 'Pelaa',
+    label: 'Aloita harjoittelu',
     description: '',
     mode: 'quiz',
   };

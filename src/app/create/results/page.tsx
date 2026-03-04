@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { AppShellHeader } from '@/components/layout/AppShellHeader';
+import type { AppShellHeaderTone } from '@/components/layout/AppShellHeader';
 import { CheckCircle, WarningCircle, XCircle, ArrowLeft } from '@phosphor-icons/react';
 
 interface CreatedSet {
@@ -65,13 +67,8 @@ export default function CreateResultsPage() {
     flashcard: 'Kortit',
   };
 
-  const headerColor = isTotalFailure
-    ? 'bg-gradient-to-r from-red-500 to-red-600 dark:from-red-600 dark:to-red-700'
-    : isPartial
-      ? 'bg-gradient-to-r from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700'
-      : 'bg-gradient-to-r from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700';
-
   const HeaderIcon = isTotalFailure ? XCircle : isPartial ? WarningCircle : CheckCircle;
+  const headerTone: AppShellHeaderTone = isTotalFailure ? 'danger' : isPartial ? 'warning' : 'success';
 
   const headerTitle = isTotalFailure
     ? 'Luonti epäonnistui'
@@ -85,98 +82,121 @@ export default function CreateResultsPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 md:p-12 flex items-center justify-center transition-colors">
-        <Card className="w-full max-w-3xl rounded-xl shadow-2xl border-slate-200 dark:border-slate-800 dark:bg-slate-900">
-          <CardHeader className={`${headerColor} text-white rounded-t-xl`}>
-            <CardTitle className="text-3xl flex items-center gap-2">
-              <HeaderIcon weight="duotone" className="w-8 h-8" />
-              {headerTitle}
-            </CardTitle>
-            <CardDescription className="text-white text-base md:text-lg font-medium">
-              {headerDescription}
-            </CardDescription>
-          </CardHeader>
+      <div className="min-h-screen bg-slate-50 p-6 transition-colors dark:bg-slate-950 md:p-12">
+        <div className="mx-auto max-w-4xl space-y-3 md:space-y-4">
+          <AppShellHeader
+            icon={<HeaderIcon size={24} weight="duotone" />}
+            title={headerTitle}
+            description={headerDescription}
+            tone={headerTone}
+            leadingAction={
+              <button
+                type="button"
+                onClick={() => router.push('/create')}
+                aria-label="Takaisin luontiin"
+                className="inline-grid h-11 w-11 place-items-center rounded-xl bg-transparent text-black/55 transition-colors hover:bg-white/70 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:focus-visible:ring-indigo-300 dark:focus-visible:ring-offset-slate-950"
+              >
+                <ArrowLeft size={20} weight="regular" aria-hidden="true" />
+              </button>
+            }
+          />
 
-          <CardContent className="p-6 space-y-6">
-            {hasSuccess && (
-              <div>
-                <h3 className="text-xl font-semibold mb-3 text-slate-900 dark:text-slate-100">
-                  Luodut kysymyssarjat:
-                </h3>
-                <div className="space-y-2">
-                  {createdSets.map((set, index) => (
+          {hasSuccess && (
+            <Card className="w-full rounded-xl border-slate-200 shadow-none dark:border-slate-800 dark:bg-slate-900">
+              <CardHeader className="space-y-1 border-b border-slate-200 p-5 dark:border-slate-800">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-300">
+                  Luodut sarjat
+                </p>
+                <CardTitle className="text-xl">Valmiit kysymyssarjat</CardTitle>
+                <CardDescription>
+                  Jaa koodi oppilaille tai avaa sarja heti testattavaksi.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 p-5">
+                {createdSets.map((set, index) => {
+                  const eyebrow = set.mode === 'flashcard'
+                    ? modeLabels[set.mode]
+                    : `Koe${set.difficulty ? ` • ${difficultyLabels[set.difficulty] ?? set.difficulty}` : ''}`;
+
+                  return (
                     <Card
-                      key={index}
+                      key={`${set.code}-${index}`}
                       variant="standard"
-                      padding="compact"
-                      className="transition-shadow duration-150 hover:shadow-md"
+                      padding="none"
+                      className="rounded-xl border-slate-200 shadow-none dark:border-slate-800"
                     >
-                      <CardContent>
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-semibold text-slate-900 dark:text-slate-100">
-                              {set.mode === 'flashcard'
-                                ? `${set.name} — ${modeLabels[set.mode]}`
-                                : difficultyLabels[set.difficulty ?? ''] || set.difficulty}
-                            </p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {set.questionCount} {set.mode === 'flashcard' ? 'korttia' : 'kysymystä'}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Koodi:</p>
-                            <code className="px-3 py-1 bg-slate-100 dark:bg-slate-600 rounded font-mono text-lg font-bold text-slate-900 dark:text-slate-100">
-                              {set.code}
-                            </code>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {hasErrors && (
-              <div>
-                <h3 className="text-xl font-semibold mb-3 text-red-700 dark:text-red-400">
-                  {isTotalFailure ? 'Virheet:' : 'Epäonnistuneet:'}
-                </h3>
-                <div className="space-y-2">
-                  {errors.map((err, index) => (
-                    <div
-                      key={index}
-                      className="flex items-start gap-3 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
-                    >
-                      <XCircle
-                        weight="duotone"
-                        className="w-5 h-5 text-red-500 dark:text-red-400 mt-0.5 shrink-0"
-                      />
-                      <div>
-                        <p className="font-semibold text-red-800 dark:text-red-300">
-                          {err.mode === 'flashcard' ? 'Muistikortit' : 'Visa'}
+                      <CardHeader className="space-y-1 p-4 pb-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                          {eyebrow}
                         </p>
-                        <p className="text-sm text-red-700 dark:text-red-400">{err.error}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                        <CardTitle className="text-base">{set.name}</CardTitle>
+                        <CardDescription>
+                          {set.questionCount} {set.mode === 'flashcard' ? 'korttia' : 'kysymystä'}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardFooter className="items-center justify-between border-t border-slate-200 p-4 pt-3 dark:border-slate-800">
+                        <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Koodi</span>
+                        <code className="rounded-lg bg-slate-100 px-3 py-1 font-mono text-lg font-bold text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+                          {set.code}
+                        </code>
+                      </CardFooter>
+                    </Card>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
 
-            <div className="flex gap-3 pt-4">
+          {hasErrors && (
+            <Card className="w-full rounded-xl border-slate-200 shadow-none dark:border-slate-800 dark:bg-slate-900">
+              <CardHeader className="space-y-1 border-b border-slate-200 p-5 dark:border-slate-800">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-600 dark:text-red-300">
+                  Virheet
+                </p>
+                <CardTitle className="text-xl">{isTotalFailure ? 'Luonti epäonnistui' : 'Epäonnistuneet osat'}</CardTitle>
+                <CardDescription>
+                  Tarkista alla olevat virheilmoitukset ja yritä uudelleen tarvittaessa.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 p-5">
+                {errors.map((err, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-3 rounded-xl border border-red-200/80 bg-red-50/65 p-4 dark:border-red-900/50 dark:bg-red-950/12"
+                  >
+                    <XCircle
+                      weight="duotone"
+                      className="mt-0.5 h-5 w-5 shrink-0 text-red-500 dark:text-red-400"
+                    />
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-700 dark:text-red-300">
+                        {err.mode === 'flashcard' ? 'Muistikortit' : 'Tietovisa'}
+                      </p>
+                      <p className="font-semibold text-red-900 dark:text-red-100">
+                        {err.mode === 'flashcard' ? 'Korttisarjan luonti epäonnistui' : 'Koesarjan luonti epäonnistui'}
+                      </p>
+                      <p className="text-sm text-red-800 dark:text-red-200">{err.error}</p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="w-full rounded-xl border-slate-200 shadow-none dark:border-slate-800 dark:bg-slate-900">
+            <CardContent className="flex gap-3 p-5">
               <Button
                 onClick={() => router.push('/create')}
                 mode="quiz"
                 variant="primary"
-                className="flex-1 flex items-center gap-2 justify-center"
+                className="flex-1 justify-center gap-2"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="h-4 w-4" />
                 Takaisin luontiin
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AuthGuard>
   );

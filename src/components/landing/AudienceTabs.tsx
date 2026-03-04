@@ -69,10 +69,10 @@ function AudienceGrid({ items }: { items: typeof pupilItems }) {
         return (
           <div
             key={item.title}
-            className="flex gap-3 rounded-2xl border border-slate-200/85 bg-slate-50/85 p-3 transition-colors duration-200 motion-reduce:transition-none dark:border-slate-700/75 dark:bg-slate-900/55"
+            className="flex gap-3 rounded-xl border border-slate-200/75 bg-white/70 p-3 transition-colors duration-200 motion-reduce:transition-none dark:border-slate-700/70 dark:bg-slate-900/35"
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-emerald-600 ring-1 ring-slate-200/80 dark:bg-slate-900 dark:text-emerald-300 dark:ring-slate-700/75">
-              <Icon size={24} weight="duotone" aria-hidden="true" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100/90 text-slate-600 ring-1 ring-slate-200/70 dark:bg-slate-800/80 dark:text-slate-300 dark:ring-slate-700/70">
+              <Icon size={22} weight="duotone" aria-hidden="true" />
             </div>
             <div className="space-y-1">
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{item.title}</p>
@@ -127,7 +127,7 @@ function MobileAccordion({
         return (
           <div
             key={section.id}
-            className="rounded-2xl border border-gray-200 bg-white/95 shadow-sm transition-colors duration-200 motion-reduce:transition-none dark:border-slate-700/70 dark:bg-slate-900/70"
+            className="rounded-xl border border-slate-200/80 bg-slate-50/70 transition-colors duration-200 motion-reduce:transition-none dark:border-slate-700/70 dark:bg-slate-900/45"
           >
             <button
               type="button"
@@ -172,7 +172,7 @@ function MobileAccordion({
               <span
                 id={helperId}
                 className={`text-sm font-medium transition-colors duration-200 motion-reduce:transition-none ${
-                  isOpen ? 'text-emerald-600 dark:text-emerald-300' : 'text-gray-400 dark:text-slate-400'
+                  isOpen ? 'text-slate-600 dark:text-slate-300' : 'text-gray-400 dark:text-slate-400'
                 }`}
               >
                 {section.helper}
@@ -215,17 +215,17 @@ export function AudienceTabs({
       </div>
 
       <div className="mt-3 hidden md:block">
-          <Tabs value={activeAudience} onValueChange={(value) => onAudienceChange(value as AudienceKey)}>
-          <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-slate-100/90 p-1 ring-1 ring-slate-200/80 transition-colors duration-200 motion-reduce:transition-none dark:bg-slate-900/80 dark:ring-slate-700/60">
+        <Tabs value={activeAudience} onValueChange={(value) => onAudienceChange(value as AudienceKey)}>
+          <TabsList className="grid w-full grid-cols-2 rounded-xl bg-slate-100/80 p-1 ring-1 ring-slate-200/70 transition-colors duration-200 motion-reduce:transition-none dark:bg-slate-900/60 dark:ring-slate-700/60">
             <TabsTrigger
               value="oppilaille"
-              className="rounded-xl border border-transparent px-4 py-3 text-base font-semibold text-slate-500 transition-all duration-200 motion-reduce:transition-none hover:bg-white/70 hover:text-slate-800 data-[state=active]:border-slate-200 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:ring-1 data-[state=active]:ring-slate-200/80 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 dark:data-[state=active]:border-slate-700 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-slate-100 dark:data-[state=active]:ring-slate-700"
+              className="rounded-lg border border-transparent px-4 py-3 text-base font-semibold text-slate-500 transition-all duration-200 motion-reduce:transition-none hover:bg-white/55 hover:text-slate-700 data-[state=active]:border-slate-200/80 data-[state=active]:bg-white/90 data-[state=active]:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/50 dark:hover:text-slate-100 dark:data-[state=active]:border-slate-700 dark:data-[state=active]:bg-slate-900/90 dark:data-[state=active]:text-slate-100"
             >
               Oppilaille
             </TabsTrigger>
             <TabsTrigger
               value="huoltajille"
-              className="rounded-xl border border-transparent px-4 py-3 text-base font-semibold text-slate-500 transition-all duration-200 motion-reduce:transition-none hover:bg-white/70 hover:text-slate-800 data-[state=active]:border-slate-200 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:ring-1 data-[state=active]:ring-slate-200/80 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 dark:data-[state=active]:border-slate-700 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-slate-100 dark:data-[state=active]:ring-slate-700"
+              className="rounded-lg border border-transparent px-4 py-3 text-base font-semibold text-slate-500 transition-all duration-200 motion-reduce:transition-none hover:bg-white/55 hover:text-slate-700 data-[state=active]:border-slate-200/80 data-[state=active]:bg-white/90 data-[state=active]:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/50 dark:hover:text-slate-100 dark:data-[state=active]:border-slate-700 dark:data-[state=active]:bg-slate-900/90 dark:data-[state=active]:text-slate-100"
             >
               Huoltajille
             </TabsTrigger>

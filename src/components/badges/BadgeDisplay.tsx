@@ -55,7 +55,10 @@ export function BadgeDisplay({ badge, className, children }: BadgeDisplayProps) 
         <Tooltip.Trigger asChild>
           <button
             type="button"
-            className={cn('text-left focus-visible:outline-none', className)}
+            className={cn(
+              'inline-flex justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-300 dark:focus-visible:ring-offset-slate-900',
+              className
+            )}
             aria-label={badge.name}
             onClick={handleTriggerClick}
           >

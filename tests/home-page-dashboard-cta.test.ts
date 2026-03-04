@@ -15,10 +15,12 @@ describe('front page dashboard CTA', () => {
 
   it('renders the front-page mode section as direct quiz and flashcard action cards', () => {
     assert.ok(homePageSource.includes('Kaksi tapaa harjoitella'));
-    assert.ok(homePageSource.includes('Pelaa tietovisoja'));
-    assert.ok(homePageSource.includes('Kertaa muistikorteilla'));
-    assert.ok(homePageSource.includes('Siirry visoihin'));
-    assert.ok(homePageSource.includes('Siirry kortteihin'));
+    assert.ok(homePageSource.includes('Tietovisat'));
+    assert.ok(homePageSource.includes('Muistikortit'));
+    assert.ok(homePageSource.includes('Tee tehtäviä, kerää pisteitä ja jatka siitä, mihin viimeksi jäit.'));
+    assert.ok(homePageSource.includes('Harjoittele rauhassa, kertaa aiheet ja etene omassa tahdissasi.'));
+    assert.ok(homePageSource.includes('>Pelaa<'));
+    assert.ok(homePageSource.includes('>Opettele<'));
   });
 
   it('keeps the dashboard entry structure in the intended order', () => {

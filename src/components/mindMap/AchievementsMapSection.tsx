@@ -153,10 +153,10 @@ export function AchievementsMapSection({
     <section
       data-testid="achievements-map-section"
       aria-labelledby={sectionHeadingId}
-      className={`rounded-2xl border border-violet-200 bg-white p-4 sm:p-6 dark:border-violet-800/70 dark:bg-gray-900 ${colors.map.light}`}
+      className="rounded-xl border border-slate-200/85 bg-white/90 p-4 sm:p-6 dark:border-slate-800 dark:bg-slate-900"
     >
       <header className="mb-4 flex items-center gap-2">
-        <MapTrifold size={20} weight="duotone" className={colors.map.text} aria-hidden="true" />
+        <MapTrifold size={20} weight="duotone" className="text-slate-500 dark:text-slate-300" aria-hidden="true" />
         <h2 id={sectionHeadingId} className="text-lg font-semibold text-gray-900 dark:text-gray-100">Aiheiden hallinta</h2>
       </header>
 
@@ -176,7 +176,7 @@ export function AchievementsMapSection({
               id="achievements-map-set"
               value={selectedCode}
               onChange={(event) => setSelectedCode(event.target.value)}
-              className={`min-h-12 rounded-lg border border-violet-200 bg-white px-3 text-sm text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-violet-800 dark:bg-gray-900 dark:text-gray-100 dark:focus-visible:ring-offset-gray-900 ${colors.map.ring}`}
+              className={`min-h-12 rounded-lg border border-slate-200 bg-white px-3 text-sm text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100 dark:focus-visible:ring-offset-gray-900 ${colors.map.ring}`}
             >
               {selectableItems.map((item) => (
                 <option key={item.code} value={item.code}>

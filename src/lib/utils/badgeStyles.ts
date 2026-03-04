@@ -84,3 +84,26 @@ export const getBadgeColors = (badgeId: string) => {
     text: 'text-gray-900 dark:text-gray-100',
   };
 };
+
+export const getBadgeGlowClass = (badgeId: BadgeId) => {
+  if (['first_session', '5_sessions', '10_sessions', '25_sessions'].includes(badgeId)) {
+    return 'shadow-[0_0_10px_rgba(99,102,241,0.25)]';
+  }
+
+  if (badgeId === 'speed_demon' || badgeId === 'tried_both_levels') {
+    return 'shadow-[0_0_10px_rgba(34,211,238,0.25)]';
+  }
+
+  if (['perfect_score', 'nopea_tarkka', 'beat_personal_best'].includes(badgeId)) {
+    return 'shadow-[0_0_10px_rgba(251,146,60,0.25)]';
+  }
+
+  if (['streak_3', 'streak_5', 'streak_10'].includes(badgeId)) {
+    return 'shadow-[0_0_10px_rgba(239,68,68,0.25)]';
+  }
+
+  return 'shadow-[0_0_10px_rgba(148,163,184,0.2)]';
+};
+
+export const isHighlightedBadge = (badgeId: BadgeId) =>
+  ['25_sessions', 'perfect_score', 'streak_10'].includes(badgeId);

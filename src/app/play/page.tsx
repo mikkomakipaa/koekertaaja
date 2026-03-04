@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from '
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -163,10 +163,10 @@ const getSubjectHeaderMeta = (subject: string, formattedDate: string | null) => 
   const config = getSubjectConfig(subject);
 
   return (
-    <div className="flex min-w-0 items-center gap-1.5">
-      <div className={`flex h-8 w-8 items-center justify-center rounded-md ${config.color}`}>{config.icon}</div>
-      <div className="min-w-0 whitespace-nowrap">
-        <span className="truncate text-[15px] font-bold text-gray-800 dark:text-gray-100">{config.label}</span>
+    <div className="flex min-w-0 items-center gap-2">
+      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${config.color}`}>{config.icon}</div>
+      <div className="min-w-0">
+        <span className="truncate text-[14px] font-semibold text-gray-800 dark:text-gray-100">{config.label}</span>
         {formattedDate && (
           <>
             <span className="mx-1.5 text-sm text-gray-500 dark:text-gray-400">•</span>
@@ -259,29 +259,23 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
 
   const formattedDate = formatQuestionSetDate(newestExamDate);
   const gradeColors = group.grade ? getGradeColors(group.grade) : null;
+  const titleLabel = [group.topic, group.subtopic].filter(Boolean).join(' • ') || group.name;
 
   return (
     <Card
       variant="standard"
-      padding="compact"
-      className="relative overflow-hidden rounded-[18px] border-gray-200/90 shadow-sm shadow-gray-200/50 dark:border-gray-700/90 dark:shadow-black/20"
+      padding="none"
+      className="overflow-hidden rounded-xl border-slate-200 bg-white shadow-none dark:border-slate-800 dark:bg-slate-900"
     >
-      <div
-        className={`absolute left-0 top-0 h-full w-0.5 ${
-          availableDifficulties.length > 0 && groupHasFlashcards
-            ? 'bg-gradient-to-b from-indigo-400 via-violet-400 to-teal-400 dark:from-indigo-500 dark:via-violet-500 dark:to-teal-500'
-            : availableDifficulties.length > 0
-              ? 'bg-indigo-400 dark:bg-indigo-500'
-              : groupHasFlashcards
-                ? 'bg-teal-400 dark:bg-teal-500'
-                : 'bg-gray-300 dark:bg-gray-600'
-        }`}
-      />
-
-      <div className="ml-3.5 grid grid-rows-[auto_auto_auto] gap-2.5 max-[480px]:gap-2">
-        <div className="grid grid-cols-[1fr_auto] items-center gap-2.5">
-          <div className="min-w-0">
-            {getSubjectHeaderMeta(group.subject, formattedDate)}
+      <CardHeader className="space-y-3 p-4 pb-3">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-3">
+          <div className="min-w-0 space-y-2">
+            <div className="min-w-0">
+              {getSubjectHeaderMeta(group.subject, formattedDate)}
+            </div>
+            <CardTitle className="line-clamp-2 text-[15px] font-medium leading-snug text-slate-800 dark:text-slate-100 md:text-base">
+              {titleLabel}
+            </CardTitle>
           </div>
           {group.grade && gradeColors && (
             <Badge
@@ -298,8 +292,10 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
             </Badge>
           )}
         </div>
+      </CardHeader>
 
-        <div>
+      <CardContent className="space-y-3 border-t border-slate-200 p-4 pt-3 dark:border-slate-800">
+        <div className="space-y-3">
           {studyMode === 'pelaa' ? (
             availableDifficulties.length > 0 ? (
               <div className="space-y-2">
@@ -367,7 +363,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                   })}
                 </div>
 
-                <div className="flex min-h-8 items-center justify-between gap-2 border-t border-gray-200/80 py-1 dark:border-gray-700/80">
+                <div className="flex min-h-8 items-center justify-between gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
                   {reviewCandidate ? (
                     <Button
                       onClick={() => router.push(`/play/${reviewCandidate.set.code}?mode=review`)}
@@ -417,10 +413,8 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
               <p className="text-sm text-gray-500 dark:text-gray-400">Ei kortteja saatavilla</p>
             )
           )}
-
         </div>
-
-      </div>
+      </CardContent>
     </Card>
   );
 }
@@ -746,13 +740,7 @@ function PlayBrowsePageContent() {
         scrolled={scrolled}
       />
 
-      <div className="mx-auto max-w-4xl px-4 pb-10 pt-4 md:p-12">
-        <div className="mb-3.5 hidden sm:block">
-          <div className="mb-1.5 flex items-center gap-2">
-            <BookOpenText size={28} weight="duotone" className="text-indigo-600 dark:text-indigo-400" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 md:text-3xl">Valitse aihealue</h1>
-          </div>
-        </div>
+      <div className="mx-auto max-w-4xl px-4 pb-8 pt-3 md:px-8 md:pb-10 md:pt-8">
         {state === 'error' && (
           <Alert variant="destructive" className="mb-6">
             <AlertDescription>{error}</AlertDescription>
@@ -831,7 +819,7 @@ function PlayBrowsePageContent() {
             )}
 
             {filteredSets.length > 0 && (
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 {filteredSets.map((group) => (
                   <QuestionSetCard key={group.key} group={group} studyMode={studyMode} router={router} />
                 ))}

@@ -66,6 +66,27 @@ bash scripts/check-dev.sh
 - After major refactoring
 - CI/CD validation
 
+#### `run-badge-visual-validation.sh`
+**Purpose**: Capture deterministic badge screenshots for Results and Achievements layouts
+
+**Usage**:
+```bash
+# Start the app in another terminal first
+npm run dev
+
+# Capture mobile + desktop in light + dark
+bash scripts/run-badge-visual-validation.sh
+```
+
+**Prerequisites**:
+- Playwright Chrome skill script available at `.codex-home/.codex/skills/playwright-koekertaaja-chrome/scripts/pw_chrome.sh`
+- Or export `PWK` to an installed skill location
+- Google Chrome installed locally
+
+**Output**:
+- Screenshots saved to `output/playwright/badge-visual-regression/<timestamp>/`
+- Includes full-page, Results-only, and Achievements-only captures
+
 ---
 
 ## Workflow Examples

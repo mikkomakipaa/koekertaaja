@@ -49,6 +49,7 @@ import {
   ArrowLeft,
   CaretDown,
   CaretUp,
+  Sparkle,
 } from '@phosphor-icons/react';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { CreationProgressStepper } from '@/components/create/CreationProgressStepper';
@@ -56,6 +57,7 @@ import { TestQuestionsTab } from '@/components/create/TestQuestionsTab';
 import { CapacityWarningDialog } from '@/components/create/CapacityWarningDialog';
 import { MetricsTab } from '@/components/metrics/MetricsTab';
 import { MathText } from '@/components/ui/math-text';
+import { AppShellHeader } from '@/components/layout/AppShellHeader';
 import { useAuth } from '@/hooks/useAuth';
 import { createLogger } from '@/lib/logger';
 import { withCsrfHeaders } from '@/lib/security/csrf-client';
@@ -1457,38 +1459,37 @@ export default function CreatePage() {
   // Form screen
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 md:p-12 transition-colors">
-      <div className="max-w-3xl mx-auto">
+      <div className="min-h-screen bg-slate-50 p-6 transition-colors dark:bg-slate-950 md:p-12">
+      <div className="mx-auto max-w-4xl">
         {/* Header */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors">
-          <div className="relative border-b border-black/10 bg-white transition-shadow duration-150 dark:border-slate-700 dark:bg-slate-900">
-            <div className="mx-auto max-w-3xl px-4">
-              <div className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2.5 pb-1.5 pt-3">
-                <button
-                  type="button"
-                  onClick={() => router.push('/')}
-                  aria-label="Takaisin"
-                  className="inline-grid h-11 w-11 place-items-center rounded-xl bg-transparent text-black/55 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
-                >
-                  <ArrowLeft size={20} weight="regular" aria-hidden="true" />
-                </button>
-
-                <h1 className="truncate text-[22px] font-bold leading-[1.1] tracking-tight text-slate-900 max-[480px]:text-[19px] dark:text-slate-100">
-                  Kysymyssarjat
-                </h1>
-
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleSignOut}
-                  aria-label="Kirjaudu ulos"
-                  className="h-11 w-11 rounded-[14px] border border-black/[0.08] bg-black/[0.02] text-slate-700 transition-all hover:bg-black/[0.04] hover:text-slate-900 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                >
-                  <SignOut weight="duotone" className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-          </div>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-colors dark:border-slate-800 dark:bg-slate-900">
+          <AppShellHeader
+            icon={<Sparkle size={24} weight="duotone" />}
+            title="Kysymyssarjat"
+            description="Luo uusia sarjoja, laajenna olemassa olevia ja hallitse julkaistavia sisältöjä."
+            leadingAction={
+              <button
+                type="button"
+                onClick={() => router.push('/')}
+                aria-label="Takaisin etusivulle"
+                className="inline-grid h-11 w-11 place-items-center rounded-xl bg-transparent text-black/55 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
+              >
+                <ArrowLeft size={20} weight="regular" aria-hidden="true" />
+              </button>
+            }
+            trailingAction={
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleSignOut}
+                aria-label="Kirjaudu ulos"
+                className="h-11 w-11 rounded-[14px] border border-black/[0.08] bg-black/[0.02] text-slate-700 transition-all hover:bg-black/[0.04] hover:text-slate-900 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                <SignOut weight="duotone" className="h-5 w-5" />
+              </Button>
+            }
+            className="rounded-none border-0 shadow-none"
+          />
           <ARIATabBar
             tabs={tabsConfig}
             activeTab={activeTab}
@@ -1499,7 +1500,7 @@ export default function CreatePage() {
         </div>
 
         {/* Tab Content */}
-        <div className="mt-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm md:p-8 transition-colors">
+        <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-none transition-colors dark:border-slate-800 dark:bg-slate-900 md:p-6">
           {activeTab === 'create' && (
             <div
               id="question-form"

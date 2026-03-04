@@ -11,6 +11,7 @@ interface PrimaryActionButtonProps {
   mode?: ButtonProps['mode'];
   rightMeta?: ReactNode;
   disabled?: boolean;
+  surface?: 'default' | 'hero';
   className?: string;
 }
 
@@ -24,6 +25,7 @@ export function PrimaryActionButton({
   mode = 'quiz',
   rightMeta,
   disabled = false,
+  surface = 'default',
   className,
 }: PrimaryActionButtonProps) {
   return (
@@ -35,16 +37,19 @@ export function PrimaryActionButton({
       disabled={disabled}
       className={cn(
         primaryActionShadow,
-        'group h-[52px] w-full min-w-12 justify-between rounded-[14px] px-3.5 text-[15px] font-semibold min-[481px]:h-12 max-[480px]:text-[14px]',
+        'group h-[52px] w-full min-w-12 justify-between px-3.5 text-[15px] font-semibold max-[480px]:text-[14px]',
+        surface === 'hero' ? 'rounded-2xl px-4 text-base' : 'rounded-[14px]',
         className
       )}
       aria-label={ariaLabel}
     >
-      <span className="flex items-center gap-2">
-        {icon}
-        <span>{label}</span>
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="inline-flex shrink-0 items-center justify-center" aria-hidden="true">
+          {icon}
+        </span>
+        <span className="truncate">{label}</span>
       </span>
-      <span className="ml-auto flex items-center gap-2 text-white/85">
+      <span className="ml-3 flex shrink-0 items-center gap-2 text-white/85">
         {rightMeta}
         <ArrowRight size={16} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
       </span>

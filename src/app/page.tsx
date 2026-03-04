@@ -78,9 +78,9 @@ export default function HomePage() {
         <header className="hero-fade">
           <section
             aria-labelledby="dashboard-heading"
-            className="bg-[linear-gradient(180deg,rgba(98,94,255,0.085),rgba(98,94,255,0.04))] text-slate-950 dark:bg-[linear-gradient(155deg,rgba(58,56,210,0.88)_0%,rgba(44,42,159,0.88)_52%,rgba(23,25,79,0.88)_100%)] dark:text-white"
+            className="bg-[linear-gradient(180deg,rgba(99,102,241,0.18)_0%,rgba(99,102,241,0.10)_45%,rgba(99,102,241,0)_100%)] text-slate-950 dark:bg-[linear-gradient(180deg,rgba(99,102,241,0.85)_0%,rgba(99,102,241,0.55)_40%,rgba(99,102,241,0)_100%)] dark:text-white"
           >
-            <div className="mx-auto max-w-3xl px-4 pt-4 pb-3 md:px-8 md:pt-5 md:pb-3">
+            <div className="mx-auto max-w-4xl px-4 pt-4 pb-5 md:px-8 md:pt-5 md:pb-6 dark:pt-5 dark:pb-8 md:dark:pt-6 md:dark:pb-10">
               <div className="flex items-start gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/80 ring-1 ring-indigo-200/80 backdrop-blur dark:bg-white/12 dark:ring-white/15">
                   <Image
@@ -106,6 +106,7 @@ export default function HomePage() {
                 <PrimaryActionButton
                   onClick={() => router.push(dashboardAction.href)}
                   mode={dashboardAction.mode}
+                  surface="hero"
                   icon={
                     dashboardAction.mode === 'study' ? (
                       <Book size={20} weight="duotone" />
@@ -115,16 +116,15 @@ export default function HomePage() {
                   }
                   label={dashboardAction.label}
                   ariaLabel={dashboardAction.label}
-                  className="h-[52px] w-full rounded-2xl px-4 text-base"
                 />
               </div>
             </div>
           </section>
         </header>
 
-        <div className="mx-auto max-w-3xl px-4 pb-4 md:px-8 md:pb-8">
+        <div className="mx-auto max-w-4xl px-4 pb-4 md:px-8 md:pb-6">
           <section
-            className="mt-2 border-t border-gray-100/70 pt-3 transition-colors dark:border-slate-800/70"
+            className="mt-0 pt-3 transition-colors"
             aria-labelledby="modes-heading"
           >
             <div className="scroll-fade space-y-1" data-scroll>
@@ -136,15 +136,15 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+            <div className="mt-2.5 grid grid-cols-1 gap-3.5 md:grid-cols-2 md:gap-4">
               <Link
                 href="/play?mode=pelaa"
-                className="group scroll-fade rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-300 dark:focus-visible:ring-offset-slate-950"
+                className="group scroll-fade rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-300 dark:focus-visible:ring-offset-slate-950"
                 data-scroll
                 style={{ '--stagger': '60ms' } as CSSProperties}
               >
-                <Card className="h-full rounded-2xl border border-slate-200/90 bg-white/95 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_3px_8px_rgba(15,23,42,0.05)] dark:border-slate-700/80 dark:bg-slate-900/70 dark:shadow-[0_1px_2px_rgba(0,0,0,0.13)] dark:group-hover:shadow-[0_3px_8px_rgba(0,0,0,0.18)]">
-                  <CardHeader className="space-y-4">
+                <Card className="h-full rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_3px_8px_rgba(15,23,42,0.05)] dark:border-slate-700/80 dark:bg-slate-900 dark:shadow-[0_1px_2px_rgba(0,0,0,0.13)] dark:group-hover:shadow-[0_3px_8px_rgba(0,0,0,0.18)]">
+                  <CardHeader className="space-y-3 pb-3">
                     <div className="flex items-start gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 transition-colors dark:bg-indigo-500/15">
                         <GameController size={30} weight="duotone" className="text-indigo-600 dark:text-indigo-300" aria-hidden="true" />
@@ -160,7 +160,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="flex items-center justify-between border-t border-slate-200/90 pt-4 dark:border-slate-700/80">
+                  <CardContent className="flex items-center justify-between border-t border-slate-200/90 pt-3 dark:border-slate-700/80">
                     <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Pelaa</span>
                     <ArrowRight size={18} weight="bold" className="text-indigo-600 transition-transform group-hover:translate-x-0.5 dark:text-indigo-300" aria-hidden="true" />
                   </CardContent>
@@ -169,12 +169,12 @@ export default function HomePage() {
 
               <Link
                 href="/play?mode=opettele"
-                className="group scroll-fade rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 dark:focus-visible:ring-teal-300 dark:focus-visible:ring-offset-slate-950"
+                className="group scroll-fade rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 dark:focus-visible:ring-teal-300 dark:focus-visible:ring-offset-slate-950"
                 data-scroll
                 style={{ '--stagger': '140ms' } as CSSProperties}
               >
-                <Card className="h-full rounded-2xl border border-slate-200/90 bg-white/95 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_3px_8px_rgba(15,23,42,0.05)] dark:border-slate-700/80 dark:bg-slate-900/70 dark:shadow-[0_1px_2px_rgba(0,0,0,0.13)] dark:group-hover:shadow-[0_3px_8px_rgba(0,0,0,0.18)]">
-                  <CardHeader className="space-y-4">
+                <Card className="h-full rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_3px_8px_rgba(15,23,42,0.05)] dark:border-slate-700/80 dark:bg-slate-900 dark:shadow-[0_1px_2px_rgba(0,0,0,0.13)] dark:group-hover:shadow-[0_3px_8px_rgba(0,0,0,0.18)]">
+                  <CardHeader className="space-y-3 pb-3">
                     <div className="flex items-start gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50 transition-colors dark:bg-teal-500/15">
                         <Cards size={30} weight="duotone" className="text-teal-500 dark:text-teal-300" aria-hidden="true" />
@@ -190,7 +190,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="flex items-center justify-between border-t border-slate-200/90 pt-4 dark:border-slate-700/80">
+                  <CardContent className="flex items-center justify-between border-t border-slate-200/90 pt-3 dark:border-slate-700/80">
                     <span className="text-sm font-medium text-teal-700 dark:text-teal-300">Opettele</span>
                     <ArrowRight size={18} weight="bold" className="text-teal-500 transition-transform group-hover:translate-x-0.5 dark:text-teal-300" aria-hidden="true" />
                   </CardContent>
@@ -199,7 +199,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          <div className="scroll-fade mt-6 border-t border-gray-100/70 pt-4 transition-colors dark:border-slate-800/70 md:mt-8 md:pt-6" data-scroll>
+          <div className="scroll-fade mt-5 pt-4 transition-colors md:mt-6 md:pt-5" data-scroll>
             <AudienceTabs activeAudience={activeAudience} onAudienceChange={setActiveAudience} />
           </div>
         </div>

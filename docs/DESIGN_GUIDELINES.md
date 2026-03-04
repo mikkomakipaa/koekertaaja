@@ -1,9 +1,11 @@
 # Design Guidelines
 
-**Last Updated:** February 2026
+**Last Updated:** 2026-03-03
 **Status:** Standardized after UX/UI audit
 
 This document defines the design system for Koekertaaja, ensuring visual consistency and polished user experience across all pages and components.
+
+This document is the design source of truth for shared shell surfaces. If implementation guidance in `docs/` or `DWF/` drifts, align those documents to this file unless a newer approved ADR explicitly says otherwise.
 
 ---
 
@@ -18,6 +20,251 @@ Koekertaaja is an educational tool for Finnish students (grades 4-9), requiring:
 - **Mobile-first:** Optimized for phones and tablets (primary usage context)
 
 **Inspiration:** Notion (warmth), Linear (precision), Duolingo (encouragement)
+
+---
+
+## Design System Contract
+
+This section is strict. New UI work should follow these rules unless there is a documented exception.
+
+### 1. Product Shell First
+- The front page and Play entry pages are product shells, not marketing surfaces.
+- Top sections should behave like dashboard headers, not promo banners.
+- One primary action per hero/header surface.
+- Exploration and secondary actions belong below the hero in structured cards or sections.
+
+### 2. Light and Dark Mode Are Not Mirrored
+- **Light mode** uses calmer surfaces, softer borders, and lower visual weight.
+- **Dark mode** can use stronger framing, gradients, and contrast.
+- Do not copy a dark-mode hero directly into light mode.
+- In light mode, the button may be visually stronger than the surrounding container.
+
+### 3. Border Before Shadow
+- Structure comes from border, spacing, and typography first.
+- Shadow is secondary and should be restrained.
+- If a card feels too heavy, reduce shadow before removing the border.
+- Avoid “puffy” cards created by combining strong border, heavy blur, and strong surface tint.
+
+### 4. One Surface, One Job
+- Header/hero surfaces: introduce and route.
+- Mode cards: explain and navigate.
+- Informational sections: explain only.
+- Do not mix marketing copy, product state, and multiple CTA types inside the same block.
+
+### 5. Shared Components Must Stay Shared
+- If the same action pattern appears on the front page and Play pages, use the same component or same visual contract.
+- Do not create page-specific button styling for equivalent primary actions.
+- Do not rename identical actions without a real semantic difference.
+
+---
+
+## Elements That Must Be Unified
+
+These elements must use the same design logic across the refreshed front page, Play browse, Create, Results, and Achievements shell surfaces.
+
+### Primary CTA
+- Height
+- Border radius
+- Icon placement
+- Label weight
+- Right-side affordance (arrow / progress meta)
+- Hover, active, and focus behavior
+- Mode coloring (`quiz`, `study`, `review`)
+
+### Hero / Header Surfaces
+- Radius family
+- Vertical density
+- Title scale
+- Subtitle contrast rules
+- CTA placement
+- Light-mode softness vs dark-mode intensity
+
+### Mode Cards
+- Border weight
+- Shadow intensity
+- Internal structure:
+  - eyebrow
+  - title
+  - description
+  - footer action row
+- Footer action wording (`Pelaa`, `Opettele`)
+- Hover lift amount
+
+### Section Rhythm
+- Gap from hero to next section
+- Gap from section title to card grid
+- Divider treatment
+- Container max width and horizontal padding
+
+### Informational Sections
+- Lower visual intensity than actionable sections
+- Softer background and border treatment
+- No strong glow or promo styling
+- Should read as guidance, not as competing CTA blocks
+
+### Achievement Tokens
+- Achievement badges on Results and Achievements pages use a shared round token pattern, not rectangular cards.
+- The collectible surface is the circle; the badge title stays visible below the token.
+- Locked tokens stay readable with subdued contrast and a clear lock indicator rather than heavy opacity loss.
+- Results may add a highlight ring to freshly earned or explicitly rare tokens, but the emphasis stays on the circle rather than adding a card wrapper.
+- Tooltip or dialog behavior may wrap the token, but the wrapper must not introduce card-like chrome around it.
+- Token grids should favor denser collection layouts: 3 columns on small phones where space allows, then scale up progressively on tablet and desktop.
+
+### Footer
+- Alignment logic
+- Typography size
+- Link styling
+- Attribution formatting
+
+---
+
+## Shell Validation Snapshot
+
+Validated on 2026-03-04 against the current implementation:
+
+- Front page (`/`): custom dashboard hero with one primary CTA, shared mode cards below, quieter audience/help section, shared footer.
+- Play browse (`/play`): shared browse shell with compact heading, shared primary CTA on quiz/flashcard cards, `max-w-4xl` container rhythm, no competing hero CTA group.
+- Create (`/create`): `AppShellHeader` + tab shell container for create/manage flows; header uses the shared border-first shell treatment instead of a bespoke promo panel.
+- Create results (`/create/results`): `AppShellHeader` tone variants (`success`, `warning`, `danger`) with restrained result cards and one clear return action.
+- Results (`ResultsScreen`): lightweight section header (not `AppShellHeader`), compact metric cards with stronger value emphasis, and tabbed detail sections using the same card weight rules. No Play CTA belongs in the results header.
+- Achievements (`/play/achievements`): `AppShellHeader`, restrained stat cards, collection card, and topic-map section below the main shell content. No Play CTA belongs in the achievements header.
+
+What must remain unified:
+
+- Shared shell containers stay on `max-w-4xl` with `px-4 md:px-8` rhythm unless a page is intentionally long-form.
+- Hero or shell headers get one primary route action only; secondary navigation belongs in tabs, cards, or lower sections.
+- `PrimaryActionButton` remains the shared CTA for equivalent quiz/study entry actions.
+- `AppShellHeader` remains the default interior-page shell header for Create and Achievements class pages.
+- Results and Achievements are explicit exceptions: their headers do not surface a Play CTA.
+- Footer styling stays lightweight and lower-contrast than actionable sections.
+
+---
+
+## Strict Rules For Refreshed Front Page and Play Entry
+
+### Hero Rules
+- Max one CTA in the hero/header surface.
+- No secondary CTA group inside the same hero.
+- No inner nested “today” or “summary” card unless it contains real dynamic value.
+- If helper text under the CTA adds no routing value, remove it.
+- Light-mode hero should use:
+  - soft tint
+  - subtle neutral border
+  - no heavy container shadow
+
+### CTA Copy Rules
+- Use direct verbs:
+  - `Pelaa`
+  - `Opettele`
+  - `Jatka`
+  - `Aloita harjoittelu`
+- Avoid mixed action language like `Siirry visoihin` in one place and `Pelaa` in another for the same action class.
+- If context matters, prefer mode-aware CTA labels rather than extra explanatory text.
+
+### Card Weight Rules
+- Border is mandatory on mode cards.
+- Base shadow should be subtle.
+- Hover shadow should be stronger than base shadow, but still restrained.
+- Do not combine:
+  - strong border
+  - strong background tint
+  - strong always-on shadow
+
+### Spacing Rules
+- Header vertical padding should be tighter than standard content-card padding.
+- Section rhythm should favor cohesion over showroom spacing.
+- On refined shell surfaces, prefer spacing instead of faint divider lines between major sections.
+- Recommended default:
+  - hero/header vertical padding: compact
+  - hero to next section: tight
+  - section title to cards: tighter than section-to-section spacing
+
+### Light Mode Contrast Rules
+- Subtitle/body-supporting copy must maintain strong readability.
+- Prefer explicit contrast values for hero subtitles when needed.
+- Avoid very low-opacity brand tints for important text.
+
+### Informational Section Rules
+- Audience/help/trust sections must be visually quieter than action sections.
+- Reduce glow, shadow, and accent saturation in those sections.
+- Active tabs may be highlighted, but the section should still read as secondary to the main task flow.
+
+---
+
+## Documented Exceptions
+
+These are approved deviations from the general rules. Each exception is intentional and must not be treated as licence to apply the pattern elsewhere.
+
+### Exception 1 — `rounded-2xl` on Shell CTA and Header/Icon Containers
+
+**Where:** Dashboard CTA button (`PrimaryActionButton` on hero surfaces), the front-page logo icon container, and `AppShellHeader` shell/header containers.
+
+**Why:** Shared shell headers are not standard content cards. A slightly larger radius (14–16px / `rounded-2xl`) reinforces the product-shell role, keeps icon containers and shell frames in the same radius family, and gives the hero CTA visual dominance without introducing a separate page-specific shape language.
+
+**Constraint:** `rounded-2xl` is permitted only within shared hero/header surfaces. Standard action cards, metrics cards, list cards, and content containers still use the regular system (`rounded-lg`/`rounded-[14px]` buttons, `rounded-xl` cards).
+
+---
+
+### Exception 2 — Feather-Light Resting Shadow on Mode Cards
+
+**Where:** `Tietovisat` and `Muistikortit` mode cards on the front page and play-entry pages.
+
+**Why:** Mode cards are the primary navigation surface below the hero. A near-invisible resting shadow (`shadow-[0_1px_2px_rgba(15,23,42,0.03)]`) adds just enough surface definition to distinguish cards from the page background without elevation. The hover shadow still grows meaningfully on interaction.
+
+**Constraint:** Shadow opacity must stay at or below `0.04` in light mode. Do not add a resting shadow to standard content cards (question sets, results items, list cards).
+
+---
+
+### Exception 3 — Indigo Gradient on Front Page Hero (Dark Mode)
+
+**Where:** The hero `<section>` background on `/` (front page only) in dark mode.
+
+**Value:** `linear-gradient(180deg, rgba(99,102,241,0.85) 0%, rgba(55,48,163,0.85) 100%)`
+
+**Why:** Dark mode allows stronger framing. The semi-transparent indigo gradient creates depth and mode identity without the saturated color block effect of a solid fill. The `0.85` opacity keeps it atmospheric rather than dominant.
+
+**Constraint:** This gradient is for the front page hero only. Interior shell headers use the neutral `AppShellHeader` tone system rather than a second hero treatment. Do not introduce similar gradients into other surfaces without explicit sign-off.
+
+---
+
+### Exception 4 — `max-w-4xl` as App Shell Default
+
+**Where:** All main content containers across the app shell (front page, play pages, create, browse).
+
+**Value:** `max-w-4xl` (896px), `px-4 md:px-8`
+
+**Why:** The original `max-w-3xl` (768px) was too narrow on tablet and desktop, compressing content unnecessarily. `max-w-4xl` matches the play-page header and creates a consistent reading width across all primary surfaces.
+
+**Constraint:** Informational or long-form pages (docs, help) may use `max-w-2xl` for readability. Never use `max-w-7xl` on dashboard/shell surfaces.
+
+---
+
+### Exception 5 — No Play CTA in Results or Achievements Headers
+
+**Where:** `ResultsScreen` header surfaces and the Achievements page header (`/play/achievements`).
+
+**Why:** These pages are review and progress destinations, not re-entry launch surfaces. Adding a Play CTA in the header competes with reflection, summary, and collection browsing. Replay or continue actions, if needed, belong lower in the page hierarchy where they do not override the page purpose.
+
+**Constraint:** Do not place `PrimaryActionButton` or equivalent Play-entry CTA in Results or Achievements headers. This exception applies only to these review/progress surfaces; front page and Play-entry shells still use the unified CTA rules.
+
+**Results-specific note:** Results use a lighter section-header treatment instead of a bordered shell card. The header should read as `icon + result title + compact metadata`, not as a featured promo or launch surface.
+
+---
+
+### Exception 6 — Optimized Header Area on Play Browse Cards
+
+**Where:** Question-set cards on `/play`.
+
+**Why:** The play browse cards work best when the header is compact and scan-friendly. The subject icon, subject label, and date provide stable metadata, while the main title can carry the more specific topic emphasis. Repeating a mode eyebrow (`Tietovisa`) and an explanatory sub-header (`Valitse vaikeustaso...`) adds noise instead of clarity.
+
+**Constraint:** On Play browse cards:
+- keep the header metadata row as `icon + subject + date`
+- show the main title once, using a smaller sub-header scale and preferring topic/subtopic content when available
+- remove the top-left mode indicator (`Tietovisa` / equivalent)
+- remove helper sub-header copy such as `Valitse vaikeustaso...`
+- do not duplicate subject/date metadata elsewhere in the same card header
+
+This exception applies to Play browse cards only. Front-page mode cards and other shell cards still use the broader card-structure rules when they need eyebrow/title/description/footer structure.
 
 ---
 
