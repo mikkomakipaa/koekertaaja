@@ -12,8 +12,8 @@ import { ModeClassBar } from '@/components/play/ModeClassBar';
 import { PrimaryActionButton } from '@/components/play/PrimaryActionButton';
 import { cn } from '@/lib/utils';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
-import { SUBJECTS, SUBJECTS_BY_ID } from '@/config/subjects';
 import { getGradeColors } from '@/lib/utils/grade-colors';
+import { getSubjectConfig } from '@/lib/utils/subject-config';
 import { buildModeGradeQuery, parseGradeParam, parseStudyModeParam } from '@/lib/play/mode-grade-query';
 import { difficultyLabels, getQuizPrimaryActionLabel } from '@/lib/play/primary-action';
 import {
@@ -31,31 +31,14 @@ import { useRecentSearches } from '@/hooks/useRecentSearches';
 import { useScrollDetection } from '@/hooks/useScrollDetection';
 import { createLogger } from '@/lib/logger';
 import {
-  GlobeHemisphereWest,
-  MathOperations,
-  Scroll,
-  Bank,
   Books,
   Circle,
   CirclesFour,
   Timer,
   Sparkle,
-  BookOpenText,
   Book,
   ArrowCounterClockwise,
   MagnifyingGlass,
-  Leaf,
-  MapTrifold,
-  Translate,
-  Atom,
-  Flask,
-  Plant,
-  Star,
-  Scales,
-  PaintBrush,
-  MusicNotes,
-  Lightning,
-  Scissors,
 } from '@phosphor-icons/react';
 
 type BrowseState = 'loading' | 'loaded' | 'error';
@@ -68,17 +51,6 @@ interface GroupedQuestionSets {
   subtopic?: string;
   grade?: number;
   sets: QuestionSet[];
-}
-
-interface SubjectConfig {
-  icon: ReactNode;
-  label: string;
-  color: string;
-}
-
-interface SubjectIconConfig {
-  icon: ReactNode;
-  color: string;
 }
 
 const logger = createLogger({ module: 'play.page' });
@@ -121,44 +93,6 @@ const difficultyIcons: Record<string, ReactNode> = {
   aikahaaste: <Timer size={20} weight="duotone" className="inline" />,
 };
 
-const subjectIconConfigs: Record<string, SubjectIconConfig> = {
-  english:                { icon: <GlobeHemisphereWest size={20} weight="duotone" />, color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' },
-  swedish:                { icon: <Translate size={20} weight="duotone" />,           color: 'bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400' },
-  finnish:                { icon: <BookOpenText size={20} weight="duotone" />,        color: 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' },
-  math:                   { icon: <MathOperations size={20} weight="duotone" />,      color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400' },
-  physics:                { icon: <Atom size={20} weight="duotone" />,                color: 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400' },
-  chemistry:              { icon: <Flask size={20} weight="duotone" />,               color: 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400' },
-  biology:                { icon: <Leaf size={20} weight="duotone" />,                color: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' },
-  'environmental-studies':{ icon: <Plant size={20} weight="duotone" />,               color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' },
-  history:                { icon: <Scroll size={20} weight="duotone" />,              color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400' },
-  society:                { icon: <Bank size={20} weight="duotone" />,                color: 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400' },
-  geography:              { icon: <MapTrifold size={20} weight="duotone" />,          color: 'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400' },
-  religion:               { icon: <Star size={20} weight="duotone" />,                color: 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400' },
-  ethics:                 { icon: <Scales size={20} weight="duotone" />,              color: 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400' },
-  art:                    { icon: <PaintBrush size={20} weight="duotone" />,          color: 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400' },
-  music:                  { icon: <MusicNotes size={20} weight="duotone" />,          color: 'bg-fuchsia-50 dark:bg-fuchsia-900/20 text-fuchsia-600 dark:text-fuchsia-400' },
-  pe:                     { icon: <Lightning size={20} weight="duotone" />,           color: 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400' },
-  crafts:                 { icon: <Scissors size={20} weight="duotone" />,            color: 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400' },
-};
-
-const getSubjectConfig = (subject: string): SubjectConfig => {
-  // Resolve legacy Finnish names (e.g. 'matematiikka') to canonical subject IDs (e.g. 'math')
-  const subjectDef =
-    SUBJECTS_BY_ID[subject] ??
-    SUBJECTS.find((s) => s.name.toLowerCase() === subject.toLowerCase());
-
-  const canonicalId = subjectDef?.id ?? subject;
-
-  const iconConfig = subjectIconConfigs[canonicalId] ?? {
-    icon: <BookOpenText size={20} weight="duotone" />,
-    color: 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
-  };
-  return {
-    ...iconConfig,
-    label: subjectDef?.name ?? subject,
-  };
-};
-
 const getSubjectHeaderMeta = (subject: string, formattedDate: string | null) => {
   const config = getSubjectConfig(subject);
 
@@ -166,7 +100,7 @@ const getSubjectHeaderMeta = (subject: string, formattedDate: string | null) => 
     <div className="flex min-w-0 items-center gap-2">
       <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${config.color}`}>{config.icon}</div>
       {formattedDate && (
-        <span className="truncate text-[12px] font-medium text-slate-500 dark:text-slate-400">
+        <span className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
           {formattedDate}
         </span>
       )}
@@ -285,7 +219,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
             <div className="min-w-0">
               {getSubjectHeaderMeta(group.subject, formattedDate)}
             </div>
-            <CardTitle className="line-clamp-2 text-[17px] font-semibold leading-tight text-slate-900 dark:text-slate-100">
+            <CardTitle className="line-clamp-2 text-base font-semibold leading-tight text-slate-900 dark:text-slate-100">
               {titleLabel}
             </CardTitle>
           </div>
@@ -295,7 +229,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
               semantic="grade"
               size="xs"
               className={cn(
-                'h-6 self-start border-current/25 bg-white/75 px-2 text-[11px] font-medium tracking-[0.01em] dark:bg-slate-950/50 dark:border-current/20',
+                'h-6 self-start border-current/25 bg-white/75 px-2 text-xs font-medium tracking-[0.01em] dark:bg-slate-950/50 dark:border-current/20',
                 gradeColors.text,
                 gradeColors.border
               )}
@@ -321,7 +255,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                   ariaLabel={`${primaryActionText} vaikeustaso`}
                   rightMeta={
                     primaryActionMeta ? (
-                      <span className="text-[12px] font-medium tabular-nums text-white/85 max-[480px]:text-[11px]">
+                      <span className="text-xs font-medium tabular-nums text-white/85 max-[480px]:text-xs">
                         {primaryActionMeta}
                       </span>
                     ) : null
@@ -347,7 +281,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                         variant="secondary"
                         size="chip"
                         className={cn(
-                          'h-10 min-h-10 min-w-10 justify-center gap-1.5 rounded-lg border px-2.5 text-[12px] font-medium shadow-none max-[480px]:text-[11px]',
+                          'h-10 min-h-10 min-w-10 justify-center gap-1.5 rounded-lg border px-2.5 text-sm font-medium shadow-none max-[480px]:text-xs',
                           difficulty === primaryDifficulty
                             ? cn(
                                 colors.bg,
@@ -384,7 +318,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                       mode="review"
                       variant="ghost"
                       size="sm"
-                      className="h-7 min-h-0 gap-1 rounded-full border border-rose-200/80 bg-rose-50/70 px-2.5 py-0 text-[11px] font-medium leading-none text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-900/30"
+                      className="h-7 min-h-0 gap-1 rounded-full border border-rose-200/80 bg-rose-50/70 px-2.5 py-0 text-xs font-medium leading-none text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-900/30"
                       aria-label="Virheet"
                     >
                       <ArrowCounterClockwise size={14} weight="duotone" className="inline" />
@@ -392,14 +326,14 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                     </Button>
                   ) : (
                     <span
-                      className="pointer-events-none inline-flex h-7 items-center rounded-full border border-transparent bg-slate-100/70 px-2.5 text-[11px] font-medium leading-none text-slate-500 opacity-70 dark:bg-slate-800/70 dark:text-slate-400"
+                      className="pointer-events-none inline-flex h-7 items-center rounded-full border border-transparent bg-slate-100/70 px-2.5 text-xs font-medium leading-none text-slate-500 opacity-70 dark:bg-slate-800/70 dark:text-slate-400"
                       aria-disabled="true"
                     >
                       Ei virheitä tallessa
                     </span>
                   )}
 
-                  <span className="inline-flex items-center truncate text-right text-[11px] leading-none text-slate-500 dark:text-slate-400">
+                  <span className="inline-flex items-center truncate text-right text-xs leading-none text-slate-500 dark:text-slate-400">
                     {latestDifficultyScore
                       ? `Viimeisin: ${latestDifficultyScore.score.score}/${latestDifficultyScore.score.total} (${difficultyLabels[latestDifficultyScore.difficulty]})`
                       : 'Ei tuloksia'}

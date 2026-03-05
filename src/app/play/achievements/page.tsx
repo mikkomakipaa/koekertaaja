@@ -3,7 +3,6 @@
 import type { ComponentProps } from 'react';
 import Link from 'next/link.js';
 import {
-  Trophy,
   Medal,
   ArrowLeft,
   Fire,
@@ -11,9 +10,10 @@ import {
   Sparkle,
 } from '@phosphor-icons/react';
 import { BadgeCollectionCard } from '@/components/badges/BadgeCollectionCard';
+import { ExamHistoryTab } from '@/components/achievements/ExamHistoryTab';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AchievementsMapSection } from '@/components/mindMap/AchievementsMapSection';
-import { AppShellHeader } from '@/components/layout/AppShellHeader';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getBadgeDefinitionCount, useBadges } from '@/hooks/useBadges';
 import type { Badge } from '@/types';
 
@@ -56,25 +56,47 @@ export function AchievementsPageContent({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 transition-colors dark:bg-slate-950">
+    <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
       <div className="mx-auto max-w-4xl space-y-6 p-6 pb-24">
-        <AppShellHeader
-          icon={<Trophy size={24} weight="duotone" />}
-          title="Saavutukset"
-          description={`Avaat merkkejä harjoittelemalla. Olet avannut ${unlockedCount}/${BADGE_TOTAL} merkkiä.`}
-          leadingAction={
+        <section className="border-b border-slate-200/80 pb-4 dark:border-white/10">
+          <div className="flex items-center gap-3">
             <Link
               href="/play"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-gray-300 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-300 dark:focus-visible:ring-offset-gray-900"
-              aria-label="Takaisin pelaamaan"
+              className="inline-grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-black/[0.08] bg-black/[0.02] text-gray-600 transition-all hover:bg-black/[0.04] hover:text-gray-900 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
+              aria-label="Takaisin"
             >
-              <ArrowLeft size={18} weight="bold" />
+              <ArrowLeft size={20} weight="regular" aria-hidden="true" />
             </Link>
-          }
-        />
+            <div className="min-w-0">
+              <h1 className="text-[22px] font-bold leading-[1.1] tracking-tight text-slate-950 dark:text-slate-50 max-[480px]:text-[19px]">
+                Saavutukset
+              </h1>
+            </div>
+          </div>
+        </section>
         <StatsSection stats={stats} unlockedCount={unlockedCount} />
-        <BadgesSection badges={badges} />
-        <AchievementsMapSection {...mapSectionProps} />
+        <Tabs defaultValue="exams" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3 rounded-xl border border-slate-200 bg-white p-1 shadow-none dark:border-slate-800 dark:bg-slate-900">
+            <TabsTrigger value="exams" className="rounded-xl text-sm md:text-base">
+              Kokeet
+            </TabsTrigger>
+            <TabsTrigger value="mastery" className="rounded-xl text-sm md:text-base">
+              Aiheet
+            </TabsTrigger>
+            <TabsTrigger value="badges" className="rounded-xl text-sm md:text-base">
+              Merkit ({unlockedCount}/{BADGE_TOTAL})
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="exams" className="mt-4">
+            <ExamHistoryTab />
+          </TabsContent>
+          <TabsContent value="mastery" className="mt-4">
+            <AchievementsMapSection {...mapSectionProps} />
+          </TabsContent>
+          <TabsContent value="badges" className="mt-4">
+            <BadgesSection badges={badges} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
@@ -89,9 +111,6 @@ function StatsSection({ stats, unlockedCount }: { stats: BadgeStats; unlockedCou
           Tilastot
         </p>
         <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Harjoittelun yhteenveto</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          Merkit, ennätykset ja pelatut sessiot samassa näkymässä.
-        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -147,29 +166,30 @@ function BadgesSection({ badges }: { badges: Badge[] }) {
   return (
     <BadgeCollectionCard
       badges={badges}
-      description="Jokainen merkki avautuu harjoittelemalla. Napauta merkkiä nähdäksesi ehdot."
     />
   );
 }
 
 function EmptyAchievementsState() {
   return (
-    <div className="min-h-screen bg-slate-50 p-6 dark:bg-slate-950">
+    <div className="min-h-screen bg-white p-6 transition-colors dark:bg-gray-900">
       <div className="mx-auto max-w-4xl space-y-3">
-        <AppShellHeader
-          icon={<Trophy size={24} weight="duotone" />}
-          title="Saavutukset"
-          description="Suorita ensimmäinen harjoituskierros avataksesi ensimmäisen merkin ja nähdäksesi tilastosi."
-          leadingAction={
+        <section className="border-b border-slate-200/80 pb-4 dark:border-white/10">
+          <div className="flex items-center gap-3">
             <Link
               href="/play"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-gray-300 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-300 dark:focus-visible:ring-offset-gray-900"
-              aria-label="Takaisin pelaamaan"
+              className="inline-grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-black/[0.08] bg-black/[0.02] text-gray-600 transition-all hover:bg-black/[0.04] hover:text-gray-900 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
+              aria-label="Takaisin"
             >
-              <ArrowLeft size={18} weight="bold" />
+              <ArrowLeft size={20} weight="regular" aria-hidden="true" />
             </Link>
-          }
-        />
+            <div className="min-w-0">
+              <h1 className="text-[22px] font-bold leading-[1.1] tracking-tight text-slate-950 dark:text-slate-50 max-[480px]:text-[19px]">
+                Saavutukset
+              </h1>
+            </div>
+          </div>
+        </section>
 
         <Card variant="standard" padding="none" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800 dark:bg-slate-900">
           <CardHeader className="space-y-1 border-b border-slate-200 p-5 dark:border-slate-800">

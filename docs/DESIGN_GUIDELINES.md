@@ -120,21 +120,21 @@ These elements must use the same design logic across the refreshed front page, P
 
 ## Shell Validation Snapshot
 
-Validated on 2026-03-04 against the current implementation:
+Validated on 2026-03-05 against the current implementation:
 
 - Front page (`/`): custom dashboard hero with one primary CTA, shared mode cards below, quieter audience/help section, shared footer.
 - Play browse (`/play`): shared browse shell with compact heading, shared primary CTA on quiz/flashcard cards, `max-w-4xl` container rhythm, no competing hero CTA group.
 - Create (`/create`): `AppShellHeader` + tab shell container for create/manage flows; header uses the shared border-first shell treatment instead of a bespoke promo panel.
 - Create results (`/create/results`): `AppShellHeader` tone variants (`success`, `warning`, `danger`) with restrained result cards and one clear return action.
-- Results (`ResultsScreen`): lightweight section header (not `AppShellHeader`), compact metric cards with stronger value emphasis, and tabbed detail sections using the same card weight rules. No Play CTA belongs in the results header.
-- Achievements (`/play/achievements`): `AppShellHeader`, restrained stat cards, collection card, and topic-map section below the main shell content. No Play CTA belongs in the achievements header.
+- Results (`ResultsScreen`): lightweight Play-style section header with back button, no header icon tile, compact metric cards with stronger value emphasis, and tabbed detail sections using the same card weight rules. No Play CTA belongs in the results header.
+- Achievements (`/play/achievements`): lightweight Play-style section header with back button, no header icon tile, restrained stat cards, and tabs for `Aiheiden hallinta` and `Merkit`. No Play CTA belongs in the achievements header.
 
 What must remain unified:
 
 - Shared shell containers stay on `max-w-4xl` with `px-4 md:px-8` rhythm unless a page is intentionally long-form.
 - Hero or shell headers get one primary route action only; secondary navigation belongs in tabs, cards, or lower sections.
 - `PrimaryActionButton` remains the shared CTA for equivalent quiz/study entry actions.
-- `AppShellHeader` remains the default interior-page shell header for Create and Achievements class pages.
+- `AppShellHeader` remains the default interior-page shell header for Create and similar admin interiors; Results and Achievements use the lighter Play-style header variant.
 - Results and Achievements are explicit exceptions: their headers do not surface a Play CTA.
 - Footer styling stays lightweight and lower-contrast than actionable sections.
 
@@ -247,7 +247,7 @@ These are approved deviations from the general rules. Each exception is intentio
 
 **Constraint:** Do not place `PrimaryActionButton` or equivalent Play-entry CTA in Results or Achievements headers. This exception applies only to these review/progress surfaces; front page and Play-entry shells still use the unified CTA rules.
 
-**Results-specific note:** Results use a lighter section-header treatment instead of a bordered shell card. The header should read as `icon + result title + compact metadata`, not as a featured promo or launch surface.
+**Results/Achievements note:** Both pages use a lighter section-header treatment with back action and compact metadata, without a decorative header icon tile.
 
 ---
 
@@ -255,16 +255,28 @@ These are approved deviations from the general rules. Each exception is intentio
 
 **Where:** Question-set cards on `/play`.
 
-**Why:** The play browse cards work best when the header is compact and scan-friendly. The subject icon, subject label, and date provide stable metadata, while the main title can carry the more specific topic emphasis. Repeating a mode eyebrow (`Tietovisa`) and an explanatory sub-header (`Valitse vaikeustaso...`) adds noise instead of clarity.
+**Why:** The play browse cards work best when the header is compact and scan-friendly. The subject icon and date provide stable metadata, while the title carries the subject. Repeating a mode eyebrow (`Tietovisa`) and an explanatory sub-header (`Valitse vaikeustaso...`) adds noise instead of clarity.
 
 **Constraint:** On Play browse cards:
-- keep the header metadata row as `icon + subject + date`
-- show the main title once, using a smaller sub-header scale and preferring topic/subtopic content when available
+- keep the header metadata row as `icon + date`
+- show the main title once, using a smaller sub-header scale and using the subject as the title content
 - remove the top-left mode indicator (`Tietovisa` / equivalent)
 - remove helper sub-header copy such as `Valitse vaikeustaso...`
-- do not duplicate subject/date metadata elsewhere in the same card header
+- do not duplicate date metadata elsewhere in the same card header
 
 This exception applies to Play browse cards only. Front-page mode cards and other shell cards still use the broader card-structure rules when they need eyebrow/title/description/footer structure.
+
+---
+
+### Exception 7 — `max-w-5xl` on Results Screen
+
+**Where:** `ResultsScreen` (`src/components/play/ResultsScreen.tsx`) main content container.
+
+**Value:** `max-w-5xl` (1024px), `mx-auto`
+
+**Why:** The Results screen combines metrics, tabbed summaries, question review details, topic mastery, and badge content in one dense review surface. `max-w-5xl` reduces unnecessary wrapping and preserves scanability on desktop while keeping mobile behavior unchanged.
+
+**Constraint:** This width exception is limited to the Results screen only. Other shell pages continue to use the `max-w-4xl` default from Exception 4 unless separately approved.
 
 ---
 

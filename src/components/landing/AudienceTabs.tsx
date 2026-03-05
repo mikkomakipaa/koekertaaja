@@ -216,16 +216,16 @@ export function AudienceTabs({
 
       <div className="mt-3 hidden md:block">
         <Tabs value={activeAudience} onValueChange={(value) => onAudienceChange(value as AudienceKey)}>
-          <TabsList className="grid w-full grid-cols-2 rounded-xl bg-slate-100/80 p-1 ring-1 ring-slate-200/70 transition-colors duration-200 motion-reduce:transition-none dark:bg-slate-900/60 dark:ring-slate-700/60">
+          <TabsList className="grid w-full grid-cols-2 rounded-xl border border-slate-200 bg-white p-1 shadow-none dark:border-slate-800 dark:bg-slate-900">
             <TabsTrigger
               value="oppilaille"
-              className="rounded-lg border border-transparent px-4 py-3 text-base font-semibold text-slate-500 transition-all duration-200 motion-reduce:transition-none hover:bg-white/55 hover:text-slate-700 data-[state=active]:border-slate-200/80 data-[state=active]:bg-white/90 data-[state=active]:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/50 dark:hover:text-slate-100 dark:data-[state=active]:border-slate-700 dark:data-[state=active]:bg-slate-900/90 dark:data-[state=active]:text-slate-100"
+              className="rounded-xl text-sm md:text-base"
             >
               Oppilaille
             </TabsTrigger>
             <TabsTrigger
               value="huoltajille"
-              className="rounded-lg border border-transparent px-4 py-3 text-base font-semibold text-slate-500 transition-all duration-200 motion-reduce:transition-none hover:bg-white/55 hover:text-slate-700 data-[state=active]:border-slate-200/80 data-[state=active]:bg-white/90 data-[state=active]:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/50 dark:hover:text-slate-100 dark:data-[state=active]:border-slate-700 dark:data-[state=active]:bg-slate-900/90 dark:data-[state=active]:text-slate-100"
+              className="rounded-xl text-sm md:text-base"
             >
               Huoltajille
             </TabsTrigger>

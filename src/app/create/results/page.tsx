@@ -82,8 +82,8 @@ export default function CreateResultsPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-slate-50 p-6 transition-colors dark:bg-slate-950 md:p-12">
-        <div className="mx-auto max-w-4xl space-y-3 md:space-y-4">
+      <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
+        <div className="mx-auto max-w-4xl space-y-3 px-4 py-6 md:space-y-4 md:px-8">
           <AppShellHeader
             icon={<HeaderIcon size={24} weight="duotone" />}
             title={headerTitle}
@@ -94,7 +94,7 @@ export default function CreateResultsPage() {
                 type="button"
                 onClick={() => router.push('/create')}
                 aria-label="Takaisin luontiin"
-                className="inline-grid h-11 w-11 place-items-center rounded-xl bg-transparent text-black/55 transition-colors hover:bg-white/70 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:focus-visible:ring-indigo-300 dark:focus-visible:ring-offset-slate-950"
+                className="inline-grid h-11 w-11 place-items-center rounded-xl bg-transparent text-black/55 transition-colors hover:bg-white/70 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100 dark:focus-visible:ring-indigo-300 dark:focus-visible:ring-offset-gray-900"
               >
                 <ArrowLeft size={20} weight="regular" aria-hidden="true" />
               </button>
@@ -102,8 +102,8 @@ export default function CreateResultsPage() {
           />
 
           {hasSuccess && (
-            <Card className="w-full rounded-xl border-slate-200 shadow-none dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader className="space-y-1 border-b border-slate-200 p-5 dark:border-slate-800">
+            <Card className="w-full rounded-xl border-gray-200 shadow-none dark:border-gray-800 dark:bg-gray-900">
+              <CardHeader className="space-y-1 border-b border-gray-200 p-5 dark:border-gray-800">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-300">
                   Luodut sarjat
                 </p>
@@ -123,10 +123,10 @@ export default function CreateResultsPage() {
                       key={`${set.code}-${index}`}
                       variant="standard"
                       padding="none"
-                      className="rounded-xl border-slate-200 shadow-none dark:border-slate-800"
+                      className="rounded-xl border-gray-200 shadow-none dark:border-gray-800"
                     >
                       <CardHeader className="space-y-1 p-4 pb-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
                           {eyebrow}
                         </p>
                         <CardTitle className="text-base">{set.name}</CardTitle>
@@ -134,9 +134,9 @@ export default function CreateResultsPage() {
                           {set.questionCount} {set.mode === 'flashcard' ? 'korttia' : 'kysymystä'}
                         </CardDescription>
                       </CardHeader>
-                      <CardFooter className="items-center justify-between border-t border-slate-200 p-4 pt-3 dark:border-slate-800">
-                        <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Koodi</span>
-                        <code className="rounded-lg bg-slate-100 px-3 py-1 font-mono text-lg font-bold text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+                      <CardFooter className="items-center justify-between border-t border-gray-200 p-4 pt-3 dark:border-gray-800">
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Koodi</span>
+                        <code className="rounded-lg bg-gray-100 px-3 py-1 font-mono text-lg font-bold text-gray-900 dark:bg-gray-800 dark:text-gray-100">
                           {set.code}
                         </code>
                       </CardFooter>
@@ -148,8 +148,8 @@ export default function CreateResultsPage() {
           )}
 
           {hasErrors && (
-            <Card className="w-full rounded-xl border-slate-200 shadow-none dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader className="space-y-1 border-b border-slate-200 p-5 dark:border-slate-800">
+            <Card className="w-full rounded-xl border-gray-200 shadow-none dark:border-gray-800 dark:bg-gray-900">
+              <CardHeader className="space-y-1 border-b border-gray-200 p-5 dark:border-gray-800">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-600 dark:text-red-300">
                   Virheet
                 </p>
@@ -183,7 +183,7 @@ export default function CreateResultsPage() {
             </Card>
           )}
 
-          <Card className="w-full rounded-xl border-slate-200 shadow-none dark:border-slate-800 dark:bg-slate-900">
+          <Card className="w-full rounded-xl border-gray-200 shadow-none dark:border-gray-800 dark:bg-gray-900">
             <CardContent className="flex gap-3 p-5">
               <Button
                 onClick={() => router.push('/create')}

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 interface BadgeCollectionCardProps {
   badges: Badge[];
-  description: string;
+  description?: string;
   highlightedBadgeIds?: BadgeId[];
   className?: string;
   contentClassName?: string;
@@ -39,7 +39,9 @@ export function BadgeCollectionCard({
           <Medal weight="duotone" className="h-5 w-5" />
           Kaikki merkit ({unlockedCount}/{badges.length})
         </CardTitle>
-        <p className="text-sm text-slate-600 dark:text-slate-400">{description}</p>
+        {description ? (
+          <p className="text-sm text-slate-600 dark:text-slate-400">{description}</p>
+        ) : null}
       </CardHeader>
       <CardContent className={cn('p-5', contentClassName)}>
         <div className="grid grid-cols-3 gap-x-2 gap-y-4 sm:grid-cols-4 sm:gap-x-3 sm:gap-y-5 md:grid-cols-5 lg:grid-cols-6">

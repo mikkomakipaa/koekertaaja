@@ -365,39 +365,22 @@ export function ResultsScreen({
 
   // Determine celebration level
   const getCelebration = () => {
-    if (percentage === 100) return {
-      icon: <Star size={34} weight="fill" className="text-yellow-500" />,
-      text: 'W Pisteet.'
-    };
-    if (percentage >= 90) return {
-      icon: <Rocket size={34} weight="duotone" className="text-purple-500" />,
-      text: 'Sigma Suoritus.'
-    };
-    if (percentage >= 80) return {
-      icon: <Fire size={34} weight="fill" className="text-orange-500" />,
-      text: 'Slay Kierros.'
-    };
-    if (percentage >= 60) return {
-      icon: <Target size={34} weight="duotone" className="text-blue-500" />,
-      text: 'Vibe Tulos.'
-    };
-    return {
-      icon: <Barbell size={34} weight="bold" className="text-orange-500" />,
-      text: 'Mid Grindi.'
-    };
+    if (percentage === 100) return { text: 'W Pisteet.' };
+    if (percentage >= 90) return { text: 'Sigma Suoritus.' };
+    if (percentage >= 80) return { text: 'Slay Kierros.' };
+    if (percentage >= 60) return { text: 'Vibe Tulos.' };
+    return { text: 'Mid Grindi.' };
   };
 
   const celebration = getCelebration();
 
   const modeColors = mode === 'quiz'
     ? {
-        bg: 'from-indigo-50 to-white dark:from-gray-900 dark:to-gray-800',
         accent: 'text-indigo-600 dark:text-indigo-400',
         iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
         button: 'bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white shadow-md hover:shadow-lg active:shadow-sm',
       }
     : {
-        bg: 'from-teal-50 to-white dark:from-gray-900 dark:to-gray-800',
         accent: 'text-teal-600 dark:text-teal-400',
         iconBg: 'bg-teal-100 dark:bg-teal-900/30',
         button: 'bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 text-white shadow-md hover:shadow-lg active:shadow-sm',
@@ -423,13 +406,18 @@ export function ResultsScreen({
   const resultsSecondaryMeta = `${score} / ${total} oikein (${percentage}%)`;
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b ${modeColors.bg} p-4 md:p-8 pb-24 transition-colors`}>
+    <div className="min-h-screen bg-white p-4 pb-24 transition-colors dark:bg-gray-900 md:p-8">
       <div className="max-w-5xl mx-auto">
         <section className="mb-4 border-b border-slate-200/80 pb-4 dark:border-white/10">
           <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-500/15 text-orange-500">
-              {celebration.icon}
-            </div>
+            <button
+              type="button"
+              onClick={onBackToMenu}
+              aria-label="Takaisin"
+              className="inline-grid h-11 w-11 shrink-0 place-items-center rounded-[14px] border border-black/[0.08] bg-black/[0.02] text-gray-600 transition-all hover:bg-black/[0.04] hover:text-gray-900 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
+            >
+              <ArrowRight size={20} weight="regular" className="rotate-180" aria-hidden="true" />
+            </button>
             <div className="min-w-0">
               <h1 className="text-[22px] font-bold leading-[1.1] tracking-tight text-slate-950 dark:text-slate-50 max-[480px]:text-[19px]">
                 {celebration.text}
@@ -648,7 +636,7 @@ export function ResultsScreen({
                                 <MathText>{detail.question}</MathText>
                               </p>
                               {isSkipped && (
-                                <p className="text-sm text-amber-700 mt-1">Tämä kysymys ohitettiin aikarajan vuoksi.</p>
+                                <p className="text-sm text-amber-700 mt-1">Tämä kysymys ohitettiin.</p>
                               )}
                               {detail.status !== 'correct' && !isSkipped && (
                                 <p className="text-sm text-gray-600 mt-1">

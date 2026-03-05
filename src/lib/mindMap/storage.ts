@@ -186,6 +186,56 @@ const sanitizeLabelPart = (value: string | null | undefined): string | null => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const formatExamDateLabel = (examDate?: string | null): string | null => {
+  if (!examDate) return null;
+  const trimmed = examDate.trim();
+  if (trimmed.length === 0) return null;
+
+  const dateOnlyMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const parsedDate = dateOnlyMatch
+    ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
+    : new Date(trimmed);
+
+  if (Number.isNaN(parsedDate.getTime())) return null;
+
+  return new Intl.DateTimeFormat('fi-FI', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(parsedDate);
+};
+
+export const writePracticedSetMetadataToStorage = (
+  metadata: Partial<PracticedSetMetadata> & { code?: string | null },
+  storageOverride?: Storage | null
+): boolean => {
+  const code = normalizeCode(metadata.code);
+  const storage = storageOverride ?? getStorage();
+  if (!code || !storage) return false;
+
+  const storageKey = getTopicMasteryMetadataStorageKey(code);
+  if (!storageKey) return false;
+
+  const existing = readMetadataObject(storageKey, storageOverride);
+  const nextMetadata: PracticedSetMetadata = {
+    code,
+    name: sanitizeLabelPart(metadata.name) ?? existing?.name ?? null,
+    subject: sanitizeLabelPart(metadata.subject) ?? existing?.subject ?? null,
+    examDate: formatExamDateLabel(metadata.examDate) ?? existing?.examDate ?? null,
+    difficulty: sanitizeLabelPart(metadata.difficulty) ?? existing?.difficulty ?? null,
+    grade: sanitizeLabelPart(metadata.grade) ?? existing?.grade ?? null,
+    practicedAt: metadata.practicedAt ?? existing?.practicedAt ?? null,
+  };
+
+  try {
+    storage.setItem(storageKey, JSON.stringify(nextMetadata));
+    return true;
+  } catch (error) {
+    logger.warn({ error, storageKey }, 'Unable to write practiced set metadata');
+    return false;
+  }
+};
+
 export const formatPracticedSetDropdownLabel = (item: Pick<
   PracticedSetDropdownItem,
   'code' | 'label' | 'subject' | 'examDate' | 'difficulty' | 'grade'

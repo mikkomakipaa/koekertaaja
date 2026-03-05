@@ -42,6 +42,7 @@ import {
 import { QuestionSetWithQuestions, StudyMode, Flashcard, type QuestionType, type QuestionFlagReason } from '@/types';
 import { createLogger } from '@/lib/logger';
 import { withCsrfHeaders } from '@/lib/security/csrf-client';
+import { writePracticedSetMetadataToStorage } from '@/lib/mindMap/storage';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   ListBullets,
@@ -288,6 +289,29 @@ export default function PlayPage() {
     setShowIntro(isAikahaaste);
     setSkippedQuestions([]);
   }, [isAikahaaste, questionSet?.id]);
+
+  useEffect(() => {
+    if (!questionSet?.code) return;
+    if (answers.length === 0) return;
+
+    writePracticedSetMetadataToStorage({
+      code: questionSet.code,
+      name: questionSet.name ?? null,
+      subject: questionSet.subject ?? null,
+      examDate: questionSet.exam_date ?? null,
+      difficulty: questionSet.difficulty ?? null,
+      grade: questionSet.grade != null ? String(questionSet.grade) : null,
+      practicedAt: Date.now(),
+    });
+  }, [
+    answers.length,
+    questionSet?.code,
+    questionSet?.difficulty,
+    questionSet?.exam_date,
+    questionSet?.grade,
+    questionSet?.name,
+    questionSet?.subject,
+  ]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

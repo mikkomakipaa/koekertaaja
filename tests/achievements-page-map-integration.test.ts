@@ -52,6 +52,11 @@ describe('Achievements page map integration', () => {
     assert.ok(html.includes('Täydellistä'));
     assert.ok(html.includes('Ennätys'));
     assert.ok(html.includes('Merkkejä'));
+    assert.ok(html.includes('grid-cols-3'));
+    assert.ok(html.includes('Aiheet'));
+    assert.ok(html.includes('Merkit ('));
+    assert.ok(html.includes('Kokeet'));
+    assert.ok(html.includes('Pelaa yksi harjoituskierros, niin koetulokset ilmestyvät tänne.'));
     assert.ok(html.includes('Skibidi Alku'));
     assert.ok(html.includes('NPC ei olla'));
     assert.ok(html.includes('Osaaminen'));

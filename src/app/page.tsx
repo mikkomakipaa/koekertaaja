@@ -66,7 +66,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white transition-colors duration-300 ease-out dark:bg-gray-950">
+    <div className="flex min-h-screen flex-col bg-white transition-colors duration-300 ease-out dark:bg-gray-900">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-6 focus:top-6 focus:z-50 rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-700"
@@ -93,7 +93,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <h1 id="dashboard-heading" className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white md:text-4xl">
+                  <h1 id="dashboard-heading" className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl">
                     Koekertaaja
                   </h1>
                   <p className="mt-2 max-w-xl text-base font-medium text-[rgba(0,0,0,0.78)] dark:text-white/90 md:text-[17px]">
@@ -143,7 +143,7 @@ export default function HomePage() {
                 data-scroll
                 style={{ '--stagger': '60ms' } as CSSProperties}
               >
-                <Card className="h-full rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_3px_8px_rgba(15,23,42,0.05)] dark:border-slate-700/80 dark:bg-slate-900 dark:shadow-[0_1px_2px_rgba(0,0,0,0.13)] dark:group-hover:shadow-[0_3px_8px_rgba(0,0,0,0.18)]">
+                <Card className="h-full rounded-xl border border-gray-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_3px_8px_rgba(15,23,42,0.05)] dark:border-gray-700 dark:bg-slate-900 dark:shadow-[0_1px_2px_rgba(0,0,0,0.13)] dark:group-hover:shadow-[0_3px_8px_rgba(0,0,0,0.18)]">
                   <CardHeader className="space-y-3 pb-3">
                     <div className="flex items-start gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 transition-colors dark:bg-indigo-500/15">
@@ -160,7 +160,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="flex items-center justify-between border-t border-slate-200/90 pt-3 dark:border-slate-700/80">
+                  <CardContent className="flex items-center justify-between border-t border-gray-200 pt-3 dark:border-gray-700">
                     <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Pelaa</span>
                     <ArrowRight size={18} weight="bold" className="text-indigo-600 transition-transform group-hover:translate-x-0.5 dark:text-indigo-300" aria-hidden="true" />
                   </CardContent>
@@ -173,7 +173,7 @@ export default function HomePage() {
                 data-scroll
                 style={{ '--stagger': '140ms' } as CSSProperties}
               >
-                <Card className="h-full rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_3px_8px_rgba(15,23,42,0.05)] dark:border-slate-700/80 dark:bg-slate-900 dark:shadow-[0_1px_2px_rgba(0,0,0,0.13)] dark:group-hover:shadow-[0_3px_8px_rgba(0,0,0,0.18)]">
+                <Card className="h-full rounded-xl border border-gray-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_3px_8px_rgba(15,23,42,0.05)] dark:border-gray-700 dark:bg-slate-900 dark:shadow-[0_1px_2px_rgba(0,0,0,0.13)] dark:group-hover:shadow-[0_3px_8px_rgba(0,0,0,0.18)]">
                   <CardHeader className="space-y-3 pb-3">
                     <div className="flex items-start gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50 transition-colors dark:bg-teal-500/15">
@@ -190,7 +190,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="flex items-center justify-between border-t border-slate-200/90 pt-3 dark:border-slate-700/80">
+                  <CardContent className="flex items-center justify-between border-t border-gray-200 pt-3 dark:border-gray-700">
                     <span className="text-sm font-medium text-teal-700 dark:text-teal-300">Opettele</span>
                     <ArrowRight size={18} weight="bold" className="text-teal-500 transition-transform group-hover:translate-x-0.5 dark:text-teal-300" aria-hidden="true" />
                   </CardContent>
