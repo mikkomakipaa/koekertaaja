@@ -43,6 +43,7 @@ import { QuestionSetWithQuestions, StudyMode, Flashcard, type QuestionType, type
 import { createLogger } from '@/lib/logger';
 import { withCsrfHeaders } from '@/lib/security/csrf-client';
 import { writePracticedSetMetadataToStorage } from '@/lib/mindMap/storage';
+import { stripDifficultySuffix } from '@/lib/question-set-name';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   ListBullets,
@@ -125,6 +126,7 @@ export default function PlayPage() {
   const code = params.code as string;
   const modeParam = searchParams.get('mode');
   const difficultyParam = searchParams.get('difficulty');
+  const topicParam = searchParams.get('topic');
   const draftParam = searchParams.get('draft') === '1';
   const isReviewMode = modeParam === 'review';
   const requestedStudyMode: StudyMode = modeParam === 'opettele' ? 'opettele' : 'pelaa';
@@ -161,6 +163,13 @@ export default function PlayPage() {
   const isAikahaaste = isAikahaasteMode({ difficultyParam, studyMode, isReviewMode });
   const { getMistakes, removeMistake, mistakeCount, error: mistakesError } = useReviewMistakes(code);
   const { updateProgress, clearProgress } = useSessionProgress(questionSet?.code ?? code);
+
+  const resolveRequestedTopic = useCallback((topics: string[]): string | null => {
+    const requestedTopic = topicParam?.trim();
+    if (!requestedTopic) return null;
+    const lowered = requestedTopic.toLowerCase();
+    return topics.find((topic) => topic.trim().toLowerCase() === lowered) ?? null;
+  }, [topicParam]);
 
   const mistakeQuestions = useMemo(() => {
     if (!isReviewMode || !questionSet?.questions) return [];
@@ -454,7 +463,10 @@ export default function PlayPage() {
           )];
           setAvailableTopics(topics);
           // Auto-select if only one topic or no topics
-          if (topics.length <= 1) {
+          const requestedTopic = resolveRequestedTopic(topics);
+          if (requestedTopic) {
+            setSelectedTopic(requestedTopic);
+          } else if (topics.length <= 1) {
             setSelectedTopic('ALL');
           }
           setState('playing');
@@ -482,7 +494,10 @@ export default function PlayPage() {
           )];
           setAvailableTopics(topics);
           // Auto-select if only one topic or no topics
-          if (topics.length <= 1) {
+          const requestedTopic = resolveRequestedTopic(topics);
+          if (requestedTopic) {
+            setSelectedTopic(requestedTopic);
+          } else if (topics.length <= 1) {
             setSelectedTopic('ALL');
           }
 
@@ -498,7 +513,7 @@ export default function PlayPage() {
     if (code) {
       loadQuestionSet();
     }
-  }, [code, allCodes, requestedStudyMode, draftParam]);
+  }, [code, allCodes, requestedStudyMode, draftParam, resolveRequestedTopic]);
 
   useEffect(() => {
     if (!questionSet || questionSet.mode !== 'flashcard' || modeParam === 'opettele') {
@@ -951,17 +966,6 @@ export default function PlayPage() {
       />
     );
   }
-
-  // Strip difficulty suffix from name for display
-  const stripDifficultySuffix = (name: string): string => {
-    const suffixes = [' - Helppo', ' - Normaali', ' - Vaikea'];
-    for (const suffix of suffixes) {
-      if (name.endsWith(suffix)) {
-        return name.slice(0, -suffix.length);
-      }
-    }
-    return name;
-  };
 
   const displayName = questionSet?.name ? stripDifficultySuffix(questionSet.name) : 'Kysymyssarja';
   const canPause = !isAikahaaste;

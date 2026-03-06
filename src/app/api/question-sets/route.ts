@@ -7,6 +7,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { isAdmin } from '@/lib/auth/admin';
 import { parseDatabaseQuestion } from '@/types/database';
 import { createLogger } from '@/lib/logger';
+import { findRelatedFlashcardCode } from '@/lib/supabase/queries';
 import type { QuestionSet, QuestionSetStatus } from '@/types/questions';
 import type { QuestionSet as PublicQuestionSet } from '@/types';
 
@@ -18,10 +19,11 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code')?.toUpperCase();
   const includeDrafts = url.searchParams.get('includeDrafts') === '1';
+  const includeRelatedFlashcard = url.searchParams.get('relatedFlashcard') === '1';
   const scope = (url.searchParams.get('scope') as FlagScope | null) ?? 'play';
 
   if (code) {
-    return getQuestionSetByCode(request, code, includeDrafts);
+    return getQuestionSetByCode(request, code, includeDrafts, includeRelatedFlashcard);
   }
 
   if (scope === 'created') {
@@ -31,7 +33,12 @@ export async function GET(request: NextRequest) {
   return getPlayableQuestionSets(request);
 }
 
-async function getQuestionSetByCode(request: NextRequest, code: string, includeDrafts: boolean) {
+async function getQuestionSetByCode(
+  request: NextRequest,
+  code: string,
+  includeDrafts: boolean,
+  includeRelatedFlashcard: boolean
+) {
   const logger = createLogger({
     requestId: crypto.randomUUID(),
     route: '/api/question-sets',
@@ -70,11 +77,25 @@ async function getQuestionSetByCode(request: NextRequest, code: string, includeD
 
     const questions = (dbQuestions as any[]).map(parseDatabaseQuestion);
 
+    const responseData: Record<string, unknown> = {
+      ...(questionSet as any),
+      questions,
+    };
+
+    if (includeRelatedFlashcard) {
+      try {
+        responseData.relatedFlashcardCode = await findRelatedFlashcardCode(code);
+      } catch (relatedFlashcardError) {
+        logger.warn(
+          { error: relatedFlashcardError, code },
+          'Failed to resolve related flashcard code'
+        );
+        responseData.relatedFlashcardCode = null;
+      }
+    }
+
     return NextResponse.json({
-      data: {
-        ...(questionSet as any),
-        questions,
-      },
+      data: responseData,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unauthorized';

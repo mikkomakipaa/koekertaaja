@@ -5,23 +5,16 @@ import {
 } from '@/lib/mindMap/storage';
 import { readLastScoreFromStorage } from '@/hooks/useLastScore';
 import type { ExamHistoryEntry } from '@/types/examHistory';
+import { stripDifficultySuffix } from '@/lib/question-set-name';
 
-const DIFFICULTY_SUFFIXES = [' - Helppo', ' - Normaali', ' - Kortit', ' - Aikahaaste'];
-
-const stripDifficultySuffix = (name: string | null): string | null => {
+const stripDifficultySuffixOrNull = (name: string | null): string | null => {
   if (!name) return null;
 
   const trimmedName = name.trim();
   if (trimmedName.length === 0) return null;
 
-  for (const suffix of DIFFICULTY_SUFFIXES) {
-    if (trimmedName.endsWith(suffix)) {
-      const baseName = trimmedName.slice(0, -suffix.length).trim();
-      return baseName.length > 0 ? baseName : null;
-    }
-  }
-
-  return trimmedName;
+  const baseName = stripDifficultySuffix(trimmedName).trim();
+  return baseName.length > 0 ? baseName : null;
 };
 
 const toExamHistoryEntry = (
@@ -32,7 +25,7 @@ const toExamHistoryEntry = (
 
   return {
     code: item.code,
-    name: stripDifficultySuffix(item.label),
+    name: stripDifficultySuffixOrNull(item.label),
     subject: item.subject ?? null,
     examDate: item.examDate ?? null,
     difficulty: item.difficulty ?? null,
@@ -154,7 +147,7 @@ export function useExamHistory(): { entries: ExamHistoryEntry[]; isEmpty: boolea
           for (const set of payload.data ?? []) {
             if (!set.code) continue;
             lookup.set(set.code, {
-              name: stripDifficultySuffix(set.name ?? null),
+              name: stripDifficultySuffixOrNull(set.name ?? null),
               subject: set.subject ?? null,
               examDate: formatExamDateLabel(set.exam_date ?? null),
               difficulty: set.difficulty ?? null,
@@ -192,7 +185,7 @@ export function useExamHistory(): { entries: ExamHistoryEntry[]; isEmpty: boolea
             if (payload.data) {
               return {
                 code,
-                name: stripDifficultySuffix(payload.data.name ?? null),
+                name: stripDifficultySuffixOrNull(payload.data.name ?? null),
                 subject: payload.data.subject ?? null,
                 examDate: formatExamDateLabel(payload.data.exam_date ?? null),
                 difficulty: payload.data.difficulty ?? null,

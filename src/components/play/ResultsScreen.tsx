@@ -9,6 +9,7 @@ import { BadgeCollectionCard } from '@/components/badges/BadgeCollectionCard';
 import { useBadges } from '@/hooks/useBadges';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
+import { useRelatedFlashcardSet } from '@/hooks/useRelatedFlashcardSet';
 import { difficultyLabels } from '@/lib/play/primary-action';
 import { cn } from '@/lib/utils';
 import {
@@ -246,6 +247,7 @@ export function ResultsScreen({
   } = useBadges(questionSetCode);
   const { mistakeCount } = useReviewMistakes(questionSetCode);
   const { saveLastScore } = useLastScore(questionSetCode);
+  const { flashcardCode } = useRelatedFlashcardSet(questionSetCode);
 
   const [personalBest, setPersonalBest] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState(false);
@@ -504,7 +506,11 @@ export function ResultsScreen({
                   <Target size={18} weight="duotone" className="text-indigo-500" />
                   Aiheiden hallinta
                 </div>
-                <TopicMasteryDisplay questionSetCode={questionSetCode ?? ''} className="mt-2 border-t-0 pt-0" />
+                <TopicMasteryDisplay
+                  questionSetCode={questionSetCode ?? ''}
+                  flashcardSetCode={flashcardCode}
+                  className="mt-2 border-t-0 pt-0"
+                />
               </CardContent>
             </Card>
 

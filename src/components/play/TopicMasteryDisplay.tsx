@@ -1,16 +1,18 @@
 'use client';
 
-import { Brain } from '@phosphor-icons/react';
+import { ArrowRight, Brain } from '@phosphor-icons/react';
+import Link from 'next/link';
 import { useMemo } from 'react';
 import { useTopicMastery } from '@/hooks/useTopicMastery';
 import { normalizeTopicLabel } from '@/lib/topics/normalization';
 
 interface TopicMasteryDisplayProps {
   questionSetCode: string;
+  flashcardSetCode?: string | null;
   className?: string;
 }
 
-export function TopicMasteryDisplay({ questionSetCode, className = '' }: TopicMasteryDisplayProps) {
+export function TopicMasteryDisplay({ questionSetCode, flashcardSetCode, className = '' }: TopicMasteryDisplayProps) {
   const { getMasteryStats, hasMasteryData } = useTopicMastery(questionSetCode);
 
   const masteryStats = useMemo(() => {
@@ -50,10 +52,16 @@ export function TopicMasteryDisplay({ questionSetCode, className = '' }: TopicMa
   }
 
   const getColor = (percentage: number) => {
-    if (percentage >= 80) {
+    if (percentage >= 90) {
       return {
         bg: 'bg-emerald-500',
         text: 'text-emerald-700 dark:text-emerald-300',
+      };
+    }
+    if (percentage >= 70) {
+      return {
+        bg: 'bg-teal-500',
+        text: 'text-teal-700 dark:text-teal-300',
       };
     }
     if (percentage >= 50) {
@@ -63,8 +71,8 @@ export function TopicMasteryDisplay({ questionSetCode, className = '' }: TopicMa
       };
     }
     return {
-      bg: 'bg-rose-500',
-      text: 'text-rose-700 dark:text-rose-300',
+      bg: 'bg-slate-400',
+      text: 'text-slate-600 dark:text-slate-400',
     };
   };
 
@@ -75,34 +83,59 @@ export function TopicMasteryDisplay({ questionSetCode, className = '' }: TopicMa
         <span>Hallintasi</span>
       </div>
 
-      {masteryStats.map(([topic, stats]) => {
-        const colors = getColor(stats.percentage);
+      <div className="space-y-4">
+        {masteryStats.map(([topic, stats]) => {
+          const colors = getColor(stats.percentage);
+          const canReviewTopic = Boolean(flashcardSetCode) && stats.percentage < 80;
+          const reviewHref = `/play/${flashcardSetCode}?mode=opettele&topic=${encodeURIComponent(topic)}`;
 
-        return (
-          <div key={topic} className="space-y-1">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-gray-700 dark:text-gray-300">{topic}</span>
-              <span className={`text-xs font-semibold ${colors.text}`}>{stats.percentage}%</span>
-            </div>
+          const rowContent = (
+            <div className="rounded-lg px-1 py-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-gray-700 dark:text-gray-300">{topic}</span>
+                <span className={`text-xs font-semibold ${colors.text}`}>{stats.percentage}%</span>
+              </div>
 
-            <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div
-                className={`h-full ${colors.bg} transition-all duration-500 ease-out`}
-                style={{ width: `${stats.percentage}%` }}
-                role="progressbar"
-                aria-valuenow={stats.percentage}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`${topic}: ${stats.percentage}% hallinnassa`}
-              />
-            </div>
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                <div
+                  className={`h-full ${colors.bg} transition-all duration-500 ease-out`}
+                  style={{ width: `${stats.percentage}%` }}
+                  role="progressbar"
+                  aria-valuenow={stats.percentage}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${topic}: ${stats.percentage}% hallinnassa`}
+                />
+              </div>
 
-            <div className="text-[10px] text-gray-500 dark:text-gray-400">
-              {stats.correct}/{stats.total} oikein
+              <div className="mt-1.5 flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400">
+                <span>{stats.correct}/{stats.total} oikein</span>
+                {canReviewTopic ? (
+                  <span className="inline-flex min-h-[32px] items-center gap-1 px-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300">
+                    Kertaa
+                    <ArrowRight size={12} weight="bold" aria-hidden="true" />
+                  </span>
+                ) : null}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+
+          if (canReviewTopic) {
+            return (
+              <Link
+                key={topic}
+                href={reviewHref}
+                className="block cursor-pointer rounded-lg transition-colors hover:bg-teal-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 dark:hover:bg-teal-900/20"
+              >
+                {rowContent}
+              </Link>
+            );
+          }
+
+          return <div key={topic}>{rowContent}</div>;
+        })}
+      </div>
+
     </div>
   );
 }

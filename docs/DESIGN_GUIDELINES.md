@@ -1,6 +1,6 @@
 # Design Guidelines
 
-**Last Updated:** 2026-03-03
+**Last Updated:** 2026-03-06
 **Status:** Standardized after UX/UI audit
 
 This document defines the design system for Koekertaaja, ensuring visual consistency and polished user experience across all pages and components.
@@ -124,7 +124,7 @@ Validated on 2026-03-05 against the current implementation:
 
 - Front page (`/`): custom dashboard hero with one primary CTA, shared mode cards below, quieter audience/help section, shared footer.
 - Play browse (`/play`): shared browse shell with compact heading, shared primary CTA on quiz/flashcard cards, `max-w-4xl` container rhythm, no competing hero CTA group.
-- Create (`/create`): `AppShellHeader` + tab shell container for create/manage flows; header uses the shared border-first shell treatment instead of a bespoke promo panel.
+- Create (`/create`): lightweight Play-style section header with back action and concise subtitle, matching Results and Achievements header rhythm (no decorative header icon tile), followed by a segmented tab bar (`rounded-xl`, bordered, pill-style active tab) aligned with the Achievements tabs visual contract.
 - Create results (`/create/results`): `AppShellHeader` tone variants (`success`, `warning`, `danger`) with restrained result cards and one clear return action.
 - Results (`ResultsScreen`): lightweight Play-style section header with back button, no header icon tile, compact metric cards with stronger value emphasis, and tabbed detail sections using the same card weight rules. No Play CTA belongs in the results header.
 - Achievements (`/play/achievements`): lightweight Play-style section header with back button, no header icon tile, restrained stat cards, and tabs for `Aiheiden hallinta` and `Merkit`. No Play CTA belongs in the achievements header.
@@ -134,8 +134,8 @@ What must remain unified:
 - Shared shell containers stay on `max-w-4xl` with `px-4 md:px-8` rhythm unless a page is intentionally long-form.
 - Hero or shell headers get one primary route action only; secondary navigation belongs in tabs, cards, or lower sections.
 - `PrimaryActionButton` remains the shared CTA for equivalent quiz/study entry actions.
-- `AppShellHeader` remains the default interior-page shell header for Create and similar admin interiors; Results and Achievements use the lighter Play-style header variant.
-- Results and Achievements are explicit exceptions: their headers do not surface a Play CTA.
+- Create, Results, and Achievements use the same lightweight section-header structure (back action + title + concise metadata), without decorative icon tiles.
+- Results and Achievements remain explicit exceptions: their headers do not surface a Play CTA.
 - Footer styling stays lightweight and lower-contrast than actionable sections.
 
 ---

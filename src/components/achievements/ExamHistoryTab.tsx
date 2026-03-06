@@ -2,7 +2,7 @@
 
 import { useMemo, type ReactNode } from 'react';
 import Link from 'next/link';
-import { BookOpenText, Check, Minus } from '@phosphor-icons/react';
+import { ArrowRight, BookOpenText, Check, Minus } from '@phosphor-icons/react';
 import { useExamHistory } from '@/hooks/useExamHistory';
 import { getSubjectConfig } from '@/lib/utils/subject-config';
 import { cn } from '@/lib/utils';
@@ -26,8 +26,11 @@ function formatExamDate(examDate: string | null): string | null {
   if (!examDate) return null;
 
   const dateOnlyMatch = examDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const fiDateMatch = examDate.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
   const parsedDate = dateOnlyMatch
     ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
+    : fiDateMatch
+      ? new Date(Number(fiDateMatch[3]), Number(fiDateMatch[2]) - 1, Number(fiDateMatch[1]))
     : new Date(examDate);
 
   if (Number.isNaN(parsedDate.getTime())) return null;
@@ -74,7 +77,7 @@ interface DifficultyStats {
 interface GroupedExamSummary {
   id: string;
   title: string;
-  subtitle: string | null;
+  sortTimestamp: number;
   subjectConfig: {
     icon: ReactNode;
     label: string;
@@ -91,6 +94,23 @@ interface GroupedExamSummary {
 const clampPercentage = (percentage: number | null | undefined): number => {
   if (typeof percentage !== 'number' || !Number.isFinite(percentage)) return 0;
   return Math.max(0, Math.min(100, Math.round(percentage)));
+};
+
+const parseSortableDate = (value?: string | null): number | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return null;
+
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const fiMatch = trimmed.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  const parsedDate = isoMatch
+    ? new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]))
+    : fiMatch
+      ? new Date(Number(fiMatch[3]), Number(fiMatch[2]) - 1, Number(fiMatch[1]))
+      : new Date(trimmed);
+
+  const timestamp = parsedDate.getTime();
+  return Number.isNaN(timestamp) ? null : timestamp;
 };
 
 const buildGroupKey = (entry: ExamHistoryEntry): string => {
@@ -126,6 +146,7 @@ const buildGroupedExamSummaries = (entries: ExamHistoryEntry[]): GroupedExamSumm
       ? subjectConfig.label
       : sanitizedName ?? fallbackSubjectConfig.label;
     const subtitle = formatExamDate(representative.examDate);
+    const titleWithDate = subtitle ? `${title} • ${subtitle}` : title;
 
     const byDifficulty = new Map<string, ExamHistoryEntry>();
     for (const entry of groupEntries) {
@@ -138,6 +159,8 @@ const buildGroupedExamSummaries = (entries: ExamHistoryEntry[]): GroupedExamSumm
 
     const helppoPercentage = clampPercentage(helppoEntry?.lastScore?.percentage);
     const normaaliPercentage = clampPercentage(normaaliEntry?.lastScore?.percentage);
+    const sortTimestamp = parseSortableDate(representative.examDate)
+      ?? Math.max(...groupEntries.map((entry) => entry.sortTimestamp));
 
     const bestScore = Math.max(
       ...groupEntries.map((entry) => clampPercentage(entry.lastScore?.percentage))
@@ -151,8 +174,8 @@ const buildGroupedExamSummaries = (entries: ExamHistoryEntry[]): GroupedExamSumm
 
     return {
       id: `${representative.code}-${representative.sortTimestamp}`,
-      title,
-      subtitle,
+      title: titleWithDate,
+      sortTimestamp,
       subjectConfig,
       bestScore,
       sessionCount,
@@ -172,38 +195,77 @@ const buildGroupedExamSummaries = (entries: ExamHistoryEntry[]): GroupedExamSumm
   });
 
   return summaries.sort((a, b) => {
-    if (a.bestScore !== b.bestScore) return a.bestScore - b.bestScore;
-    return b.sessionCount - a.sessionCount;
+    if (a.sortTimestamp !== b.sortTimestamp) return b.sortTimestamp - a.sortTimestamp;
+    return a.title.localeCompare(b.title, 'fi');
   });
 };
 
 function DifficultyRow({
   label,
   percentage,
-  complete,
+  scoreText,
+  href,
 }: {
   label: string;
   percentage: number;
-  complete: boolean;
+  scoreText: string;
+  href: string | null;
 }) {
-  return (
-    <div className="flex items-center gap-3">
-      <span className="w-16 text-sm font-medium text-slate-700 dark:text-slate-200">{label}</span>
-      <div className="h-2 flex-1 rounded-full bg-slate-200 dark:bg-slate-700">
+  const isMastered = percentage >= 90;
+  const barColor = isMastered
+    ? 'bg-emerald-500'
+    : percentage >= 70
+      ? 'bg-teal-500'
+      : percentage >= 50
+      ? 'bg-amber-500'
+      : 'bg-slate-400';
+  const textColor = isMastered
+    ? 'text-emerald-700 dark:text-emerald-300'
+    : percentage >= 70
+      ? 'text-teal-700 dark:text-teal-300'
+      : percentage >= 50
+      ? 'text-amber-700 dark:text-amber-300'
+      : 'text-slate-600 dark:text-slate-400';
+
+  const rowContent = (
+    <div className="rounded-lg px-1 py-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="font-medium text-gray-700 dark:text-gray-300">{label}</span>
+        <span className={`text-xs font-semibold ${textColor}`}>{percentage}%</span>
+      </div>
+      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
         <div
-          className="h-2 rounded-full bg-indigo-500 transition-all"
+          className={`h-full transition-all duration-500 ease-out ${barColor}`}
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <span className="w-10 text-right text-sm font-semibold text-slate-700 dark:text-slate-200">{percentage}%</span>
-      <span className="inline-flex w-5 justify-center">
-        {complete ? (
-          <Check size={16} weight="bold" className="text-emerald-600 dark:text-emerald-400" />
+      <div className="mt-1.5 flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400">
+        <span>{scoreText}</span>
+        {href ? (
+          <span className="inline-flex min-h-[32px] items-center gap-1 px-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+            Pelaa
+            <ArrowRight size={12} weight="bold" aria-hidden="true" />
+          </span>
         ) : (
-          <Minus size={14} weight="bold" className="text-slate-400 dark:text-slate-500" />
+          <span className="inline-flex min-h-[32px] items-center px-1 text-[11px] font-semibold text-gray-400 dark:text-gray-500">
+            {percentage === 100 ? <Check size={12} weight="bold" /> : <Minus size={12} weight="bold" />}
+          </span>
         )}
-      </span>
+      </div>
     </div>
+  );
+
+  if (!href) {
+    return rowContent;
+  }
+
+  return (
+    <Link
+      href={href}
+      className="block cursor-pointer rounded-lg transition-colors hover:bg-indigo-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:hover:bg-indigo-900/20"
+    >
+      {rowContent}
+    </Link>
   );
 }
 
@@ -228,8 +290,8 @@ export function ExamHistoryTab() {
             className="rounded-xl border border-slate-200 bg-white p-4 shadow-none transition-shadow duration-150 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900"
           >
             <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-md', exam.subjectConfig.color)}>
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                   {exam.subjectConfig.icon}
                 </div>
 
@@ -237,39 +299,31 @@ export function ExamHistoryTab() {
                   <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
                     {exam.title}
                   </p>
-                  {exam.subtitle && (
-                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{exam.subtitle}</p>
-                  )}
                 </div>
               </div>
 
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                Paras tulos {exam.bestScore}% • Sessioita {exam.sessionCount}
-              </p>
-
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <DifficultyRow
                   label="Helppo"
                   percentage={exam.helppo.percentage}
-                  complete={exam.helppo.complete}
+                  scoreText={exam.helppo.entry?.lastScore
+                    ? `${exam.helppo.entry.lastScore.score}/${exam.helppo.entry.lastScore.total} oikein`
+                    : 'Ei tulosta'}
+                  href={exam.helppo.entry
+                    ? `/play/${exam.helppo.entry.code}?mode=${getPlayMode(exam.helppo.entry.difficulty)}`
+                    : null}
                 />
-
-                <div className="ml-8 h-4 w-px bg-slate-300 dark:bg-slate-600" />
 
                 <DifficultyRow
                   label="Normaali"
                   percentage={exam.normaali.percentage}
-                  complete={exam.normaali.complete}
+                  scoreText={exam.normaali.entry?.lastScore
+                    ? `${exam.normaali.entry.lastScore.score}/${exam.normaali.entry.lastScore.total} oikein`
+                    : 'Ei tulosta'}
+                  href={exam.normaali.entry
+                    ? `/play/${exam.normaali.entry.code}?mode=${getPlayMode(exam.normaali.entry.difficulty)}`
+                    : null}
                 />
-              </div>
-
-              <div className="flex justify-end">
-                <Link
-                  href={`/play/${exam.playCode}?mode=${exam.playMode}`}
-                  className="text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
-                >
-                  Pelaa →
-                </Link>
               </div>
             </div>
           </article>

@@ -11,11 +11,14 @@ import type { PracticedSetDropdownItem } from '@/types/mindMap';
 
 interface AchievementsMapSectionProps {
   initialItems?: PracticedSetDropdownItem[];
-  loadQuestionSetByCode?: (code: string) => Promise<QuestionSetWithQuestions | null>;
+  loadQuestionSetByCode?: (
+    code: string
+  ) => Promise<{ questionSet: QuestionSetWithQuestions | null; relatedFlashcardCode: string | null }>;
 }
 
 interface QuestionSetByCodeResponse {
-  data?: QuestionSetWithQuestions;
+  data?: (QuestionSetWithQuestions & { relatedFlashcardCode?: string | null });
+  relatedFlashcardCode?: string | null;
 }
 
 const formatExamDateLabel = (examDate?: string | null): string | null => {
@@ -35,19 +38,46 @@ const formatExamDateLabel = (examDate?: string | null): string | null => {
   }).format(parsed);
 };
 
-const defaultLoadQuestionSetByCode = async (code: string): Promise<QuestionSetWithQuestions | null> => {
+const parseSortableDate = (value?: string | null): number | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return null;
+
+  const fiMatch = trimmed.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  const parsed = fiMatch
+    ? new Date(Number(fiMatch[3]), Number(fiMatch[2]) - 1, Number(fiMatch[1]))
+    : new Date(trimmed);
+
+  const timestamp = parsed.getTime();
+  return Number.isNaN(timestamp) ? null : timestamp;
+};
+
+const defaultLoadQuestionSetByCode = async (
+  code: string
+): Promise<{ questionSet: QuestionSetWithQuestions | null; relatedFlashcardCode: string | null }> => {
   try {
-    const response = await fetch(`/api/question-sets?code=${encodeURIComponent(code)}`, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-      cache: 'no-store',
-    });
-    if (!response.ok) return null;
+    const response = await fetch(
+      `/api/question-sets?code=${encodeURIComponent(code)}&relatedFlashcard=1`,
+      {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
+      }
+    );
+    if (!response.ok) {
+      return { questionSet: null, relatedFlashcardCode: null };
+    }
 
     const payload = (await response.json()) as QuestionSetByCodeResponse;
-    return payload.data ?? null;
+    return {
+      questionSet: payload.data ?? null,
+      relatedFlashcardCode:
+        payload.relatedFlashcardCode
+        ?? payload.data?.relatedFlashcardCode
+        ?? null,
+    };
   } catch {
-    return null;
+    return { questionSet: null, relatedFlashcardCode: null };
   }
 };
 
@@ -57,15 +87,23 @@ export function AchievementsMapSection({
 }: AchievementsMapSectionProps) {
   const [items, setItems] = useState<PracticedSetDropdownItem[]>(initialItems ?? []);
   const [selectedCode, setSelectedCode] = useState<string>(() => initialItems?.[0]?.code ?? '');
+  const [relatedFlashcardCodes, setRelatedFlashcardCodes] = useState<Record<string, string | null>>({});
 
   const selectableItems = useMemo(() => {
-    return items.filter((item) => {
+    return items
+      .filter((item) => {
       const code = item.code.trim().toUpperCase();
       const label = item.label?.trim() ?? '';
       const hasMetadata = Boolean(item.subject?.trim() || item.examDate?.trim() || item.difficulty?.trim() || item.grade?.trim());
       const labelLooksLikeCode = label.length > 0 && label.toUpperCase() === code;
       return hasMetadata || (label.length > 0 && !labelLooksLikeCode);
-    });
+      })
+      .sort((a, b) => {
+        const aDate = parseSortableDate(a.examDate) ?? a.practicedAt ?? 0;
+        const bDate = parseSortableDate(b.examDate) ?? b.practicedAt ?? 0;
+        if (aDate !== bDate) return bDate - aDate;
+        return a.code.localeCompare(b.code, 'fi');
+      });
   }, [items]);
 
   useEffect(() => {
@@ -88,10 +126,11 @@ export function AchievementsMapSection({
     const hydrate = async () => {
       const hydrated = await Promise.all(
         codesToHydrate.map(async (code) => {
-          const questionSet = await loadQuestionSetByCode(code);
+          const { questionSet, relatedFlashcardCode } = await loadQuestionSetByCode(code);
           if (!questionSet) return null;
           return {
             code,
+            relatedFlashcardCode,
             subject: questionSet.subject || null,
             examDate: formatExamDateLabel(questionSet.exam_date ?? null),
             difficulty: questionSet.difficulty ?? null,
@@ -110,6 +149,12 @@ export function AchievementsMapSection({
       );
       if (patchByCode.size === 0) return;
 
+      const newCodes = hydrated.reduce<Record<string, string | null>>((acc, item) => {
+        if (!item) return acc;
+        acc[item.code] = item.relatedFlashcardCode ?? null;
+        return acc;
+      }, {});
+
       setItems((current) =>
         current.map((item) => {
           const patch = patchByCode.get(item.code);
@@ -124,6 +169,7 @@ export function AchievementsMapSection({
           };
         })
       );
+      setRelatedFlashcardCodes((current) => ({ ...current, ...newCodes }));
     };
 
     void hydrate();
@@ -187,7 +233,11 @@ export function AchievementsMapSection({
           </div>
 
           {hasSelectedSet ? (
-            <TopicMasteryDisplay questionSetCode={selectedCode} className="mt-2 border-t-0 pt-0" />
+            <TopicMasteryDisplay
+              questionSetCode={selectedCode}
+              flashcardSetCode={relatedFlashcardCodes[selectedCode] ?? null}
+              className="mt-2 border-t-0 pt-0"
+            />
           ) : null}
         </div>
       )}

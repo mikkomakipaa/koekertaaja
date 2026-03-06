@@ -1,0 +1,7 @@
+[GET] http://localhost:3000/api/question-sets?scope=play&limit=100&mode=quiz => [200] OK
+[GET] http://localhost:3000/api/question-sets?scope=play&limit=100&mode=flashcard => [200] OK
+[GET] http://localhost:3000/play?mode=pelaa&_rsc=l6ztu => [200] OK
+[GET] http://localhost:3000/play/72TOLB?mode=pelaa&_rsc=l6ztu => [200] OK
+[GET] http://localhost:3000/play/72TOLB?mode=pelaa&_rsc=l6ztu => [200] OK
+[GET] http://localhost:3000/api/question-sets?code=72TOLB => [200] OK
+[GET] http://localhost:3000/api/question-sets?code=72TOLB => [200] OK

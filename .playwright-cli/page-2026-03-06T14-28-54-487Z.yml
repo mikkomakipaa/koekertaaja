@@ -1,0 +1,381 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e49]:
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - button "Takaisin" [ref=e55] [cursor=pointer]:
+              - img [ref=e56]
+            - heading "Koekertaaja" [level=1] [ref=e58]
+          - generic [ref=e59]:
+            - button "Avaa haku" [ref=e61] [cursor=pointer]:
+              - img [ref=e62]
+            - link "Saavutukset" [ref=e65] [cursor=pointer]:
+              - /url: /play/achievements
+              - img [ref=e66]
+        - radiogroup "Suodattimet" [ref=e71]:
+          - radio "Pelaa" [checked] [ref=e72] [cursor=pointer]:
+            - img [ref=e73]
+            - generic [ref=e75]: Pelaa
+          - radio "Opettele" [ref=e76] [cursor=pointer]:
+            - img [ref=e77]
+            - generic [ref=e79]: Opettele
+          - button "4 lk" [ref=e80] [cursor=pointer]:
+            - img [ref=e81]
+            - text: 4 lk
+          - button "6 lk" [ref=e83] [cursor=pointer]:
+            - img [ref=e84]
+            - text: 6 lk
+      - generic [ref=e87]:
+        - generic [ref=e88]:
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - generic [ref=e93]:
+                - img [ref=e95]
+                - generic [ref=e98]: 12.03.2026
+              - heading "Matematiikka" [level=3] [ref=e99]
+            - generic [ref=e100]: 4. lk
+          - generic [ref=e103]:
+            - button "Aloita Normaali vaikeustaso" [ref=e104] [cursor=pointer]:
+              - generic [ref=e105]:
+                - img [ref=e107]
+                - generic [ref=e109]: Pelaa nyt
+              - generic [ref=e110]:
+                - generic [ref=e111]: Normaali
+                - img [ref=e112]
+            - generic [ref=e114]:
+              - button "Helppo vaikeustaso" [ref=e115] [cursor=pointer]:
+                - img [ref=e117]
+                - generic [ref=e119]: Helppo
+              - button "Normaali vaikeustaso" [pressed] [ref=e120] [cursor=pointer]:
+                - img [ref=e122]
+                - generic [ref=e124]: Normaali
+              - button "Aikahaaste vaikeustaso" [ref=e125] [cursor=pointer]:
+                - img [ref=e127]
+                - generic [ref=e130]: Aikahaaste
+            - generic [ref=e131]:
+              - generic: Ei virheitä tallessa
+              - generic [ref=e132]: Ei tuloksia
+        - generic [ref=e133]:
+          - generic [ref=e135]:
+            - generic [ref=e136]:
+              - generic [ref=e138]:
+                - img [ref=e140]
+                - generic [ref=e143]: 06.03.2026
+              - heading "Äidinkieli ja kirjallisuus" [level=3] [ref=e144]
+            - generic [ref=e145]: 4. lk
+          - generic [ref=e148]:
+            - button "Aloita Normaali vaikeustaso" [ref=e149] [cursor=pointer]:
+              - generic [ref=e150]:
+                - img [ref=e152]
+                - generic [ref=e154]: Pelaa nyt
+              - generic [ref=e155]:
+                - generic [ref=e156]: Normaali
+                - img [ref=e157]
+            - generic [ref=e159]:
+              - button "Helppo vaikeustaso" [ref=e160] [cursor=pointer]:
+                - img [ref=e162]
+                - generic [ref=e164]: Helppo
+              - button "Normaali vaikeustaso" [pressed] [ref=e165] [cursor=pointer]:
+                - img [ref=e167]
+                - generic [ref=e169]: Normaali
+              - button "Aikahaaste vaikeustaso" [ref=e170] [cursor=pointer]:
+                - img [ref=e172]
+                - generic [ref=e175]: Aikahaaste
+            - generic [ref=e176]:
+              - generic: Ei virheitä tallessa
+              - generic [ref=e177]: Ei tuloksia
+        - generic [ref=e178]:
+          - generic [ref=e180]:
+            - generic [ref=e181]:
+              - generic [ref=e183]:
+                - img [ref=e185]
+                - generic [ref=e188]: 27.02.2026
+              - heading "Englanti" [level=3] [ref=e189]
+            - generic [ref=e190]: 4. lk
+          - generic [ref=e193]:
+            - button "Aloita Normaali vaikeustaso" [ref=e194] [cursor=pointer]:
+              - generic [ref=e195]:
+                - img [ref=e197]
+                - generic [ref=e199]: Pelaa nyt
+              - generic [ref=e200]:
+                - generic [ref=e201]: Normaali
+                - img [ref=e202]
+            - generic [ref=e204]:
+              - button "Helppo vaikeustaso" [ref=e205] [cursor=pointer]:
+                - img [ref=e207]
+                - generic [ref=e209]: Helppo
+              - button "Normaali vaikeustaso" [pressed] [ref=e210] [cursor=pointer]:
+                - img [ref=e212]
+                - generic [ref=e214]: Normaali
+              - button "Aikahaaste vaikeustaso" [ref=e215] [cursor=pointer]:
+                - img [ref=e217]
+                - generic [ref=e220]: Aikahaaste
+            - generic [ref=e221]:
+              - generic: Ei virheitä tallessa
+              - generic [ref=e222]: Ei tuloksia
+        - generic [ref=e223]:
+          - generic [ref=e225]:
+            - generic [ref=e226]:
+              - generic [ref=e228]:
+                - img [ref=e230]
+                - generic [ref=e233]: 23.02.2026
+              - heading "Englanti" [level=3] [ref=e234]
+            - generic [ref=e235]: 6. lk
+          - generic [ref=e238]:
+            - button "Aloita Normaali vaikeustaso" [ref=e239] [cursor=pointer]:
+              - generic [ref=e240]:
+                - img [ref=e242]
+                - generic [ref=e244]: Pelaa nyt
+              - generic [ref=e245]:
+                - generic [ref=e246]: Normaali
+                - img [ref=e247]
+            - generic [ref=e249]:
+              - button "Helppo vaikeustaso" [ref=e250] [cursor=pointer]:
+                - img [ref=e252]
+                - generic [ref=e254]: Helppo
+              - button "Normaali vaikeustaso" [pressed] [ref=e255] [cursor=pointer]:
+                - img [ref=e257]
+                - generic [ref=e259]: Normaali
+              - button "Aikahaaste vaikeustaso" [ref=e260] [cursor=pointer]:
+                - img [ref=e262]
+                - generic [ref=e265]: Aikahaaste
+            - generic [ref=e266]:
+              - generic: Ei virheitä tallessa
+              - generic [ref=e267]: Ei tuloksia
+        - generic [ref=e268]:
+          - generic [ref=e270]:
+            - generic [ref=e271]:
+              - generic [ref=e273]:
+                - img [ref=e275]
+                - generic [ref=e278]: 30.01.2026
+              - heading "Matematiikka" [level=3] [ref=e279]
+            - generic [ref=e280]: 6. lk
+          - generic [ref=e283]:
+            - button "Aloita Normaali vaikeustaso" [ref=e284] [cursor=pointer]:
+              - generic [ref=e285]:
+                - img [ref=e287]
+                - generic [ref=e289]: Pelaa nyt
+              - generic [ref=e290]:
+                - generic [ref=e291]: Normaali
+                - img [ref=e292]
+            - generic [ref=e294]:
+              - button "Helppo vaikeustaso" [ref=e295] [cursor=pointer]:
+                - img [ref=e297]
+                - generic [ref=e299]: Helppo
+              - button "Normaali vaikeustaso" [pressed] [ref=e300] [cursor=pointer]:
+                - img [ref=e302]
+                - generic [ref=e304]: Normaali
+              - button "Aikahaaste vaikeustaso" [ref=e305] [cursor=pointer]:
+                - img [ref=e307]
+                - generic [ref=e310]: Aikahaaste
+            - generic [ref=e311]:
+              - generic: Ei virheitä tallessa
+              - generic [ref=e312]: Ei tuloksia
+        - generic [ref=e313]:
+          - generic [ref=e315]:
+            - generic [ref=e316]:
+              - generic [ref=e318]:
+                - img [ref=e320]
+                - generic [ref=e323]: 27.01.2026
+              - heading "Matematiikka" [level=3] [ref=e324]
+            - generic [ref=e325]: 4. lk
+          - generic [ref=e328]:
+            - button "Aloita Normaali vaikeustaso" [ref=e329] [cursor=pointer]:
+              - generic [ref=e330]:
+                - img [ref=e332]
+                - generic [ref=e334]: Pelaa nyt
+              - generic [ref=e335]:
+                - generic [ref=e336]: Normaali
+                - img [ref=e337]
+            - generic [ref=e339]:
+              - button "Helppo vaikeustaso" [ref=e340] [cursor=pointer]:
+                - img [ref=e342]
+                - generic [ref=e344]: Helppo
+              - button "Normaali vaikeustaso" [pressed] [ref=e345] [cursor=pointer]:
+                - img [ref=e347]
+                - generic [ref=e349]: Normaali
+              - button "Aikahaaste vaikeustaso" [ref=e350] [cursor=pointer]:
+                - img [ref=e352]
+                - generic [ref=e355]: Aikahaaste
+            - generic [ref=e356]:
+              - generic: Ei virheitä tallessa
+              - generic [ref=e357]: Ei tuloksia
+        - generic [ref=e358]:
+          - generic [ref=e360]:
+            - generic [ref=e361]:
+              - generic [ref=e363]:
+                - img [ref=e365]
+                - generic [ref=e368]: 12.01.2026
+              - heading "Englanti" [level=3] [ref=e369]
+            - generic [ref=e370]: 4. lk
+          - generic [ref=e373]:
+            - button "Aloita Normaali vaikeustaso" [ref=e374] [cursor=pointer]:
+              - generic [ref=e375]:
+                - img [ref=e377]
+                - generic [ref=e379]: Pelaa nyt
+              - generic [ref=e380]:
+                - generic [ref=e381]: Normaali
+                - img [ref=e382]
+            - generic [ref=e384]:
+              - button "Helppo vaikeustaso" [ref=e385] [cursor=pointer]:
+                - img [ref=e387]
+                - generic [ref=e389]: Helppo
+              - button "Normaali vaikeustaso" [pressed] [ref=e390] [cursor=pointer]:
+                - img [ref=e392]
+                - generic [ref=e394]: Normaali
+              - button "Aikahaaste vaikeustaso" [ref=e395] [cursor=pointer]:
+                - img [ref=e397]
+                - generic [ref=e400]: Aikahaaste
+            - generic [ref=e401]:
+              - generic: Ei virheitä tallessa
+              - generic [ref=e402]: Ei tuloksia
+        - generic [ref=e403]:
+          - generic [ref=e405]:
+            - generic [ref=e406]:
+              - generic [ref=e408]:
+                - img [ref=e410]
+                - generic [ref=e413]: 10.12.2025
+              - heading "Matematiikka" [level=3] [ref=e414]
+            - generic [ref=e415]: 6. lk
+          - generic [ref=e418]:
+            - button "Aloita Normaali vaikeustaso" [ref=e419] [cursor=pointer]:
+              - generic [ref=e420]:
+                - img [ref=e422]
+                - generic [ref=e424]: Pelaa nyt
+              - generic [ref=e425]:
+                - generic [ref=e426]: Normaali
+                - img [ref=e427]
+            - generic [ref=e429]:
+              - button "Helppo vaikeustaso" [ref=e430] [cursor=pointer]:
+                - img [ref=e432]
+                - generic [ref=e434]: Helppo
+              - button "Normaali vaikeustaso" [pressed] [ref=e435] [cursor=pointer]:
+                - img [ref=e437]
+                - generic [ref=e439]: Normaali
+              - button "Aikahaaste vaikeustaso" [ref=e440] [cursor=pointer]:
+                - img [ref=e442]
+                - generic [ref=e445]: Aikahaaste
+            - generic [ref=e446]:
+              - generic: Ei virheitä tallessa
+              - generic [ref=e447]: Ei tuloksia
+        - generic [ref=e448]:
+          - generic [ref=e450]:
+            - generic [ref=e451]:
+              - generic [ref=e453]:
+                - img [ref=e455]
+                - generic [ref=e458]: 02.12.2025
+              - heading "Ympäristöoppi" [level=3] [ref=e459]
+            - generic [ref=e460]: 4. lk
+          - generic [ref=e463]:
+            - button "Aloita Normaali vaikeustaso" [ref=e464] [cursor=pointer]:
+              - generic [ref=e465]:
+                - img [ref=e467]
+                - generic [ref=e469]: Pelaa nyt
+              - generic [ref=e470]:
+                - generic [ref=e471]: Normaali
+                - img [ref=e472]
+            - generic [ref=e474]:
+              - button "Helppo vaikeustaso" [ref=e475] [cursor=pointer]:
+                - img [ref=e477]
+                - generic [ref=e479]: Helppo
+              - button "Normaali vaikeustaso" [pressed] [ref=e480] [cursor=pointer]:
+                - img [ref=e482]
+                - generic [ref=e484]: Normaali
+              - button "Aikahaaste vaikeustaso" [ref=e485] [cursor=pointer]:
+                - img [ref=e487]
+                - generic [ref=e490]: Aikahaaste
+            - generic [ref=e491]:
+              - generic: Ei virheitä tallessa
+              - generic [ref=e492]: Ei tuloksia
+        - generic [ref=e493]:
+          - generic [ref=e495]:
+            - generic [ref=e496]:
+              - generic [ref=e498]:
+                - img [ref=e500]
+                - generic [ref=e503]: 01.12.2025
+              - heading "Yhteiskuntaoppi" [level=3] [ref=e504]
+            - generic [ref=e505]: 4. lk
+          - generic [ref=e508]:
+            - button "Aloita Normaali vaikeustaso" [ref=e509] [cursor=pointer]:
+              - generic [ref=e510]:
+                - img [ref=e512]
+                - generic [ref=e514]: Pelaa nyt
+              - generic [ref=e515]:
+                - generic [ref=e516]: Normaali
+                - img [ref=e517]
+            - generic [ref=e519]:
+              - button "Helppo vaikeustaso" [ref=e520] [cursor=pointer]:
+                - img [ref=e522]
+                - generic [ref=e524]: Helppo
+              - button "Normaali vaikeustaso" [pressed] [ref=e525] [cursor=pointer]:
+                - img [ref=e527]
+                - generic [ref=e529]: Normaali
+              - button "Aikahaaste vaikeustaso" [ref=e530] [cursor=pointer]:
+                - img [ref=e532]
+                - generic [ref=e535]: Aikahaaste
+            - generic [ref=e536]:
+              - generic: Ei virheitä tallessa
+              - generic [ref=e537]: Ei tuloksia
+        - generic [ref=e538]:
+          - generic [ref=e540]:
+            - generic [ref=e541]:
+              - generic [ref=e543]:
+                - img [ref=e545]
+                - generic [ref=e548]: 30.11.2025
+              - heading "Ruotsi" [level=3] [ref=e549]
+            - generic [ref=e550]: 6. lk
+          - generic [ref=e553]:
+            - button "Aloita Normaali vaikeustaso" [ref=e554] [cursor=pointer]:
+              - generic [ref=e555]:
+                - img [ref=e557]
+                - generic [ref=e559]: Pelaa nyt
+              - generic [ref=e560]:
+                - generic [ref=e561]: Normaali
+                - img [ref=e562]
+            - generic [ref=e564]:
+              - button "Helppo vaikeustaso" [ref=e565] [cursor=pointer]:
+                - img [ref=e567]
+                - generic [ref=e569]: Helppo
+              - button "Normaali vaikeustaso" [pressed] [ref=e570] [cursor=pointer]:
+                - img [ref=e572]
+                - generic [ref=e574]: Normaali
+              - button "Aikahaaste vaikeustaso" [ref=e575] [cursor=pointer]:
+                - img [ref=e577]
+                - generic [ref=e580]: Aikahaaste
+            - generic [ref=e581]:
+              - generic: Ei virheitä tallessa
+              - generic [ref=e582]: Ei tuloksia
+        - generic [ref=e583]:
+          - generic [ref=e585]:
+            - generic [ref=e586]:
+              - generic [ref=e588]:
+                - img [ref=e590]
+                - generic [ref=e593]: 26.11.2025
+              - heading "Matematiikka" [level=3] [ref=e594]
+            - generic [ref=e595]: 4. lk
+          - generic [ref=e598]:
+            - button "Aloita Normaali vaikeustaso" [ref=e599] [cursor=pointer]:
+              - generic [ref=e600]:
+                - img [ref=e602]
+                - generic [ref=e604]: Pelaa nyt
+              - generic [ref=e605]:
+                - generic [ref=e606]: Normaali
+                - img [ref=e607]
+            - generic [ref=e609]:
+              - button "Helppo vaikeustaso" [ref=e610] [cursor=pointer]:
+                - img [ref=e612]
+                - generic [ref=e614]: Helppo
+              - button "Normaali vaikeustaso" [pressed] [ref=e615] [cursor=pointer]:
+                - img [ref=e617]
+                - generic [ref=e619]: Normaali
+              - button "Aikahaaste vaikeustaso" [ref=e620] [cursor=pointer]:
+                - img [ref=e622]
+                - generic [ref=e625]: Aikahaaste
+            - generic [ref=e626]:
+              - generic: Ei virheitä tallessa
+              - generic [ref=e627]: Ei tuloksia
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e44] [cursor=pointer]:
+    - img [ref=e45]
+  - alert [ref=e48]

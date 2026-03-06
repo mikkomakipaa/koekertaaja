@@ -1,0 +1,88 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e628]:
+      - generic [ref=e630]:
+        - generic [ref=e631]:
+          - generic [ref=e632]:
+            - img [ref=e633]
+            - generic [ref=e635]:
+              - heading "Matematiikka 12.3" [level=2] [ref=e636]
+              - paragraph [ref=e637]: Kysymys 1 / 15
+          - button "Lopeta harjoitus" [ref=e638] [cursor=pointer]:
+            - img [ref=e639]
+            - text: Lopeta
+        - generic [ref=e641]:
+          - generic [ref=e642]:
+            - progressbar
+          - generic [ref=e643]: 0% valmis
+      - generic [ref=e644]:
+        - generic [ref=e646]:
+          - heading "Valitse kaikki, jotka ovat yhtä suuria kuin ." [level=2] [ref=e647]:
+            - generic [ref=e648]:
+              - text: Valitse kaikki, jotka ovat yhtä suuria kuin
+              - generic [ref=e650]:
+                - math [ref=e652]:
+                  - generic [ref=e655]:
+                    - generic [ref=e656]: "1"
+                    - generic [ref=e657]: "2"
+                - generic [ref=e664]:
+                  - generic [ref=e666]: "2"
+                  - generic [ref=e669]: "1"
+              - text: .
+          - group "Valitse KAIKKI oikeat vastaukset" [ref=e673]:
+            - generic [ref=e674]: Valitse KAIKKI oikeat vastaukset
+            - generic [ref=e675]:
+              - generic [ref=e676] [cursor=pointer]:
+                - checkbox "0,5" [ref=e677]
+                - generic [ref=e678]: 0,5
+              - generic [ref=e679] [cursor=pointer]:
+                - checkbox "2 4" [ref=e680]
+                - generic [ref=e684]:
+                  - math [ref=e686]:
+                    - generic [ref=e689]:
+                      - generic [ref=e690]: "2"
+                      - generic [ref=e691]: "4"
+                  - generic [ref=e698]:
+                    - generic [ref=e700]: "4"
+                    - generic [ref=e703]: "2"
+              - generic [ref=e707] [cursor=pointer]:
+                - checkbox "3 5" [ref=e708]
+                - generic [ref=e712]:
+                  - math [ref=e714]:
+                    - generic [ref=e717]:
+                      - generic [ref=e718]: "3"
+                      - generic [ref=e719]: "5"
+                  - generic [ref=e726]:
+                    - generic [ref=e728]: "5"
+                    - generic [ref=e731]: "3"
+              - generic [ref=e735] [cursor=pointer]:
+                - checkbox "4 8" [ref=e736]
+                - generic [ref=e740]:
+                  - math [ref=e742]:
+                    - generic [ref=e745]:
+                      - generic [ref=e746]: "4"
+                      - generic [ref=e747]: "8"
+                  - generic [ref=e754]:
+                    - generic [ref=e756]: "8"
+                    - generic [ref=e759]: "4"
+              - generic [ref=e763] [cursor=pointer]:
+                - checkbox "7 12" [ref=e764]
+                - generic [ref=e768]:
+                  - math [ref=e770]:
+                    - generic [ref=e773]:
+                      - generic [ref=e774]: "7"
+                      - generic [ref=e775]: "12"
+                  - generic [ref=e782]:
+                    - generic [ref=e784]: "12"
+                    - generic [ref=e787]: "7"
+        - generic [ref=e791]:
+          - generic [ref=e792]:
+            - button "Ohita kysymys" [ref=e793] [cursor=pointer]: Ohita
+            - button "Tarkista vastaus" [disabled]
+          - button "Valitse eri aihealue" [ref=e794] [cursor=pointer]:
+            - img [ref=e795]
+            - text: Valitse eri aihealue
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e44] [cursor=pointer]:
+    - img [ref=e45]
+  - alert [ref=e48]

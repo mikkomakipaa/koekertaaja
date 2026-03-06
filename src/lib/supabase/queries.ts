@@ -8,6 +8,7 @@ import { QuestionSet, QuestionSetWithQuestions } from '@/types';
 import { parseDatabaseQuestion } from '@/types/database';
 import { createLogger } from '@/lib/logger';
 import { normalizeTopicLabel } from '@/lib/topics/normalization';
+import { stripDifficultySuffix } from '@/lib/question-set-name';
 
 const logger = createLogger({ module: 'supabase.queries' });
 
@@ -223,4 +224,61 @@ export async function getCreatedQuestionSets(limit = 50): Promise<QuestionSet[]>
   }
 
   return (data || []) as QuestionSet[];
+}
+
+/**
+ * Find related published flashcard set code for a quiz set code.
+ * Matches by subject, grade, and base name without difficulty suffix.
+ */
+export async function findRelatedFlashcardCode(quizCode: string): Promise<string | null> {
+  const normalizedCode = quizCode.trim().toUpperCase();
+  if (!normalizedCode) {
+    return null;
+  }
+
+  const { data: quizSet, error: quizError } = await supabase
+    .from('question_sets')
+    .select('subject, grade, name')
+    .eq('code', normalizedCode)
+    .single();
+
+  if (quizError || !quizSet) {
+    return null;
+  }
+
+  const baseName = stripDifficultySuffix(quizSet.name ?? '');
+  if (!baseName || !quizSet.subject || quizSet.grade == null) {
+    return null;
+  }
+
+  const { data: flashcardCandidates, error: flashcardError } = await supabase
+    .from('question_sets')
+    .select('code, name')
+    .eq('subject', quizSet.subject)
+    .eq('grade', quizSet.grade)
+    .eq('mode', 'flashcard')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false });
+
+  if (flashcardError || !flashcardCandidates) {
+    if (flashcardError) {
+      logger.error(
+        { error: flashcardError, quizCode: normalizedCode },
+        'Error fetching related flashcard candidates'
+      );
+    }
+    return null;
+  }
+
+  for (const candidate of flashcardCandidates) {
+    if (!candidate.code || !candidate.name) {
+      continue;
+    }
+
+    if (stripDifficultySuffix(candidate.name) === baseName) {
+      return candidate.code;
+    }
+  }
+
+  return null;
 }

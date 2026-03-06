@@ -49,7 +49,6 @@ import {
   ArrowLeft,
   CaretDown,
   CaretUp,
-  Sparkle,
 } from '@phosphor-icons/react';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { CreationProgressStepper } from '@/components/create/CreationProgressStepper';
@@ -57,7 +56,6 @@ import { TestQuestionsTab } from '@/components/create/TestQuestionsTab';
 import { CapacityWarningDialog } from '@/components/create/CapacityWarningDialog';
 import { MetricsTab } from '@/components/metrics/MetricsTab';
 import { MathText } from '@/components/ui/math-text';
-import { AppShellHeader } from '@/components/layout/AppShellHeader';
 import { useAuth } from '@/hooks/useAuth';
 import { createLogger } from '@/lib/logger';
 import { withCsrfHeaders } from '@/lib/security/csrf-client';
@@ -222,6 +220,7 @@ export default function CreatePage() {
   const [flagLoadError, setFlagLoadError] = useState('');
   const [editingFlag, setEditingFlag] = useState<FlaggedQuestion | null>(null);
   const [dismissingFlagId, setDismissingFlagId] = useState<string | null>(null);
+  const [deletingFlaggedQuestionId, setDeletingFlaggedQuestionId] = useState<string | null>(null);
   const [editQuestionText, setEditQuestionText] = useState('');
   const [editCorrectAnswer, setEditCorrectAnswer] = useState('');
   const [editOptions, setEditOptions] = useState('');
@@ -1128,6 +1127,50 @@ export default function CreatePage() {
     }
   };
 
+  const handleRemoveFlaggedQuestion = async (flag: FlaggedQuestion) => {
+    if (!isAdmin) return;
+
+    const confirmed = confirm('Poistetaanko tämä kysymys kokonaan kysymyssarjasta?');
+    if (!confirmed) return;
+
+    setDeletingFlaggedQuestionId(flag.questionId);
+    setFlagLoadError('');
+
+    try {
+      const response = await fetch(`/api/questions/${flag.questionId}`, {
+        method: 'DELETE',
+        headers: withCsrfHeaders(),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = payload.error || 'Kysymyksen poistaminen epäonnistui';
+        throw new Error(errorMessage);
+      }
+
+      setFlaggedQuestions((prev) => prev.filter((item) => item.questionId !== flag.questionId));
+      setAllQuestionSets((prev) =>
+        prev.map((set) =>
+          set.id === flag.questionSetId
+            ? { ...set, question_count: Math.max(0, Number(set.question_count ?? 0) - 1) }
+            : set
+        )
+      );
+      if (editingFlag?.questionId === flag.questionId) {
+        setEditingFlag(null);
+      }
+
+      toast.success('Kysymys poistettu', {
+        description: 'Kysymys poistettiin kysymyssarjasta.',
+      });
+    } catch (error) {
+      logger.error({ error }, 'Failed to delete flagged question');
+      setFlagLoadError(error instanceof Error ? error.message : 'Kysymyksen poistaminen epäonnistui');
+    } finally {
+      setDeletingFlaggedQuestionId(null);
+    }
+  };
+
 
   const checkAdminStatus = async () => {
     try {
@@ -1459,48 +1502,49 @@ export default function CreatePage() {
   // Form screen
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-slate-50 p-6 transition-colors dark:bg-slate-950 md:p-12">
-      <div className="mx-auto max-w-4xl">
-        {/* Header */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-colors dark:border-slate-800 dark:bg-slate-900">
-          <AppShellHeader
-            icon={<Sparkle size={24} weight="duotone" />}
-            title="Kysymyssarjat"
-            description="Luo uusia sarjoja, laajenna olemassa olevia ja hallitse julkaistavia sisältöjä."
-            leadingAction={
+      <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
+      <div className="mx-auto max-w-4xl space-y-3 px-4 py-6 md:px-8">
+        <section className="border-b border-slate-200/80 pb-4 dark:border-white/10">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-3">
               <button
                 type="button"
                 onClick={() => router.push('/')}
                 aria-label="Takaisin etusivulle"
-                className="inline-grid h-11 w-11 place-items-center rounded-xl bg-transparent text-black/55 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
+                className="inline-grid h-11 w-11 shrink-0 place-items-center rounded-[14px] border border-black/[0.08] bg-black/[0.02] text-gray-600 transition-all hover:bg-black/[0.04] hover:text-gray-900 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
               >
                 <ArrowLeft size={20} weight="regular" aria-hidden="true" />
               </button>
-            }
-            trailingAction={
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleSignOut}
-                aria-label="Kirjaudu ulos"
-                className="h-11 w-11 rounded-[14px] border border-black/[0.08] bg-black/[0.02] text-slate-700 transition-all hover:bg-black/[0.04] hover:text-slate-900 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                <SignOut weight="duotone" className="h-5 w-5" />
-              </Button>
-            }
-            className="rounded-none border-0 shadow-none"
-          />
-          <ARIATabBar
-            tabs={tabsConfig}
-            activeTab={activeTab}
-            onTabChange={(value: typeof activeTab) => setActiveTab(value)}
-            isAdmin={isAdmin}
-            className="bg-slate-50/80 dark:bg-slate-900/50"
-          />
-        </div>
+              <div className="min-w-0">
+                <h1 className="text-[22px] font-bold leading-[1.1] tracking-tight text-slate-950 dark:text-slate-50 max-[480px]:text-[19px]">
+                  Kysymyssarjat
+                </h1>
+                <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300">
+                  Luo uusia sarjoja, laajenna olemassa olevia ja hallitse julkaistavia sisältöjä.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleSignOut}
+              aria-label="Kirjaudu ulos"
+              className="h-11 w-11 shrink-0 rounded-[14px] border border-black/[0.08] bg-black/[0.02] text-slate-700 transition-all hover:bg-black/[0.04] hover:text-slate-900 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              <SignOut weight="duotone" className="h-5 w-5" />
+            </Button>
+          </div>
+        </section>
+
+        <ARIATabBar
+          tabs={tabsConfig}
+          activeTab={activeTab}
+          onTabChange={(value: typeof activeTab) => setActiveTab(value)}
+          isAdmin={isAdmin}
+        />
 
         {/* Tab Content */}
-        <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-none transition-colors dark:border-slate-800 dark:bg-slate-900 md:p-6">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-none transition-colors dark:border-slate-800 dark:bg-slate-900 md:p-6">
           {activeTab === 'create' && (
             <div
               id="question-form"
@@ -2415,7 +2459,10 @@ export default function CreatePage() {
                                   onClick={() => handleDismissFlag(flag)}
                                   variant="outline"
                                   size="sm"
-                                  disabled={dismissingFlagId === flag.questionId}
+                                  disabled={
+                                    dismissingFlagId === flag.questionId ||
+                                    deletingFlaggedQuestionId === flag.questionId
+                                  }
                                   className="gap-2 text-slate-600 hover:text-slate-900"
                                 >
                                   {dismissingFlagId === flag.questionId ? (
@@ -2424,6 +2471,23 @@ export default function CreatePage() {
                                     <Trash weight="duotone" className="w-4 h-4" />
                                   )}
                                   Poista ilmoitukset
+                                </Button>
+                                <Button
+                                  onClick={() => handleRemoveFlaggedQuestion(flag)}
+                                  variant="destructive"
+                                  size="sm"
+                                  disabled={
+                                    deletingFlaggedQuestionId === flag.questionId ||
+                                    dismissingFlagId === flag.questionId
+                                  }
+                                  className="gap-2"
+                                >
+                                  {deletingFlaggedQuestionId === flag.questionId ? (
+                                    <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Trash weight="duotone" className="w-4 h-4" />
+                                  )}
+                                  Poista kysymys
                                 </Button>
                               </div>
                             </div>

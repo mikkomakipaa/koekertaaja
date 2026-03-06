@@ -30,6 +30,7 @@ import { useSessionProgress } from '@/hooks/useSessionProgress';
 import { useRecentSearches } from '@/hooks/useRecentSearches';
 import { useScrollDetection } from '@/hooks/useScrollDetection';
 import { createLogger } from '@/lib/logger';
+import { stripDifficultySuffix } from '@/lib/question-set-name';
 import {
   Books,
   Circle,
@@ -451,16 +452,6 @@ function PlayBrowsePageContent() {
           const message = payload?.error || 'Kysymyssarjojen lataaminen epäonnistui';
           throw new Error(message);
         }
-
-        const stripDifficultySuffix = (name: string): string => {
-          const suffixes = [' - Helppo', ' - Normaali', ' - Kortit'];
-          for (const suffix of suffixes) {
-            if (name.endsWith(suffix)) {
-              return name.slice(0, -suffix.length);
-            }
-          }
-          return name;
-        };
 
         const grouped = sets.reduce((acc, set) => {
           const cleanName = stripDifficultySuffix(set.name);
