@@ -137,7 +137,7 @@ task-253  Integrate tab into achievements page
 
 ## Design Constraints
 
-- Follow `docs/DESIGN_GUIDELINES.md` for all new surfaces
+- Follow `DWF/DESIGN_GUIDELINES.md` for all new surfaces
 - Cards: `rounded-xl`, no permanent shadow, `hover:shadow-md`
 - Typography: named scale classes only (`text-xs`, `text-sm`, `text-base`)
 - Colors: semantic only (score = status color, subject = subject color)

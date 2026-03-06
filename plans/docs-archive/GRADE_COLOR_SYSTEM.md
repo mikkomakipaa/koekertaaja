@@ -299,7 +299,7 @@ export function getGradeBadgeClasses(grade: number): string {
 
 ## References
 
-- Parent document: `docs/DESIGN_GUIDELINES.md` (Section 3: Color System)
+- Parent document: `DWF/DESIGN_GUIDELINES.md` (Section 3: Color System)
 - WCAG 2.1 AA: https://www.w3.org/WAI/WCAG21/quickref/
 - Color contrast checker: https://webaim.org/resources/contrastchecker/
 - Design tokens: `src/lib/design-tokens/colors.ts`

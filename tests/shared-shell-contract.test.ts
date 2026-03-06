@@ -2,34 +2,35 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
-const designGuidelinesSource = readFileSync('docs/DESIGN_GUIDELINES.md', 'utf-8');
+const designGuidelinesSource = readFileSync('DWF/DESIGN_GUIDELINES.md', 'utf-8');
 const homePageSource = readFileSync('src/app/page.tsx', 'utf-8');
 const playPageSource = readFileSync('src/app/play/page.tsx', 'utf-8');
 const createPageSource = readFileSync('src/app/create/page.tsx', 'utf-8');
 const createResultsPageSource = readFileSync('src/app/create/results/page.tsx', 'utf-8');
 const achievementsPageSource = readFileSync('src/app/play/achievements/page.tsx', 'utf-8');
 const resultsScreenSource = readFileSync('src/components/play/ResultsScreen.tsx', 'utf-8');
+const badgeCollectionCardSource = readFileSync('src/components/badges/BadgeCollectionCard.tsx', 'utf-8');
 const appShellHeaderSource = readFileSync('src/components/layout/AppShellHeader.tsx', 'utf-8');
 const primaryActionButtonSource = readFileSync('src/components/play/PrimaryActionButton.tsx', 'utf-8');
 const footerSource = readFileSync('src/components/shared/Footer.tsx', 'utf-8');
 
 describe('shared shell contract', () => {
-  it('keeps docs/DESIGN_GUIDELINES.md as the design source of truth for unified shell surfaces', () => {
+  it('keeps DWF/DESIGN_GUIDELINES.md as the design source of truth for unified shell surfaces', () => {
     assert.ok(designGuidelinesSource.includes('design source of truth for shared shell surfaces'));
     assert.ok(designGuidelinesSource.includes('## Shell Validation Snapshot'));
-    assert.ok(designGuidelinesSource.includes('Create (`/create`): `AppShellHeader`'));
-    assert.ok(designGuidelinesSource.includes('Achievements (`/play/achievements`): `AppShellHeader`'));
+    assert.ok(designGuidelinesSource.includes('Create (`/create`): lightweight Play-style section header'));
+    assert.ok(designGuidelinesSource.includes('Achievements (`/play/achievements`): lightweight Play-style section header'));
   });
 
-  it('uses shared shell primitives across the validated pages', () => {
+  it('uses shared shell primitives and lightweight headers across the validated pages', () => {
     assert.ok(homePageSource.includes('PrimaryActionButton'));
     assert.ok(homePageSource.includes('<Footer />'));
     assert.ok(playPageSource.includes('PrimaryActionButton'));
-    assert.ok(createPageSource.includes('AppShellHeader'));
+    assert.ok(createPageSource.includes('border-b border-slate-200/80 pb-4'));
+    assert.ok(createPageSource.includes('<ARIATabBar'));
     assert.ok(createResultsPageSource.includes('AppShellHeader'));
-    assert.ok(achievementsPageSource.includes('AppShellHeader'));
-    assert.ok(achievementsPageSource.includes('PrimaryActionButton'));
-    assert.ok(resultsScreenSource.includes('AppShellHeader'));
+    assert.ok(achievementsPageSource.includes('border-b border-slate-200/80 pb-4'));
+    assert.ok(resultsScreenSource.includes('border-b border-slate-200/80 pb-4'));
   });
 
   it('locks the shared shell sizing and border-first styling primitives', () => {
@@ -43,16 +44,16 @@ describe('shared shell contract', () => {
     assert.ok(resultsScreenSource.includes('rounded-xl border-slate-200 shadow-none'));
     assert.ok(resultsScreenSource.includes('TabsList className="grid w-full grid-cols-3 rounded-xl border border-slate-200 bg-white p-1 shadow-none'));
     assert.ok(achievementsPageSource.includes('rounded-xl border-slate-200 shadow-none'));
-    assert.ok(resultsScreenSource.includes('className="mb-4"'));
+    assert.ok(resultsScreenSource.includes('mb-4 border-b border-slate-200/80'));
     assert.ok(achievementsPageSource.includes('<AchievementsMapSection'));
   });
 
   it('keeps results and achievements badges on the shared round-token collection layout', () => {
     assert.ok(designGuidelinesSource.includes('Achievement badges on Results and Achievements pages use a shared round token pattern'));
     assert.ok(designGuidelinesSource.includes('Token grids should favor denser collection layouts'));
-    assert.ok(resultsScreenSource.includes('grid grid-cols-3 gap-x-2 gap-y-4 sm:grid-cols-4 sm:gap-x-3 sm:gap-y-5 lg:grid-cols-5'));
-    assert.ok(achievementsPageSource.includes('grid grid-cols-3 gap-x-2 gap-y-4 sm:grid-cols-4 sm:gap-x-3 sm:gap-y-5 md:grid-cols-5 lg:grid-cols-6'));
-    assert.ok(resultsScreenSource.includes('className="mx-auto"'));
-    assert.ok(achievementsPageSource.includes('className="mx-auto"'));
+    assert.ok(resultsScreenSource.includes('<BadgeCollectionCard'));
+    assert.ok(achievementsPageSource.includes('<BadgeCollectionCard'));
+    assert.ok(badgeCollectionCardSource.includes('grid grid-cols-3 gap-x-2 gap-y-4 sm:grid-cols-4 sm:gap-x-3 sm:gap-y-5 md:grid-cols-5 lg:grid-cols-6'));
+    assert.ok(badgeCollectionCardSource.includes('className="mx-auto"'));
   });
 });

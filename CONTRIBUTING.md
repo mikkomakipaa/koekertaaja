@@ -91,7 +91,7 @@ Delete feature branch
 3. **Make your changes**
    - Write code
    - Add tests
-   - Update documentation
+   - Update documentation in `DWF/` (single authoritative source)
 
 4. **Commit your changes**
    ```bash

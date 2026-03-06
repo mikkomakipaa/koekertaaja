@@ -174,6 +174,6 @@ task-258  Wire ResultsScreen and AchievementsMapSection
 ## Constraints
 
 - No new Vercel API routes (stays at 10 of 12 functions)
-- Follow `docs/DESIGN_GUIDELINES.md` for all new UI (teal = study mode, `rounded-lg` on links/buttons, named type scale)
+- Follow `DWF/DESIGN_GUIDELINES.md` for all new UI (teal = study mode, `rounded-lg` on links/buttons, named type scale)
 - `TopicMasteryDisplay` stays backwards-compatible — `flashcardSetCode` is optional
 - No breaking changes to existing API response shape (new field is additive)

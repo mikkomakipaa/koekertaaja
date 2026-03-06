@@ -24,7 +24,7 @@
 - Journey fit:
   `DWF/USER_JOURNEYS.md` emphasizes instant confidence, low frustration after mistakes, and clear recovery after incorrect answers.
 - UI fit:
-  `DWF/DESIGN_SYSTEM.md` requires large touch targets, 16px+ text, mobile-first interaction, and positive feedback without shaming.
+  `DWF/DESIGN_GUIDELINES.md` requires large touch targets, 16px+ text, mobile-first interaction, and positive feedback without shaming.
 - Existing flow:
   [ShortAnswer.tsx](/Users/mikko.makipaa/koekertaaja/src/components/questions/ShortAnswer.tsx) currently uses a generic `Textarea` with a generic placeholder.
   [page.tsx](/Users/mikko.makipaa/koekertaaja/src/app/play/[code]/page.tsx) passes only broad question-type placeholder hints.

@@ -16,7 +16,7 @@ Replace the current rectangular achievement badge cards on the Results and Achie
 - Shared badge token presentation for unlocked, locked, and highlighted/rare states.
 - Results page header, stat row, and badges tab.
 - Achievements page badge collection grid.
-- Alignment with `docs/DESIGN_GUIDELINES.md` for shell consistency, density, and restrained surface styling.
+- Alignment with `DWF/DESIGN_GUIDELINES.md` for shell consistency, density, and restrained surface styling.
 
 ## Out of Scope
 

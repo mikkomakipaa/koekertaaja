@@ -259,4 +259,4 @@ When adding new scripts:
 **See Also**:
 - `../README.md` - Project overview
 - `../CONTRIBUTING.md` - Contribution guidelines
-- `../docs/TESTING_GUIDE.md` - Testing documentation
+- `../DWF/TESTING_STRATEGY.md` - Testing documentation (authoritative)

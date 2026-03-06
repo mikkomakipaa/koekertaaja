@@ -33,9 +33,9 @@ Revise the public front page at `/` so it behaves like a clean product dashboard
 - [AudienceTabs.tsx](/Users/mikko.makipaa/koekertaaja/src/components/landing/AudienceTabs.tsx)
 - [ARIATabBar.tsx](/Users/mikko.makipaa/koekertaaja/src/components/layout/ARIATabBar.tsx)
 - [page.tsx](/Users/mikko.makipaa/koekertaaja/src/app/play/page.tsx)
-- [DESIGN_SYSTEM.md](/Users/mikko.makipaa/koekertaaja/DWF/DESIGN_SYSTEM.md)
+- [DESIGN_GUIDELINES.md](/Users/mikko.makipaa/koekertaaja/DWF/DESIGN_GUIDELINES.md)
 - [USER_JOURNEYS.md](/Users/mikko.makipaa/koekertaaja/DWF/USER_JOURNEYS.md)
-- [LANDING_PAGE_ACCESSIBILITY.md](/Users/mikko.makipaa/koekertaaja/docs/LANDING_PAGE_ACCESSIBILITY.md)
+- [LANDING_PAGE_ACCESSIBILITY.md](/Users/mikko.makipaa/koekertaaja/plans/docs-archive/LANDING_PAGE_ACCESSIBILITY.md)
 
 ## Task Breakdown
 

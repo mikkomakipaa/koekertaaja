@@ -266,4 +266,4 @@ Button press:
 
 ---
 
-**Full guidelines:** See `docs/DESIGN_GUIDELINES.md`
+**Full guidelines:** See `DWF/DESIGN_GUIDELINES.md`

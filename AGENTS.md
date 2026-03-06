@@ -67,8 +67,8 @@ Use a three-step workflow: Plan and create tasks, Executes tasks and test, then 
 - Name task files with a numeric prefix: `task-###-short-title.md` (pick the next available number)
 - Each task must be independent, reference specific files, and have acceptance criteria
 - Tool must not implement code changes; it only creates task files
-- Update `DWF/ADR-001-core-architecture.md` for architectural changes
-- For new features or logic changes, add a testing plan per `Documentation/TESTING_GUIDE.md`
+- Update `DWF/CORE_ARCHITECTURE.md` for architectural changes
+- For new features or logic changes, align testing scope with `DWF/TESTING_STRATEGY.md`
 - If feature requires a plan, save plan to → `plans/`, use name 'plan-###-short-title' 
 
 **Step 2: Task execution (Tool-agnostic)**
@@ -149,39 +149,33 @@ src/
 └── types/                       # TypeScript types
 
 supabase/migrations/             # Database migrations
-docs/                            # App-specific docs (lenient matching, API schemas)
-Documentation/                   # Planning, testing, deployment, security
-DWF/                             # Product + architecture docs, ADRs, design system
+DWF/                             # Authoritative product + architecture documentation
+plans/docs-archive/              # Legacy/non-authoritative docs moved from /docs
 scripts/                         # Task runner scripts
 ```
 
 ## Documentation
 
-Development Workflow (DWF) folder is the key source of information in this project.
+Development Workflow (DWF) folder is the single authoritative documentation source in this project.
 ```
 DWF/
 ├── COMPONENTS.md
 ├── CORE_ARCHITECTURE.md
+├── DATA_SCHEMA.md
 ├── DATA_MODEL.md
-├── DESIGN_SYSTEM.md
+├── DESIGN_GUIDELINES.md
 ├── METRICS.md
 ├── NFR.md
 ├── PERSONAS.md
 ├── TESTING_STRATEGY.md
 ├── USER_JOURNEYS.md
 └── WIREFRAMES.md
-
-Additional project documentation:
-
-docs/
-├── API_SCHEMAS.md
-├── LENIENT_ANSWER_MATCHING.md
-└── MCP_SUPABASE_INTEGRATION.md
-├── IMPLEMENTATION_PLAN.md
-├── TESTING_GUIDE.md
-├── DEPLOYMENT_GUIDE.md
-└── SECURITY_REVIEW.md
 ```
+
+Legacy note:
+- `plans/docs-archive/` contains migrated historical docs from the removed `/docs` folder.
+- Treat `plans/docs-archive/` as non-authoritative reference material only.
+- If archived docs conflict with DWF, DWF always wins.
 
 ## Architecture Patterns
 
@@ -225,7 +219,7 @@ docs/
 - Phosphor duotone icons throughout the app.
 - Dark mode respects system preference.
 - Use shadcn/ui components from `src/components/ui/`.
-- Reference `DWF/DESIGN_SYSTEM.md` for visual rules.
+- Reference `DWF/DESIGN_GUIDELINES.md` for visual rules.
 
 ## Localization
 
@@ -242,7 +236,7 @@ docs/
 
 ## Testing
 
-- Current test tooling is minimal; follow `Documentation/TESTING_GUIDE.md`.
+- Current test tooling is minimal; follow `DWF/TESTING_STRATEGY.md`.
 - Prioritize unit tests for core logic (answer matching, sampling, code generation).
 - Add API route tests for validation, auth, and error handling.
 - Consider E2E coverage for create → play → results when feasible.
@@ -275,4 +269,4 @@ Cost impact: about +$0.023 per question set creation (one-time).
 ### Answer Matching
 - Strategies: exact (normalized) → contains → fuzzy (Levenshtein).
 - Grade thresholds: 4th (75%), 5th (80%), 6th (85%).
-- See `docs/LENIENT_ANSWER_MATCHING.md` for examples.
+- Historical reference: `plans/docs-archive/LENIENT_ANSWER_MATCHING.md` (DWF remains authoritative).

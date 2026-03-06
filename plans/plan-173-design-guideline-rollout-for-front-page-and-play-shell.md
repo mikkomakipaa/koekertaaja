@@ -2,7 +2,7 @@
 
 ## Goal
 
-Apply the stricter design contract from [DESIGN_GUIDELINES.md](/Users/mikko.makipaa/koekertaaja/docs/DESIGN_GUIDELINES.md) to the shared app-shell surfaces so the product shell stops drifting across front page, Play, Create, Results, and Achievements pages.
+Apply the stricter design contract from [DESIGN_GUIDELINES.md](/Users/mikko.makipaa/koekertaaja/DWF/DESIGN_GUIDELINES.md) to the shared app-shell surfaces so the product shell stops drifting across front page, Play, Create, Results, and Achievements pages.
 
 ## Why
 

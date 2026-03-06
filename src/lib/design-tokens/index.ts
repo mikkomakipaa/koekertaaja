@@ -2,7 +2,7 @@
  * Design Tokens
  *
  * Centralized design system tokens for consistent styling across the app.
- * These tokens map to the design guidelines in docs/DESIGN_GUIDELINES.md
+ * These tokens map to the design guidelines in DWF/DESIGN_GUIDELINES.md
  *
  * Usage:
  * import { typography, spacing, colors } from '@/lib/design-tokens';
