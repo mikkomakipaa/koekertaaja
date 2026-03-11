@@ -1,5 +1,6 @@
 import { ShortAnswerQuestion } from '@/types';
 import type { AnswerEntryConfig } from '@/lib/questions/answer-entry';
+import { FractionInput } from '@/components/ui/fraction-input';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { MathText } from '@/components/ui/math-text';
@@ -25,6 +26,7 @@ export function ShortAnswer({
 }: ShortAnswerProps) {
   const isCorrect = showExplanation && isAnswerCorrect;
   const isCompactInput = answerEntryConfig?.variant === 'compact';
+  const isFractionWidget = isCompactInput && Boolean(answerEntryConfig?.mathInputType);
   const placeholder = answerEntryConfig?.placeholder ?? 'Kirjoita vastauksesi tähän... (Voit kirjoittaa useamman lauseen)';
   const sharedFieldClassName = cn(
     'text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
@@ -34,7 +36,7 @@ export function ShortAnswer({
 
   return (
     <div className="space-y-4">
-      {!showExplanation && answerEntryConfig?.notationHint && (
+      {!showExplanation && answerEntryConfig?.notationHint && !isFractionWidget && (
         <div
           data-testid="answer-notation-hint"
           className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-100"
@@ -46,8 +48,17 @@ export function ShortAnswer({
         </div>
       )}
 
-      <div className="relative">
-        {isCompactInput ? (
+      <div className={cn('relative', isFractionWidget && showExplanation && 'pr-20')}>
+        {isFractionWidget ? (
+          <FractionInput
+            data-testid="fraction-answer-input"
+            type={answerEntryConfig?.mathInputType === 'mixed_number' ? 'mixed_number' : 'fraction'}
+            value={userAnswer}
+            onChange={(value) => !showExplanation && onAnswerChange(value)}
+            disabled={showExplanation}
+            className={sharedFieldClassName}
+          />
+        ) : isCompactInput ? (
           <Input
             data-testid="compact-answer-input"
             type="text"
@@ -70,7 +81,12 @@ export function ShortAnswer({
             className={cn('text-base resize-none min-h-32', sharedFieldClassName)}
           />
         )}
-        {showExplanation && (
+        {!isCompactInput && !showExplanation && (
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 text-right">
+            {userAnswer.trim() === '' ? 'Vastaus puuttuu' : `${userAnswer.trim().length} merkkiä`}
+          </p>
+        )}
+        {showExplanation && !isFractionWidget && (
           <div className="absolute right-3 top-3">
             {isCorrect ? (
               <CheckCircle weight="duotone" className="w-6 h-6 text-green-600" />
@@ -82,6 +98,17 @@ export function ShortAnswer({
           </div>
         )}
       </div>
+      {showExplanation && isFractionWidget && (
+        <div className="flex justify-end">
+          {isCorrect ? (
+            <CheckCircle weight="duotone" className="w-6 h-6 text-green-600" />
+          ) : (
+            <div className="bg-yellow-100 p-2 rounded-lg">
+              <span className="text-xs text-yellow-800 font-medium">Tarkista</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {showExplanation && (
         <div className="p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg space-y-3">

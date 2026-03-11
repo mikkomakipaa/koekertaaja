@@ -6,6 +6,7 @@ export interface AnswerEntryConfig {
   notationHint?: string;
   feedbackHint?: string;
   acceptedFormats?: string[];
+  mathInputType?: 'fraction' | 'mixed_number' | 'fraction_or_mixed';
   isStructuredMath: boolean;
 }
 
@@ -87,6 +88,28 @@ function isStructuredNumericValue(value: string): boolean {
   );
 }
 
+function getMathInputType(params: {
+  fractionAnswer?: string;
+  mixedNumberAnswer?: string;
+  isFractionLike: boolean;
+}): AnswerEntryConfig['mathInputType'] {
+  const { fractionAnswer, mixedNumberAnswer, isFractionLike } = params;
+
+  if (fractionAnswer && mixedNumberAnswer) {
+    return 'fraction_or_mixed';
+  }
+
+  if (mixedNumberAnswer) {
+    return 'mixed_number';
+  }
+
+  if (fractionAnswer || isFractionLike) {
+    return 'fraction';
+  }
+
+  return undefined;
+}
+
 export function getAnswerEntryConfig(question: Question): AnswerEntryConfig {
   const basePlaceholder =
     question.question_type === 'fill_blank' && question.question_text.toLowerCase().includes('miksi')
@@ -116,6 +139,12 @@ export function getAnswerEntryConfig(question: Question): AnswerEntryConfig {
     };
   }
 
+  const mathInputType = getMathInputType({
+    fractionAnswer,
+    mixedNumberAnswer,
+    isFractionLike,
+  });
+
   const preferredExample = fractionAnswer ? GENERIC_FRACTION_EXAMPLE : mixedNumberAnswer ? GENERIC_MIXED_NUMBER_EXAMPLE : GENERIC_FRACTION_EXAMPLE;
   const acceptedFormats = [fractionAnswer, mixedNumberAnswer]
     .filter((answer): answer is string => Boolean(answer))
@@ -144,6 +173,7 @@ export function getAnswerEntryConfig(question: Question): AnswerEntryConfig {
     notationHint,
     feedbackHint,
     acceptedFormats,
+    mathInputType,
     isStructuredMath: isFractionLike,
   };
 }

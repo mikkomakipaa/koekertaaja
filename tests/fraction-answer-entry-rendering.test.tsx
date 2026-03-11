@@ -15,6 +15,73 @@ const baseQuestionFields = {
 };
 
 describe('fraction answer entry rendering', () => {
+  it('returns mathInputType fraction for simple fraction answers', () => {
+    const question: ShortAnswerQuestion = {
+      ...baseQuestionFields,
+      question_type: 'short_answer',
+      question_text: 'Kirjoita vastaus murtolukuna.',
+      correct_answer: '3/4',
+    };
+
+    const answerEntryConfig = getAnswerEntryConfig(question);
+
+    assert.equal(answerEntryConfig.mathInputType, 'fraction');
+  });
+
+  it('returns mathInputType mixed_number for mixed number answers', () => {
+    const question: ShortAnswerQuestion = {
+      ...baseQuestionFields,
+      question_type: 'short_answer',
+      question_text: 'Kirjoita vastaus sekalukuna.',
+      correct_answer: '1 1/2',
+    };
+
+    const answerEntryConfig = getAnswerEntryConfig(question);
+
+    assert.equal(answerEntryConfig.mathInputType, 'mixed_number');
+  });
+
+  it('returns mathInputType fraction_or_mixed when both answer formats are accepted', () => {
+    const question: ShortAnswerQuestion = {
+      ...baseQuestionFields,
+      question_type: 'short_answer',
+      question_text: 'Kirjoita vastaus murtolukuna tai sekalukuna.',
+      correct_answer: '3/2',
+      acceptable_answers: ['1 1/2'],
+    };
+
+    const answerEntryConfig = getAnswerEntryConfig(question);
+
+    assert.equal(answerEntryConfig.mathInputType, 'fraction_or_mixed');
+  });
+
+  it('returns mathInputType fraction when fraction mode is triggered by keywords only', () => {
+    const question: FillBlankQuestion = {
+      ...baseQuestionFields,
+      question_type: 'fill_blank',
+      question_text: 'Kirjoita vastaus murtolukuna.',
+      correct_answer: 'kolme neljäsosaa',
+    };
+
+    const answerEntryConfig = getAnswerEntryConfig(question);
+
+    assert.equal(answerEntryConfig.mathInputType, 'fraction');
+  });
+
+  it('keeps mathInputType undefined for non-math questions', () => {
+    const question: ShortAnswerQuestion = {
+      ...baseQuestionFields,
+      question_type: 'short_answer',
+      question_text: 'Miksi kasvit tarvitsevat auringonvaloa?',
+      correct_answer: 'Kasvit tarvitsevat auringonvaloa yhteyttämiseen.',
+      acceptable_answers: ['Yhteyttämiseen ja ravinnon valmistamiseen.'],
+    };
+
+    const answerEntryConfig = getAnswerEntryConfig(question);
+
+    assert.equal(answerEntryConfig.mathInputType, undefined);
+  });
+
   it('renders LaTeX notation hints without leaking raw delimiters before submit', () => {
     const question: ShortAnswerQuestion = {
       ...baseQuestionFields,
@@ -71,10 +138,10 @@ describe('fraction answer entry rendering', () => {
       answerEntryConfig.notationHint,
       'Kirjoita vastaus murtolukuna muodossa 3/4. Voit kirjoittaa myös sekalukuna, esimerkiksi 1 1/2.'
     );
-    assert.ok(html.includes('Kirjoitusvinkki'));
-    assert.ok(html.includes('data-testid="answer-notation-hint"'));
-    assert.ok(html.includes('placeholder="Esim. 3/4"'));
-    assert.ok(html.includes('data-testid="compact-answer-input"'));
+    assert.ok(!html.includes('Kirjoitusvinkki'));
+    assert.ok(!html.includes('data-testid="answer-notation-hint"'));
+    assert.ok(html.includes('data-testid="fraction-answer-input"'));
+    assert.ok(html.includes('Kirjoita murtoluku muodossa 3/4'));
     assert.ok(!html.includes('<textarea'));
   });
 
