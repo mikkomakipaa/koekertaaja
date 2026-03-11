@@ -36,7 +36,7 @@ export function ShortAnswer({
 
   return (
     <div className="space-y-4">
-      {!showExplanation && answerEntryConfig?.notationHint && !isFractionWidget && (
+      {!showExplanation && answerEntryConfig?.notationHint && (
         <div
           data-testid="answer-notation-hint"
           className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-100"
@@ -52,7 +52,7 @@ export function ShortAnswer({
         {isFractionWidget ? (
           <FractionInput
             data-testid="fraction-answer-input"
-            type={answerEntryConfig?.mathInputType === 'mixed_number' ? 'mixed_number' : 'fraction'}
+            type={answerEntryConfig?.mathInputType === 'fraction' ? 'fraction' : 'mixed_number'}
             value={userAnswer}
             onChange={(value) => !showExplanation && onAnswerChange(value)}
             disabled={showExplanation}

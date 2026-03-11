@@ -29,6 +29,9 @@ const PERCENT_PATTERN = /^-?\d+(?:[.,]\d+)?\s*%$/;
 const UNIT_PATTERN = /^-?\d+(?:[.,]\d+)?\s*[a-zA-ZåäöÅÄÖ°]+$/;
 const GENERIC_FRACTION_EXAMPLE = '3/4';
 const GENERIC_MIXED_NUMBER_EXAMPLE = '1 1/2';
+const GENERIC_DECIMAL_EXAMPLE = '0,75';
+const GENERIC_PERCENT_EXAMPLE = '75 %';
+const GENERIC_UNIT_EXAMPLE = '12 cm';
 
 function normalizeCandidate(answer: string): string {
   return answer.trim().replace(/\s+/g, ' ');
@@ -88,6 +91,38 @@ function isStructuredNumericValue(value: string): boolean {
   );
 }
 
+function getStructuredExample(params: {
+  fractionAnswer?: string;
+  mixedNumberAnswer?: string;
+  candidates: string[];
+}): string {
+  const { fractionAnswer, mixedNumberAnswer, candidates } = params;
+
+  if (fractionAnswer) {
+    return GENERIC_FRACTION_EXAMPLE;
+  }
+
+  if (mixedNumberAnswer) {
+    return GENERIC_MIXED_NUMBER_EXAMPLE;
+  }
+
+  const normalizedCandidates = candidates.map(toComparableAnswer);
+
+  if (normalizedCandidates.some((candidate) => PERCENT_PATTERN.test(candidate))) {
+    return GENERIC_PERCENT_EXAMPLE;
+  }
+
+  if (normalizedCandidates.some((candidate) => UNIT_PATTERN.test(candidate))) {
+    return GENERIC_UNIT_EXAMPLE;
+  }
+
+  if (normalizedCandidates.some((candidate) => DECIMAL_PATTERN.test(candidate))) {
+    return GENERIC_DECIMAL_EXAMPLE;
+  }
+
+  return GENERIC_FRACTION_EXAMPLE;
+}
+
 function getMathInputType(params: {
   fractionAnswer?: string;
   mixedNumberAnswer?: string;
@@ -145,7 +180,11 @@ export function getAnswerEntryConfig(question: Question): AnswerEntryConfig {
     isFractionLike,
   });
 
-  const preferredExample = fractionAnswer ? GENERIC_FRACTION_EXAMPLE : mixedNumberAnswer ? GENERIC_MIXED_NUMBER_EXAMPLE : GENERIC_FRACTION_EXAMPLE;
+  const preferredExample = getStructuredExample({
+    fractionAnswer,
+    mixedNumberAnswer,
+    candidates,
+  });
   const acceptedFormats = [fractionAnswer, mixedNumberAnswer]
     .filter((answer): answer is string => Boolean(answer))
     .filter((answer, index, all) => all.indexOf(answer) === index);
@@ -174,6 +213,6 @@ export function getAnswerEntryConfig(question: Question): AnswerEntryConfig {
     feedbackHint,
     acceptedFormats,
     mathInputType,
-    isStructuredMath: isFractionLike,
+    isStructuredMath: isFractionLike || allStructured,
   };
 }

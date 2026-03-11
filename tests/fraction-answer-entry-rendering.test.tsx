@@ -138,10 +138,10 @@ describe('fraction answer entry rendering', () => {
       answerEntryConfig.notationHint,
       'Kirjoita vastaus murtolukuna muodossa 3/4. Voit kirjoittaa myös sekalukuna, esimerkiksi 1 1/2.'
     );
-    assert.ok(!html.includes('Kirjoitusvinkki'));
-    assert.ok(!html.includes('data-testid="answer-notation-hint"'));
+    assert.ok(html.includes('Kirjoitusvinkki'));
+    assert.ok(html.includes('data-testid="answer-notation-hint"'));
     assert.ok(html.includes('data-testid="fraction-answer-input"'));
-    assert.ok(html.includes('Kirjoita murtoluku muodossa 3/4'));
+    assert.ok(html.includes('Kirjoita vastaus murtolukuna muodossa 3/4'));
     assert.ok(!html.includes('<textarea'));
   });
 
@@ -199,8 +199,7 @@ describe('fraction answer entry rendering', () => {
     );
     assert.ok(html.includes('Kirjoitusvinkki'));
     assert.ok(html.includes('data-testid="answer-notation-hint"'));
-    assert.ok(html.includes('placeholder="Esim. 3/4"'));
-    assert.ok(html.includes('data-testid="compact-answer-input"'));
+    assert.ok(html.includes('data-testid="fraction-answer-input"'));
   });
 
   it('keeps notation feedback visible after an incorrect structured math answer', () => {
@@ -250,9 +249,36 @@ describe('fraction answer entry rendering', () => {
     assert.equal(answerEntryConfig.variant, 'compact');
     assert.equal(answerEntryConfig.placeholder, 'Esim. 3/4');
     assert.ok(html.includes('data-testid="answer-notation-hint"'));
-    assert.ok(html.includes('placeholder="Esim. 3/4"'));
     assert.ok(!html.includes('placeholder="Esim. $$\\frac{4}{3}$$"'));
     assert.ok(!html.includes('$$\\frac{4}{3}$$'));
+  });
+
+  it('uses decimal helper copy for decimal-answer short answers', () => {
+    const question: ShortAnswerQuestion = {
+      ...baseQuestionFields,
+      question_type: 'short_answer',
+      question_text: 'Laske: 1/4 + 1/2 ja anna vastaus desimaalina.',
+      correct_answer: '0,75',
+    };
+
+    const answerEntryConfig = getAnswerEntryConfig(question);
+    const html = renderToString(
+      <ShortAnswer
+        question={question}
+        userAnswer=""
+        showExplanation={false}
+        onAnswerChange={() => {}}
+        answerEntryConfig={answerEntryConfig}
+      />
+    );
+
+    assert.equal(answerEntryConfig.variant, 'compact');
+    assert.equal(answerEntryConfig.isStructuredMath, true);
+    assert.equal(answerEntryConfig.mathInputType, undefined);
+    assert.equal(answerEntryConfig.placeholder, 'Esim. 0,75');
+    assert.equal(answerEntryConfig.notationHint, 'Kirjoita vastaus lyhyesti, esimerkiksi 0,75.');
+    assert.ok(html.includes('placeholder="Esim. 0,75"'));
+    assert.ok(html.includes('Kirjoita vastaus lyhyesti, esimerkiksi 0,75.'));
   });
 
   it('keeps compact examples plain text when the helper copy is generated from LaTeX answers', () => {
