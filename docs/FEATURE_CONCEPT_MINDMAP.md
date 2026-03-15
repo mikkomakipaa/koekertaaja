@@ -11,6 +11,11 @@
 - Node interaction upgraded: clicking a node opens a **flashcard-style self-learning panel** (not just a brief popover). Content can be longer than 1–2 sentences — full explanation, examples, key facts.
 - **Teachers do not use the app.** All teacher personas, teacher flows, and teacher-specific copy removed. The app is student-driven throughout.
 
+### Feedback applied (round 2)
+- Design system audit complete. Shared components and design tokens mapped throughout. See §5 (Shared Components) for the full breakdown.
+- **Map mode color corrected to violet** — the design system already defines `mode="map"` as violet (`colors.map.*`) in `src/lib/design-tokens/colors.ts` and `Button`. The earlier "sky" suggestion was wrong and removed.
+- Component list trimmed: `ConceptMapShareButton` and `ConceptMapLegend` are not standalone components — they use `Button mode="map"` and `Badge` inline.
+
 ---
 
 ## 1. Feature Summary
@@ -26,6 +31,7 @@ Add a new **Käsitekartta** (Concept Map) mode to Koekertaaja. The map is AI-gen
 | **When used** | After playing quizzes | Before / during studying |
 | **Persistence** | Local only | Stored in DB, shareable code |
 | **Depth** | Root → Topic (2 levels) | Root → Topic → Subtopic → Concept (up to 4 levels) |
+| **Mode color** | indigo (quiz) | **violet** (`colors.map.*`) |
 | **Node interaction** | None | Click → full flashcard-style learning panel |
 
 ---
@@ -137,9 +143,133 @@ On mobile this panel appears as a **bottom sheet** that slides up. On desktop it
 
 ---
 
-## 5. Architecture
+## 5. Shared Components & Design System
 
-### 5.1 New Database Table: `concept_maps`
+### 5.1 Mode Color — Violet
+
+The design system already defines the **map** mode. Use these tokens everywhere — do not invent custom colors:
+
+```ts
+// src/lib/design-tokens/colors.ts — already exists
+colors.map.primary  // bg-gradient-to-r from-violet-600 to-violet-500
+colors.map.hover    // hover:from-violet-700 hover:to-violet-600
+colors.map.light    // bg-violet-50 dark:bg-violet-900/20
+colors.map.text     // text-violet-600 dark:text-violet-400
+colors.map.ring     // ring-violet-500 dark:ring-violet-400
+```
+
+SVG node fill colors (Tailwind classes cannot be used inside SVG `fill=` props — use raw values):
+
+| Depth | Role | Hex (light) | Hex (dark) |
+|---|---|---|---|
+| 0 | Root | `#7c3aed` violet-700 | `#8b5cf6` violet-500 |
+| 1 | Topic | `#8b5cf6` violet-500 | `#a78bfa` violet-400 |
+| 2 | Subtopic | `#a78bfa` violet-400 | `#c4b5fd` violet-300 |
+| 3 | Concept (leaf) | `#ede9fe` violet-100 | `#2e1065` violet-950 |
+
+---
+
+### 5.2 Shared UI Components — Usage Map
+
+#### Page shell
+
+| Surface | Component | Props / notes |
+|---|---|---|
+| Page header | `AppShellHeader` | `icon=<TreeStructure>`, `title="Tutki"`, `tone="default"`, `trailingAction=<share button>` |
+| Page container | `patterns.pageContainer` (`max-w-4xl mx-auto` + spacing) | Wrap all page content |
+| Error state | `Alert` + `AlertTitle` + `AlertDescription` | For generation failures |
+
+#### Generator form (`ConceptMapGenerator`)
+
+| Element | Component | Props |
+|---|---|---|
+| Subject picker | Radix `Select` (already in codebase) | Standard `Input`-styled trigger |
+| Grade picker | Radix `Select` or `RadioGroup` | 3 options: 4/5/6 |
+| Generate button | `Button` | `mode="map"` `size="lg"` |
+| Loading skeleton | `Skeleton` | Multiple rows mimicking accordion cards |
+
+#### SVG canvas (desktop)
+
+| Element | Notes |
+|---|---|
+| Canvas wrapper | Plain `div` with `overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700` (matches `Card variant="standard"`) |
+| Node hit areas | SVG `<circle>` + `<text>` — use hex values from §5.1 depth table |
+| Edge lines | SVG `<line>` with `stroke={colors.border.standard}` equivalent (`#e5e7eb` light / `#374151` dark) |
+
+#### Mobile accordion (`ConceptMapAccordion`)
+
+| Element | Component | Props |
+|---|---|---|
+| Topic row (collapsed) | `Card` | `variant="interactive"` `padding="compact"` |
+| Topic title | `CardTitle` | `typography.h4` size |
+| Concept list item | plain `button` | `min-h-11` touch target, `typography.body`, `w-full text-left` |
+
+#### Learning panel (`ConceptMapLearningPanel`)
+
+The panel is a **Radix `Dialog`** on all screen sizes — positioned as a bottom sheet on mobile (`fixed bottom-0 inset-x-0 rounded-t-2xl`) and a centred modal on desktop (existing `Dialog.Content` pattern from the design quick reference).
+
+| Element | Component | Props / classes |
+|---|---|---|
+| Container | Radix `Dialog.Content` | Mobile: `fixed bottom-0 inset-x-0 max-h-[75vh] overflow-y-auto rounded-t-2xl bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-5 shadow-xl` · Desktop: standard modal pattern (`w-[92vw] max-w-md`) |
+| Concept title | `typography.h3` | With emoji prefix |
+| Explanation body | `typography.body` | Multi-paragraph prose |
+| "Tärkeää muistaa" heading | `typography.h4` | |
+| Key facts list | `typography.bodySmall` | `<ul>` with bullet items |
+| "Esimerkki" block | `Card` | `variant="elevated"` `padding="compact"` inset within the panel |
+| Example text | `typography.bodySmall` | |
+| Related concepts heading | `typography.caption` | |
+| Related concept chips | `Badge` | `variant="outline"` `size="sm"` — one per related concept label |
+| Close button | `Button` | `variant="ghost"` `size="icon"` absolute top-right |
+
+#### Share / copy code
+
+Not a separate component — render inline using:
+```tsx
+<Button mode="map" variant="secondary" size="sm">
+  <Share weight="duotone" size={16} />
+  Kopioi koodi
+</Button>
+```
+
+#### Depth legend
+
+Not a separate component — render three `Badge` elements inline:
+```tsx
+<Badge variant="default" className="bg-violet-100 text-violet-700">Aihe</Badge>
+<Badge variant="default" className="bg-violet-50 text-violet-500">Alaihe</Badge>
+<Badge variant="outline" className="border-violet-200 text-violet-400">Käsite</Badge>
+```
+
+---
+
+### 5.3 Design Token Usage Summary
+
+| Token | Where used |
+|---|---|
+| `colors.map.primary` | Generate button background, root node fill |
+| `colors.map.text` | Active/selected node label, section headings |
+| `colors.map.light` | `AppShellHeader` icon badge background, hover state on accordion rows |
+| `colors.map.ring` | Focus ring on interactive nodes and buttons |
+| `colors.border.standard` | SVG edge lines, card borders |
+| `colors.bg.base` | Page background |
+| `colors.bg.elevated` | Learning panel background |
+| `typography.h1` | `/map` page title |
+| `typography.h3` | Learning panel concept title |
+| `typography.h4` | Accordion topic titles, panel section headings |
+| `typography.body` | Explanation prose |
+| `typography.bodySmall` | Key facts, example text |
+| `typography.caption` | Related concepts label |
+| `spacing.touchTarget` (`min-h-11`) | All clickable concept items |
+| `patterns.pageContainer` | Outer page wrapper on `/map` and `/map/[code]` |
+| `patterns.transition.all` | Accordion expand/collapse |
+| `patterns.transition.shadow` | Canvas card hover |
+
+---
+
+## 6. Architecture
+
+### 6.1 New Database Table: `concept_maps`
+
 
 ```sql
 CREATE TABLE public.concept_maps (
@@ -167,7 +297,7 @@ CREATE POLICY "insert_auth" ON public.concept_maps FOR INSERT
 
 Migration: `supabase/migrations/YYYYMMDD_concept_maps.sql`
 
-### 5.2 AI Generation
+### 6.2 AI Generation
 
 **Prompt template: `src/config/prompt-templates/concept-map.md`**
 
@@ -188,37 +318,41 @@ The prompt instructs the AI to return a full `ConceptMapNode` JSON tree where:
 2. If found → return immediately
 3. If not → generate, insert, return
 
-### 5.3 New Routes
+### 6.3 New Routes
 
 | Route | Description |
 |---|---|
 | `/map` | Subject/grade picker — generates or retrieves map |
 | `/map/[code]` | View a specific map by code (public, no auth) |
 
-### 5.4 New UI Components
+### 6.4 New Components
 
-**Reused from existing mindmap:**
-- `src/lib/mindMap/layoutTree.ts` — radial layout algorithm, unchanged
-- `src/lib/mindMap/fitScale.ts` — viewport fitting, unchanged
-- `src/components/mindMap/MindMapCanvas.tsx` — SVG canvas, extended with generic `renderNode` prop
+**Reused from existing mindmap (unchanged):**
+- `src/lib/mindMap/layoutTree.ts`
+- `src/lib/mindMap/fitScale.ts`
+- `src/components/mindMap/MindMapCanvas.tsx` — extended with generic `renderNode` prop
 
-**New components:**
+**New components (all use shared UI components from §5):**
 ```
 src/components/conceptMap/
-  ConceptMapSession.tsx       Main wrapper: generation state + desktop/mobile split
-  ConceptMapNode.tsx          SVG node — click to open learning panel
-  ConceptMapLearningPanel.tsx Flashcard-style drawer/bottom sheet with full content
-  ConceptMapAccordion.tsx     Mobile accordion list replacing SVG
-  ConceptMapGenerator.tsx     Subject + grade picker form
-  ConceptMapShareButton.tsx   Copy share code to clipboard
+  ConceptMapSession.tsx       Main wrapper: state + desktop SVG / mobile accordion split
+  ConceptMapNode.tsx          SVG node — violet depth-coded fill, click → learning panel
+  ConceptMapLearningPanel.tsx Radix Dialog as bottom sheet (mobile) / modal (desktop)
+  ConceptMapAccordion.tsx     Mobile list: Card + CardContent + concept buttons
+  ConceptMapGenerator.tsx     Subject + grade form with Button mode="map"
 
 src/app/map/
   page.tsx                    Generator page
-  [code]/page.tsx             Shared view (server component, fetches map by code)
-  [code]/ConceptMapView.tsx   Client component (canvas + panel interaction)
+  [code]/page.tsx             Server component — fetches map by code
+  [code]/ConceptMapView.tsx   Client component — canvas + panel state
 ```
 
-### 5.5 Home Screen Integration
+**Not new standalone components** (use shared primitives inline):
+- Share/copy button → `<Button mode="map" variant="secondary">`
+- Depth legend → three `<Badge>` elements with violet tints
+- Loading state → `<Skeleton>` rows
+
+### 6.5 Home Screen Integration
 
 Third mode tile added to `/`:
 ```tsx
@@ -227,13 +361,13 @@ Third mode tile added to `/`:
   title="Tutki"
   description="Tutustu aihealueen käsitteisiin kartalla"
   href="/map"
-  color="sky"
+  color="map"  // violet — uses colors.map.* tokens
 />
 ```
 
 ---
 
-## 6. Implementation Steps
+## 7. Implementation Steps
 
 ### Phase 1 — Core
 
@@ -243,16 +377,15 @@ Third mode tile added to `/`:
 4. [ ] Generation function: `generateConceptMap.ts` (with Zod validation)
 5. [ ] Cache-or-create action: `createOrFetchConceptMap.ts`
 6. [ ] API route: `src/app/api/concept-map/route.ts`
-7. [ ] `ConceptMapGenerator.tsx` — subject/grade form
+7. [ ] `ConceptMapGenerator.tsx` — `Button mode="map" size="lg"` + Radix Select for subject/grade
 8. [ ] Extend `MindMapCanvas` with generic `renderNode` prop
-9. [ ] `ConceptMapNode.tsx` — SVG node, click triggers panel
-10. [ ] `ConceptMapLearningPanel.tsx` — flashcard-style drawer (explanation + keyFacts + example + relatedConcepts)
-11. [ ] `ConceptMapAccordion.tsx` — mobile list view
-12. [ ] `ConceptMapSession.tsx` — wires canvas/accordion + panel state
-13. [ ] `/map/page.tsx` — generator page
+9. [ ] `ConceptMapNode.tsx` — SVG node with violet depth fills (§5.1), click triggers panel
+10. [ ] `ConceptMapLearningPanel.tsx` — Radix Dialog, Card/Badge/typography tokens (§5.2)
+11. [ ] `ConceptMapAccordion.tsx` — `Card variant="interactive"` + concept `button` rows
+12. [ ] `ConceptMapSession.tsx` — wires canvas/accordion + panel state + share button inline
+13. [ ] `/map/page.tsx` — `AppShellHeader` + `patterns.pageContainer`
 14. [ ] `/map/[code]/page.tsx` + `ConceptMapView.tsx` — shared view
-15. [ ] Home screen "Tutki" tile
-16. [ ] `ConceptMapShareButton.tsx`
+15. [ ] Home screen "Tutki" tile with `color="map"` (violet)
 
 ### Phase 2 — Polish
 
@@ -263,7 +396,7 @@ Third mode tile added to `/`:
 
 ---
 
-## 7. Key Design Decisions
+## 8. Key Design Decisions
 
 ### Node click → full learning panel (not a tooltip)
 The panel is not a small popover — it is a proper content area that can be as long as needed. For a leaf concept like "Pythagoraan lause" the AI may generate 2–3 paragraphs of explanation, a worked example, and a key-facts list. The panel is scrollable and takes up ~40% of the screen width on desktop (right drawer), or 60% of screen height on mobile (bottom sheet).
@@ -279,7 +412,7 @@ The SVG canvas is not shown on phones. The accordion gives a clean, thumb-friend
 
 ---
 
-## 8. Risks and Mitigations
+## 9. Risks and Mitigations
 
 | Risk | Mitigation |
 |---|---|
@@ -291,7 +424,7 @@ The SVG canvas is not shown on phones. The accordion gives a clean, thumb-friend
 
 ---
 
-## 9. Out of Scope (Phase 1)
+## 10. Out of Scope (Phase 1)
 
 - Cross-subject or cross-grade concept maps
 - Student progress tracking within the map (mastery per node)
@@ -302,7 +435,7 @@ The SVG canvas is not shown on phones. The accordion gives a clean, thumb-friend
 
 ---
 
-## 10. Acceptance Criteria
+## 11. Acceptance Criteria
 
 - [ ] Student can pick subject + grade and receive a concept map within 10 seconds
 - [ ] Same subject+grade returns instantly on subsequent requests (cached)
