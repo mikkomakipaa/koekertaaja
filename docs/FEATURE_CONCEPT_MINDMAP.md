@@ -16,6 +16,12 @@
 - **Map mode color corrected to violet** — the design system already defines `mode="map"` as violet (`colors.map.*`) in `src/lib/design-tokens/colors.ts` and `Button`. The earlier "sky" suggestion was wrong and removed.
 - Component list trimmed: `ConceptMapShareButton` and `ConceptMapLegend` are not standalone components — they use `Button mode="map"` and `Badge` inline.
 
+### Feedback applied (round 3)
+- Data investigation complete against migration history. See §7 (Data Readiness) for full findings.
+- **No backfilling needed** — concept maps are generated from curriculum data, independent of existing question set rows. All prerequisite columns (`subject`, `subject_type`) are already fully populated.
+- **One data risk identified**: legacy question sets (pre-2025-01-30) stored `subject` as Finnish display names (e.g. `'matematiikka'`) rather than canonical IDs (e.g. `'math'`). The cache key must normalise through `subject_type` (which was backfilled for all rows in 2026-03-03) rather than raw `subject` to avoid duplicate cache entries.
+- `concept_maps` table does not yet exist — confirmed no migration for it exists.
+
 ---
 
 ## 1. Feature Summary
@@ -367,7 +373,74 @@ Third mode tile added to `/`:
 
 ---
 
-## 7. Implementation Steps
+## 7. Data Readiness — Investigation Findings
+
+> Source: full migration history in `supabase/migrations/` (2025-01-03 → 2026-03-03).
+> Live row-level data not queried (no Supabase MCP credentials available in this environment).
+> All conclusions are derived from migration SQL and explicit migration comments.
+
+---
+
+### 7.1 Does `concept_maps` table exist?
+
+**No.** There is no migration that creates a `concept_maps` table. The only map-related migration was `map_questions` (created 2026-02-03, **dropped 2026-02-04** — experimental geography feature, abandoned).
+
+The `concept_maps` table must be created as a new migration before any feature code runs.
+
+---
+
+### 7.2 Existing `question_sets` column coverage
+
+| Column | Added | Nullable | Backfilled? | Status for concept maps |
+|---|---|---|---|---|
+| `subject` | 2025-01-03 (initial) | **NOT NULL** | n/a — required from day 1 | ✅ Always populated |
+| `grade` | 2025-01-03 (initial) | NULL allowed | Never backfilled | ⚠️ Some sets may lack grade |
+| `topic` | 2025-01-03 (initial) | NULL allowed | Never backfilled | ⚠️ Sparse — optional per-set focus, not always set |
+| `subtopic` | 2025-01-03 (initial) | NULL allowed | Never backfilled | ⚠️ Sparse |
+| `subject_type` | 2025-02-07 | NULL allowed | ✅ Backfilled 2026-03-03 for all rows | ✅ Fully populated |
+| `mode` | 2025-01-30 | varchar, default `'quiz'` | Default applied | ✅ Fully populated |
+| `status` | 2025-02-19 | enum | ✅ Backfilled to `'published'` for all pre-existing sets | ✅ Fully populated |
+
+---
+
+### 7.3 Existing `questions` column coverage
+
+| Column | Added | NULL for old rows? | Status for concept maps |
+|---|---|---|---|
+| `topic` | 2025-01-30 | ✅ Yes — explicit migration comment: *"Existing questions will have NULL topics"* | Not used directly by concept maps |
+| `skill` | 2025-01-31 | Yes | Not used directly by concept maps |
+| `subtopic` | 2025-02-07 | Yes | Not used directly by concept maps |
+
+Questions-level topic/skill data is irrelevant to concept map generation. Concept maps are generated from the curriculum JSON files, not from the question corpus.
+
+---
+
+### 7.4 Subject name inconsistency risk — cache key design
+
+The initial schema stored `subject` as a free-text value. Early question sets (pre-2025) used Finnish display names (`'matematiikka'`, `'englanti'`, `'ruotsi'`) rather than the canonical English IDs used today (`'math'`, `'english'`, `'swedish'`).
+
+The 2026-03-03 backfill migration handled this mapping when populating `subject_type`, but **did not normalise `subject` itself**. Both `'math'` and `'matematiikka'` remain as distinct `subject` values in the database.
+
+**Impact on concept maps:**
+The cache index `concept_maps_cache_idx` was originally designed as `(subject, grade, topic)`. If a student selects "Math grade 5", the generator uses `subject = 'math'`. An old set stored as `subject = 'matematiikka'` would never find that cache entry — but this causes no harm (it only affects the "Näytä käsitekartta" shortcut from a results screen, Phase 2). New concept maps are always generated with the canonical subject ID from the subject picker, so the cache is clean.
+
+**Decision: cache key uses canonical `subject` ID + `subject_type` as a secondary guard.** The generator always receives a subject ID from `SUBJECTS_BY_ID` (which only contains canonical IDs), so no normalisation is needed in the generation path. The Phase 2 "results → map" link must look up the canonical ID via `getSubjectById(questionSet.subject)` and fall back to `null` if the subject is an unrecognised legacy name.
+
+---
+
+### 7.5 Backfilling verdict
+
+| Question | Answer |
+|---|---|
+| Must we backfill `question_sets` before concept maps work? | **No.** The concept map generator reads subject/grade from user input, not from existing rows. |
+| Must we backfill `questions` topics before concept maps work? | **No.** Concept maps use curriculum JSON, not the question corpus. |
+| Must we pre-generate concept maps for existing subjects? | **No.** Maps are generated lazily on first request and cached. |
+| Is any migration needed before launch? | **Yes — one: create `concept_maps` table.** No data backfill is required. |
+| Is there any data risk? | **Yes — one:** the Phase 2 "results → map" shortcut must normalise legacy subject names before using them as cache keys. Document in Phase 2 task. |
+
+---
+
+## 8. Implementation Steps
 
 ### Phase 1 — Core
 
@@ -396,7 +469,7 @@ Third mode tile added to `/`:
 
 ---
 
-## 8. Key Design Decisions
+## 9. Key Design Decisions
 
 ### Node click → full learning panel (not a tooltip)
 The panel is not a small popover — it is a proper content area that can be as long as needed. For a leaf concept like "Pythagoraan lause" the AI may generate 2–3 paragraphs of explanation, a worked example, and a key-facts list. The panel is scrollable and takes up ~40% of the screen width on desktop (right drawer), or 60% of screen height on mobile (bottom sheet).
@@ -412,7 +485,7 @@ The SVG canvas is not shown on phones. The accordion gives a clean, thumb-friend
 
 ---
 
-## 9. Risks and Mitigations
+## 10. Risks and Mitigations
 
 | Risk | Mitigation |
 |---|---|
@@ -421,10 +494,11 @@ The SVG canvas is not shown on phones. The accordion gives a clean, thumb-friend
 | High cost for popular subjects | Cache by `(subject, grade, topic)` — generated once, served forever |
 | Learning panel content too long on mobile | Bottom sheet is scrollable; content truncated with "Näytä lisää" if > 400 chars |
 | SVG unreadable on small tablets | Pinch-zoom supported; auto-fit on load |
+| Legacy subject names cause cache misses (Phase 2) | Phase 2 "results → map" link normalises subject via `getSubjectById()` before cache lookup; falls back gracefully if subject is unrecognised |
 
 ---
 
-## 10. Out of Scope (Phase 1)
+## 11. Out of Scope (Phase 1)
 
 - Cross-subject or cross-grade concept maps
 - Student progress tracking within the map (mastery per node)
@@ -435,7 +509,7 @@ The SVG canvas is not shown on phones. The accordion gives a clean, thumb-friend
 
 ---
 
-## 11. Acceptance Criteria
+## 12. Acceptance Criteria
 
 - [ ] Student can pick subject + grade and receive a concept map within 10 seconds
 - [ ] Same subject+grade returns instantly on subsequent requests (cached)
