@@ -73,3 +73,6 @@ english-exam-game.tsx
 # map data (regenerated with npm run maps:download)
 /data/maps/natural-earth/
 /data/maps/*.zip
+
+# Supabase CLI cache
+supabase/.temp/
