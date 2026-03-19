@@ -397,6 +397,12 @@ export class PromptBuilder {
       '- Tavoittele monipuolisuutta: älä tee koko settiä yhdellä kysymystyypillä',
       '- Priorisoi luonnollinen sopivuus, älä pakotettua jakaumaa',
       '- Käytä sequential-tyyppiä aina kun sisällössä on selkeä aikajärjestys tai vaiheistus',
+      '',
+      'Kysymystekstin muotoilu:',
+      '- ÄLÄ lisää question-kenttään kysymystyypin etikettiä tai prefiksiä',
+      '- Väärin: "Täydennä: 1 % luvusta saadaan..." tai "Totta vai tarua: 100 % vastaa..."',
+      '- Oikein: "1 % luvusta saadaan ___:lla." tai "100 % vastaa lukua 1."',
+      '- Käyttöliittymä näyttää tyypin (Täydennä lause / Totta vai tarua) automaattisesti',
     ];
 
     const subjectSpecific: Record<SubjectType, string[]> = {
@@ -404,7 +410,9 @@ export class PromptBuilder {
         'Tyypillinen painotus (ei pakollinen): fill_blank ja short_answer, tarvittaessa matching/sequential.',
       ],
       math: [
-        'Tyypillinen painotus (ei pakollinen): fill_blank ja multiple_choice, sequential ratkaisuvaiheisiin.',
+        'Painotus: fill_blank (numeeriset vastaukset), multiple_choice (käsitteet ja valinnat), sequential (ratkaisuvaiheet).',
+        'ÄLÄ käytä short_answer-tyyppiä matematiikassa. Matematiikka vaatii täsmällisiä numeerisia vastauksia, ei kirjallisia selityksiä.',
+        'Konseptuaaliset "miksi/miten"-kysymykset: muunna multiple_choice-muotoon vaihtoehtojen avulla.',
       ],
       written: [
         'Tyypillinen painotus (ei pakollinen): multiple_choice ja true_false, sequential aikajanoihin.',

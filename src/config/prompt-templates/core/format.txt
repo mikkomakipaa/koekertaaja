@@ -34,6 +34,7 @@ PAKOLLISET YHTEISET SÄÄNNÖT:
 - Luo tasan {{question_count}} riviä.
 - Flashcard-tilassa käytä aina type = "flashcard".
 - Käytä vain sallittuja type-arvoja.
+- ÄLÄ lisää question-kenttään kysymystyypin etikettiä: ei "Täydennä:", ei "Totta vai tarua:", ei "Tot or false:", ei "Valitse:", ei mitään muuta tyyppiprefiksiä. Käyttöliittymä näyttää tyypin automaattisesti.
 
 TYYPPIKOHTAINEN MINIMISOPIMUS:
 - multiple_choice: options on pakollinen ja sisältää tasan 4 vaihtoehtoa.

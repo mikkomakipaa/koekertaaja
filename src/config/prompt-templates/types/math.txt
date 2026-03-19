@@ -14,6 +14,7 @@
 - Luo täsmälleen {{question_count}} kysymystä.
 - Perusta kysymykset annettuun materiaaliin {{grade_context_note}}.
 - Varmista, että laskut ja yksiköt ovat oikein.
+- ÄLÄ aloita question-kenttää tyyppiprefiksillä ("Täydennä:", "Totta vai tarua:", "Tot or false:" tms.) — kirjoita suoraan kysymys tai väite.
 
 TAGIEN EROTUS (PAKOLLINEN):
 - topic = sisältöalue (esim. Murtoluvut, Geometria)
@@ -27,6 +28,11 @@ MATEMAATTINEN MERKINTÄ:
 NUMEERISET VASTAUKSET:
 - Lisää acceptable_answers-taulukkoon keskeiset vaihtoehtoiset muodot
   (esim. 0,5 / 0.5 / 1/2 / $$\\frac{1}{2}$$ tilanteen mukaan).
+
+KYSYMYSTYYPIT (MATEMATIIKKA):
+- Käytä: fill_blank, multiple_choice, multiple_select, true_false, matching, sequential
+- ÄLÄ käytä: short_answer — matematiikassa ei odoteta kirjallisia selityksiä
+- Konseptuaaliset kysymykset ("miten lasketaan X?") → muunna multiple_choice-muotoon
 
 NUMEROMUOTOILU (SUOMI):
 - Desimaalit pilkulla (15,25), lukusarjat puolipisteellä (5; 10; 15).
