@@ -1,8 +1,8 @@
 # Data Schema (Supabase Snapshot)
 
-**Version**: 1.0  
-**Last Updated**: 2026-03-06  
-**Source**: Supabase MCP (`list_tables`, `list_extensions`)  
+**Version**: 1.1  
+**Last Updated**: 2026-03-16  
+**Source**: Supabase MCP (`get_project_url`, `list_tables`, `list_extensions`, `list_migrations`)  
 **Scope**: Live schema snapshot for `public`, plus managed schema overview for `auth` and `storage`
 
 ---
@@ -14,6 +14,7 @@ This document is a database schema snapshot generated from the currently linked 
 - Primary application tables are in `public`.
 - Authentication and object storage infrastructure lives in managed `auth` and `storage` schemas.
 - Row Level Security (RLS) is enabled on all application-facing `public` tables.
+- Current linked project URL: `https://fzqepoqqagwyhmzowhyr.supabase.co`
 
 ---
 
@@ -190,7 +191,7 @@ Observed tables include:
 
 ## Installed Extensions (Observed)
 
-From MCP snapshot, installed extensions include at least:
+From the 2026-03-16 MCP snapshot, installed extensions include:
 
 - `pg_graphql`
 - `pg_stat_statements`
@@ -200,6 +201,22 @@ From MCP snapshot, installed extensions include at least:
 - `plpgsql`
 
 Note: Supabase MCP returns both installed and available extension metadata. The list above includes installed entries reported with `installed_version`.
+
+---
+
+## Latest Observed Tracked Migrations
+
+From MCP `list_migrations` on 2026-03-16:
+
+- `20251213111808` `add_insert_update_policies`
+- `20260118232030` `add_subject_type_and_question_subtopic`
+- `20260120172114` `add_map_questions_table`
+- `20260128201002` `20260128_add_question_flags`
+- `20260129141041` `20260129_question_flags_rls_policies`
+- `20260212055849` `fix_questions_type_check_for_flashcard`
+- `20260212055905` `fix_questions_type_check_for_flashcard_v2`
+- `20260220113534` `enforce_rls_on_public_spatial_ref_sys`
+- `20260223161207` `backfill_exam_date_from_created_at`
 
 ---
 

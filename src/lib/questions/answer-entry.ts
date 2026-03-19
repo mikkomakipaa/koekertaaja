@@ -6,7 +6,7 @@ export interface AnswerEntryConfig {
   notationHint?: string;
   feedbackHint?: string;
   acceptedFormats?: string[];
-  mathInputType?: 'fraction' | 'mixed_number' | 'fraction_or_mixed';
+  mathInputType?: 'fraction' | 'mixed_number' | 'fraction_or_mixed' | 'percentage' | 'currency';
   isStructuredMath: boolean;
 }
 
@@ -26,11 +26,13 @@ const FRACTION_PATTERN = /^-?\d+\s*\/\s*-?\d+$/;
 const MIXED_NUMBER_PATTERN = /^-?\d+\s+\d+\s*\/\s*\d+$/;
 const DECIMAL_PATTERN = /^-?\d+(?:[.,]\d+)?$/;
 const PERCENT_PATTERN = /^-?\d+(?:[.,]\d+)?\s*%$/;
+const CURRENCY_PATTERN = /^-?\d+(?:[.,]\d+)?\s*€$/;
 const UNIT_PATTERN = /^-?\d+(?:[.,]\d+)?\s*[a-zA-ZåäöÅÄÖ°]+$/;
 const GENERIC_FRACTION_EXAMPLE = '3/4';
 const GENERIC_MIXED_NUMBER_EXAMPLE = '1 1/2';
 const GENERIC_DECIMAL_EXAMPLE = '0,75';
 const GENERIC_PERCENT_EXAMPLE = '75 %';
+const GENERIC_CURRENCY_EXAMPLE = '12 €';
 const GENERIC_UNIT_EXAMPLE = '12 cm';
 
 function normalizeCandidate(answer: string): string {
@@ -87,7 +89,8 @@ function isStructuredNumericValue(value: string): boolean {
     isMixedNumber(normalized) ||
     DECIMAL_PATTERN.test(normalized) ||
     PERCENT_PATTERN.test(normalized) ||
-    UNIT_PATTERN.test(normalized)
+    UNIT_PATTERN.test(normalized) ||
+    CURRENCY_PATTERN.test(normalized)
   );
 }
 
@@ -112,6 +115,10 @@ function getStructuredExample(params: {
     return GENERIC_PERCENT_EXAMPLE;
   }
 
+  if (normalizedCandidates.some((candidate) => CURRENCY_PATTERN.test(candidate))) {
+    return GENERIC_CURRENCY_EXAMPLE;
+  }
+
   if (normalizedCandidates.some((candidate) => UNIT_PATTERN.test(candidate))) {
     return GENERIC_UNIT_EXAMPLE;
   }
@@ -127,8 +134,10 @@ function getMathInputType(params: {
   fractionAnswer?: string;
   mixedNumberAnswer?: string;
   isFractionLike: boolean;
+  percentageAnswer?: string;
+  currencyAnswer?: string;
 }): AnswerEntryConfig['mathInputType'] {
-  const { fractionAnswer, mixedNumberAnswer, isFractionLike } = params;
+  const { fractionAnswer, mixedNumberAnswer, isFractionLike, percentageAnswer, currencyAnswer } = params;
 
   if (fractionAnswer && mixedNumberAnswer) {
     return 'fraction_or_mixed';
@@ -140,6 +149,14 @@ function getMathInputType(params: {
 
   if (fractionAnswer || isFractionLike) {
     return 'fraction';
+  }
+
+  if (percentageAnswer) {
+    return 'percentage';
+  }
+
+  if (currencyAnswer) {
+    return 'currency';
   }
 
   return undefined;
@@ -163,6 +180,8 @@ export function getAnswerEntryConfig(question: Question): AnswerEntryConfig {
   const lowerQuestionText = question.question_text.toLowerCase();
   const fractionAnswer = candidates.find(isFraction);
   const mixedNumberAnswer = candidates.find(isMixedNumber);
+  const percentageAnswer = candidates.find((candidate) => PERCENT_PATTERN.test(toComparableAnswer(candidate)));
+  const currencyAnswer = candidates.find((candidate) => CURRENCY_PATTERN.test(toComparableAnswer(candidate)));
   const isFractionLike = Boolean(fractionAnswer || mixedNumberAnswer || FRACTION_KEYWORDS.test(lowerQuestionText));
   const allStructured = candidates.length > 0 && candidates.every(isStructuredNumericValue);
 
@@ -178,6 +197,8 @@ export function getAnswerEntryConfig(question: Question): AnswerEntryConfig {
     fractionAnswer,
     mixedNumberAnswer,
     isFractionLike,
+    percentageAnswer,
+    currencyAnswer,
   });
 
   const preferredExample = getStructuredExample({
@@ -204,6 +225,12 @@ export function getAnswerEntryConfig(question: Question): AnswerEntryConfig {
   } else if (mixedNumberAnswer) {
     notationHint = `Kirjoita sekaluku muodossa ${GENERIC_MIXED_NUMBER_EXAMPLE}.`;
     feedbackHint = `Tarkista kirjoitustapa. Käytä sekalukua muodossa ${GENERIC_MIXED_NUMBER_EXAMPLE}.`;
+  } else if (mathInputType === 'percentage') {
+    notationHint = `Kirjoita prosenttiluku muodossa ${GENERIC_PERCENT_EXAMPLE}.`;
+    feedbackHint = `Tarkista kirjoitustapa. Kokeile muotoa ${GENERIC_PERCENT_EXAMPLE}.`;
+  } else if (mathInputType === 'currency') {
+    notationHint = `Kirjoita rahasumma muodossa ${GENERIC_CURRENCY_EXAMPLE}.`;
+    feedbackHint = `Tarkista kirjoitustapa. Kokeile muotoa ${GENERIC_CURRENCY_EXAMPLE}.`;
   }
 
   return {

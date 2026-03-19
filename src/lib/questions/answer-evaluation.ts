@@ -2,7 +2,16 @@ import type { Question } from '@/types';
 import { isAnswerAcceptable } from '@/lib/utils/answerMatching';
 import { smartValidateAnswer, type SmartMatchType } from '@/lib/utils/smartAnswerValidation';
 
-export type AnswerNotation = 'empty' | 'fraction' | 'mixed_number' | 'decimal' | 'percentage' | 'unit' | 'text' | 'other';
+export type AnswerNotation =
+  | 'empty'
+  | 'fraction'
+  | 'mixed_number'
+  | 'decimal'
+  | 'percentage'
+  | 'currency'
+  | 'unit'
+  | 'text'
+  | 'other';
 
 export type NotationFrictionSignal =
   | 'none'
@@ -30,6 +39,7 @@ const FRACTION_PATTERN = /^-?\d+\s*\/\s*-?\d+$/;
 const MIXED_NUMBER_PATTERN = /^-?\d+\s+\d+\s*\/\s*\d+$/;
 const DECIMAL_PATTERN = /^-?\d+(?:[.,]\d+)?$/;
 const PERCENT_PATTERN = /^-?\d+(?:[.,]\d+)?\s*%$/;
+const CURRENCY_PATTERN = /^-?\d+(?:[.,]\d+)?\s*€$/;
 const UNIT_PATTERN = /^-?\d+(?:[.,]\d+)?\s*[a-zA-ZåäöÅÄÖ°]+$/;
 const MATH_ATTEMPT_PATTERN = /[\d/%.,]/;
 
@@ -66,6 +76,9 @@ function detectAnswerNotation(answer: string): AnswerNotation {
   if (PERCENT_PATTERN.test(normalized)) {
     return 'percentage';
   }
+  if (CURRENCY_PATTERN.test(normalized)) {
+    return 'currency';
+  }
   if (UNIT_PATTERN.test(normalized)) {
     return 'unit';
   }
@@ -76,6 +89,32 @@ function detectAnswerNotation(answer: string): AnswerNotation {
     return 'text';
   }
   return 'other';
+}
+
+function isPlainNumericAnswer(answer: string): boolean {
+  return DECIMAL_PATTERN.test(normalizeCandidate(answer));
+}
+
+function buildUserAnswerVariants(question: Question, userAnswer: string): string[] {
+  const normalizedUserAnswer = normalizeCandidate(userAnswer);
+  const variants = [normalizedUserAnswer];
+
+  if (!normalizedUserAnswer || !isPlainNumericAnswer(normalizedUserAnswer)) {
+    return variants;
+  }
+
+  const candidates = collectAnswerCandidates(question);
+  const expectedNotations = Array.from(new Set(candidates.map(detectAnswerNotation)));
+
+  if (expectedNotations.length === 1 && expectedNotations[0] === 'percentage') {
+    variants.push(`${normalizedUserAnswer} %`, `${normalizedUserAnswer}%`);
+  }
+
+  if (expectedNotations.length === 1 && expectedNotations[0] === 'currency') {
+    variants.push(`${normalizedUserAnswer} €`);
+  }
+
+  return variants.filter((variant, index, all) => variant.length > 0 && all.indexOf(variant) === index);
 }
 
 function buildDiagnostics(
@@ -93,7 +132,7 @@ function buildDiagnostics(
   const expectedNotations = Array.from(new Set(candidates.map(detectAnswerNotation)));
   const userNotation = detectAnswerNotation(userAnswer);
   const isStructuredMath = expectedNotations.some((notation) =>
-    ['fraction', 'mixed_number', 'decimal', 'percentage', 'unit'].includes(notation)
+    ['fraction', 'mixed_number', 'decimal', 'percentage', 'currency', 'unit'].includes(notation)
   );
 
   let notationFrictionSignal: NotationFrictionSignal = 'none';
@@ -131,20 +170,24 @@ export function evaluateQuestionAnswer(
 ): QuestionAnswerEvaluation {
   const evaluateTextAnswer = (correctAnswer: string, acceptableAnswers?: string[]): QuestionAnswerEvaluation => {
     const stringAnswer = String(userAnswer ?? '');
+    const userAnswerVariants = buildUserAnswerVariants(question, stringAnswer);
     const candidates = [correctAnswer, ...(acceptableAnswers ?? [])];
-    const smartMatches = candidates
-      .map((candidate) => ({
+    const smartMatches = userAnswerVariants
+      .flatMap((answerVariant) => candidates.map((candidate) => ({
         candidate,
-        result: smartValidateAnswer(stringAnswer, candidate, { questionType: question.question_type, subject }),
-      }))
+        answerVariant,
+        result: smartValidateAnswer(answerVariant, candidate, { questionType: question.question_type, subject }),
+      })))
       .filter(({ result }) => result.isCorrect);
     const smartMatch = smartMatches[0];
-    const isCorrect = isAnswerAcceptable(
-      stringAnswer,
-      correctAnswer,
-      acceptableAnswers,
-      grade,
-      { questionType: question.question_type, subject }
+    const isCorrect = userAnswerVariants.some((answerVariant) =>
+      isAnswerAcceptable(
+        answerVariant,
+        correctAnswer,
+        acceptableAnswers,
+        grade,
+        { questionType: question.question_type, subject }
+      )
     );
     const matchType = isCorrect
       ? (smartMatch?.result.matchType && smartMatch.result.matchType !== 'none'

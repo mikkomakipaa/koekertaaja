@@ -3,6 +3,7 @@ import type { AnswerEntryConfig } from '@/lib/questions/answer-entry';
 import { FractionInput } from '@/components/ui/fraction-input';
 import { Input } from '@/components/ui/input';
 import { MathText } from '@/components/ui/math-text';
+import { NumberUnitInput } from '@/components/ui/number-unit-input';
 import { CheckCircle, XCircle } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +26,9 @@ export function FillBlank({
 }: FillBlankProps) {
   const isCorrect = showExplanation && isAnswerCorrect;
   const isFractionWidget = Boolean(answerEntryConfig?.mathInputType);
+  const isUnitWidget =
+    answerEntryConfig?.mathInputType === 'percentage' || answerEntryConfig?.mathInputType === 'currency';
+  const unitSymbol = answerEntryConfig?.mathInputType === 'percentage' ? '%' : '€';
   const placeholder = answerEntryConfig?.placeholder ?? 'Kirjoita vastauksesi tähän...';
   const sharedFieldClassName = cn(
     'min-h-12 text-lg px-4 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
@@ -47,7 +51,16 @@ export function FillBlank({
       )}
 
       <div className="relative">
-        {isFractionWidget ? (
+        {isUnitWidget ? (
+          <NumberUnitInput
+            data-testid="unit-answer-input"
+            unit={unitSymbol}
+            value={userAnswer}
+            onChange={(value) => !showExplanation && onAnswerChange(value)}
+            disabled={showExplanation}
+            className={sharedFieldClassName}
+          />
+        ) : isFractionWidget ? (
           <FractionInput
             data-testid="fraction-answer-input"
             type={answerEntryConfig?.mathInputType === 'fraction' ? 'fraction' : 'mixed_number'}
@@ -68,7 +81,7 @@ export function FillBlank({
             className={sharedFieldClassName}
           />
         )}
-        {showExplanation && !isFractionWidget && (
+        {showExplanation && !isFractionWidget && !isUnitWidget && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
             {isCorrect ? (
               <CheckCircle weight="duotone" className="w-6 h-6 text-green-600" />
@@ -78,7 +91,7 @@ export function FillBlank({
           </div>
         )}
       </div>
-      {showExplanation && isFractionWidget && (
+      {showExplanation && (isFractionWidget || isUnitWidget) && (
         <div className="flex justify-end">
           {isCorrect ? (
             <CheckCircle weight="duotone" className="w-6 h-6 text-green-600" />

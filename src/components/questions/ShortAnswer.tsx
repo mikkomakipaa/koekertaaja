@@ -2,6 +2,7 @@ import { ShortAnswerQuestion } from '@/types';
 import type { AnswerEntryConfig } from '@/lib/questions/answer-entry';
 import { FractionInput } from '@/components/ui/fraction-input';
 import { Input } from '@/components/ui/input';
+import { NumberUnitInput } from '@/components/ui/number-unit-input';
 import { Textarea } from '@/components/ui/textarea';
 import { MathText } from '@/components/ui/math-text';
 import { CheckCircle } from '@phosphor-icons/react';
@@ -26,7 +27,16 @@ export function ShortAnswer({
 }: ShortAnswerProps) {
   const isCorrect = showExplanation && isAnswerCorrect;
   const isCompactInput = answerEntryConfig?.variant === 'compact';
-  const isFractionWidget = isCompactInput && Boolean(answerEntryConfig?.mathInputType);
+  const isFractionWidget = isCompactInput && (
+    answerEntryConfig?.mathInputType === 'fraction' ||
+    answerEntryConfig?.mathInputType === 'mixed_number' ||
+    answerEntryConfig?.mathInputType === 'fraction_or_mixed'
+  );
+  const isUnitWidget = isCompactInput && (
+    answerEntryConfig?.mathInputType === 'percentage' ||
+    answerEntryConfig?.mathInputType === 'currency'
+  );
+  const unitSymbol = answerEntryConfig?.mathInputType === 'percentage' ? '%' : '€';
   const placeholder = answerEntryConfig?.placeholder ?? 'Kirjoita vastauksesi tähän... (Voit kirjoittaa useamman lauseen)';
   const sharedFieldClassName = cn(
     'text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
@@ -48,11 +58,20 @@ export function ShortAnswer({
         </div>
       )}
 
-      <div className={cn('relative', isFractionWidget && showExplanation && 'pr-20')}>
+      <div className={cn('relative', (isFractionWidget || isUnitWidget) && showExplanation && 'pr-20')}>
         {isFractionWidget ? (
           <FractionInput
             data-testid="fraction-answer-input"
             type={answerEntryConfig?.mathInputType === 'fraction' ? 'fraction' : 'mixed_number'}
+            value={userAnswer}
+            onChange={(value) => !showExplanation && onAnswerChange(value)}
+            disabled={showExplanation}
+            className={sharedFieldClassName}
+          />
+        ) : isUnitWidget ? (
+          <NumberUnitInput
+            data-testid="unit-answer-input"
+            unit={unitSymbol}
             value={userAnswer}
             onChange={(value) => !showExplanation && onAnswerChange(value)}
             disabled={showExplanation}
@@ -86,7 +105,7 @@ export function ShortAnswer({
             {userAnswer.trim() === '' ? 'Vastaus puuttuu' : `${userAnswer.trim().length} merkkiä`}
           </p>
         )}
-        {showExplanation && !isFractionWidget && (
+        {showExplanation && !isFractionWidget && !isUnitWidget && (
           <div className="absolute right-3 top-3">
             {isCorrect ? (
               <CheckCircle weight="duotone" className="w-6 h-6 text-green-600" />
@@ -98,7 +117,7 @@ export function ShortAnswer({
           </div>
         )}
       </div>
-      {showExplanation && isFractionWidget && (
+      {showExplanation && (isFractionWidget || isUnitWidget) && (
         <div className="flex justify-end">
           {isCorrect ? (
             <CheckCircle weight="duotone" className="w-6 h-6 text-green-600" />

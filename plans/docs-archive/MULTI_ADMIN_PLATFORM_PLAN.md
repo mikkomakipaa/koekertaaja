@@ -2,716 +2,857 @@
 
 ## Goal
 
-Transform the app into a secure multi-admin platform where:
+Transform Koekertaaja into a secure multi-admin platform where:
 - each admin can create and manage only their own question sets,
-- each admin has their own API key configuration,
-- Supabase Auth handles self-signup/sign-in,
-- school-level separation is supported (as a bonus capability),
-- and open design questions are explicitly tracked and validated before implementation.
+- each admin signs in with Supabase Auth,
+- each admin can configure their own provider API key,
+- public student play remains unchanged,
+- and follow-on capabilities such as school tenancy, billing, and extra admin seats are added only after the core owner-scoped model is stable.
 
-## Success Criteria
+## Review Outcome
 
-- Admin users can self-register and sign in with Supabase Auth.
-- Every question set has an immutable owner (`owner_user_id`) and can be modified only by that owner.
-- API-key usage for generation is isolated per admin account.
-<<<<<<< ours
-<<<<<<< ours
-- Optional school/tenant isolation can be enabled without breaking single-school deployments.
-- RLS protects data even if an API route has a bug.
+Plan status after review: **approve only as a phased program, not as one bundled feature**.
 
-## Review Outcome (Updated)
+The original plan mixed three very different products into one stream:
+- secure owner-scoped admin accounts,
+- commercial workspace billing and seat sales,
+- school/tenant and student identity extensions.
 
-Plan status after review: **conditionally approved**.
+That bundling would create materially higher maintenance, support, and compliance load than the current app. The core multi-admin capability is supportable. The combined platform plan is support-heavy unless most repetitive workflows are automated and release scope is narrowed.
 
-Before implementation starts, the following blockers must be resolved because they affect security-critical behavior or migration correctness:
+## DWF Alignment Review
 
-1. **Auth enforcement approach is still undecided** (middleware + route client pattern).
-2. **Legacy owner backfill owner is not yet selected** (blocks `owner_user_id NOT NULL`).
-3. **Public read behavior for published sets must be explicitly preserved** to avoid breaking student game joins.
-4. **API key encryption and rotation strategy must be chosen up front** (Vault/KMS vs libsodium).
-5. **GDPR delivery is mandatory and must be phased as deliverables, not only listed as open questions**.
+This plan was reviewed against the current DWF set on 2026-03-16. Result: **partially aligned, with planned product-expansion gaps**.
 
-Implementation should not proceed past Phase 0/1 gates until these are closed in writing.
+### Confirmed alignments
 
-## Non-Disruption Contract (Mandatory)
+- `DWF/USER_JOURNEYS.md` assumes student play is fast and anonymous. This plan preserves anonymous student play and treats any auth on `/play` as a release blocker.
+- `DWF/TESTING_STRATEGY.md` emphasizes critical-path coverage over broad coverage. This plan aligns by requiring focused auth, ownership, and public-play regression tests rather than broad new test mandates.
+- `DWF/DATA_SCHEMA.md` shows the live app already uses `auth.users` references in `question_sets.user_id` and `prompt_metrics.user_id`. The plan should build on that existing ownership field instead of adding a parallel owner column unless a rename is justified.
 
-The migration must preserve current usage and user journey quality at every phase.
+### DWF contradictions and planned expansion gaps
 
-Hard requirements:
-- Student play journey (`/play` -> join by code -> answer flow -> results) must remain publicly accessible with no auth prompt introduced.
-- Existing teacher/admin core flow (create -> publish -> play-test) must remain available during rollout through either legacy or new path (no dead window between migrations and route changes).
-- No phase may be merged unless staging verifies parity for current critical journeys:
-  - Landing -> Play list -> Open set by code -> Complete session,
-  - Create question set -> Publish -> Open in play view,
-  - Review mistakes and results screens load as before.
-- If any phase increases critical journey failure rate or introduces blocking auth/UI friction, rollout pauses and the phase is rolled back.
+- `DWF/CORE_ARCHITECTURE.md` still says the app "requires no authentication (public access via shareable codes)". That remains true for students, but not for a future multi-admin teacher platform. The architecture ADR will need to distinguish anonymous student play from authenticated admin creation/management when implementation is approved.
+- `DWF/NFR.md` currently states the application must not store PII including names, emails, and schools. If multi-admin auth and school grouping are implemented, that requirement will need to evolve into a minimal-data privacy model for admin identities.
+- `DWF/DATA_MODEL.md` is not a Koekertaaja document at all and cannot be used as an authoritative source for this feature. Use `DWF/DATA_SCHEMA.md` for current schema truth until `DWF/DATA_MODEL.md` is replaced or repaired.
 
-Release guardrails:
-- Use feature flags for new admin-only surfaces (API key settings, school filters) so they can be disabled without reverting DB migrations.
-- Apply DB changes in expand/contract order: add nullable columns + compatible code first, backfill, enforce constraints, then tighten policies.
-- Keep anonymous published-set read policy active until replacement policy is verified in production-like tests.
+### Planning implication
 
-=======
-=======
->>>>>>> theirs
-- Workspace owners can purchase additional admin seats and invite admins without manual ops work.
-- Optional school/tenant isolation can be enabled without breaking single-school deployments.
-- RLS protects data even if an API route has a bug.
+Before implementation starts, the workstream should include follow-up documentation updates for:
+- architecture text that splits anonymous student access from authenticated admin access,
+- privacy/NFR text that defines the minimum allowed admin identity data,
+- conceptual data-model ownership, either by repairing `DWF/DATA_MODEL.md` or explicitly using `DWF/DATA_SCHEMA.md` for this workstream.
 
-<<<<<<< ours
->>>>>>> theirs
-=======
->>>>>>> theirs
+## Executive Recommendation
+
+Ship in this order:
+1. **Phase A: Core multi-admin security**
+   - Supabase Auth for admins
+   - owner-scoped `question_sets.user_id`
+   - owner-scoped writes
+   - public published-set reads preserved
+   - per-admin API key storage
+2. **Phase B: Ops automation**
+   - support intake, issue triage, alert routing, and low-risk bugfix PR workflow
+3. **Phase C: Optional school grouping**
+   - soft tenancy only
+4. **Phase D: Paid seats and billing**
+   - only if there is proven commercial demand
+
+Do **not** launch workspace billing, extra admin seats, school tenancy, and student identity persistence in the same implementation wave as owner-scoped admin auth.
+
+## Maintenance And Support Estimate
+
+Assumptions for these estimates:
+- small production footprint,
+- under 50 active admin workspaces,
+- one main provider path,
+- no dedicated support team,
+- one engineer handling most platform maintenance.
+
+### Estimated steady-state load
+
+| Scope | Typical recurring work | Estimated steady-state load | Automation potential |
+|------|-------------------------|-----------------------------|----------------------|
+| Core multi-admin only | login issues, owner-access bugs, API key save/rotate errors, provider drift | ~2-4 engineering days/month | 50-65% |
+| Core multi-admin + school grouping | data access questions, school filtering confusion, school membership changes | ~3-6 engineering days/month | 45-60% |
+| Core multi-admin + billing/seats | invite failures, billing webhook failures, payment disputes, downgrade edge cases, seat reconciliation | ~6-10 engineering days/month | 60-75% |
+| Full combined platform incl. student identity persistence | all above plus retention, export/delete handling, pseudonymous identity recovery, compliance work | ~8-15 engineering days/month | 35-55% |
+
+### Practical reading of the estimate
+
+- **Core multi-admin only** is reasonable for this product. Expect about **0.1-0.2 FTE** ongoing maintenance after stabilization.
+- Adding **billing and seat management** roughly doubles or triples support burden because many incidents become account-state or webhook-state problems rather than code bugs.
+- Adding **student persistence and broader compliance workflows** creates a different operational profile: fewer repetitive tickets can be fully automated, and more cases require judgment.
+
+## What Actually Creates The Support Load
+
+### Low-to-medium ongoing load
+
+- admin sign-up/sign-in problems,
+- ownership migration edge cases,
+- per-admin API key save/rotate/deactivate flows,
+- provider model changes or quota failures,
+- occasional RLS or route-scoping regressions.
+
+### High ongoing load if included
+
+- invite acceptance failures,
+- seat count mismatches,
+- failed Stripe webhook reconciliation,
+- account recovery for workspace owners,
+- downgrade grace-period enforcement,
+- school membership changes and mistaken access expectations,
+- GDPR export/deletion workflows if identity scope expands.
+
+## Recommended Scope Boundary
+
+For the first release, keep the plan limited to:
+- admin authentication,
+- owner-scoped authorization,
+- per-admin key management,
+- audit logging,
+- public student play continuity.
+
+Explicitly defer:
+- paid seat sales,
+- workspace billing,
+- strict school tenancy,
+- persistent student profiles,
+- delegated editing/collaboration roles.
+
+## Privacy And GDPR Scope
+
+Multi-admin changes are not only an auth feature. They create a new privacy model because the app would start storing teacher/admin identity data and potentially school affiliation data.
+
+### Data protection principle
+
+Keep the student experience anonymous by default and limit stored identity data to the smallest set needed for admin account operation.
+
+### Data categories introduced by this plan
+
+- **Admin identity data**
+  - Supabase Auth user ID
+  - email address
+  - optional display name
+- **Admin operational metadata**
+  - last sign-in
+  - API key audit metadata
+  - generation usage and cost metrics
+- **Optional organizational data**
+  - school name or school identifier
+  - workspace membership if billing/seats are ever added
+
+### Data categories that should remain out of scope
+
+- student accounts by default,
+- student email addresses,
+- student names tied to persistent accounts,
+- unnecessary teacher profile fields such as phone number or home address,
+- raw API keys in logs, analytics, exports, or support tools.
+
+### GDPR topics that must be part of implementation planning
+
+- lawful basis for storing admin identity and operational data,
+- privacy notice updates for authenticated admin users,
+- data minimization rules for admin profiles and school records,
+- retention rules for auth-adjacent logs, API key audit data, and generation metrics,
+- right-to-access workflow for admin account data,
+- right-to-erasure workflow for admin account deletion,
+- data export workflow for admin-owned question sets and account metadata,
+- processor/subprocessor review for Supabase, AI providers, error monitoring, analytics, and billing tools,
+- breach handling and secret-exposure response process,
+- support-tool access limits so issue triage automation does not expose personal data unnecessarily.
+
+### Recommended privacy delivery model
+
+Treat privacy/GDPR as a first-class implementation track that runs in parallel with auth and ownership work:
+
+1. Define allowed data fields and retention before schema tightening.
+2. Implement admin auth and owner scoping.
+3. Add audit metadata with redaction rules.
+4. Add admin export/delete workflows before broad rollout.
+5. Add school data only after the minimal admin-identity path is stable.
+
+### Support impact of privacy requirements
+
+Privacy/GDPR requirements reduce automation potential for some support classes:
+
+- export/delete requests should be prepared by automation but approved by a human,
+- access disputes should be triaged automatically but resolved by a human,
+- incidents involving secrets or personal data should bypass agent-safe autonomous fix workflows.
+
+## How Much Can Be Automated
+
+### Realistic automation split
+
+- **50-70%** of repetitive intake, triage, routing, labeling, reproduction gathering, and low-risk remediation can be automated.
+- **20-35%** of real incidents can be fixed end-to-end without human judgment if they are narrow and well-tested.
+- **0-15%** of compliance, billing disputes, migration mistakes, or ambiguous access-control issues should be fully automated.
+
+### Best candidates for automation
+
+- classify incoming bugs and support requests,
+- attach logs and known environment context,
+- identify likely owner files and services,
+- generate a minimal repro summary,
+- open a scoped engineering task,
+- implement low-risk fixes behind existing patterns,
+- run checks and open a PR,
+- monitor for regressions after deploy.
+
+### Poor candidates for full automation
+
+- schema migration decisions,
+- RLS policy changes,
+- billing state corrections,
+- account ownership disputes,
+- GDPR deletion/export approvals,
+- cross-tenant access incidents.
+
+## Recommended Automation Tooling
+
+### Intake and tracking
+
+- **GitHub Issue Forms**
+  - separate forms for bug, access problem, billing problem, provider/API key problem, and security report.
+- **GitHub Projects**
+  - track support queue, engineering triage, and automation-eligible incidents separately.
+- **Labels**
+  - `bug`, `access`, `provider`, `billing`, `security`, `multi-admin`, `ops`, `agent-safe`, `needs-human`, `sev1`, `sev2`, `sev3`.
+
+### Monitoring and alert sources
+
+- **Sentry**
+  - runtime errors, route failures, auth failures, client regressions.
+- **Supabase logs / alerts**
+  - failed queries, RLS denials, auth anomalies, webhook handler errors.
+- **Stripe webhooks + alerting** if billing is later introduced
+  - payment failures, webhook retries, subscription state drift.
+- **PostHog or equivalent**
+  - conversion and flow drop-offs on sign-in, API key save, create, publish, and play-test flows.
+
+### Triage and execution agents
+
+- **GitHub Actions**
+  - assign labels, severity, stale state, and routing based on issue template fields.
+- **Codex/Claude CLI agents in repo**
+  - triage issue -> generate scoped `todo/` task -> produce fix branch -> run checks -> prepare PR.
+- **Existing task runner workflow**
+  - use `scripts/run-tasks-codex.sh` or `scripts/run-tasks-claude.sh` to keep fixes isolated and traceable.
+
+### PR and merge safety
+
+- **GitHub Actions CI**
+  - `npm run typecheck`
+  - `npm run lint`
+  - relevant tests
+  - targeted migration/RLS tests when owner-scoped auth changes are touched
+- **Dependabot or Renovate**
+  - dependency update automation, but keep auth, Supabase, and billing libraries on stricter review.
+
+## Recommended Automation Workflow
+
+### Issue -> triage -> fix -> PR
+
+1. A bug or support issue is created through a GitHub Issue Form.
+2. A GitHub Action normalizes labels, severity, affected area, and required metadata.
+3. An agent triages the issue:
+   - searches the repo,
+   - checks recent changes,
+   - summarizes likely root cause,
+   - determines whether the issue is `agent-safe` or `needs-human`.
+4. If `agent-safe`, the agent creates or updates a scoped task in `todo/`.
+5. The task runner executes the fix in isolation.
+6. The agent runs required checks and opens a PR with:
+   - root cause,
+   - change summary,
+   - risk notes,
+   - verification performed.
+7. Human review is still required for:
+   - auth changes,
+   - RLS changes,
+   - migration changes,
+   - billing logic,
+   - deletion/export flows.
+
+### Good automation targets for this repo
+
+- UI regressions in admin settings flows,
+- incorrect owner scoping in route handlers,
+- missing masking/redaction in API key responses,
+- issue-specific test additions,
+- docs and plan updates after implementation changes.
+
+### Mandatory human review gates
+
+- Supabase migration files,
+- RLS policies,
+- service-role usage changes,
+- Stripe webhook behavior,
+- data retention and deletion jobs,
+- security-sensitive configuration.
+
 ## Proposed Architecture
 
-### 1) Identity and authorization baseline (Supabase Auth)
+### 1) Identity and authorization baseline
 
-Use `auth.users` as identity source and connect application data through foreign keys to `auth.users.id`.
+Use `auth.users` as the admin identity source.
 
 Core rule:
-- the frontend can only access tables through RLS policies,
-- service-role usage in server code should be minimized and never used for owner-scoped writes unless explicitly re-checking ownership.
+- browser clients access data only through RLS-protected paths,
+- service-role usage is minimized,
+- owner-scoped writes must always derive ownership from the authenticated session, never from client payload.
 
-### 2) Data model updates
-
-Add/extend tables:
+### 2) Core data model
 
 - `admin_profiles`
   - `user_id uuid primary key references auth.users(id)`
   - `display_name text`
-  - `school_id uuid null` (bonus tenancy)
   - `created_at timestamptz`
 
-- `schools` (bonus)
+- `question_sets` (existing table update)
+  - use existing `user_id uuid references auth.users(id)` as the owner field
+  - backfill existing null `user_id` rows before enforcing stronger ownership guarantees
+  - add or keep index on `(user_id, created_at desc)`
+
+- `admin_api_keys`
+  - `id uuid primary key`
+  - `user_id uuid not null references auth.users(id)`
+  - `provider text not null`
+  - `encrypted_api_key text not null`
+  - `key_last4 text not null`
+  - `is_active boolean not null default true`
+  - `last_used_at timestamptz null`
+  - `last_used_provider_model text null`
+  - `last_error text null`
+  - `estimated_cost_usd numeric null`
+  - `created_at timestamptz`
+  - `updated_at timestamptz`
+  - partial unique index on `(user_id, provider)` where `is_active = true`
+
+### 3) Optional later data model
+
+Add only after core multi-admin is stable:
+
+- `schools`
   - `id uuid primary key`
   - `name text unique`
   - `created_at timestamptz`
 
-- `question_sets` (existing table update)
-  - add `owner_user_id uuid not null references auth.users(id)`
-  - add `school_id uuid null references schools(id)`
-  - add index on `(owner_user_id, created_at desc)`
-  - add index on `(school_id, created_at desc)`
+- `admin_profiles.school_id uuid null references schools(id)`
 
-<<<<<<< ours
-<<<<<<< ours
-- `student_profiles` (new — Phase 5)
-  - `id uuid primary key`
-  - `display_name text not null`
-  - `join_token text unique not null` (random UUID, stored in client localStorage)
-  - `school_id uuid null references schools(id)`
-  - `created_at timestamptz`
-  - index on `join_token` (lookup path for every game join)
+- `workspaces`
+  - only if commercial seat billing is proven necessary
 
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
-- `admin_api_keys`
-  - `id uuid primary key`
-  - `user_id uuid not null references auth.users(id)`
-  - `provider text not null` (e.g. `openai`, `anthropic`)
-  - `encrypted_api_key text not null`
-  - `key_last4 text not null`
-  - `is_active boolean default true`
-  - `created_at/updated_at timestamptz`
-<<<<<<< ours
-<<<<<<< ours
-  - partial unique index on `(user_id, provider)` where `is_active = true`
-=======
-  - unique `(user_id, provider, is_active)` partial unique for active rows
->>>>>>> theirs
-=======
-  - unique `(user_id, provider, is_active)` partial unique for active rows
->>>>>>> theirs
+Do not add student identity tables in the first multi-admin release.
 
-### 3) RLS policies (critical)
+### 4) RLS policies
 
 Enable RLS and enforce:
 
 - `question_sets`
-  - `select`: owner can read own sets; optional policy to read school-public sets if desired later.
-<<<<<<< ours
-<<<<<<< ours
-    - **Note**: the current policy makes all `published` sets publicly readable (required for the student play flow via access code). This policy must be explicitly preserved or replaced — tightening it without a matching read policy will break the student game entry flow.
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
-  - `insert`: `owner_user_id = auth.uid()`.
-  - `update/delete`: `owner_user_id = auth.uid()`.
+  - owner can read own sets
+  - owner can update/delete own sets
+  - insert requires `user_id = auth.uid()`
+  - public read for `published` sets must remain explicitly preserved for student play
 
 - `admin_profiles`
-  - user can `select/update` own profile only.
+  - user can select/update own profile only
 
 - `admin_api_keys`
-  - user can `select/insert/update/delete` only where `user_id = auth.uid()`.
+  - user can select/insert/update/delete only where `user_id = auth.uid()`
 
-<<<<<<< ours
-<<<<<<< ours
-- `student_profiles`
-  - no direct client table access (students are not Supabase Auth users).
-  - all reads/writes go through a dedicated server-side route that validates the `join_token` from a signed session cookie before touching the table.
-  - service role used exclusively; no anon key access permitted.
+### 5) Route and service-layer changes
 
-### 4) API route and service-layer changes
+All write endpoints must:
+- resolve authenticated user first,
+- write `user_id` from session,
+- reject cross-owner access in the same query predicate,
+- avoid trusting client-supplied owner identifiers.
 
-Update server endpoints to always resolve authenticated user first and then scope operations by `auth.uid()`.
+Admin-only route protection:
+- protect only admin pages and owner-scoped write APIs,
+- explicitly exclude `/`, `/play/:path*`, published-set public reads, and static assets,
+- add matcher tests so public student paths stay anonymous.
 
-**Application-layer auth must be specified explicitly.** RLS is the authoritative backstop, but unauthenticated requests still reach route handler logic before being rejected at the DB. A concrete spec is needed for:
-- which Supabase client helper is used in route handlers (`createRouteHandlerClient` vs `createServerActionClient` vs service role),
-- whether a Next.js `middleware.ts` guards admin pages and API routes before handler execution,
-- how admin-only pages (e.g. `/admin/settings/api-keys`) are protected at the page/layout level.
+### 6) Per-admin API key management
 
-Required middleware scope contract (to avoid journey disruption):
-- Protect only admin surfaces by matcher allowlist (for example: `/create/:path*`, `/admin/:path*`, `/api/admin/:path*`, and explicitly owner-scoped write APIs).
-- Explicitly exclude public/student surfaces from auth middleware (for example: `/`, `/play/:path*`, public published-set read endpoints, static assets, and health checks).
-- Add automated tests for matcher behavior so admin routes reject unauthenticated access while student/public routes stay accessible.
-=======
-### 4) API route and service-layer changes
+Implementation requirements:
 
-Update server endpoints to always resolve authenticated user first and then scope operations by `auth.uid()`:
->>>>>>> theirs
-=======
-### 4) API route and service-layer changes
+1. Add `/admin/settings/api-keys`.
+2. Encrypt keys before DB write.
+3. Never return full key material in responses.
+4. Mask values as `••••1234`.
+5. Log usage metadata without exposing secrets.
+6. Redact secrets from logs and error payloads.
 
-Update server endpoints to always resolve authenticated user first and then scope operations by `auth.uid()`:
->>>>>>> theirs
+Encryption choice:
+- prefer a managed secret solution if operationally available,
+- otherwise use application-layer encryption with a dedicated master key and a documented rotation plan.
 
-- create question set route:
-  - write `owner_user_id` from session, never from client payload.
+## Migration Plan
 
-- update/delete/extend question set routes:
-  - query with `id` + `owner_user_id = auth.uid()` in same statement.
+### Phase 0 — Preflight and risk reduction
 
-- list question sets for admin UI:
-  - default list returns only own sets; optional filter by school if enabled and authorized.
-
-- generation route:
-  - resolve active per-admin API key, decrypt server-side, call provider.
-
-### 5) Per-admin API key management
-
-Implementation path:
-
-1. Add admin settings UI (`/admin/settings/api-keys`) for save/rotate/deactivate.
-<<<<<<< ours
-<<<<<<< ours
-2. Encrypt keys before database write — **choose one approach before Phase 3 starts**:
-   - **Supabase Vault / KMS**: managed rotation, audit trail, higher operational overhead.
-   - **libsodium with env-managed master key**: simpler, but key rotation requires re-encrypting all stored rows.
-3. Never return full key in API response; only provider + masked value (`••••1234`).
-4. Add audit metadata (`last_used_at`, `last_used_provider_model`, `last_error`).
-5. Add `tokens_used` and `estimated_cost_usd` audit columns to `admin_api_keys` or a linked usage log table — required for per-user budget enforcement and abuse detection.
-=======
-2. Encrypt keys before database write (KMS or libsodium with env-managed master key).
-3. Never return full key in API response; only provider + masked value (`••••1234`).
-4. Add audit metadata (`last_used_at`, `last_used_provider_model`, `last_error`).
->>>>>>> theirs
-=======
-2. Encrypt keys before database write (KMS or libsodium with env-managed master key).
-3. Never return full key in API response; only provider + masked value (`••••1234`).
-4. Add audit metadata (`last_used_at`, `last_used_provider_model`, `last_error`).
->>>>>>> theirs
-
-Security requirement:
-- all decryption must happen server-side only.
-
-### 6) School separation (bonus tenant model)
-
-Two rollout options:
-
-- **Option A (recommended first): soft tenancy**
-  - users optionally linked to `school_id`.
-  - ownership rules stay primary; school used for analytics/sharing later.
-
-- **Option B: strict tenancy**
-  - enforce `school_id` on sets and policies requiring both ownership or explicit school admin role.
-
-Start with Option A to reduce migration complexity and avoid blocking multi-admin core delivery.
-
-<<<<<<< ours
-<<<<<<< ours
-### 7) User profiles — teacher and student
-
-The platform has two distinct user types with different identity requirements.
-
-#### Teacher profile (`admin_profiles`)
-
-Already defined in section 2. Teachers authenticate via Supabase Auth and have a full account.
-
-Minimal required fields:
-- `user_id` — FK to `auth.users(id)`, primary key
-- `display_name text` — shown in admin UI and (optionally) to students during a game
-- `school_id uuid null` — optional school link (Phase 4)
-- `created_at timestamptz`
-
-No additional fields are needed at launch. Do not add phone, address, or role-title fields unless a concrete feature requires them.
-
-#### Student profile (`student_profiles`)
-
-Students must not be required to create an account. Classroom use demands zero-friction entry — asking students to register with an email breaks the game flow.
-
-Design: **token-based pseudonymous identity**
-
-How it works:
-1. On first game join, the client generates a random UUID `join_token` and stores it in `localStorage`.
-2. The server creates (or looks up) a `student_profiles` row keyed by that token.
-3. On subsequent visits the same token is sent, restoring the student's display name and history.
-4. If `localStorage` is cleared the student enters as a new anonymous participant — this is acceptable.
-
-Minimal required fields:
-- `id uuid primary key`
-- `display_name text not null` — chosen by the student at game entry (e.g. "Mikko", "Player 1")
-- `join_token text unique not null` — random UUID generated client-side; never displayed
-- `school_id uuid null references schools(id)` — optionally assigned when a teacher creates a class session
-- `created_at timestamptz`
-
-Explicitly excluded to keep data minimal and reduce GDPR surface:
-- no email
-- no real name field (display name is self-chosen and not verified)
-- no password or PIN
-- no date of birth
-- no device fingerprint
-
-Data retention: student profiles with no linked sessions older than the configured retention period (see open question 7) should be deleted by a scheduled job.
-
-RLS for `student_profiles`:
-- direct RLS policies are intentionally not exposed to browser clients.
-- all operations (`select/insert/update/delete`) are executed by a tightly scoped server-side service layer after join-token validation.
-- no endpoint may return rows across tokens; handlers must always scope by a single validated token.
-=======
-=======
->>>>>>> theirs
-### 7) Sellable model: paid additional admins (seat-based)
-
-Recommended commercial model:
-
-- one workspace (organization/school) has one billing owner,
-- base plan includes `N` admin seats,
-- extra admins are sold as paid seat add-ons,
-- invited admins join the same workspace and can only modify their own question sets.
-
-Most convenient/automated implementation:
-
-1. Use **Stripe Checkout + Billing Portal** for self-serve upgrades.
-2. Store Stripe subscription state in Supabase (`workspaces`, `workspace_billing`).
-3. Listen to Stripe webhooks (`checkout.session.completed`, `customer.subscription.updated`, `invoice.paid`, `invoice.payment_failed`).
-4. Compute `seat_limit` from subscription items and persist it in `workspaces`.
-5. Enforce `active_admin_count <= seat_limit` when sending invites and when accepting invites.
-6. Auto-handle downgrade:
-   - prevent new invites when over seat limit,
-   - grace period for excess active admins,
-   - require owner action (remove admins or re-upgrade) after grace period.
-
-This enables a fully productized flow with no manual intervention for adding/removing paid admin capacity.
-
-### 8) Team/workspace data model (for billing + admin seats)
-
-Add workspace-level entities:
-
-- `workspaces`
-  - `id uuid primary key`
-  - `name text`
-  - `owner_user_id uuid not null references auth.users(id)`
-  - `seat_limit integer not null default 1`
-  - `created_at timestamptz`
-
-- `workspace_members`
-  - `workspace_id uuid not null references workspaces(id)`
-  - `user_id uuid not null references auth.users(id)`
-  - `role text not null check (role in ('owner','admin'))`
-  - `status text not null check (status in ('active','invited','suspended'))`
-  - unique `(workspace_id, user_id)`
-
-- `workspace_invites`
-  - `id uuid primary key`
-  - `workspace_id uuid not null`
-  - `email text not null`
-  - `role text not null default 'admin'`
-  - `invited_by_user_id uuid not null`
-  - `expires_at timestamptz`
-
-- `workspace_billing`
-  - `workspace_id uuid primary key`
-  - `stripe_customer_id text unique`
-  - `stripe_subscription_id text unique`
-  - `plan_code text`
-  - `seat_quantity integer not null default 1`
-  - `billing_status text`
-  - `current_period_end timestamptz`
-
-Question-set ownership remains per-user (`owner_user_id`), while workspace membership controls who can access the admin area for that tenant.
-<<<<<<< ours
->>>>>>> theirs
-=======
->>>>>>> theirs
-
-## Migration Plan (incremental)
-
-### Phase 0 — Preflight
-- backup DB,
 - inventory existing question sets,
-<<<<<<< ours
-<<<<<<< ours
-- map current creator identity if any metadata exists,
-- **resolve pre-existing security baseline** (must complete before auth is added):
-  - add rate limiting to `/api/generate-questions` (Task 091),
-  - replace `Math.random()` game code generation with cryptographically secure alternative (codes are currently predictable and enumerable),
-  - fix questions RLS policy bug (Task 090),
-  - add Content-Security-Policy headers,
-- **decide self-signup policy** (gates Phase 1 — open signup without rate limits + per-user budget is equivalent to no rate limiting),
-- **decide legacy data backfill owner** (gates Phase 1 — `NOT NULL` enforcement cannot complete without this).
+- choose legacy bootstrap owner for backfill,
+- verify public published-set read behavior,
+- confirm self-signup policy,
+- close existing security gaps before adding auth:
+  - rate limiting,
+  - secure code generation,
+  - RLS correctness,
+  - CSP hardening.
 
 Exit criteria:
-- security baseline tasks completed and verified,
-- self-signup policy decision documented,
-- legacy backfill owner decision documented.
-=======
-- map current creator identity if any metadata exists.
->>>>>>> theirs
-=======
-- map current creator identity if any metadata exists.
->>>>>>> theirs
+- backfill owner decision documented,
+- public read path documented and tested,
+- security baseline tasks completed.
 
-### Phase 1 — Auth + ownership columns
-- add `owner_user_id` nullable first,
-- backfill existing rows to bootstrap owner account,
-- enforce NOT NULL once complete,
-- add RLS policies.
+### Phase 1 — Auth and ownership
 
-<<<<<<< ours
-<<<<<<< ours
-Zero-downtime choreography (mandatory sequence):
-1. Deploy code that can read/write with `owner_user_id` nullable and preserves current public read behavior.
-2. Run backfill for all legacy rows and verify row counts.
-3. Enable NOT NULL constraint only after verification.
-4. Deploy tightened owner-scoped write queries and RLS.
-5. Run post-deploy smoke tests for both admin and student journeys before phase close.
+- standardize on `question_sets.user_id` as the owner field,
+- deploy compatible code,
+- backfill legacy null `user_id` rows,
+- verify counts,
+- decide whether `NOT NULL` is safe or whether legacy/public rows must remain nullable temporarily,
+- add owner-scoped RLS and route predicates.
 
 Exit criteria:
-- `question_sets.owner_user_id` is non-null for all rows,
-- anonymous read path for published sets is validated with an automated test,
+- all owner-scoped `question_sets.user_id` values populated for rows that should be admin-owned,
+- anonymous student read path still works,
 - cross-owner write attempts fail in tests.
 
 ### Phase 2 — API hardening
-- patch all write routes to use session user — routes to cover (exhaustive list must be verified before this phase closes):
-  - `POST /api/generate-questions`
-  - `PATCH /api/question-sets`
-  - `POST /api/identify-topics`
-  - flag/unflag routes
-  - any routes that accept a `question_set_id` or owner-scoped resource ID
-- ensure no route trusts client-supplied owner fields,
-- add Next.js middleware (`middleware.ts`) enforcing session checks before route handlers are reached,
-- add negative tests for cross-owner access.
+
+- patch all owner-scoped write routes,
+- apply admin middleware allowlist,
+- add negative tests for unauthenticated and cross-owner access,
+- verify service-role paths do not bypass ownership.
 
 Exit criteria:
-- write-route inventory is signed off as exhaustive,
-- middleware is enabled for all admin pages and admin API prefixes,
-- route tests confirm unauthenticated requests fail before DB writes are attempted.
+- route inventory is complete,
+- unauthenticated admin writes fail,
+- public student routes remain accessible.
 
-=======
-=======
->>>>>>> theirs
-### Phase 2 — API hardening
-- patch all write routes to use session user,
-- ensure no route trusts client-supplied owner fields,
-- add negative tests for cross-owner access.
+### Phase 3 — Per-admin API keys
 
-<<<<<<< ours
->>>>>>> theirs
-=======
->>>>>>> theirs
-### Phase 3 — API key isolation
-- create `admin_api_keys`, settings UI, encryption service,
-- route provider calls via per-user key resolver,
-- add usage/audit logging.
-
-<<<<<<< ours
-<<<<<<< ours
-Exit criteria:
-- encryption/rotation strategy is implemented and documented,
-- full key material is never returned by API responses or logs,
-- per-user token and cost usage is queryable for budget enforcement.
-
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
-### Phase 4 — School bonus
-- add `schools` and `admin_profiles.school_id`,
-- ship school-scoped filtering (read-only first),
-- decide whether to move to strict tenancy.
-
-<<<<<<< ours
-<<<<<<< ours
-**Prerequisite for**: `DWF/USER_JOURNEYS.md` Journey 6 (Aloita → Select school → Play). The school picker, filtered play page, and school-scoped question set discovery cannot be built until `schools` table and `school_id` on `question_sets` exist. Phase 5 (`student_profiles.school_id`) is additionally required for persisting the student's school selection across sessions.
-
-### Phase 5 — User profiles
-- create `student_profiles` table with `join_token` index,
-- implement server-side join-token session cookie flow (set on first game entry, validated on subsequent requests),
-- add `student_id` FK to `game_sessions` (depends on session persistence being introduced alongside or before this phase),
-- add teacher profile display in admin UI (display name shown on question set list and dashboard),
-- add student data retention scheduled job (delete profiles with no sessions older than configured period),
-- verify no student PII is stored beyond display name and token.
+- create `admin_api_keys`,
+- ship API key settings UI,
+- add encryption and masked reads,
+- route generation through per-user key resolver,
+- add usage metadata,
+- add secret redaction and breach-response playbook inputs.
 
 Exit criteria:
-- student join-token flow works end-to-end without Supabase Auth login,
-- retention cleanup job is deployed with configured retention window,
-- GDPR deletion path covers both admin-owned data and student pseudonymous profiles.
-=======
-=======
->>>>>>> theirs
-### Phase 5 — Monetization and seat automation
-- add `workspaces`, `workspace_members`, `workspace_invites`, `workspace_billing`,
-- integrate Stripe Checkout + Portal + webhook handler,
-- enforce seat limit at invite creation and invite acceptance,
-- add owner-facing billing/settings pages,
-- implement downgrade grace-period handling and alerting.
-<<<<<<< ours
->>>>>>> theirs
-=======
->>>>>>> theirs
+- secrets are never returned or logged,
+- provider calls use the authenticated admin's active key,
+- key rotation and deactivation are tested.
 
-## Open Questions to Validate (Design Review Checklist)
+### Phase 4 — Support automation
 
-These must be answered before implementation freeze:
+- introduce issue forms and labels,
+- add alert-to-issue routing,
+- implement agent triage workflow,
+- enable agent-safe fix -> PR automation for low-risk classes,
+- classify privacy/security incidents as mandatory human-review items.
 
-<<<<<<< ours
-<<<<<<< ours
-### Original questions
+Exit criteria:
+- triage metadata is added automatically,
+- low-risk issues can produce draft PRs,
+- human review gates are enforced for sensitive changes.
 
-1. **Self-signup policy** *(blocks Phase 0 — must decide before auth is wired)*
-   - Fully open signup, domain allowlist, or invite-only?
-   - Note: open signup without per-user generation budgets and rate limits is functionally equivalent to removing rate limiting (each abuser creates a new account).
+### Phase 5 — Optional school grouping
 
-2. **First-owner assignment for legacy data** *(blocks Phase 1 — `NOT NULL` cannot be enforced until decided)*
-   - Which user should own existing question sets?
-   - Recommended: create a designated bootstrap admin account during Phase 0 preflight and assign all legacy rows to it, with the option for real owners to claim their sets later.
+- add `schools`,
+- add optional `school_id` on `admin_profiles`,
+- keep ownership primary,
+- use school grouping only for filtering and analytics first,
+- re-check privacy notice, retention, and export scope before rollout.
 
-3. **School model**
-   - Can an admin belong to multiple schools?
+Exit criteria:
+- no change to owner-scoped authorization model,
+- school grouping is feature-flagged,
+- no regression in play or create flows.
 
-4. **Cross-admin collaboration**
-   - Is sharing/edit delegation needed now or later?
+### Cross-cutting privacy deliverables
 
-5. **API key model**
-   - One key per provider per user, or multiple named keys?
-   - Clarify: after a key is deactivated, can the user have both an inactive and a new active key for the same provider simultaneously? Define the intended key history model.
+- define admin data inventory,
+- define retention schedule,
+- define export/delete workflows,
+- document secret redaction rules,
+- define who can access support tools containing admin metadata.
 
-6. **Provider fallback behavior**
-   - If user lacks a provider key, deny the request or fall back to the platform key?
+### Deferred Phase — Billing and seat automation
 
-7. **Audit and compliance**
-   - What retention period is required for key usage and content generation logs?
+Do not start until:
+- at least Phase 4 is stable,
+- there is commercial validation for paid seats,
+- webhook and support ownership are explicitly staffed.
 
-8. **Operational recovery**
-   - Who can recover an account if the owner is locked out?
+If started later, it should include:
+- `workspaces`,
+- `workspace_members`,
+- `workspace_invites`,
+- `workspace_billing`,
+- Stripe Checkout,
+- Billing Portal,
+- webhook reconciliation,
+- downgrade and grace-period rules.
 
-9. **Data export/deletion** *(see also question 15 — GDPR is mandatory for Finnish school platforms)*
-   - Need per-admin export and GDPR-style deletion workflow?
+## Commercial Model And Marketability
 
-10. **Rate limits and abuse controls**
-    - Per-user, per-school, and global limits required?
+The plan currently assumes per-admin API key support, but that is not the same as proving that mandatory bring-your-own-key (`BYOK`) is commercially viable.
 
-### Additional questions (from implementation review)
+### Why this matters
 
-11. **Student identity model** *(addressed in Phase 5 — see section 7)*
-    - Resolved: students use token-based pseudonymous profiles (no Supabase Auth account required).
-    - Remaining decision: should a teacher be able to pre-provision student profiles with class-assigned display names, or is self-chosen entry-time naming sufficient?
+For a mainstream school product, mandatory BYOK changes the product from "pay once and use" into "pay us, also buy and manage a separate AI provider account, and understand model billing". That shift can materially reduce conversion, trust, and institutional adoption.
 
-12. **Session and progress persistence**
-    - Game sessions are currently in-memory only; there is no `game_sessions` or `session_answers` table.
-    - Which phase (if any) introduces persisted session storage? This is a prerequisite for any analytics, teacher review, or retry/resume features.
+### Model options
 
-13. **Public read policy after migration**
-    - The existing RLS for `question_sets` allows any unauthenticated user to read published sets (required for students entering via access code).
-    - Does this policy remain unchanged after multi-admin RLS is added, or does access scope change?
-    - Changing this without a matching read policy will silently break the student play entry flow.
+#### Option 1: Platform-paid usage
 
-14. **Application-layer auth approach** *(must decide before Phase 2)*
-    - Which Supabase client helper pattern is used in Next.js route handlers: `createRouteHandlerClient`, `createServerActionClient`, or service role with explicit ownership checks?
-    - Will a `middleware.ts` guard admin routes at the application layer (in addition to RLS at the DB layer)?
+The app pays for LLM usage and charges customers through subscription, credits, or usage bundles.
 
-15. **GDPR compliance scope** *(mandatory, not optional — Finnish school platform)*
-    - GDPR deletion and data portability obligations apply to any platform storing data about users in EU schools.
-    - Which phase delivers: privacy policy, data retention limits, per-admin data export, and account deletion?
-    - If student accounts are ever introduced, consent flows become required.
+Strengths:
+- simplest onboarding,
+- predictable experience,
+- one vendor relationship,
+- easier support ownership,
+- strongest fit for schools and non-technical teachers.
 
-16. **Token and cost budget tracking**
-    - Should per-user token usage and estimated cost be recorded?
-    - Without this, there is no mechanism to enforce generation budgets, detect runaway usage, or produce usage reports per school.
+Weaknesses:
+- platform carries AI cost risk,
+- requires stronger abuse controls,
+- pricing must absorb model volatility.
 
-17. **`question_flags` attribution**
-    - The existing `question_flags` table has no `user_id` column; flags are anonymous.
-    - With multi-admin, should flags be attributed to the flagging admin?
+#### Option 2: Mandatory BYOK
 
-18. **Write route inventory completeness**
-    - Before Phase 2 closes, the list of all write routes must be verified as exhaustive.
-    - Who is responsible for confirming no route was missed? Missing even one route creates an ownership bypass.
+Every admin must connect their own OpenAI/Anthropic key before generation works.
 
-## Known Gaps and Risks
+Strengths:
+- lower platform cost exposure,
+- easier per-user cost isolation,
+- attractive to technical power users with existing API accounts.
 
-The following gaps were identified during implementation review and must be addressed or explicitly deferred:
+Weaknesses:
+- much higher onboarding friction,
+- weaker trust and conversion,
+- more support tickets caused by provider account state,
+- worse fit for schools and public-sector procurement,
+- unclear total cost from the buyer perspective.
 
-| Gap | Severity | Phase affected | Notes |
-|-----|----------|----------------|-------|
-| Pre-existing security issues (rate limiting, weak code RNG, missing CSP, RLS bug) | High | Phase 0 | Adding auth on top of these does not fix them; abuse surface increases with open signup |
-| Student identity model absent | Medium | Phase 5 | Addressed: token-based pseudonymous profiles planned in section 7 / Phase 5 |
-| Session/progress persistence absent | Medium | Analytics/Phase 4+ | No `game_sessions` table; all game state is in-memory |
-| Public read policy conflict | High | Phase 1 | Existing anonymous read on published sets must be explicitly preserved in new RLS or student play breaks |
-| Application-layer auth not specified | High | Phase 2 | Next.js middleware and client helper patterns must be decided before Phase 2 implementation |
-| API key encryption approach unresolved | Medium | Phase 3 | Choose between Supabase Vault/KMS and libsodium before implementation starts |
-| No token/cost tracking | Medium | Phase 3 | Required for per-user budgets; absence allows unlimited AI usage per account |
-| GDPR compliance not phased | High | Unscheduled | Mandatory for Finnish school platform; currently treated as an open question rather than a delivery requirement |
-| Write route inventory incomplete | High | Phase 2 | All write routes must be enumerated and verified before Phase 2 closes |
-| Legacy backfill strategy undefined | High | Phase 1 | `NOT NULL` cannot be enforced until question 2 is answered |
+#### Option 3: Hybrid model
 
-## Full Risk Review (Expanded)
+The app includes default platform-paid usage, while advanced users can optionally switch to BYOK.
 
-| Risk | Category | Likelihood | Impact | Early signal | Mitigation | Rollback trigger |
-|------|----------|------------|--------|--------------|------------|------------------|
-| Auth middleware accidentally blocks public play paths | UX/Availability | Medium | Critical | Spike in 401/403 on `/play/*` | Strict matcher allowlist + explicit public exclusions + route tests | Any auth prompt or 401 on student play flow |
-| Published-set anonymous read removed by new RLS | UX/Data access | Medium | Critical | Join-by-code failures increase | Preserve current published-read policy until replacement is verified | Join success drops below baseline |
-| `owner_user_id` backfill incomplete before NOT NULL | Migration | Medium | High | Constraint failure / failed writes | Pre-enforcement completeness query + staged enforce | Any failed create/update due to missing owner |
-| Service-role route bypasses owner checks | Security | Low-Medium | Critical | Cross-owner mutation test fails | Prefer user-scoped client; if service role needed, enforce owner predicate in same query | Any cross-owner write success |
-| Open signup abuse increases AI costs | Abuse/Cost | Medium | High | Sudden signup/generation spikes | Rate limits + per-user budgets + anomaly alerts before open signup | Unbounded spend or repeated abuse pattern |
-| API key decryption/logging leak | Security/Compliance | Low | Critical | Secrets appear in logs/trace | Redaction guards + tests + no full-key responses | Any key material exposure |
-| Per-user key strictness breaks generation for existing users | UX | Medium | High | Increase in generation errors after Phase 3 | Grace mode with warning + migration window + clear error UX | Generation completion drops materially |
-| School filter introduces empty-state confusion | UX | Medium | Medium | Higher drop-off from play listing | Keep school features behind flag; default behavior unchanged | Significant funnel drop in play selection |
-| Student token lifecycle regression (lost identity/progress unexpectedly) | UX/Data | Medium | Medium | Repeat visitors treated as new unexpectedly | Signed cookie + localStorage fallback tests + clear recovery UX | Identity restore failure rate above threshold |
-| GDPR deletion/export missing when data model expands | Compliance | Medium | High | Open compliance findings | Phase-assigned GDPR deliverables + retention job + audit logs | Compliance gate fails for release |
-| Migration rollback path untested | Operations | Medium | High | Staging recovery drills fail | Mandatory rollback rehearsal each phase | Inability to restore on staging drill |
-| Performance degradation from new policy/index patterns | Performance | Low-Medium | Medium | API latency regressions on play/create | Add required indexes + baseline comparison tests | P95 latency regression above agreed threshold |
+Strengths:
+- preserves simple onboarding,
+- keeps mass-market potential,
+- gives advanced users cost control,
+- reduces forced dependency on external provider setup.
 
-Risk ownership and cadence:
-- Assign one engineering owner per high-risk item before phase kickoff.
-- Re-evaluate risk table at the end of each phase and before production migration.
-- No phase advances if any Critical-impact risk lacks a tested mitigation path.
-=======
-=======
->>>>>>> theirs
-1. **Self-signup policy**
-   - Fully open signup, domain allowlist, or invite-only?
-2. **First-owner assignment for legacy data**
-   - Which user should own existing question sets?
-3. **School model**
-   - Can an admin belong to multiple schools?
-4. **Cross-admin collaboration**
-   - Is sharing/edit delegation needed now or later?
-5. **API key model**
-   - One key per provider per user, or multiple named keys?
-6. **Provider fallback behavior**
-   - If user lacks provider key, deny request or fallback to platform key?
-7. **Audit and compliance**
-   - What retention period is required for key usage and content generation logs?
-8. **Operational recovery**
-   - Who can recover an account if owner is locked out?
-9. **Data export/deletion**
-   - Need per-admin export and GDPR-style deletion workflow?
-10. **Rate limits and abuse controls**
-   - Per-user, per-school, and global limits required?
-11. **Pricing structure**
-   - What is base included seat count, and what is per-extra-admin price?
-12. **Downgrade policy**
-   - How long should grace period be when active admins exceed paid seats?
-13. **Seat accounting policy**
-   - Do invited-but-not-accepted admins consume seats, or only active admins?
-<<<<<<< ours
->>>>>>> theirs
-=======
->>>>>>> theirs
+Weaknesses:
+- more product complexity,
+- requires clear fallback and billing rules,
+- two support paths instead of one.
 
-## Validation and Testing Strategy
+### Market impact of mandatory BYOK
 
-- Unit tests:
-  - ownership checks for create/update/delete flows,
-  - API key resolver by authenticated user.
-- Integration tests:
-  - RLS policy tests for allowed vs denied actions,
-  - cross-user access rejection for all admin routes.
-- Security tests:
-  - verify decrypted keys are never logged,
-  - verify service-role paths cannot bypass ownership without explicit guard.
-- Migration tests:
-  - backfill correctness,
-  - rollback script for `owner_user_id` migration.
-<<<<<<< ours
-<<<<<<< ours
-- UX continuity tests (mandatory):
-  - anonymous student join-by-code remains accessible without auth,
-  - create -> publish -> play-test flow remains functional during and after each phase,
-  - no regression in critical UI states (loading, empty, error, results) for current journeys.
-- Release gating:
-  - define baseline metrics before Phase 1 (join success rate, generation success rate, P95 latency),
-  - compare post-deploy metrics against baseline for every phase,
-  - automatic rollback if critical journey metrics regress beyond agreed thresholds.
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
+Mandatory BYOK likely narrows the addressable market to:
+- technically confident teachers,
+- tutors,
+- pilot users,
+- AI-native early adopters.
+
+It likely weakens adoption among:
+- ordinary teachers,
+- parents,
+- schools with centralized procurement,
+- municipalities and institutional buyers.
+
+### Main risks created by mandatory BYOK
+
+- **Conversion risk**
+  - users may drop at the API key setup step before experiencing core value.
+- **Trust risk**
+  - users may hesitate to enter secrets into an education product even if storage is secure.
+- **Support risk**
+  - many incidents become provider billing, quota, rate-limit, or account-state issues outside direct app control.
+- **Pricing confusion**
+  - customers pay both the app and the model vendor, making the app feel like a thin wrapper.
+- **Procurement risk**
+  - schools may prefer one contract and one invoice, not app billing plus separate AI-provider spend.
+- **Retention risk**
+  - if a provider key expires, is revoked, or runs out of credit, the product's core value disappears immediately.
+- **Responsibility ambiguity**
+  - generation failures, latency, and quality issues will still be blamed on the app even when the root cause is external provider configuration.
+- **Compliance complexity**
+  - data-controller and processor expectations become harder to explain when prompts flow through customer-owned provider accounts.
+
+### Planning implication
+
+Per-admin API key management should be treated as a technical capability, not automatically as the default commercial model.
+
+Before rollout, the product needs an explicit decision on:
+- default commercial model: platform-paid, BYOK, or hybrid,
+- onboarding path for non-technical users,
+- fallback behavior when no valid user key exists,
+- pricing copy that explains total user cost,
+- support ownership boundaries for provider-account failures.
+
+### Current recommendation
+
+If broad school adoption is the goal:
+- do **not** make BYOK the only path,
+- prefer either platform-paid usage or a hybrid model,
+- keep BYOK as an advanced option for cost-conscious or technical users.
+
+If the near-term goal is only a narrow technical pilot:
+- BYOK can be acceptable,
+- but it should be called out as a deliberate market-narrowing choice, not an implementation detail.
+
+## Admin UX Wireframes
+
+This section defines the minimum admin-facing UI surfaces implied by the plan. These are planning wireframes only, not final design specs.
+
+### 1) Admin question-set dashboard
+
+**Route candidate**: `/admin` or authenticated `/create`
+
+Purpose:
+- list the current admin's own question sets,
+- surface ownership-safe actions,
+- provide entry points to create, publish, test, and manage keys.
+
+```text
+┌─────────────────────────────────────────────┐
+│ Admin / Kysymyssarjat              [Profiili]│
+│ Hallitse omia kysymyssarjoja turvallisesti  │
+│                                             │
+│ [Luo uusi] [API-avaimet] [Suodattimet]      │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ Omat sarjat                            │ │
+│ │ Haku...   [Luokka] [Aine] [Tila]       │ │
+│ └─────────────────────────────────────────┘ │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ Englanti / Helppo / Julkaistu          │ │
+│ │ 120 kysymystä   Koodi ABC123           │ │
+│ │ [Testaa] [Julkaise] [Muokkaa] [Poista] │ │
+│ └─────────────────────────────────────────┘ │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ Biologia / Kortit / Luonnos            │ │
+│ │ 80 kysymystä    Ei julkaistu           │ │
+│ │ [Testaa] [Julkaise] [Muokkaa] [Poista] │ │
+│ └─────────────────────────────────────────┘ │
+└─────────────────────────────────────────────┘
+```
+
+### 2) API key settings
+
+**Route**: `/admin/settings/api-keys`
+
+Purpose:
+- add, rotate, deactivate, and inspect masked provider credentials.
+
+```text
+┌─────────────────────────────────────────────┐
+│ API-avaimet                         [Takaisin]│
+│ Yhdista oma AI-palvelu tai hallitse avaimia │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ OpenAI                                  │ │
+│ │ Avainta ei ole lisatty                  │ │
+│ │ [Lisaa avain]                           │ │
+│ └─────────────────────────────────────────┘ │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ Anthropic                               │ │
+│ │ Aktiivinen: ••••1234                    │ │
+│ │ Viimeksi kaytetty: 2 h sitten           │ │
+│ │ [Vaihda] [Poista kaytosta]              │ │
+│ └─────────────────────────────────────────┘ │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ Kaytto ja kustannukset                  │ │
+│ │ Taman kuun arvio: $12.40                │ │
+│ │ [Nayta historia]                        │ │
+│ └─────────────────────────────────────────┘ │
+└─────────────────────────────────────────────┘
+```
+
+### 3) Optional school/workspace settings
+
+**Route candidate**: `/admin/settings/organization`
+
+Purpose:
+- only for later phases,
+- manage school label, membership, and eventual billing/invite settings.
+
+```text
+┌─────────────────────────────────────────────┐
+│ Koulu / Tyotila                    [Takaisin]│
+│ Hallitse organisaation perustietoja         │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ Koulu                                  │ │
+│ │ [Espoon koulu]                         │ │
+│ │ [Tallenna]                             │ │
+│ └─────────────────────────────────────────┘ │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ Yllapitajat                             │ │
+│ │ owner@koulu.fi   Omistaja               │ │
+│ │ teacher@koulu.fi Admin                  │ │
+│ │ [Kutsu uusi]                            │ │
+│ └─────────────────────────────────────────┘ │
+└─────────────────────────────────────────────┘
+```
+
+### 4) Access and privacy status surface
+
+**Route candidate**: `/admin/settings/privacy`
+
+Purpose:
+- explain what admin data is stored,
+- provide export/delete actions,
+- reduce support load by making privacy behavior explicit.
+
+```text
+┌─────────────────────────────────────────────┐
+│ Tietosuoja                         [Takaisin]│
+│ Näin tiliäsi ja käyttödataa käsitellään     │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ Tallennetut tiedot                      │ │
+│ │ Sähköposti, näyttönimi, käyttömetriikat │ │
+│ │ [Lataa tiedot]                          │ │
+│ └─────────────────────────────────────────┘ │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ Tilin poistaminen                       │ │
+│ │ [Pyydä tilin poistoa]                   │ │
+│ └─────────────────────────────────────────┘ │
+└─────────────────────────────────────────────┘
+```
+
+## Proposed Admin Components
+
+The existing DWF component library focuses on play/create flows. Multi-admin work will likely need a separate admin component layer.
+
+### Core admin components
+
+- `AdminShellHeader`
+  - authenticated shell header with page title, account menu, and settings entry points.
+- `AdminQuestionSetList`
+  - owner-scoped list container for question sets.
+- `AdminQuestionSetCard`
+  - compact card showing subject, mode, status, code, counts, and safe actions.
+- `AdminQuestionSetFilters`
+  - search plus subject/grade/status filters.
+- `AdminActionBar`
+  - top-level action row for create, keys, and optional organization controls.
+
+### API key and privacy components
+
+- `ApiKeyProviderCard`
+  - one provider per card with masked key state and actions.
+- `ApiKeyFormDialog`
+  - add/rotate provider key flow with validation and warning copy.
+- `UsageCostSummaryCard`
+  - displays per-admin usage/cost metadata if enabled.
+- `PrivacyDataSummaryCard`
+  - summarizes stored admin data categories.
+- `ExportDeleteActionsCard`
+  - wraps export/download and account deletion initiation actions.
+
+### Optional later-phase organization components
+
+- `SchoolSettingsCard`
+  - school identifier/name display and edit form.
+- `WorkspaceMemberList`
+  - owner/admin member list for later seat-based phases.
+- `InviteAdminDialog`
+  - invite flow if team features are ever introduced.
+- `BillingStatusCard`
+  - subscription and seat summary for later billing phases only.
+
+### Component boundary notes
+
+- Admin components should stay separate from student play components.
+- Public play routes must not depend on admin shell state.
+- Billing and invite components should not be built in the first multi-admin phase unless the commercial model is approved.
+
+## Open Questions To Resolve Before Implementation
+
+1. What is the self-signup policy: open signup, domain allowlist, or invite-only?
+2. Which account receives legacy question sets during backfill?
+3. Does the current public `published` read policy stay exactly as-is?
+4. Which encryption approach is used for admin API keys?
+5. Should `question_sets.user_id` remain the canonical owner field, or is there a strong reason to rename it?
+6. Is school grouping needed now, or can it be deferred?
+7. Is there proven demand for paid extra admin seats, or is this still hypothetical?
+8. Who handles owner account recovery?
+9. What audit retention period is required for API key usage and generation logs?
+10. Is per-admin cost tracking required before open signup is allowed?
+11. Which incidents are approved for agent-safe autonomous fix -> PR?
+12. What are the exact GDPR export and deletion obligations for admin account data in this product model?
+13. Is school affiliation considered required business data or optional metadata?
+14. What is the default commercial model: platform-paid usage, mandatory BYOK, or hybrid?
+15. If BYOK exists, is it optional for advanced users or mandatory for all admins?
+16. What is the fallback behavior when a user's provider key is missing, invalid, rate-limited, or out of credit?
+17. Which DWF documents will need updating once implementation is approved: at minimum `CORE_ARCHITECTURE`, `NFR`, and a repaired `DATA_MODEL` or a documented exception using `DATA_SCHEMA`?
+
+## Risks
+
+| Risk | Severity | Why it matters | Mitigation |
+|------|----------|----------------|------------|
+| Public play accidentally blocked by auth | Critical | breaks the student product | strict matcher allowlist + route tests |
+| Incomplete legacy owner backfill | High | blocks stronger ownership enforcement and creates orphaned rows | staged migration + verification query |
+| Cross-owner write path missed | Critical | authorization bypass | exhaustive route inventory + negative tests |
+| API key leakage in logs or responses | Critical | secret exposure | masking, redaction, tests, log review |
+| Open signup causes AI spend abuse | High | direct cost escalation | rate limits + usage tracking + signup policy |
+| Billing automation introduced too early | High | support burden exceeds team capacity | defer until core admin platform is stable |
+| Privacy scope expands without clear retention/export/delete rules | Critical | GDPR and operational risk | define privacy track before rollout |
+| Support automation exposes admin personal data too broadly | High | privacy incident via tooling | least-privilege support tooling + human review for sensitive cases |
+| Mandatory BYOK shrinks market adoption | High | onboarding and procurement friction reduce conversion | prefer platform-paid or hybrid default |
+| Provider-account failures dominate support load | High | core product breaks for reasons outside direct app control | define fallback, ownership boundaries, and clear user messaging |
+| DWF remains outdated after approval and implementation | Medium | docs stop being authoritative and implementation drift accelerates | schedule DWF updates as part of rollout readiness |
+
+## Validation And Testing Strategy
+
+- Unit tests
+  - ownership derivation,
+  - owner-scoped predicates,
+  - API key masking and resolver behavior.
+- Integration tests
+  - RLS allow/deny cases,
+  - unauthenticated admin route rejection,
+  - cross-owner mutation rejection.
+- Security tests
+  - secrets never logged,
+  - public play remains accessible anonymously,
+  - service-role paths cannot mutate across owners.
+- Migration tests
+  - owner backfill correctness,
+  - rollback rehearsal for ownership migration.
+- Ops automation tests
+  - issue label workflow,
+  - agent triage metadata generation,
+  - PR checks required for `agent-safe` flows.
 
 ## Recommended Delivery Sequence
 
-1. Ownership + RLS first (highest security impact).
-2. Per-admin API keys second (functional isolation).
-3. School separation third (optional tenancy).
-<<<<<<< ours
-<<<<<<< ours
-4. User profiles (teacher display + student token identity) alongside or after session persistence.
-5. Collaboration roles last (if needed).
+1. Security baseline fixes.
+2. Auth plus owner-scoped `question_sets`.
+3. Route hardening and tests.
+4. Per-admin API keys.
+5. Support automation.
+6. Optional school grouping.
+7. Only later: billing and seat automation.
 
-This sequence minimizes risk while delivering immediate multi-admin safety.
-
----
-
-## Branch and Environment Strategy
-
-### Git branching
-
-Use one short-lived feature branch per phase. Merge to `main` before starting the next phase — never let branches run in parallel or accumulate across multiple phases.
-
-```
-main
- └─ feat/multi-admin-phase-0   (security baseline: rate limiting, CSP, RLS bug, secure code RNG)
- └─ feat/multi-admin-phase-1   (auth + ownership columns + RLS policies)
- └─ feat/multi-admin-phase-2   (API hardening + middleware)
- └─ feat/multi-admin-phase-3   (API key isolation + encryption)
- └─ feat/multi-admin-phase-4   (school separation)
- └─ feat/multi-admin-phase-5   (student profiles + session persistence)
-```
-
-Rules:
-- Each branch is created from the current `main` tip, not from a previous phase branch.
-- Branch is deleted after merge.
-- `main` must remain deployable at all times — each phase must be a complete, safe increment.
-- Do not open a new phase branch until the previous phase PR is merged and verified on staging.
-
-### Supabase environments
-
-Run two separate Supabase projects throughout this migration:
-
-| Environment | Supabase project | Purpose |
-|-------------|-----------------|---------|
-| **Development/staging** | `koekertaaja-dev` | Test all migrations, RLS policies, and rollback scripts before touching production |
-| **Production** | `koekertaaja` (existing) | Only receives migrations after they are verified on staging |
-
-This separation is critical for Phases 1–3 which involve irreversible schema changes (`owner_user_id NOT NULL`, new RLS policies, encrypted key storage). A migration that breaks the student anonymous read path on production cannot be easily rolled back.
-
-Workflow per phase:
-1. Develop and test on `koekertaaja-dev`.
-2. Verify rollback script works on staging.
-3. Run automated tests (RLS policy tests, cross-owner rejection tests).
-4. Apply migration to production only after staging sign-off.
-5. Merge feature branch to `main`.
-=======
-=======
->>>>>>> theirs
-4. Workspace billing + paid admin seats.
-5. Collaboration roles last (if needed).
-
-This sequence minimizes risk while delivering immediate multi-admin safety.
-<<<<<<< ours
->>>>>>> theirs
-=======
->>>>>>> theirs
+This sequence minimizes maintenance burden while still delivering the actual high-value part of the admin platform.

@@ -173,6 +173,36 @@ test('evaluateQuestionAnswer keeps decimal and percentage variants equivalent', 
   assert.equal(percentAsPercent.diagnostics?.userNotation, 'percentage');
 });
 
+test('evaluateQuestionAnswer accepts plain numeric input when the expected format is percentage only', () => {
+  const percentQuestion: FillBlankQuestion = {
+    ...baseQuestionFields,
+    question_type: 'fill_blank',
+    question_text: 'Muunna desimaalimuoto prosentiksi: 0,4 = ___.',
+    correct_answer: '40 %',
+    acceptable_answers: ['40%'],
+  };
+
+  const plainNumberPercent = evaluateQuestionAnswer(percentQuestion, '40', 5, 'math');
+
+  assert.equal(plainNumberPercent.isCorrect, true);
+  assert.equal(plainNumberPercent.diagnostics?.userNotation, 'decimal');
+});
+
+test('evaluateQuestionAnswer accepts plain numeric input when the expected format is currency only', () => {
+  const currencyQuestion: FillBlankQuestion = {
+    ...baseQuestionFields,
+    question_type: 'fill_blank',
+    question_text: 'Paljonko tämä maksaa?',
+    correct_answer: '12 €',
+    acceptable_answers: [],
+  };
+
+  const plainNumberCurrency = evaluateQuestionAnswer(currencyQuestion, '12', 5, 'math');
+
+  assert.equal(plainNumberCurrency.isCorrect, true);
+  assert.equal(plainNumberCurrency.diagnostics?.userNotation, 'decimal');
+});
+
 test('evaluateQuestionAnswer flags likely format issues separately from content misunderstandings', () => {
   const question: FillBlankQuestion = {
     ...baseQuestionFields,
