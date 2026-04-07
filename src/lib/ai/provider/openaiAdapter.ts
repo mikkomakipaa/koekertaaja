@@ -236,6 +236,39 @@ function getDefaultClient(): OpenAIResponsesClient {
   return defaultClient;
 }
 
+function collectErrorSignals(error: unknown): string {
+  const signals: string[] = [];
+  let current: unknown = error;
+  let depth = 0;
+
+  while (current && depth < 5) {
+    if (current instanceof Error) {
+      if (current.name) {
+        signals.push(current.name);
+      }
+      if (current.message) {
+        signals.push(current.message);
+      }
+      current = (current as Error & { cause?: unknown }).cause;
+      depth += 1;
+      continue;
+    }
+
+    if (typeof current === 'object') {
+      const maybeCause = (current as { cause?: unknown }).cause;
+      if (maybeCause) {
+        current = maybeCause;
+        depth += 1;
+        continue;
+      }
+    }
+
+    break;
+  }
+
+  return signals.join(' | ').toLowerCase();
+}
+
 function categorizeOpenAIError(error: unknown): AIErrorCategory {
   const status = typeof error === 'object' && error !== null && 'status' in error ? (error.status as number) : undefined;
   if (status === 401) return 'auth';
@@ -244,11 +277,21 @@ function categorizeOpenAIError(error: unknown): AIErrorCategory {
   if (status === 413) return 'request_too_large';
   if (status === 500 || status === 502 || status === 503 || status === 504) return 'provider_unavailable';
 
-  if (error instanceof Error) {
-    const name = error.name.toLowerCase();
-    const message = error.message.toLowerCase();
-    if (name.includes('timeout') || message.includes('timeout')) return 'timeout';
-    if (name.includes('network') || message.includes('network') || message.includes('econnreset')) return 'network';
+  const signals = collectErrorSignals(error);
+  if (signals.includes('headerstimeouterror') || signals.includes('headers timeout')) {
+    return 'timeout';
+  }
+  if (signals.includes('timeout')) {
+    return 'timeout';
+  }
+  if (
+    signals.includes('network') ||
+    signals.includes('fetch failed') ||
+    signals.includes('econnreset') ||
+    signals.includes('econnrefused') ||
+    signals.includes('enotfound')
+  ) {
+    return 'network';
   }
 
   return 'unknown';

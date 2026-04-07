@@ -373,7 +373,7 @@ export class PromptBuilder {
         'Muoto:',
         '- question: selkeä, suora kysymys',
         '- answer: lyhyt ydinvastaus',
-        '- explanation: lyhyt selitys ja esimerkki',
+        '- explanation: 2-3 lyhyttä lausetta, joissa on selitys ja muistamista tukeva esimerkki',
         '',
         'Rajoitteet:',
         '- Älä käytä täydennysmuotoa (___)',
@@ -382,10 +382,11 @@ export class PromptBuilder {
       ].join('\n');
     }
 
+    const isHistory = subjectType === 'written' && this.isHistorySubject(subjectKey);
+
     const baseGuidance = [
       'Käytettävissä olevat kysymystyypit (quiz):',
       '- fill_blank: sanasto, kaavat, määritelmät, yksittäiset täsmävastaukset',
-      '- short_answer: selittäminen, perustelu, miksi/miten-kysymykset',
       '- multiple_choice: käsitteet, vertailu, luokittelu, vaihtoehtojen arviointi',
       '- multiple_select: valitse kaikki oikein -tehtävät, joissa on 2-3 oikeaa vaihtoehtoa',
       '- true_false: faktaväitteet ja yleiset väärinkäsitykset',
@@ -404,6 +405,9 @@ export class PromptBuilder {
       '- Oikein: "1 % luvusta saadaan ___:lla." tai "100 % vastaa lukua 1."',
       '- Käyttöliittymä näyttää tyypin (Täydennä lause / Totta vai tarua) automaattisesti',
     ];
+    if (!isHistory) {
+      baseGuidance.splice(2, 0, '- short_answer: selittäminen, perustelu, miksi/miten-kysymykset');
+    }
 
     const subjectSpecific: Record<SubjectType, string[]> = {
       language: [
@@ -429,7 +433,8 @@ export class PromptBuilder {
     };
 
     const notes = [...(subjectSpecific[subjectType] ?? [])];
-    if (subjectType === 'written' && this.isHistorySubject(subjectKey)) {
+    if (isHistory) {
+      notes.push('ÄLÄ käytä short_answer-tyyppiä historiassa. Suosi multiple_choice-, true_false-, matching- ja sequential-kysymyksiä.');
       notes.push('Historian sisällöissä käytä sequential-tyyppiä, kun materiaali sisältää aikajanan.');
     }
 

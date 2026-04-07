@@ -2,18 +2,14 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Flashcard } from '@/types';
-import { shuffleArray } from '@/lib/utils';
 import { FlashcardCard } from './FlashcardCard';
 import { Button } from '@/components/ui/button';
 import { createLogger } from '@/lib/logger';
 import {
   Book,
   CheckCircle,
-  ClockCounterClockwise,
-  Shuffle,
   X,
   ArrowsClockwise,
-  ArrowRight,
   ArrowLeft,
 } from '@phosphor-icons/react';
 
@@ -27,6 +23,10 @@ interface FlashcardSessionProps {
   onExit: () => void;
 }
 
+export function getFlashcardPrimaryAction(isFlipped: boolean) {
+  return isFlipped ? 'advance' : 'reveal';
+}
+
 export function FlashcardSession({
   flashcards,
   questionSetName,
@@ -36,8 +36,6 @@ export function FlashcardSession({
   const [isFlipped, setIsFlipped] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-
-  const [isShuffled, setIsShuffled] = useState(false);
   const [orderedFlashcards, setOrderedFlashcards] = useState<Flashcard[]>(flashcards);
   const [currentFlashcards, setCurrentFlashcards] = useState<Flashcard[]>(flashcards);
 
@@ -84,7 +82,6 @@ export function FlashcardSession({
     setCurrentIndex(0);
     setIsFlipped(false);
     setIsComplete(false);
-    setIsShuffled(false);
     setShowExitConfirm(false);
     previousIsFlippedRef.current = false;
   }, [flashcards]);
@@ -146,33 +143,14 @@ export function FlashcardSession({
     previousIsFlippedRef.current = false;
   }, [currentIndex]);
 
-
-  const toggleShuffle = useCallback(() => {
-    if (totalCards === 0) return;
-    const activeCardId = currentFlashcards[currentIndex]?.id;
-    const nextIsShuffled = !isShuffled;
-    const nextCards = nextIsShuffled
-      ? shuffleArray([...orderedFlashcards])
-      : orderedFlashcards;
-
-    setIsShuffled(nextIsShuffled);
-    setCurrentFlashcards(nextCards);
-    setIsFlipped(false);
-    previousIsFlippedRef.current = false;
-
-    if (activeCardId) {
-      const newIndex = nextCards.findIndex((card) => card.id === activeCardId);
-      setCurrentIndex(newIndex >= 0 ? newIndex : 0);
+  const handlePrimaryCardAction = useCallback(() => {
+    if (getFlashcardPrimaryAction(isFlipped) === 'advance') {
+      handleAdvance();
       return;
     }
-    setCurrentIndex(0);
-  }, [
-    totalCards,
-    currentFlashcards,
-    currentIndex,
-    isShuffled,
-    orderedFlashcards,
-  ]);
+
+    handleFlip();
+  }, [handleAdvance, handleFlip, isFlipped]);
 
   const handleExit = useCallback(() => {
     if (isComplete) {
@@ -188,9 +166,9 @@ export function FlashcardSession({
     const handleKeyPress = (event: KeyboardEvent) => {
       if (showExitConfirm) return;
 
-      if (event.key === ' ' || event.key === 'Spacebar') {
+      if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
         event.preventDefault();
-        handleFlip();
+        handlePrimaryCardAction();
         return;
       }
 
@@ -202,11 +180,7 @@ export function FlashcardSession({
 
       if (event.key === 'ArrowRight') {
         event.preventDefault();
-        if (!isFlipped) {
-          handleFlip();
-          return;
-        }
-        handleAdvance();
+        handlePrimaryCardAction();
       }
     };
 
@@ -216,10 +190,8 @@ export function FlashcardSession({
     currentFlashcard,
     isComplete,
     showExitConfirm,
-    isFlipped,
-    handleFlip,
     handlePrevious,
-    handleAdvance,
+    handlePrimaryCardAction,
   ]);
 
   if (!currentFlashcard) {
@@ -290,7 +262,6 @@ export function FlashcardSession({
                 setCurrentIndex(0);
                 setIsFlipped(false);
                 setIsComplete(false);
-                setIsShuffled(false);
                 setCurrentFlashcards(orderedFlashcards);
                 previousIsFlippedRef.current = false;
               }}
@@ -358,30 +329,27 @@ export function FlashcardSession({
         <FlashcardCard
           flashcard={currentFlashcard}
           isFlipped={isFlipped}
-          onFlip={handleFlip}
+          onPrimaryAction={handlePrimaryCardAction}
           onShowAnswer={() => setIsFlipped(true)}
           onShowQuestion={() => setIsFlipped(false)}
           overlay={overlay}
         />
 
-        {/* Navigation buttons */}
         <div className="mt-4 flex gap-3">
           <Button
             onClick={handlePrevious}
             disabled={currentIndex === 0}
             variant="outline"
-            className="flex-1 py-6 rounded-xl font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            className="py-6 rounded-xl font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ArrowLeft size={20} className="mr-2" />
             Edellinen
           </Button>
-          <Button
-            onClick={handleAdvance}
-            className="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-6 rounded-xl font-medium text-base"
-          >
-            Seuraava
-            <ArrowRight size={20} className="ml-2" />
-          </Button>
+          <p className="flex-1 self-center text-sm text-gray-600 dark:text-gray-300">
+            {isFlipped
+              ? 'Napauta korttia uudelleen siirtyäksesi seuraavaan.'
+              : 'Napauta korttia nähdäksesi vastauksen.'}
+          </p>
         </div>
 
         <div className="mt-8 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-4">
@@ -389,7 +357,7 @@ export function FlashcardSession({
             <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono">
               Enter
             </kbd>
-            kääntää kortin
+            näyttää vastauksen tai siirtyy seuraavaan
           </span>
           <span className="inline-flex items-center gap-1">
             <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono">

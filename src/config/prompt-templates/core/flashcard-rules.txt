@@ -1,7 +1,7 @@
-# Version: 1.0.0
-# Last Updated: 2026-02-12
+# Version: 1.2.0
+# Last Updated: 2026-04-07
 # Author: System
-# Changes: Added prompt version tracking metadata
+# Changes: Allowed slightly longer flashcard explanations with memorization support
 # Breaking: false
 
 FLASHCARD-MOODIN SÄÄNNÖT:
@@ -11,7 +11,7 @@ PAKOLLINEN MUOTO:
   "type": "flashcard",
   "question": "selkeä, suora kysymys",
   "answer": "tiivis ydinvastaus",
-  "explanation": "2-3 lauseen oppimista tukeva selitys"
+  "explanation": "2-3 hieman aiempaa informatiivisempaa, oppimista tukevaa lausetta"
 }
 
 TÄRKEÄÄ:
@@ -27,12 +27,16 @@ KYSYMYS:
 
 VASTAUS:
 - answer: lyhyt ydinvastaus
-- explanation: miksi oikein + tyypillinen kompastuskohta + lyhyt esimerkki
+- explanation: 2-3 lyhyttä mutta hieman aiempaa informatiivisempaa lausetta, jotka auttavat muistamaan oikean vastauksen
+- Selitys kertoo ensin mitä pitää muistaa, sitten merkityksen, säännön, muistivinkin tai lyhyen esimerkin.
+- Pidä selitys napakkana: tarpeeksi pitkä vahvistamaan muistamista, mutta tarpeeksi lyhyt nopeaan kertaukseen.
+- ÄLÄ kirjoita quiz-tyylistä palautetta kuten "oikein vastaus", "miksi tämä on oikein" tai "yleinen virhe".
+- ÄLÄ rakenna selitystä virheiden tai kompastuskohtien varaan.
 
 SÄÄNTÖPOHJAINEN FLASHCARD-MUOTO (matematiikka, kielioppi, kaavat):
 - Kysy sääntöä/periaatetta, ei yksittäistä koetehtävää.
 - answer antaa kaavan/säännön.
-- explanation näyttää toimivan esimerkin.
+- explanation vahvistaa säännön muistamista muistivihjeellä tai hieman aiempaa täydemmällä toimivalla esimerkillä.
 
 VARMISTUS ENNEN VASTAUSTA:
 - Jokainen kortti on validi flashcard JSON-rivi.

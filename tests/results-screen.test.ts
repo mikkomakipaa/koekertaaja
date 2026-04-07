@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
@@ -7,8 +8,11 @@ import {
   buildQuestionDetails,
   formatResultAnswer,
   getCelebrationQueue,
+  getResultsHeaderCopy,
   getNextCelebration,
   getResultsBreakdown,
+  getResultsSecondaryMeta,
+  getSchoolGrade,
   isPerfectScoreSession,
   toggleQuestionExpanded
 } from '@/lib/play/results-screen';
@@ -40,6 +44,7 @@ const answers: Answer[] = [
     explanation: 'Jakolasku',
   },
 ];
+const resultsScreenSource = readFileSync('src/components/play/ResultsScreen.tsx', 'utf-8');
 
 describe('ResultsScreen', () => {
   it('builds correct/wrong/skipped breakdown for speed quiz mode', () => {
@@ -60,6 +65,24 @@ describe('ResultsScreen', () => {
     assert.equal(details[2]?.status, 'skipped');
     assert.equal(details[1]?.userAnswer, 'Turku');
     assert.equal(details[2]?.correctAnswer, '5');
+  });
+
+  it('converts quiz scores into deterministic Finnish school grades', () => {
+    assert.equal(getSchoolGrade(0, 10).label, '4');
+    assert.equal(getSchoolGrade(2, 10).label, '5+');
+    assert.equal(getSchoolGrade(3, 10).label, '6-');
+    assert.equal(getSchoolGrade(5, 10).label, '7');
+    assert.equal(getSchoolGrade(7, 10).label, '8+');
+    assert.equal(getSchoolGrade(8, 10).label, '9-');
+    assert.equal(getSchoolGrade(9, 10).label, '9.5');
+    assert.equal(getSchoolGrade(16, 17).label, '10-');
+    assert.equal(getSchoolGrade(10, 10).label, '10');
+  });
+
+  it('clamps school grades for invalid or edge-case totals', () => {
+    assert.equal(getSchoolGrade(0, 0).label, '4');
+    assert.equal(getSchoolGrade(-5, 10).label, '4');
+    assert.equal(getSchoolGrade(12, 10).label, '10');
   });
 
   it('preserves raw data for multiple_select option-level feedback', () => {
@@ -254,6 +277,33 @@ describe('ResultsScreen', () => {
     assert.ok(html.includes('numerator: 7; denominator: 4; latex: $$\\frac{7}{4}$$; mixed: 1 3/4'));
     assert.ok(!html.includes('[object Object]'));
     assert.ok(!html.includes('{&quot;numerator&quot;'));
+  });
+
+  it('builds grade-first header copy used by the results screen', () => {
+    assert.deepEqual(getResultsHeaderCopy(9, 10, 'quiz'), {
+      title: 'Koulunumero 9.5',
+      supportingText: 'Tämän kierroksen arvio näkyy suomalaisella 4-10 asteikolla.',
+    });
+    assert.equal(getResultsSecondaryMeta(9, 10), '9 / 10 oikein • 90%');
+    assert.deepEqual(getResultsHeaderCopy(9, 10, 'flashcard'), {
+      title: 'Harjoitus valmis',
+      supportingText: 'Katso tämän kierroksen yhteenveto ja jatka harjoittelua seuraavaksi.',
+    });
+  });
+
+  it('uses the shared grade-first header helper and removes the top metric labels from the source', () => {
+    assert.ok(resultsScreenSource.includes('const resultsHeaderCopy = getResultsHeaderCopy(score, total, mode);'));
+    assert.ok(resultsScreenSource.includes('{resultsHeaderCopy.title}'));
+    assert.ok(resultsScreenSource.includes('{resultsHeaderCopy.supportingText}'));
+    assert.ok(!resultsScreenSource.includes('W Pisteet.'));
+    assert.ok(!resultsScreenSource.includes('Sigma Suoritus.'));
+    assert.ok(!resultsScreenSource.includes('Slay Kierros.'));
+    assert.ok(!resultsScreenSource.includes('Vibe Tulos.'));
+    assert.ok(!resultsScreenSource.includes('Mid Grindi.'));
+    assert.ok(!resultsScreenSource.includes('Paras putki'));
+    assert.ok(!resultsScreenSource.includes('Ohitetut'));
+    assert.ok(!resultsScreenSource.includes('Uusia merkkejä'));
+    assert.ok(!resultsScreenSource.includes('Henkilökohtainen ennätys'));
   });
 
   it('treats all incorrect answers as wrong when skippedQuestions is omitted', () => {

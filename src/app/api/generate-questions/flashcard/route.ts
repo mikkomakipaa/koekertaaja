@@ -14,9 +14,23 @@ import { getSimpleTopics } from '@/lib/ai/topicIdentifier';
 import { analyzeMaterialCapacity, validateQuestionCount } from '@/lib/utils/materialAnalysis';
 import { parseRequestedProvider, validateRequestedProvider } from '@/lib/api/modelSelection';
 import { getDefaultFlashcardContentType, isLanguageSubject } from '@/lib/utils/subjectClassification';
+import type { TopicDistribution } from '@/lib/utils/questionDistribution';
 
 // Configure route segment for Vercel deployment
 export const maxDuration = 240; // 4 minutes for flashcard generation
+
+function parseDistribution(value: FormDataEntryValue | null): TopicDistribution[] | undefined {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed) ? parsed as TopicDistribution[] : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
@@ -81,6 +95,7 @@ export async function POST(request: NextRequest) {
     const identifiedTopics = identifiedTopicsRaw
       ? JSON.parse(identifiedTopicsRaw)
       : undefined;
+    const distribution = parseDistribution(formData.get('distribution'));
     const targetProvider = parseRequestedProvider(formData.get('provider'));
     if (targetProvider) {
       const modelValidationError = validateRequestedProvider(targetProvider);
@@ -299,6 +314,7 @@ export async function POST(request: NextRequest) {
       materialFiles: files.length > 0 ? files : undefined,
       targetWords: validatedTargetWords,
       identifiedTopics: topics,
+      distribution,
       contentType: validatedContentType,
       targetProvider,
     };

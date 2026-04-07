@@ -33,7 +33,7 @@ const defaultAdapters: ProviderAdapters = {
 const logger = createLogger({ module: 'providerRouter' });
 
 /**
- * Provider-agnostic AI entrypoint. Defaults to Anthropic to preserve current behavior.
+ * Provider-agnostic AI entrypoint. Defaults to Anthropic.
  */
 export async function generateWithAI(
   messages: AIMessageContent[],
@@ -91,6 +91,35 @@ export async function generateWithAI(
         return response;
       } catch (error) {
         logFailure('openai', model, startedAt, error);
+
+        if (shouldFallbackToAnthropic(error, options)) {
+          const fallbackModel = selectAnthropicFallbackModel(model);
+          const fallbackStartedAt = Date.now();
+          logger.warn(
+            {
+              provider: 'openai',
+              model,
+              fallbackProvider: 'anthropic',
+              fallbackModel,
+              errorCategory: isAIProviderError(error) ? error.category : 'unknown',
+            },
+            'Triggering Anthropic fallback after OpenAI failure'
+          );
+
+          try {
+            const fallbackResponse = await adapters.anthropic(messages, {
+              ...options,
+              provider: 'anthropic',
+              model: fallbackModel,
+              allowFallback: false,
+            });
+            logSuccess('anthropic', fallbackModel, fallbackStartedAt, fallbackResponse, true);
+            return fallbackResponse;
+          } catch (fallbackError) {
+            logFailure('anthropic', fallbackModel, fallbackStartedAt, fallbackError, true);
+          }
+        }
+
         throw error;
       }
     }
@@ -104,11 +133,22 @@ function shouldFallbackToOpenAI(error: unknown, options: GenerateWithAIOptions):
   return fallbackEnabled && isTransientAIError(error);
 }
 
+function shouldFallbackToAnthropic(error: unknown, options: GenerateWithAIOptions): boolean {
+  const fallbackEnabled = options.allowFallback ?? true;
+  return fallbackEnabled && Boolean(process.env.ANTHROPIC_API_KEY?.trim()) && isTransientAIError(error);
+}
+
 function selectOpenAIFallbackModel(primaryModel?: string): string {
   if (!primaryModel) return 'gpt-5-mini';
   if (primaryModel.includes('haiku')) return 'gpt-5-nano';
   if (primaryModel.includes('sonnet') || primaryModel.includes('opus')) return 'gpt-5-mini';
   return 'gpt-5-mini';
+}
+
+function selectAnthropicFallbackModel(primaryModel?: string): string {
+  if (!primaryModel) return 'claude-haiku-4-5-20251001';
+  if (primaryModel.includes('gpt-5.1')) return 'claude-sonnet-4-6-20250514';
+  return 'claude-haiku-4-5-20251001';
 }
 
 function logSuccess(

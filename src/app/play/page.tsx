@@ -15,7 +15,12 @@ import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { getGradeColors } from '@/lib/utils/grade-colors';
 import { getSubjectConfig } from '@/lib/utils/subject-config';
 import { buildModeGradeQuery, parseGradeParam, parseStudyModeParam } from '@/lib/play/mode-grade-query';
-import { difficultyLabels, getQuizPrimaryActionLabel } from '@/lib/play/primary-action';
+import {
+  difficultyLabels,
+  getQuizGradeMeta,
+  getQuizLatestResultSummary,
+  getQuizPrimaryActionLabel,
+} from '@/lib/play/primary-action';
 import {
   buildDifficultyHref,
   getAvailableDifficulties,
@@ -204,7 +209,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
       ? hasInProgressPrimary && primaryProgress
         ? `${difficultyLabels[primaryDifficulty]} · ${primaryProgress.answered}/${primaryProgress.total}`
         : primaryScore
-          ? `${difficultyLabels[primaryDifficulty]} · ${primaryScore.score}/${primaryScore.total}`
+          ? `${difficultyLabels[primaryDifficulty]} · ${getQuizGradeMeta(primaryScore)}`
           : difficultyLabels[primaryDifficulty]
       : null;
 
@@ -336,7 +341,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
 
                   <span className="inline-flex items-center truncate text-right text-xs leading-none text-slate-500 dark:text-slate-400">
                     {latestDifficultyScore
-                      ? `Viimeisin: ${latestDifficultyScore.score.score}/${latestDifficultyScore.score.total} (${difficultyLabels[latestDifficultyScore.difficulty]})`
+                      ? getQuizLatestResultSummary(latestDifficultyScore)
                       : 'Ei tuloksia'}
                   </span>
                 </div>

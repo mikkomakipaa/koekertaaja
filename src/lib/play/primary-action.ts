@@ -3,6 +3,7 @@ import type { BrowseDifficulty } from '@/lib/play/browse-difficulties';
 import { buildDifficultyHref } from '@/lib/play/browse-difficulties';
 import type { LastScore } from '@/hooks/useLastScore';
 import type { SessionProgress } from '@/hooks/useSessionProgress';
+import { getSchoolGrade } from '@/lib/play/results-screen';
 
 export const difficultyLabels: Record<BrowseDifficulty, string> = {
   helppo: 'Helppo',
@@ -34,6 +35,20 @@ export function getQuizPrimaryActionLabel({
   }
 
   return `Aloita ${difficultyLabels[difficulty]}`;
+}
+
+export function getQuizGradeMeta(score: Pick<LastScore, 'score' | 'total'>): string {
+  return `Arvosana ${getSchoolGrade(score.score, score.total).label}`;
+}
+
+export function getQuizLatestResultSummary({
+  score,
+  difficulty,
+}: {
+  score: Pick<LastScore, 'score' | 'total'>;
+  difficulty: BrowseDifficulty;
+}): string {
+  return `Viimeisin: ${getQuizGradeMeta(score)} (${difficultyLabels[difficulty]})`;
 }
 
 export interface DashboardPrimaryAction {

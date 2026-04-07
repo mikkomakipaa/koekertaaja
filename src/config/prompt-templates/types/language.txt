@@ -18,7 +18,8 @@ FLASHCARD-MUOTO (jos mode=flashcard):
 - ÄLÄ luo sanastokysymyksiä tai käännöstehtäviä.
 - Perusta kysymykset annettuun materiaaliin {{grade_context_note}}.
 - Kysymykset alkavat: "Miten muodostetaan...", "Milloin käytetään...", "Mikä ero on..."
-- Vastaukset sisältävät säännön + esimerkin.
+- Vastaukset sisältävät muistettavan säännön tai rakenteen + lyhyen esimerkin.
+- Selitysten tehtävä on vahvistaa muistamista, ei arvioida virheitä.
 
 QUIZ-MUOTO (jos mode=quiz):
 - Luo täsmälleen {{question_count}} kysymystä.

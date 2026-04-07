@@ -1,7 +1,7 @@
-# Version: 1.0.0
-# Last Updated: 2026-02-12
+# Version: 1.2.0
+# Last Updated: 2026-04-07
 # Author: System
-# Changes: Added prompt version tracking metadata
+# Changes: Expanded language flashcard explanations slightly while keeping them concise
 # Breaking: false
 
 KIELIAINEIDEN FLASHCARD-LISÄSÄÄNNÖT (koskee kaikkia kieliä):
@@ -13,7 +13,13 @@ TAVOITE:
 PAKOLLINEN RAKENNE:
 - question: suora kysymys
 - answer: ydinvastaus (lyhyt)
-- explanation: lyhyt perustelu + esimerkki
+- explanation: muistamista tukeva sääntö tai merkitys + lyhyt mutta hieman täydempi esimerkki
+
+SELITYS (PAKOLLINEN TYYLI):
+- Aloita oikeasta muodosta tai säännöstä, jonka oppilaan pitää muistaa.
+- Lisää lyhyt muistivinkki, merkitysero tai käyttöesimerkki.
+- Kirjoita selitys yleensä 2-3 lyhyenä lauseena: hieman aiempaa täydempänä, mutta edelleen nopeaan kertaukseen sopivana.
+- ÄLÄ painota yleisiä virheitä tai väärää vastausta.
 
 KIELLETTYÄ:
 - Täydennysmuoto ("___")

@@ -41,6 +41,37 @@ interface SequentialItemShape {
   year?: number;
 }
 
+type SchoolGradeSuffix = '' | '+' | '.5' | '-';
+
+export interface SchoolGradeResult {
+  label: string;
+  numericValue: number;
+  percentage: number;
+  roundedQuarterSteps: number;
+  normalizedValue: number;
+}
+
+export interface ResultsPrimaryOutcome {
+  eyebrow: string;
+  value: string;
+}
+
+export interface ResultsHeaderCopy {
+  title: string;
+  supportingText: string;
+}
+
+export function shouldShowReviewMistakesAction(
+  reviewMistakeCount: number,
+  onReviewMistakes?: (() => void) | null
+): boolean {
+  return reviewMistakeCount > 0 && typeof onReviewMistakes === 'function';
+}
+
+export function getReviewMistakesActionLabel(reviewMistakeCount: number): string {
+  return `Kertaa virheet (${reviewMistakeCount})`;
+}
+
 function isMatchingPair(answer: unknown): answer is MatchingPairShape {
   return typeof answer === 'object'
     && answer !== null
@@ -162,6 +193,116 @@ function formatObjectAnswer(answer: Record<string, unknown>, questionType?: Answ
     .filter((entry) => entry.length > 0);
 
   return entries.join('; ');
+}
+
+function clampPercentage(percentage: number): number {
+  if (!Number.isFinite(percentage)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, percentage));
+}
+
+function formatSchoolGradeLabel(normalizedValue: number, roundedQuarterSteps: number): string {
+  if (normalizedValue <= 4) {
+    return '4';
+  }
+
+  if (normalizedValue >= 10) {
+    return '10';
+  }
+
+  const baseGrade = Math.floor(normalizedValue);
+  const remainder = roundedQuarterSteps % 4;
+  const suffixByRemainder: Record<number, SchoolGradeSuffix> = {
+    0: '',
+    1: '+',
+    2: '.5',
+    3: '-',
+  };
+  const suffix = suffixByRemainder[remainder] ?? '';
+
+  if (suffix === '-') {
+    return `${baseGrade + 1}-`;
+  }
+
+  return `${baseGrade}${suffix}`;
+}
+
+/**
+ * Converts quiz performance into a Finnish school-grade string on the 4-10 scale.
+ *
+ * Rule:
+ * - Map the percentage linearly to the closed interval [4, 10].
+ * - Round that value to the nearest 0.25 grade step.
+ * - Render quarter-step bands as:
+ *   - `.00` -> integer (`8`)
+ *   - `.25` -> plus (`8+`)
+ *   - `.50` -> half (`8.5`)
+ *   - `.75` -> next grade minus (`9-`)
+ * - Clamp the final result so outputs never fall outside `4`...`10`.
+ *
+ * Examples:
+ * - 0% -> `4`
+ * - 50% -> `7`
+ * - 75% -> `8.5`
+ * - 96% -> `9.75` normalized -> `10-`
+ * - 100% -> `10`
+ */
+export function getSchoolGrade(score: number, total: number): SchoolGradeResult {
+  const safeScore = Number.isFinite(score) ? Math.max(0, score) : 0;
+  const safeTotal = Number.isFinite(total) ? Math.max(0, total) : 0;
+  const rawPercentage = safeTotal > 0 ? (safeScore / safeTotal) * 100 : 0;
+  const percentage = clampPercentage(rawPercentage);
+  const normalizedValue = 4 + (percentage / 100) * 6;
+  const roundedQuarterSteps = Math.round(normalizedValue * 4);
+  const numericValue = Math.max(4, Math.min(10, roundedQuarterSteps / 4));
+
+  return {
+    label: formatSchoolGradeLabel(numericValue, roundedQuarterSteps),
+    numericValue,
+    percentage: Math.round(percentage),
+    roundedQuarterSteps,
+    normalizedValue,
+  };
+}
+
+export function getResultsPrimaryOutcome(
+  score: number,
+  total: number,
+  mode: 'quiz' | 'flashcard' = 'quiz'
+): ResultsPrimaryOutcome | null {
+  if (mode !== 'quiz') {
+    return null;
+  }
+
+  return {
+    eyebrow: 'Arvosana',
+    value: getSchoolGrade(score, total).label,
+  };
+}
+
+export function getResultsHeaderCopy(
+  score: number,
+  total: number,
+  mode: 'quiz' | 'flashcard' = 'quiz'
+): ResultsHeaderCopy {
+  if (mode === 'quiz') {
+    return {
+      title: `Arvosana ${getSchoolGrade(score, total).label}`,
+      supportingText: '',
+    };
+  }
+
+  return {
+    title: 'Harjoitus valmis',
+    supportingText: 'Katso tämän kierroksen yhteenveto ja jatka harjoittelua seuraavaksi.',
+  };
+}
+
+export function getResultsSecondaryMeta(score: number, total: number): string {
+  const grade = getSchoolGrade(score, total);
+  return `${score} / ${total} oikein • ${grade.percentage}%`;
 }
 
 /**

@@ -61,9 +61,15 @@ import { createLogger } from '@/lib/logger';
 import { withCsrfHeaders } from '@/lib/security/csrf-client';
 import { SUBJECT_GROUPS, getSubjectById, subjectRequiresGrade } from '@/config/subjects';
 import type { MaterialCapacity, QuestionCountValidation } from '@/lib/utils/materialAnalysis';
+import {
+  appendProviderPreference,
+  CREATE_PROVIDER_OPTIONS,
+  DEFAULT_CREATE_PROVIDER,
+  DEFAULT_CREATE_PROVIDER_LABEL,
+  type ProviderPreference,
+} from '@/lib/create/providerPreference';
 
 type CreateState = 'form' | 'loading' | 'success';
-type ProviderPreference = 'anthropic' | 'openai';
 
 type CreationStep = {
   id: 'topics' | 'quiz-helppo' | 'quiz-normaali' | 'flashcard';
@@ -105,6 +111,8 @@ interface QuestionGenerationResponse {
     failed: number;
   };
 }
+
+type QuizDifficulty = 'helppo' | 'normaali';
 
 interface CapacityWarningState {
   capacity: MaterialCapacity;
@@ -164,18 +172,7 @@ export default function CreatePage() {
     max: 200,
     default: 50,
   };
-  const providerOptions: Array<{ value: ProviderPreference; label: string; description: string }> = [
-    {
-      value: 'anthropic',
-      label: 'Claude',
-      description: 'Käyttää valmiiksi määriteltyjä Claude-malleja tehtäväkohtaisesti.',
-    },
-    {
-      value: 'openai',
-      label: 'OpenAI',
-      description: 'Käyttää valmiiksi määriteltyjä OpenAI-malleja tehtäväkohtaisesti.',
-    },
-  ];
+  const providerOptions = CREATE_PROVIDER_OPTIONS;
 
   // Form state
   const [state, setState] = useState<CreateState>('form');
@@ -192,7 +189,8 @@ export default function CreatePage() {
   const [generationMode, setGenerationMode] = useState<'quiz' | 'flashcard' | 'both'>('quiz');
   const [targetWords, setTargetWords] = useState('');
   const [contentType, setContentType] = useState<'vocabulary' | 'grammar' | 'mixed'>('vocabulary');
-  const [providerPreference, setProviderPreference] = useState<ProviderPreference>('anthropic');
+  const [providerPreference, setProviderPreference] =
+    useState<ProviderPreference>(DEFAULT_CREATE_PROVIDER);
   const [error, setError] = useState('');
   const [capacityWarning, setCapacityWarning] = useState<CapacityWarningState | null>(null);
   const [topicConfirmation, setTopicConfirmation] = useState<{
@@ -248,7 +246,8 @@ export default function CreatePage() {
   const hasExamDate = Boolean(examDate);
   const hasMaterials = materialText.trim().length > 0 || uploadedFiles.length > 0;
   const selectedProviderLabel =
-    providerOptions.find((option) => option.value === providerPreference)?.label ?? 'Claude';
+    providerOptions.find((option) => option.value === providerPreference)?.label ??
+    DEFAULT_CREATE_PROVIDER_LABEL;
 
   const formatListForEdit = (value: unknown): string => {
     if (Array.isArray(value)) {
@@ -310,7 +309,7 @@ export default function CreatePage() {
 
     formData.append('subjectType', subjectType);
     formData.append('generationMode', generationMode);
-    formData.append('provider', providerPreference);
+    appendProviderPreference(formData, providerPreference);
 
     if (generationMode === 'flashcard' || generationMode === 'both') {
       formData.append('contentType', contentType);
@@ -581,40 +580,46 @@ export default function CreatePage() {
 
       // Step 2: Generate quiz sets (if requested)
       if (generationMode === 'quiz' || generationMode === 'both') {
-        updateCreationStep('quiz-helppo', 'in_progress', { message: 'Luodaan visaa...' });
-        updateCreationStep('quiz-normaali', 'in_progress', { message: 'Luodaan visaa...' });
-        try {
-          const quizResponse = await fetch('/api/generate-questions/quiz', {
-            method: 'POST',
-            headers: withCsrfHeaders(),
-            body: buildGenerationFormData({
+        const quizDifficulties: QuizDifficulty[] = ['helppo', 'normaali'];
+
+        for (const difficulty of quizDifficulties) {
+          const stepId = difficulty === 'helppo' ? 'quiz-helppo' : 'quiz-normaali';
+          const difficultyLabel = difficulty === 'helppo' ? 'Helppo' : 'Normaali';
+          updateCreationStep(stepId, 'in_progress', {
+            message: `Luodaan ${difficultyLabel.toLowerCase()}-koetta...`,
+          });
+
+          try {
+            const formData = buildGenerationFormData({
               questionCountOverride: requestedQuestionCount,
               bypassCapacityCheck: true,
               identifiedTopics: topics,
               topicDistribution: options?.topicDistribution,
-            }),
-          });
-          const quizData = await quizResponse.json();
-
-          // Note: warningRequired check removed - using topic-based confirmation instead
-
-          if (quizData.success && quizData.questionSets) {
-            results.quizSets = quizData.questionSets;
-            quizData.questionSets.forEach((set: { difficulty: string; questionCount: number }) => {
-              const stepId = set.difficulty === 'helppo' ? 'quiz-helppo' : 'quiz-normaali';
-              updateCreationStep(stepId, 'completed', {
-                count: set.questionCount,
-                message: `Luotiin ${set.questionCount} kysymystä`,
-              });
             });
-          } else {
-            throw new Error(quizData.error || 'Visan luonti epäonnistui');
+            formData.append('difficulties', JSON.stringify([difficulty]));
+
+            const quizResponse = await fetch('/api/generate-questions/quiz', {
+              method: 'POST',
+              headers: withCsrfHeaders(),
+              body: formData,
+            });
+            const quizData = await quizResponse.json();
+
+            if (quizData.success && Array.isArray(quizData.questionSets) && quizData.questionSets.length > 0) {
+              const createdSet = quizData.questionSets[0];
+              results.quizSets.push(createdSet);
+              updateCreationStep(stepId, 'completed', {
+                count: createdSet.questionCount,
+                message: `Luotiin ${createdSet.questionCount} kysymystä`,
+              });
+            } else {
+              throw new Error(quizData.error || `${difficultyLabel}-kokeen luonti epäonnistui`);
+            }
+          } catch (error) {
+            const baseMessage = error instanceof Error ? error.message : 'Visan luonti epäonnistui';
+            results.errors.push({ mode: 'quiz', error: `${difficultyLabel}: ${baseMessage}` });
+            updateCreationStep(stepId, 'error', { message: baseMessage });
           }
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Visan luonti epäonnistui';
-          results.errors.push({ mode: 'quiz', error: errorMessage });
-          updateCreationStep('quiz-helppo', 'error', { message: errorMessage });
-          updateCreationStep('quiz-normaali', 'error', { message: errorMessage });
         }
       }
 
@@ -1315,7 +1320,7 @@ export default function CreatePage() {
       const formData = new FormData();
       formData.append('questionSetId', selectedSetToExtend);
       formData.append('questionsToAdd', questionsToAdd.toString());
-      formData.append('provider', providerPreference);
+      appendProviderPreference(formData, providerPreference);
 
       if (materialText.trim()) {
         formData.append('materialText', materialText);

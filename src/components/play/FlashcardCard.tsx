@@ -3,21 +3,27 @@
 import type { ReactNode } from 'react';
 import { Flashcard } from '@/types';
 import { MathText } from '@/components/ui/math-text';
-import { Cards, CheckCircle } from '@phosphor-icons/react';
+import { Cards, Brain } from '@phosphor-icons/react';
 
 interface FlashcardCardProps {
   flashcard: Flashcard;
   isFlipped: boolean;
-  onFlip: () => void;
+  onPrimaryAction: () => void;
   onShowAnswer: () => void;
   onShowQuestion: () => void;
   overlay?: ReactNode;
 }
 
+export function getFlashcardCardAriaLabel(isFlipped: boolean) {
+  return isFlipped
+    ? 'Siirry seuraavaan korttiin'
+    : 'Näytä vastaus';
+}
+
 export function FlashcardCard({
   flashcard,
   isFlipped,
-  onFlip,
+  onPrimaryAction,
   onShowAnswer,
   onShowQuestion,
   overlay,
@@ -29,16 +35,16 @@ export function FlashcardCard({
           relative w-full h-[400px] cursor-pointer transition-transform duration-500 transform-style-3d
           ${isFlipped ? 'rotate-y-180' : ''}
         `}
-        onClick={onFlip}
+        onClick={onPrimaryAction}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            onFlip();
+            onPrimaryAction();
           }
         }}
         role="button"
         tabIndex={0}
-        aria-label={isFlipped ? 'Käännä kortti takaisin' : 'Käännä kortti nähdäksesi vastaus'}
+        aria-label={getFlashcardCardAriaLabel(isFlipped)}
       >
         {overlay && (
           <div className="absolute inset-0 pointer-events-none z-20">
@@ -91,9 +97,9 @@ export function FlashcardCard({
             ${isFlipped ? 'visible' : 'invisible'}
           `}
         >
-          <div className="mb-4 flex items-center gap-2 text-green-600 dark:text-green-400">
-            <CheckCircle size={24} weight="fill" />
-            <span className="font-semibold">Oikea vastaus:</span>
+          <div className="mb-4 flex items-center gap-2 text-teal-700 dark:text-teal-300">
+            <Brain size={24} weight="duotone" />
+            <span className="font-semibold">Muista tämä:</span>
           </div>
 
           <div className="flex-1 overflow-y-auto">

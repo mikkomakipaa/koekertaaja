@@ -10,7 +10,6 @@ import {
   MatchingQuestion,
   ShortAnswerQuestion,
 } from '@/types';
-import { getAlternativeRepresentations } from '@/lib/utils/smartAnswerValidation';
 
 /**
  * Converts questions to flashcards, excluding sequential questions
@@ -73,14 +72,14 @@ function formatAnswer(question: FlashcardCompatibleQuestion): string {
 }
 
 function formatFlashcardAnswer(question: FlashcardQuestion): string {
-  return appendSmartAlternatives(question.correct_answer);
+  return question.correct_answer;
 }
 
 /**
  * Format multiple choice answer
  */
 function formatMultipleChoiceAnswer(question: MultipleChoiceQuestion): string {
-  return appendSmartAlternatives(question.correct_answer);
+  return question.correct_answer;
 }
 
 function formatMultipleSelectAnswer(question: MultipleSelectQuestion): string {
@@ -91,16 +90,7 @@ function formatMultipleSelectAnswer(question: MultipleSelectQuestion): string {
  * Format fill blank answer with acceptable alternatives
  */
 function formatFillBlankAnswer(question: FillBlankQuestion): string {
-  const main = question.correct_answer;
-  const smartAlternatives = getAlternativeRepresentations(main);
-  const smartAlternativeText =
-    smartAlternatives.length > 0 ? `\n\nHyväksytään myös: ${smartAlternatives.join(', ')}` : '';
-
-  if (question.acceptable_answers && question.acceptable_answers.length > 0) {
-    const alternatives = question.acceptable_answers.join(', ');
-    return `${main}\n\nHyväksytään myös: ${alternatives}${smartAlternativeText}`;
-  }
-  return `${main}${smartAlternativeText}`;
+  return question.correct_answer;
 }
 
 /**
@@ -123,23 +113,5 @@ function formatMatchingAnswer(question: MatchingQuestion): string {
  * Format short answer with acceptable alternatives
  */
 function formatShortAnswer(question: ShortAnswerQuestion): string {
-  const main = question.correct_answer;
-  const smartAlternatives = getAlternativeRepresentations(main);
-  const smartAlternativeText =
-    smartAlternatives.length > 0 ? `\n\nHyväksytään myös: ${smartAlternatives.join(', ')}` : '';
-
-  if (question.acceptable_answers && question.acceptable_answers.length > 0) {
-    const alternatives = question.acceptable_answers.join(', ');
-    return `${main}\n\nHyväksytään myös: ${alternatives}${smartAlternativeText}`;
-  }
-  return `${main}${smartAlternativeText}`;
-}
-
-function appendSmartAlternatives(answer: string): string {
-  const alternatives = getAlternativeRepresentations(answer);
-  if (alternatives.length === 0) {
-    return answer;
-  }
-
-  return `${answer}\n\nHyväksytään myös: ${alternatives.join(', ')}`;
+  return question.correct_answer;
 }

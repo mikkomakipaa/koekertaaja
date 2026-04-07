@@ -22,3 +22,4 @@ Variables are provided by PromptBuilder and substituted by PromptLoader.
 - Keep output contracts provider-neutral and deterministic (JSON-only where required).
 - Do not remove required fields (`topic`, `skill`, schema fields used by validators).
 - Preserve pedagogical intent: grade-appropriate difficulty, curriculum alignment, meaningful explanations.
+- Keep flashcard prompts distinct from quiz prompts: flashcards reinforce recall and memory anchors, while quiz prompts may explain correctness and misconceptions.

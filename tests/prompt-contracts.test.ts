@@ -44,7 +44,30 @@ describe('Prompt Contracts', () => {
     assert.match(prompt, /FLASHCARD-MOODIN SÄÄNNÖT/i);
     assert.match(prompt, /Käytä VAIN tyyppiä: flashcard/i);
     assert.match(prompt, /KIELIAINEIDEN FLASHCARD-LISÄSÄÄNNÖT/i);
+    assert.match(prompt, /hieman aiempaa informatiivisempaa/i);
+    assert.match(prompt, /auttavat muistamaan oikean vastauksen/i);
+    assert.match(prompt, /tarpeeksi pitkä vahvistamaan muistamista, mutta tarpeeksi lyhyt nopeaan kertaukseen/i);
+    assert.match(prompt, /ÄLÄ kirjoita quiz-tyylistä palautetta/i);
+    assert.match(prompt, /ÄLÄ painota yleisiä virheitä tai väärää vastausta/i);
     assert.match(prompt, /Palauta vain JSON-taulukko/i);
     assert.doesNotMatch(prompt, /(anthropic|claude|openai|gpt)/i);
+  });
+
+  it('history quiz prompt excludes short answer guidance', async () => {
+    const builder = new PromptBuilder(new PromptLoader());
+
+    const prompt = await builder.assemblePrompt({
+      subject: 'History' as Subject,
+      difficulty: 'normaali' as Difficulty,
+      questionCount: 12,
+      grade: 5,
+      mode: 'quiz',
+      identifiedTopics: ['Antiikki', 'Keskiaika', 'Suomen historia'],
+      materialText: 'Historiassa käsitellään aikakausia, tapahtumia ja niiden järjestystä.',
+    });
+
+    assert.doesNotMatch(prompt, /Käytettävissä olevat kysymystyypit[\s\S]*- short_answer:/i);
+    assert.match(prompt, /ÄLÄ käytä short_answer-tyyppiä historiassa/i);
+    assert.match(prompt, /Historian sisällöissä käytä sequential-tyyppiä/i);
   });
 });

@@ -62,6 +62,7 @@ describe('Flashcard Template Selection', () => {
     // Verify guidance header and single flashcard type
     assert(prompt.includes('FLASHCARD-MUOTO (PERINTEINEN KYSYMYS-VASTAUS)'), 'Missing flashcard guidance header');
     assert(prompt.includes('Käytä kaikissa korteissa samaa tyyppiä: flashcard.'));
+    assert(prompt.includes('2-3 lyhyttä lausetta, joissa on selitys ja muistamista tukeva esimerkki'));
   });
 
   it('should use quiz type guidance for quiz mode', async () => {
@@ -91,6 +92,7 @@ describe('Flashcard Template Selection', () => {
 
     // Verify flashcard rules are present
     assert(prompt.includes('FLASHCARD-MOODIN SÄÄNNÖT'));
+    assert(prompt.includes('tarpeeksi pitkä vahvistamaan muistamista, mutta tarpeeksi lyhyt nopeaan kertaukseen'));
 
     // Verify math flashcards use single Q&A guidance
     assert(prompt.includes('FLASHCARD-MUOTO (PERINTEINEN KYSYMYS-VASTAUS)'));
@@ -109,6 +111,7 @@ describe('Flashcard Template Selection', () => {
     // Verify flashcard rules are present
     assert(prompt.includes('FLASHCARD-MOODIN SÄÄNNÖT'));
     assert(!prompt.includes('KIELIAINEIDEN FLASHCARD-LISÄSÄÄNNÖT'));
+    assert(prompt.includes('hieman aiempaa informatiivisempaa'));
 
     // Verify written flashcards use single Q&A guidance
     assert(prompt.includes('FLASHCARD-MUOTO (PERINTEINEN KYSYMYS-VASTAUS)'));

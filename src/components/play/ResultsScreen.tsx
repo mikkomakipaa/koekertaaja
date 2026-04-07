@@ -17,7 +17,11 @@ import {
   formatResultAnswer,
   getCelebrationQueue,
   getNextCelebration,
+  getResultsHeaderCopy,
+  getReviewMistakesActionLabel,
   getResultsBreakdown,
+  getResultsSecondaryMeta,
+  shouldShowReviewMistakesAction,
   type CelebrationType,
   type QuestionDetailStatus,
   toggleQuestionExpanded
@@ -29,15 +33,9 @@ import {
   markAllBadgesCelebrated,
   markPerfectScoreCelebrated,
 } from '@/lib/utils/celebrations';
-import { CheckCircle, XCircle, Medal, ArrowCounterClockwise, X, ArrowRight } from '@phosphor-icons/react';
+import { CheckCircle, XCircle, ArrowCounterClockwise, X, ArrowRight } from '@phosphor-icons/react';
 import {
-  Fire,
-  Sparkle,
-  Star,
-  Confetti,
-  Barbell,
   Target,
-  Rocket,
 } from '@phosphor-icons/react';
 
 interface ResultsScreenProps {
@@ -237,20 +235,16 @@ export function ResultsScreen({
   onReviewMistakes,
   onBackToMenu,
 }: ResultsScreenProps) {
-  const percentage = Math.round((score / total) * 100);
   const {
     badges,
     newlyUnlocked,
     recordSession,
-    getPersonalBest,
     updatePersonalBest,
   } = useBadges(questionSetCode);
   const { mistakeCount } = useReviewMistakes(questionSetCode);
   const { saveLastScore } = useLastScore(questionSetCode);
   const { flashcardCode } = useRelatedFlashcardSet(questionSetCode);
 
-  const [personalBest, setPersonalBest] = useState(0);
-  const [isNewRecord, setIsNewRecord] = useState(false);
   const [showAllAnswers, setShowAllAnswers] = useState(false);
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState<CelebrationType | null>(null);
@@ -260,10 +254,8 @@ export function ResultsScreen({
   const sessionMistakeCount = answers.filter(answer => !answer.isCorrect).length;
   const { skippedCount, correctCount, wrongCount } = getResultsBreakdown(answers, skippedQuestions);
   const questionDetails = buildQuestionDetails(answers, skippedQuestions);
-  const skippedAnswerCount = skippedCount > 0
-    ? skippedCount
-    : answers.filter(answer => answer.userAnswer === null && !answer.isCorrect).length;
   const reviewMistakeCount = mistakeCount > 0 ? mistakeCount : sessionMistakeCount;
+  const showReviewMistakesAction = shouldShowReviewMistakesAction(reviewMistakeCount, onReviewMistakes);
 
   // Track if events have already been captured to prevent duplicates
 
@@ -271,11 +263,7 @@ export function ResultsScreen({
   useEffect(() => {
     if (!questionSetCode || hasRecordedRef.current) return;
 
-    const currentBest = getPersonalBest(questionSetCode);
-    setPersonalBest(currentBest);
-
-    const newRecord = updatePersonalBest(questionSetCode, totalPoints);
-    setIsNewRecord(newRecord);
+    updatePersonalBest(questionSetCode, totalPoints);
 
     recordSession({
       score,
@@ -292,7 +280,6 @@ export function ResultsScreen({
     bestStreak,
     difficulty,
     durationSeconds,
-    getPersonalBest,
     questionSetCode,
     recordSession,
     saveLastScore,
@@ -364,18 +351,6 @@ export function ResultsScreen({
     }, 300);
   };
 
-
-  // Determine celebration level
-  const getCelebration = () => {
-    if (percentage === 100) return { text: 'W Pisteet.' };
-    if (percentage >= 90) return { text: 'Sigma Suoritus.' };
-    if (percentage >= 80) return { text: 'Slay Kierros.' };
-    if (percentage >= 60) return { text: 'Vibe Tulos.' };
-    return { text: 'Mid Grindi.' };
-  };
-
-  const celebration = getCelebration();
-
   const modeColors = mode === 'quiz'
     ? {
         accent: 'text-indigo-600 dark:text-indigo-400',
@@ -388,9 +363,7 @@ export function ResultsScreen({
         button: 'bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 text-white shadow-md hover:shadow-lg active:shadow-sm',
       };
 
-  const displayPersonalBest = personalBest > 0 ? (isNewRecord ? totalPoints : personalBest) : null;
   const unlockedBadgesCount = badges.filter(b => b.unlocked).length;
-  const newlyUnlockedBadges = badges.filter(badge => newlyUnlocked.includes(badge.id));
   const difficultyLabel =
     difficulty && difficulty in difficultyLabels
       ? difficultyLabels[difficulty as keyof typeof difficultyLabels]
@@ -405,12 +378,13 @@ export function ResultsScreen({
     normalizedQuestionSetName,
     questionSetAlreadyIncludesDifficulty ? null : difficultyLabel,
   ].filter(Boolean).join(' • ');
-  const resultsSecondaryMeta = `${score} / ${total} oikein (${percentage}%)`;
+  const resultsHeaderCopy = getResultsHeaderCopy(score, total, mode);
+  const resultsSecondaryMeta = getResultsSecondaryMeta(score, total);
 
   return (
     <div className="min-h-screen bg-white p-4 pb-24 transition-colors dark:bg-gray-900 md:p-8">
       <div className="max-w-5xl mx-auto">
-        <section className="mb-4 border-b border-slate-200/80 pb-4 dark:border-white/10">
+        <section className="mb-3 border-b border-slate-200/80 pb-4 dark:border-white/10">
           <div className="flex items-start gap-3">
             <button
               type="button"
@@ -422,10 +396,13 @@ export function ResultsScreen({
             </button>
             <div className="min-w-0">
               <h1 className="text-[22px] font-bold leading-[1.1] tracking-tight text-slate-950 dark:text-slate-50 max-[480px]:text-[19px]">
-                {celebration.text}
+                {resultsHeaderCopy.title}
               </h1>
+              <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300">
+                {resultsHeaderCopy.supportingText}
+              </p>
               {resultsPrimaryMeta ? (
-                <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300">
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                   {resultsPrimaryMeta}
                 </p>
               ) : null}
@@ -436,61 +413,8 @@ export function ResultsScreen({
           </div>
         </section>
 
-        {/* Metrics */}
-        <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
-            <CardContent>
-              <div className="mb-2 flex items-center gap-2 text-sm text-gray-600/70 dark:text-gray-400/70">
-                <Fire size={18} weight="duotone" className="text-orange-500" />
-                Paras putki
-              </div>
-              <div className="text-[28px] font-bold text-gray-900 dark:text-gray-100 md:text-[28px]">
-                {bestStreak > 0 ? bestStreak : '—'}
-              </div>
-            </CardContent>
-          </Card>
-          <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
-            <CardContent>
-              <div className="mb-2 flex items-center gap-2 text-sm text-gray-600/70 dark:text-gray-400/70">
-                <ArrowCounterClockwise size={18} weight="duotone" className="text-amber-500" />
-                Ohitetut
-              </div>
-              <div className="text-[28px] font-bold text-gray-900 dark:text-gray-100 md:text-[28px]">
-                {skippedAnswerCount}
-              </div>
-            </CardContent>
-          </Card>
-          <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
-            <CardContent>
-              <div className="mb-2 flex items-center gap-2 text-sm text-gray-600/70 dark:text-gray-400/70">
-                <Medal size={18} weight="duotone" className="text-purple-500" />
-                Uusia merkkejä
-              </div>
-              <div className="text-[28px] font-bold text-gray-900 dark:text-gray-100 md:text-[28px]">
-                {newlyUnlockedBadges.length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
-            <CardContent>
-              <div className="mb-2 flex items-center gap-2 text-sm text-gray-600/70 dark:text-gray-400/70">
-                <Sparkle size={18} weight="duotone" className="text-emerald-500" />
-                Henkilökohtainen ennätys
-              </div>
-              <div className="text-[28px] font-bold text-gray-900 dark:text-gray-100 md:text-[28px]">
-                {displayPersonalBest ?? '—'}
-              </div>
-              {displayPersonalBest && isNewRecord && (
-                <div className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                  Uusi ennätys! <Confetti size={14} weight="fill" />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Tabs */}
-        <Tabs defaultValue="overview" className="mb-5">
+        <Tabs defaultValue="overview" className="mb-5 mt-4">
           <TabsList className="grid w-full grid-cols-3 rounded-xl border border-slate-200 bg-white p-1 shadow-none dark:border-slate-800 dark:bg-slate-900">
             <TabsTrigger value="overview" className="rounded-xl text-sm md:text-base">Yhteenveto</TabsTrigger>
             <TabsTrigger value="answers" className="rounded-xl text-sm md:text-base">Vastaukset</TabsTrigger>
@@ -512,27 +436,6 @@ export function ResultsScreen({
                   className="mt-2 border-t-0 pt-0"
                 />
               </CardContent>
-            </Card>
-
-            <Card
-              variant="standard"
-              padding="standard"
-              className="flex flex-col gap-4 rounded-xl border-slate-200 shadow-none dark:border-slate-800 md:flex-row md:items-center md:justify-between"
-            >
-              <div>
-                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                  <ArrowCounterClockwise size={18} weight="duotone" className="text-rose-500" />
-                  Kertaa virheet
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Löytyi {reviewMistakeCount} virhettä, joita voit harjoitella uudelleen.
-                </p>
-              </div>
-              {sessionMistakeCount > 0 && onReviewMistakes && (
-                <Button onClick={onReviewMistakes} mode="review" variant="primary">
-                  Kertaa virheet
-                </Button>
-              )}
             </Card>
           </TabsContent>
 
@@ -675,19 +578,30 @@ export function ResultsScreen({
         {/* Actions */}
         <div className="sticky bottom-4 z-10">
           <div className="rounded-xl border border-slate-200 bg-white/95 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)] backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/90">
-            <div className="flex flex-col sm:flex-row gap-3">
+            {/* Keep all end-of-session actions together so mobile and desktop layouts preserve a single decision area. */}
+            <div className="flex flex-col gap-3 md:flex-row">
               <Button
                 onClick={onPlayAgain}
                 mode={mode === 'flashcard' ? 'study' : 'quiz'}
                 variant="primary"
-                className="flex-1"
+                className="w-full md:flex-1"
               >
                 Pelaa uudelleen
               </Button>
+              {showReviewMistakesAction && onReviewMistakes ? (
+                <Button
+                  onClick={onReviewMistakes}
+                  mode="review"
+                  variant="primary"
+                  className="w-full md:flex-1"
+                >
+                  {getReviewMistakesActionLabel(reviewMistakeCount)}
+                </Button>
+              ) : null}
               <Button
                 onClick={onBackToMenu}
                 variant="secondary"
-                className="flex-1"
+                className="w-full md:flex-1"
               >
                 Takaisin valikkoon
               </Button>

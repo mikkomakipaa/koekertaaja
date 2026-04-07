@@ -65,6 +65,7 @@ export interface GenerationRequest {
   materialFiles?: MaterialFile[];
   targetWords?: string[];
   identifiedTopics?: string[]; // Pre-computed topics (optional)
+  distribution?: TopicDistribution[]; // Caller-provided topic distribution (optional)
   targetProvider?: AIProvider;
 }
 
@@ -455,10 +456,24 @@ export async function generateQuizSets(
   const logger = createLogger({ module: 'generateQuizSets' });
 
   // Calculate optimal counts and distribution if enhanced topics provided
-  let distribution: TopicDistribution[] | undefined;
+  let distribution = request.distribution;
   let effectiveQuizCount = request.questionCount;
 
-  if (enhancedTopics && enhancedTopics.length > 0) {
+  if (distribution && distribution.length > 0) {
+    effectiveQuizCount = distribution.reduce((sum, item) => sum + Math.max(0, item.targetCount), 0);
+
+    logger.info(
+      {
+        distribution: distribution.map((d) => ({
+          topic: d.topic,
+          count: d.targetCount,
+          percentage: Math.round(d.coverage * 100),
+        })),
+        effectiveQuizCount,
+      },
+      'Using caller-provided topic distribution'
+    );
+  } else if (enhancedTopics && enhancedTopics.length > 0) {
     const optimalCounts = calculateOptimalCounts(enhancedTopics, request.questionCount);
     effectiveQuizCount = optimalCounts.quizCount;
 
@@ -753,10 +768,24 @@ export async function generateFlashcardSet(
   const logger = createLogger({ module: 'generateFlashcardSet' });
 
   // Calculate optimal counts and distribution if enhanced topics provided
-  let distribution: TopicDistribution[] | undefined;
+  let distribution = request.distribution;
   let effectiveFlashcardCount = request.questionCount;
 
-  if (enhancedTopics && enhancedTopics.length > 0) {
+  if (distribution && distribution.length > 0) {
+    effectiveFlashcardCount = distribution.reduce((sum, item) => sum + Math.max(0, item.targetCount), 0);
+
+    logger.info(
+      {
+        distribution: distribution.map((d) => ({
+          topic: d.topic,
+          count: d.targetCount,
+          percentage: Math.round(d.coverage * 100),
+        })),
+        effectiveFlashcardCount,
+      },
+      'Using caller-provided topic distribution'
+    );
+  } else if (enhancedTopics && enhancedTopics.length > 0) {
     const optimalCounts = calculateOptimalCounts(enhancedTopics, request.questionCount);
     effectiveFlashcardCount = optimalCounts.flashcardCount;
 
