@@ -51,6 +51,7 @@ import {
   DiamondsFour,
   Fire,
   Book,
+  ArrowLeft,
   ArrowCounterClockwise,
   GameController,
   ArrowRight,
@@ -1005,11 +1006,12 @@ export default function PlayPage() {
             subtitle={`Tämä korttisarja sisältää ${availableTopics.length} aihetta. Valitse mitä haluat harjoitella.`}
             icon={<Book size={20} weight="duotone" />}
             actionLabel="Takaisin"
+            actionIcon={<ArrowLeft size={18} weight="bold" />}
             onAction={() => router.push('/play?mode=opettele')}
             sticky={false}
           />
 
-          <div className="mx-auto max-w-4xl px-4 py-8">
+          <div className="mx-auto max-w-4xl px-4 py-3 md:py-8">
             <div className="space-y-3">
               <Card
                 variant="interactive"
@@ -1169,9 +1171,9 @@ export default function PlayPage() {
         <PlaySessionHeader
           tone="quiz"
           title={displayName}
-          subtitle={`Kysymys ${currentQuestionIndex + 1} / ${selectedQuestions.length}`}
           icon={<GameController size={20} weight="fill" className="text-indigo-100" />}
           actionLabel={canPause ? 'Lopeta' : undefined}
+          actionIcon={canPause ? <X size={18} weight="bold" /> : undefined}
           actionAriaLabel="Lopeta harjoitus"
           onAction={canPause ? () => setShowExitConfirm(true) : undefined}
           progressCurrent={currentQuestionIndex + 1}
@@ -1193,7 +1195,7 @@ export default function PlayPage() {
       )}
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-2 md:py-8">
         {(mistakesError || sessionMistakesError) && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>{mistakesError || sessionMistakesError}</AlertDescription>
@@ -1215,15 +1217,15 @@ export default function PlayPage() {
         )}
 
         {/* Question Card */}
-        <Card variant="elevated" padding="responsive" className="mb-6 transition-colors shadow-sm">
-          <CardContent>
+        <Card variant="elevated" padding="none" className="mb-4 md:mb-6 transition-colors shadow-sm">
+          <CardContent className="p-4 md:p-6">
             {(currentQuestion.requires_visual || currentQuestion.image_reference) && (
               <VisualQuestionPreview
                 imageUrl={currentQuestion.image_url}
                 altText={`Visuaali kysymykseen ${currentQuestionIndex + 1}`}
               />
             )}
-            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 md:mb-6">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 md:mb-5">
               <MathText>{currentQuestion.question_text}</MathText>
             </h2>
 

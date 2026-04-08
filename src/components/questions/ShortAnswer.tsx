@@ -45,7 +45,7 @@ export function ShortAnswer({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {!showExplanation && answerEntryConfig?.notationHint && (
         <div
           data-testid="answer-notation-hint"
@@ -101,7 +101,7 @@ export function ShortAnswer({
           />
         )}
         {!isCompactInput && !showExplanation && (
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 text-right">
+          <p className="mt-1 text-right text-xs text-gray-400 dark:text-gray-500">
             {userAnswer.trim() === '' ? 'Vastaus puuttuu' : `${userAnswer.trim().length} merkkiä`}
           </p>
         )}
@@ -130,7 +130,7 @@ export function ShortAnswer({
       )}
 
       {showExplanation && (
-        <div className="p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg space-y-3">
+        <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-900">
           <div>
             <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">Esimerkkivastaus:</p>
             <div className="text-sm text-blue-800 dark:text-blue-300 whitespace-pre-wrap">

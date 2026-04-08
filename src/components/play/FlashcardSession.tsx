@@ -11,6 +11,7 @@ import {
   CheckCircle,
   ArrowsClockwise,
   ArrowLeft,
+  X,
 } from '@phosphor-icons/react';
 
 const FLIP_HINT_KEY = 'has_seen_flip_hint';
@@ -286,17 +287,18 @@ export function FlashcardSession({
       <PlaySessionHeader
         tone="flashcard"
         title={questionSetName}
-        subtitle={`Kortti ${currentIndex + 1} / ${totalCards}`}
         icon={<Book size={20} weight="duotone" />}
         actionLabel="Lopeta"
+        actionIcon={<X size={18} weight="bold" />}
         actionAriaLabel="Lopeta harjoitus"
         onAction={handleExit}
         progressCurrent={currentIndex + 1}
         progressTotal={totalCards}
+        progressLabel={`Kortti ${currentIndex + 1} / ${totalCards}`}
       />
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="py-4">
+      <div className="max-w-4xl mx-auto px-4 py-2 md:py-8">
+        <div className="py-0.5 md:py-4">
           <FlashcardCard
             flashcard={currentFlashcard}
             isFlipped={isFlipped}
@@ -306,12 +308,12 @@ export function FlashcardSession({
             overlay={overlay}
           />
 
-          <div className="mt-4 flex gap-3">
+          <div className="mt-3 flex gap-3 md:mt-4">
             <Button
               onClick={handlePrevious}
               disabled={currentIndex === 0}
               variant="outline"
-              className="py-6 rounded-xl font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-h-12 rounded-xl px-4 py-3 font-medium text-base disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ArrowLeft size={20} className="mr-2" />
               Edellinen
@@ -323,7 +325,7 @@ export function FlashcardSession({
             </p>
           </div>
 
-          <div className="mt-8 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-center text-xs text-gray-500 dark:text-gray-400 md:mt-8">
             <span className="inline-flex items-center gap-1">
               <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono">
                 Enter

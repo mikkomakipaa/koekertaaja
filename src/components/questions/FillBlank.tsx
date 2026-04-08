@@ -37,7 +37,7 @@ export function FillBlank({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {!showExplanation && answerEntryConfig?.notationHint && (
         <div
           data-testid="answer-notation-hint"
@@ -102,7 +102,7 @@ export function FillBlank({
       )}
 
       {showExplanation && !isCorrect && (
-        <div className="p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900">
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Oikea vastaus: <span className="font-bold text-blue-700 dark:text-blue-300">
               <MathText>{question.correct_answer}</MathText>

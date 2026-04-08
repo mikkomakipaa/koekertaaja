@@ -21,7 +21,7 @@ export function TrueFalse({
   ];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5 md:space-y-3">
       {options.map((option) => {
         const isSelected = selectedAnswer === option.value;
         const isCorrect = option.value === question.correct_answer;
@@ -34,7 +34,7 @@ export function TrueFalse({
             onClick={() => !showExplanation && onAnswerSelect(option.value)}
             disabled={showExplanation}
             className={cn(
-              "w-full p-4 text-left rounded-lg border-2 transition-all text-gray-900 dark:text-gray-100",
+              "w-full min-h-12 rounded-lg border-2 p-4 text-left text-gray-900 transition-all dark:text-gray-100",
               showCorrect && "border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-400",
               showWrong && "border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-400",
               !showCorrect && !showWrong && isSelected && "border-blue-500 bg-blue-50 dark:bg-blue-900 dark:border-blue-400",
@@ -43,7 +43,7 @@ export function TrueFalse({
             )}
           >
             <div className="flex items-center justify-between">
-              <span className="text-lg font-medium">{option.label}</span>
+              <span className="text-base font-medium md:text-lg">{option.label}</span>
               {showCorrect && <CheckCircle weight="duotone" className="w-6 h-6 text-green-600 flex-shrink-0" />}
               {showWrong && <XCircle weight="duotone" className="w-6 h-6 text-red-600 flex-shrink-0" />}
             </div>

@@ -37,7 +37,7 @@ export function MultipleSelect({
 
   return (
     <fieldset aria-describedby={`multiple-select-hint-${question.id}`}>
-      <legend id={`multiple-select-hint-${question.id}`} className="mb-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+      <legend id={`multiple-select-hint-${question.id}`} className="mb-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 md:mb-3">
         Valitse KAIKKI oikeat vastaukset
       </legend>
 
@@ -53,7 +53,7 @@ export function MultipleSelect({
             <label
               key={option}
               className={cn(
-                'flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-all',
+                'flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border-2 p-3.5 transition-all md:p-4',
                 'text-slate-900 dark:text-slate-100',
                 showCorrect && 'border-green-500 bg-green-50 dark:border-green-400 dark:bg-green-900',
                 showWrong && 'border-red-500 bg-red-50 dark:border-red-400 dark:bg-red-900',

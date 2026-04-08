@@ -32,7 +32,7 @@ export function FlashcardCard({
     <div className="w-full max-w-2xl mx-auto perspective-1000">
       <div
         className={`
-          relative w-full h-[400px] cursor-pointer transition-transform duration-500 transform-style-3d
+          relative h-[340px] w-full cursor-pointer transition-transform duration-500 transform-style-3d sm:h-[400px]
           ${isFlipped ? 'rotate-y-180' : ''}
         `}
         onClick={onPrimaryAction}
@@ -59,17 +59,17 @@ export function FlashcardCard({
             bg-white dark:bg-gray-800
             border-2 border-teal-500 dark:border-teal-600
             rounded-2xl shadow-lg
-            p-8
+            p-5 sm:p-8
             flex flex-col items-center justify-center
             ${isFlipped ? 'invisible' : 'visible'}
           `}
         >
-          <div className="mb-6">
-            <Cards size={48} weight="duotone" className="text-teal-600 dark:text-teal-400" />
+          <div className="mb-4 sm:mb-6">
+            <Cards size={40} weight="duotone" className="text-teal-600 dark:text-teal-400 sm:h-12 sm:w-12" />
           </div>
 
-          <div className="text-center space-y-4 w-full">
-            <div className="text-xl md:text-2xl font-medium text-gray-900 dark:text-gray-100">
+          <div className="w-full space-y-3 text-center sm:space-y-4">
+            <div className="text-lg font-medium text-gray-900 dark:text-gray-100 md:text-2xl">
               <MathText>{flashcard.front}</MathText>
             </div>
             <button
@@ -92,7 +92,7 @@ export function FlashcardCard({
             bg-gradient-to-br from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20
             border-2 border-teal-500 dark:border-teal-600
             rounded-2xl shadow-lg
-            p-8
+            p-5 sm:p-8
             flex flex-col
             ${isFlipped ? 'visible' : 'invisible'}
           `}

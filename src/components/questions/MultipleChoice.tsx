@@ -35,7 +35,7 @@ export function MultipleChoice({
   );
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5 md:space-y-3">
       {shuffledOptions.map((option, index) => {
         const isSelected = selectedAnswer === option;
         const isCorrect = option === question.correct_answer;
@@ -48,7 +48,7 @@ export function MultipleChoice({
             onClick={() => !showExplanation && onAnswerSelect(option)}
             disabled={showExplanation}
             className={cn(
-              "w-full p-5 text-left rounded-lg border-2 transition-all active:scale-[0.98] text-gray-900 dark:text-gray-100",
+              "w-full min-h-12 rounded-lg border-2 p-4 text-left text-gray-900 transition-all active:scale-[0.98] dark:text-gray-100 md:p-5",
               showCorrect && "border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-400",
               showWrong && "border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-400",
               !showCorrect && !showWrong && isSelected && "border-blue-500 bg-blue-50 dark:bg-blue-900 dark:border-blue-400",
@@ -57,7 +57,7 @@ export function MultipleChoice({
             )}
           >
             <div className="flex items-center justify-between">
-              <span className="text-lg">
+              <span className="text-base md:text-lg">
                 <MathText>{option}</MathText>
               </span>
               {showCorrect && <CheckCircle weight="duotone" className="w-6 h-6 text-green-600 flex-shrink-0 ml-2" />}
