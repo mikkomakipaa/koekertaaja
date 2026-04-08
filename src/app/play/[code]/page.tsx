@@ -1211,9 +1211,11 @@ export default function PlayPage() {
                 altText={`Visuaali kysymykseen ${currentQuestionIndex + 1}`}
               />
             )}
-            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 md:mb-5">
-              <MathText>{currentQuestion.question_text}</MathText>
-            </h2>
+            {currentQuestion.question_type !== 'sequential' ? (
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 md:mb-5">
+                <MathText>{currentQuestion.question_text}</MathText>
+              </h2>
+            ) : null}
 
             <QuestionRenderer
               question={currentQuestion}
