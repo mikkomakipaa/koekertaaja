@@ -1,5 +1,6 @@
 'use client';
 
+import type { Viewport } from 'next';
 import { useEffect, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -26,6 +27,10 @@ const defaultDashboardAction: DashboardPrimaryAction = {
 const hasPublicSupabaseEnv = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
+
+export const viewport: Viewport = {
+  themeColor: '#e0e7ff',
+};
 
 export default function HomePage() {
   const router = useRouter();
