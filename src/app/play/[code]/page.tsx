@@ -10,16 +10,14 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { IconButton } from '@/components/ui/icon-button';
 import { MathText } from '@/components/ui/math-text';
-import { PageTitle } from '@/components/ui/page-title';
 import { Textarea } from '@/components/ui/textarea';
 import { LoadingScreen } from '@/components/ui/loading';
 import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
 import { VisualQuestionPreview } from '@/components/questions/VisualQuestionPreview';
-import { ProgressBar } from '@/components/play/ProgressBar';
 import { ResultsScreen } from '@/components/play/ResultsScreen';
 import { FlashcardSession } from '@/components/play/FlashcardSession';
+import { PlaySessionHeader } from '@/components/play/PlaySessionHeader';
 import { SpeedQuizIntro, SpeedQuizTimer } from '@/components/speedQuiz';
 import { useGameSession } from '@/hooks/useGameSession';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
@@ -56,7 +54,6 @@ import {
   ArrowCounterClockwise,
   GameController,
   ArrowRight,
-  MagnifyingGlass,
   TextT,
   ListChecks,
   CheckCircle,
@@ -66,7 +63,6 @@ import {
   Article,
   Smiley,
   Target,
-  Trophy,
   X,
   Flag,
 } from '@phosphor-icons/react';
@@ -1002,46 +998,18 @@ export default function PlayPage() {
     // Show topic selection if topics are available and none is selected
     if (availableTopics.length > 1 && !selectedTopic) {
       return (
-        <div className="min-h-screen bg-white p-4 pb-24 transition-colors dark:bg-gray-900 md:p-8">
-          <div className="mx-auto max-w-5xl space-y-6">
-            <section className="border-b border-slate-200/80 pb-4 dark:border-white/10">
-              <div className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2.5 pb-3">
-                <IconButton
-                  onClick={() => router.push('/play')}
-                  aria-label="Takaisin"
-                >
-                  <ArrowRight size={20} weight="regular" className="rotate-180" aria-hidden="true" />
-                </IconButton>
-                <PageTitle className="truncate text-slate-900 dark:text-slate-100">
-                  Koekertaaja
-                </PageTitle>
-                <div className="flex items-center gap-2">
-                  <IconButton asChild aria-label="Haku">
-                    <Link href="/play">
-                      <MagnifyingGlass size={18} weight="duotone" />
-                    </Link>
-                  </IconButton>
-                  <IconButton asChild aria-label="Saavutukset">
-                    <Link href="/play/achievements">
-                      <Trophy size={18} weight="duotone" />
-                    </Link>
-                  </IconButton>
-                </div>
-              </div>
+        <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
+          <PlaySessionHeader
+            tone="flashcard"
+            title="Valitse harjoiteltava aihe"
+            subtitle={`Tämä korttisarja sisältää ${availableTopics.length} aihetta. Valitse mitä haluat harjoitella.`}
+            icon={<Book size={20} weight="duotone" />}
+            actionLabel="Takaisin"
+            onAction={() => router.push('/play?mode=opettele')}
+            sticky={false}
+          />
 
-              <div className="min-w-0">
-                <PageTitle
-                  as="h2"
-                  className="text-slate-950 dark:text-slate-50"
-                >
-                  Valitse harjoiteltava aihe
-                </PageTitle>
-                <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300">
-                  Tämä korttisarja sisältää {availableTopics.length} aihetta. Valitse mitä haluat harjoitella.
-                </p>
-              </div>
-            </section>
-
+          <div className="mx-auto max-w-4xl px-4 py-8">
             <div className="space-y-3">
               <Card
                 variant="interactive"
@@ -1198,41 +1166,17 @@ export default function PlayPage() {
       <div ref={topRef} />
       {/* Header with progress */}
       {!isFlashcardMode && (
-        <div className="bg-gradient-to-r from-indigo-600 to-indigo-500 dark:from-indigo-700 dark:to-indigo-600 text-white sticky top-0 z-10">
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            {/* Top section: Question set name + Exit button */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <GameController size={20} weight="fill" className="text-indigo-100" />
-                <div>
-                  <h2 className="text-base font-semibold md:text-lg">{displayName}</h2>
-                  <p className="text-sm text-indigo-100">
-                    Kysymys {currentQuestionIndex + 1} / {selectedQuestions.length}
-                  </p>
-                </div>
-              </div>
-              {canPause && (
-                <Button
-                  onClick={() => setShowExitConfirm(true)}
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Lopeta harjoitus"
-                  className="text-white/90 hover:text-white hover:bg-white/10"
-                >
-                  <X className="w-5 h-5 mr-1" />
-                  Lopeta
-                </Button>
-              )}
-            </div>
-
-            <ProgressBar
-              current={currentQuestionIndex}
-              total={selectedQuestions.length}
-              mode="quiz"
-              variant="header"
-            />
-          </div>
-        </div>
+        <PlaySessionHeader
+          tone="quiz"
+          title={displayName}
+          subtitle={`Kysymys ${currentQuestionIndex + 1} / ${selectedQuestions.length}`}
+          icon={<GameController size={20} weight="fill" className="text-indigo-100" />}
+          actionLabel={canPause ? 'Lopeta' : undefined}
+          actionAriaLabel="Lopeta harjoitus"
+          onAction={canPause ? () => setShowExitConfirm(true) : undefined}
+          progressCurrent={currentQuestionIndex + 1}
+          progressTotal={selectedQuestions.length}
+        />
       )}
       {shouldShowAikahaasteTimer({
         isAikahaaste,

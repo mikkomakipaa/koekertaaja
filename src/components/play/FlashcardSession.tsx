@@ -1,22 +1,16 @@
 'use client';
 
-import Link from 'next/link.js';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Flashcard } from '@/types';
 import { FlashcardCard } from './FlashcardCard';
 import { Button } from '@/components/ui/button';
-import { IconButton } from '@/components/ui/icon-button';
-import { PageTitle } from '@/components/ui/page-title';
+import { PlaySessionHeader } from '@/components/play/PlaySessionHeader';
 import { createLogger } from '@/lib/logger';
 import {
   Book,
   CheckCircle,
-  X,
   ArrowsClockwise,
   ArrowLeft,
-  ArrowRight,
-  MagnifyingGlass,
-  Trophy,
 } from '@phosphor-icons/react';
 
 const FLIP_HINT_KEY = 'has_seen_flip_hint';
@@ -52,7 +46,6 @@ export function FlashcardSession({
 
   const totalCards = currentFlashcards.length;
   const currentFlashcard = currentFlashcards[currentIndex];
-  const progress = totalCards > 0 ? ((currentIndex + 1) / totalCards) * 100 : 0;
 
   const readStoredNumber = useCallback((key: string): number => {
     try {
@@ -289,58 +282,21 @@ export function FlashcardSession({
   }
 
   return (
-    <div className="min-h-screen bg-white p-4 pb-24 transition-colors dark:bg-gray-900 md:p-8">
-      <div className="max-w-5xl mx-auto">
-        <section className="mb-4 border-b border-slate-200/80 pb-4 dark:border-white/10">
-          <div className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2.5 pb-3">
-            <IconButton
-              onClick={handleExit}
-              aria-label="Takaisin"
-            >
-              <ArrowRight size={20} weight="regular" className="rotate-180" aria-hidden="true" />
-            </IconButton>
-            <PageTitle className="truncate text-slate-900 dark:text-slate-100">
-              Koekertaaja
-            </PageTitle>
-            <div className="flex items-center gap-2">
-              <IconButton asChild aria-label="Haku">
-                <Link href="/play">
-                  <MagnifyingGlass size={18} weight="duotone" />
-                </Link>
-              </IconButton>
-              <IconButton asChild aria-label="Saavutukset">
-                <Link href="/play/achievements">
-                  <Trophy size={18} weight="duotone" />
-                </Link>
-              </IconButton>
-            </div>
-          </div>
+    <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
+      <PlaySessionHeader
+        tone="flashcard"
+        title={questionSetName}
+        subtitle={`Kortti ${currentIndex + 1} / ${totalCards}`}
+        icon={<Book size={20} weight="duotone" />}
+        actionLabel="Lopeta"
+        actionAriaLabel="Lopeta harjoitus"
+        onAction={handleExit}
+        progressCurrent={currentIndex + 1}
+        progressTotal={totalCards}
+      />
 
-          <div className="space-y-3">
-            <div>
-              <PageTitle as="h2">
-                {questionSetName}
-              </PageTitle>
-              <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300">
-                Kortti {currentIndex + 1} / {totalCards}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 rounded-full bg-slate-200 h-2 overflow-hidden dark:bg-slate-800">
-                <div
-                  className="bg-teal-500 dark:bg-teal-400 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <span className="text-sm font-medium whitespace-nowrap text-slate-600 dark:text-slate-300">
-                {Math.round(progress)}% valmis
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* Flashcard */}
-        <div className="max-w-4xl mx-auto py-4">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="py-4">
           <FlashcardCard
             flashcard={currentFlashcard}
             isFlipped={isFlipped}
