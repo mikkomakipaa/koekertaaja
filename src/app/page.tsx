@@ -66,7 +66,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white transition-colors duration-300 ease-out dark:bg-gray-900">
+    <div className="flex min-h-screen flex-col bg-[linear-gradient(180deg,rgba(99,102,241,0.18)_0%,rgba(99,102,241,0.10)_18%,rgba(255,255,255,1)_34%)] transition-colors duration-300 ease-out dark:bg-[linear-gradient(180deg,rgba(99,102,241,0.85)_0%,rgba(99,102,241,0.55)_20%,rgba(17,24,39,1)_36%)]">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-6 focus:top-6 focus:z-50 rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-700"
@@ -78,7 +78,7 @@ export default function HomePage() {
         <header className="hero-fade">
           <section
             aria-labelledby="dashboard-heading"
-            className="bg-[linear-gradient(180deg,rgba(99,102,241,0.18)_0%,rgba(99,102,241,0.10)_45%,rgba(99,102,241,0)_100%)] pt-[env(safe-area-inset-top)] text-slate-950 dark:bg-[linear-gradient(180deg,rgba(99,102,241,0.85)_0%,rgba(99,102,241,0.55)_40%,rgba(99,102,241,0)_100%)] dark:text-white"
+            className="pt-[env(safe-area-inset-top)] text-slate-950 dark:text-white"
           >
             <div className="mx-auto max-w-4xl px-4 pt-4 pb-5 md:px-8 md:pt-5 md:pb-6 dark:pt-5 dark:pb-8 md:dark:pt-6 md:dark:pb-10">
               <div className="flex items-start gap-4">
