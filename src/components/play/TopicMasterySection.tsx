@@ -2,7 +2,6 @@
 
 import { ArrowRight } from '@phosphor-icons/react';
 import Link from 'next/link.js';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SectionHeading } from '@/components/ui/section-heading';
@@ -70,9 +69,6 @@ export function TopicMasterySection({ items }: TopicMasterySectionProps) {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-base font-semibold text-slate-950 dark:text-slate-50">{item.topic}</p>
-                        <Badge size="sm" className={cn('min-h-7', tone.status)}>
-                          {item.statusLabel}
-                        </Badge>
                       </div>
 
                       <div className="mt-3 flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-400">

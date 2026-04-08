@@ -392,10 +392,6 @@ export function ResultsScreen({
       && difficultyLabel
       && normalizedQuestionSetName.toLocaleLowerCase('fi-FI').endsWith(`- ${difficultyLabel.toLocaleLowerCase('fi-FI')}`)
   );
-  const resultsPrimaryMeta = [
-    normalizedQuestionSetName,
-    questionSetAlreadyIncludesDifficulty ? null : difficultyLabel,
-  ].filter(Boolean).join(' • ');
   const resultsHeaderCopy = getResultsHeaderCopy(score, total, mode);
 
   return (
@@ -416,11 +412,6 @@ export function ResultsScreen({
               {resultsHeaderCopy.supportingText ? (
                 <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300">
                   {resultsHeaderCopy.supportingText}
-                </p>
-              ) : null}
-              {resultsPrimaryMeta ? (
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                  {resultsPrimaryMeta}
                 </p>
               ) : null}
             </div>
