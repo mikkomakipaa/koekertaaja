@@ -48,8 +48,6 @@ import { stripDifficultySuffix } from '@/lib/question-set-name';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   ListBullets,
-  DiamondsFour,
-  Fire,
   Book,
   ArrowLeft,
   ArrowCounterClockwise,
@@ -1145,8 +1143,6 @@ export default function PlayPage() {
   const lastAnswer = answers[answers.length - 1];
   const lastWasCorrect = Boolean(lastAnswer?.isCorrect);
   const lastWasSkipped = Boolean(lastAnswer && lastAnswer.userAnswer === null && !lastAnswer.isCorrect);
-  const lastPointsEarned = lastAnswer?.pointsEarned ?? 0;
-  const lastStreakAtAnswer = lastAnswer?.streakAtAnswer ?? 0;
   const questionTypeInfo = getQuestionTypeInfo(currentQuestion.question_type);
   const difficulty = questionSet?.difficulty;
   const difficultyLabel = difficulty === 'helppo' ? 'Helppo' : difficulty === 'normaali' ? 'Normaali' : difficulty;
@@ -1260,32 +1256,7 @@ export default function PlayPage() {
         {/* Feedback */}
         {showExplanation && (
           <div className="space-y-3 mb-6">
-            {lastWasCorrect ? (
-              <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-green-900 dark:text-green-100 font-semibold">
-                    ✓ Oikein! +{lastPointsEarned} pistettä
-                    {lastStreakAtAnswer >= 3 && (
-                      <span className="ml-2 text-sm text-green-700 dark:text-green-300">
-                        (Putkibonus +5 pistettä!)
-                      </span>
-                    )}
-                  </p>
-                  {lastStreakAtAnswer >= 3 && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 border border-orange-500/30 rounded-lg">
-                      <Fire size={20} weight="fill" className="text-orange-500" />
-                      <span className="text-sm font-bold text-orange-700 dark:text-orange-300">
-                        {lastStreakAtAnswer} putki
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5 text-sm font-semibold text-green-800 dark:text-green-200">
-                  <DiamondsFour size={18} weight="duotone" className="text-amber-600 dark:text-amber-400" />
-                  <span>{totalPoints} pistettä yhteensä</span>
-                </div>
-              </div>
-            ) : lastWasSkipped ? (
+            {lastWasCorrect ? null : lastWasSkipped ? (
               <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg p-4">
                 <p className="text-amber-900 dark:text-amber-100 font-semibold">Ohitit kysymyksen</p>
               </div>
