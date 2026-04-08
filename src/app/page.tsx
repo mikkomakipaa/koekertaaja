@@ -66,10 +66,10 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="relative isolate flex min-h-screen flex-col bg-[linear-gradient(180deg,rgba(99,102,241,0.18)_0%,rgba(99,102,241,0.10)_18%,rgba(255,255,255,1)_34%)] transition-colors duration-300 ease-out dark:bg-[linear-gradient(180deg,rgba(99,102,241,0.85)_0%,rgba(99,102,241,0.55)_20%,rgba(17,24,39,1)_36%)]">
+    <div className="relative isolate flex min-h-screen flex-col bg-white transition-colors duration-300 ease-out dark:bg-gray-900">
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[calc(env(safe-area-inset-top)+10rem)] bg-[linear-gradient(180deg,rgba(99,102,241,0.18)_0%,rgba(99,102,241,0.10)_55%,rgba(255,255,255,0)_100%)] dark:bg-[linear-gradient(180deg,rgba(99,102,241,0.85)_0%,rgba(99,102,241,0.55)_60%,rgba(17,24,39,0)_100%)]"
+        className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[calc(env(safe-area-inset-top)+10rem)] bg-[linear-gradient(180deg,rgba(99,102,241,0.24)_0%,rgba(99,102,241,0.18)_58%,rgba(255,255,255,0)_100%)] dark:bg-[linear-gradient(180deg,rgba(99,102,241,0.92)_0%,rgba(99,102,241,0.68)_60%,rgba(17,24,39,0)_100%)] md:bg-[linear-gradient(180deg,rgba(99,102,241,0.18)_0%,rgba(99,102,241,0.10)_55%,rgba(255,255,255,0)_100%)] md:dark:bg-[linear-gradient(180deg,rgba(99,102,241,0.85)_0%,rgba(99,102,241,0.55)_60%,rgba(17,24,39,0)_100%)]"
       />
       <a
         href="#main-content"
@@ -79,7 +79,7 @@ export default function HomePage() {
       </a>
 
       <main id="main-content" tabIndex={-1} className="relative z-10 flex-1">
-        <header className="hero-fade">
+        <header className="hero-fade bg-indigo-100/90 dark:bg-indigo-900/70 md:bg-transparent md:dark:bg-transparent">
           <section
             aria-labelledby="dashboard-heading"
             className="pt-[env(safe-area-inset-top)] text-slate-950 dark:text-white"
