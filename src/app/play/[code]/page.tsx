@@ -1007,7 +1007,6 @@ export default function PlayPage() {
             actionLabel="Takaisin"
             actionIcon={<ArrowLeft size={18} weight="bold" />}
             onAction={() => router.push('/play?mode=opettele')}
-            sticky={false}
           />
 
           <div className="mx-auto max-w-4xl px-4 py-3 md:py-8">

@@ -68,8 +68,8 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} flex flex-col h-full`}>
-        <main className="flex-1 overflow-auto">
+      <body className={`${inter.className} flex min-h-full flex-col`}>
+        <main className="flex-1">
           {children}
         </main>
         <Toaster richColors position="top-center" />
