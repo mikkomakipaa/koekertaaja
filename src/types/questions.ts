@@ -145,6 +145,7 @@ export interface QuestionSet {
   mode: Mode;  // 'quiz' for traditional assessment, 'flashcard' for memorization-focused
   topic?: string;
   subtopic?: string;
+  topic_distribution?: Record<string, number>;
   question_count: number;
   exam_length?: number;
   exam_date?: string | null;

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { createServerClient, requireAdmin, requireAuth, resolveAuthError, verifyAuth } from '@/lib/supabase/server-auth';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { isAdmin } from '@/lib/auth/admin';
+import { normalizeTopicLabel } from '@/lib/topics/normalization';
 import { parseDatabaseQuestion } from '@/types/database';
 import { createLogger } from '@/lib/logger';
 import { findRelatedFlashcardCode } from '@/lib/supabase/queries';
@@ -182,7 +183,54 @@ async function getPlayableQuestionSets(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to load question sets' }, { status: 500 });
     }
 
-    return NextResponse.json({ data: data || [] });
+    const questionSets = (data || []) as PublicQuestionSet[];
+
+    if (questionSets.length === 0) {
+      return NextResponse.json({ data: [] });
+    }
+
+    const setModeById = new Map(questionSets.map((set) => [set.id, set.mode]));
+    const { data: questionRows, error: questionsError } = await supabase
+      .from('questions')
+      .select('question_set_id, question_type, topic')
+      .in('question_set_id', questionSets.map((set) => set.id));
+
+    if (questionsError) {
+      return NextResponse.json({ error: 'Failed to load question set topics' }, { status: 500 });
+    }
+
+    const topicDistributionBySetId = new Map<string, Record<string, number>>();
+
+    for (const row of (questionRows || []) as Array<{
+      question_set_id: string;
+      question_type: string;
+      topic: string | null;
+    }>) {
+      const setMode = setModeById.get(row.question_set_id);
+      if (!setMode) {
+        continue;
+      }
+
+      if (setMode === 'quiz' && row.question_type === 'flashcard') {
+        continue;
+      }
+
+      const normalizedTopic = row.topic ? normalizeTopicLabel(row.topic, { context: 'api.question-sets.playable' }).trim() : '';
+      if (!normalizedTopic) {
+        continue;
+      }
+
+      const currentDistribution = topicDistributionBySetId.get(row.question_set_id) ?? {};
+      currentDistribution[normalizedTopic] = (currentDistribution[normalizedTopic] ?? 0) + 1;
+      topicDistributionBySetId.set(row.question_set_id, currentDistribution);
+    }
+
+    return NextResponse.json({
+      data: questionSets.map((set) => ({
+        ...set,
+        topic_distribution: topicDistributionBySetId.get(set.id) ?? {},
+      })),
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unauthorized';
     const status = message.includes('Unauthorized') ? 401 : 500;

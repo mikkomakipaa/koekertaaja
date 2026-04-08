@@ -18,6 +18,7 @@ import { VisualQuestionPreview } from '@/components/questions/VisualQuestionPrev
 import { ResultsScreen } from '@/components/play/ResultsScreen';
 import { FlashcardSession } from '@/components/play/FlashcardSession';
 import { PlaySessionHeader } from '@/components/play/PlaySessionHeader';
+import { PlayTopicSelector } from '@/components/play/PlayTopicSelector';
 import { SpeedQuizIntro, SpeedQuizTimer } from '@/components/speedQuiz';
 import { useGameSession } from '@/hooks/useGameSession';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
@@ -37,9 +38,17 @@ import {
   shouldShowAikahaasteTimer,
 } from '@/lib/play/aikahaaste';
 import {
+  ALL_TOPICS,
+  buildAvailableTopics,
+  buildStudyTopicHref,
+  buildTopicCounts,
   buildFlashcardTopicCounts,
   buildQuestionTopicLookup,
+  filterQuestionsByTopic,
   filterFlashcardsByTopic,
+  QUIZ_TOPIC_SELECTOR_QUERY_PARAM,
+  resolveRequestedTopic,
+  shouldShowQuizTopicSelector,
 } from '@/lib/play/flashcard-topic-lookup';
 import { QuestionSetWithQuestions, StudyMode, Flashcard, type QuestionType, type QuestionFlagReason } from '@/types';
 import { createLogger } from '@/lib/logger';
@@ -165,13 +174,6 @@ export default function PlayPage() {
   const { getMistakes, removeMistake, mistakeCount, error: mistakesError } = useReviewMistakes(code);
   const { updateProgress, clearProgress } = useSessionProgress(questionSet?.code ?? code);
 
-  const resolveRequestedTopic = useCallback((topics: string[]): string | null => {
-    const requestedTopic = topicParam?.trim();
-    if (!requestedTopic) return null;
-    const lowered = requestedTopic.toLowerCase();
-    return topics.find((topic) => topic.trim().toLowerCase() === lowered) ?? null;
-  }, [topicParam]);
-
   const mistakeQuestions = useMemo(() => {
     if (!isReviewMode || !questionSet?.questions) return [];
     const mistakes = getMistakes();
@@ -205,13 +207,17 @@ export default function PlayPage() {
     const sourceQuestions = (isReviewMode ? mistakeQuestions : quizSafeQuestions).filter(
       (question) => isFlashcardMode || question.question_type !== 'flashcard'
     );
+    const topicScopedQuestions =
+      !isFlashcardMode && !isReviewMode && !isAikahaaste
+        ? filterQuestionsByTopic(sourceQuestions, selectedTopic)
+        : sourceQuestions;
 
     if (!isAikahaaste) {
-      return sourceQuestions;
+      return topicScopedQuestions;
     }
 
-    return selectRandomQuestionsForAikahaaste(sourceQuestions, AIKAHAASTE_QUESTION_COUNT);
-  }, [isAikahaaste, isReviewMode, mistakeQuestions, questionSet?.questions, quizSafeQuestions]);
+    return selectRandomQuestionsForAikahaaste(topicScopedQuestions, AIKAHAASTE_QUESTION_COUNT);
+  }, [isAikahaaste, isFlashcardMode, isReviewMode, mistakeQuestions, questionSet?.questions, quizSafeQuestions, selectedTopic]);
 
   const questionTopicLookup = useMemo(() => {
     if (!questionSet?.questions) {
@@ -224,11 +230,21 @@ export default function PlayPage() {
     () => buildFlashcardTopicCounts(flashcards, questionTopicLookup),
     [flashcards, questionTopicLookup]
   );
+  const quizTopicCounts = useMemo(() => buildTopicCounts(quizSafeQuestions), [quizSafeQuestions]);
 
   const filteredFlashcards = useMemo(
     () => filterFlashcardsByTopic(flashcards, selectedTopic, questionTopicLookup),
     [flashcards, selectedTopic, questionTopicLookup]
   );
+  const quizTopicSelectorRequested = searchParams.get(QUIZ_TOPIC_SELECTOR_QUERY_PARAM) === '1';
+  const showQuizTopicSelector = shouldShowQuizTopicSelector({
+    availableTopicCount: availableTopics.length,
+    isAikahaaste,
+    isReviewMode,
+    selectorRequested: quizTopicSelectorRequested,
+    studyMode,
+  });
+  const showFlashcardTopicSelector = studyMode === 'opettele' && availableTopics.length > 1 && !selectedTopic;
 
   const {
     currentQuestion,
@@ -456,19 +472,16 @@ export default function PlayPage() {
           const cards = convertQuestionsToFlashcards(combinedSet.questions);
           // Shuffle flashcards for varied practice
           setFlashcards(shuffleArray(cards));
-          // Extract unique topics from questions
-          const topics = [...new Set(
-            combinedSet.questions
-              .map(q => q.topic)
-              .filter((t): t is string => t !== null && t !== undefined && t.trim().length > 0)
-          )];
+          const topics = buildAvailableTopics(combinedSet.questions);
           setAvailableTopics(topics);
           // Auto-select if only one topic or no topics
-          const requestedTopic = resolveRequestedTopic(topics);
+          const requestedTopic = resolveRequestedTopic(topics, topicParam);
           if (requestedTopic) {
             setSelectedTopic(requestedTopic);
           } else if (topics.length <= 1) {
-            setSelectedTopic('ALL');
+            setSelectedTopic(ALL_TOPICS);
+          } else {
+            setSelectedTopic(null);
           }
           setState('playing');
         } else {
@@ -487,19 +500,20 @@ export default function PlayPage() {
           const cards = convertQuestionsToFlashcards(data.questions);
           // Shuffle flashcards for varied practice
           setFlashcards(shuffleArray(cards));
-          // Extract unique topics from questions
-          const topics = [...new Set(
-            data.questions
-              .map(q => q.topic)
-              .filter((t): t is string => t !== null && t !== undefined && t.trim().length > 0)
-          )];
+          const topicSourceQuestions =
+            requestedStudyMode === 'opettele' || data.mode === 'flashcard'
+              ? data.questions
+              : data.questions.filter((question) => question.question_type !== 'flashcard');
+          const topics = buildAvailableTopics(topicSourceQuestions);
           setAvailableTopics(topics);
           // Auto-select if only one topic or no topics
-          const requestedTopic = resolveRequestedTopic(topics);
+          const requestedTopic = resolveRequestedTopic(topics, topicParam);
           if (requestedTopic) {
             setSelectedTopic(requestedTopic);
           } else if (topics.length <= 1) {
-            setSelectedTopic('ALL');
+            setSelectedTopic(ALL_TOPICS);
+          } else {
+            setSelectedTopic(null);
           }
 
           setState('playing');
@@ -514,7 +528,7 @@ export default function PlayPage() {
     if (code) {
       loadQuestionSet();
     }
-  }, [code, allCodes, requestedStudyMode, draftParam, resolveRequestedTopic]);
+  }, [code, allCodes, requestedStudyMode, draftParam, topicParam]);
 
   useEffect(() => {
     if (!questionSet || questionSet.mode !== 'flashcard' || modeParam === 'opettele') {
@@ -532,12 +546,23 @@ export default function PlayPage() {
       questionSet &&
       state === 'playing' &&
       selectedQuestions.length === 0 &&
+      !showQuizTopicSelector &&
+      !showFlashcardTopicSelector &&
       (!isReviewMode || mistakeQuestions.length > 0)
     ) {
       startNewSession();
       setSessionStartTime(Date.now());
     }
-  }, [questionSet, state, selectedQuestions.length, startNewSession, isReviewMode, mistakeQuestions.length]);
+  }, [
+    questionSet,
+    state,
+    selectedQuestions.length,
+    startNewSession,
+    isReviewMode,
+    mistakeQuestions.length,
+    showQuizTopicSelector,
+    showFlashcardTopicSelector,
+  ]);
 
   useEffect(() => {
     if (!questionSet) return;
@@ -995,96 +1020,65 @@ export default function PlayPage() {
       );
     }
 
-    // Show topic selection if topics are available and none is selected
-    if (availableTopics.length > 1 && !selectedTopic) {
+    if (showFlashcardTopicSelector) {
       return (
-        <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
-          <PlaySessionHeader
-            tone="flashcard"
-            title={displayName}
-            icon={<Book size={20} weight="duotone" />}
-            actionLabel="Takaisin"
-            actionIcon={<ArrowLeft size={18} weight="bold" />}
-            onAction={() => router.push('/play?mode=opettele')}
-          />
-
-          <div className="mx-auto max-w-4xl px-4 py-3 md:py-8">
-            <div className="space-y-3">
-              <Card
-                variant="interactive"
-                padding="none"
-                className="border-teal-300/80 bg-teal-50/70 dark:border-teal-700/70 dark:bg-teal-950/20"
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedTopic('ALL')}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    setSelectedTopic('ALL');
-                  }
-                }}
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                        Kaikki aiheet
-                      </h3>
-                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                        Harjoittele kaikkia aiheita ({flashcards.length} korttia)
-                      </p>
-                    </div>
-                    <ArrowRight size={18} weight="bold" className="shrink-0 text-teal-600 dark:text-teal-400" aria-hidden="true" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {availableTopics.map((topic) => {
-                const topicCardCount = flashcardTopicCounts.get(topic) ?? 0;
-
-                return (
-                  <Card
-                    key={topic}
-                    variant="interactive"
-                    padding="none"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setSelectedTopic(topic)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        setSelectedTopic(topic);
-                      }
-                    }}
-                  >
-                    <CardContent className="p-5">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="min-w-0">
-                          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                            {topic}
-                          </h3>
-                          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                            {topicCardCount} korttia
-                          </p>
-                        </div>
-                        <ArrowRight size={18} weight="bold" className="shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-          </div>
-        </div>
+        <PlayTopicSelector
+          tone="flashcard"
+          title={displayName}
+          subtitle="Mitä haluat opetella? Voit ottaa kaikki aiheet mukaan tai keskittyä yhteen aiheeseen."
+          icon={<Book size={20} weight="duotone" />}
+          onBack={() => router.push('/play?mode=opettele')}
+          options={[
+            {
+              key: ALL_TOPICS,
+              title: 'Kaikki aiheet',
+              description: `Harjoittele kaikkia aiheita (${flashcards.length} korttia)`,
+              emphasized: true,
+              onSelect: () => setSelectedTopic(ALL_TOPICS),
+            },
+            ...availableTopics.map((topic) => ({
+              key: topic,
+              title: topic,
+              description: `${flashcardTopicCounts.get(topic) ?? 0} korttia`,
+              onSelect: () => setSelectedTopic(topic),
+            })),
+          ]}
+        />
       );
     }
 
     return (
       <FlashcardSession
         flashcards={filteredFlashcards}
-        questionSetName={selectedTopic && selectedTopic !== 'ALL' ? `${displayName} - ${selectedTopic}` : displayName}
+        questionSetName={selectedTopic && selectedTopic !== ALL_TOPICS ? `${displayName} - ${selectedTopic}` : displayName}
         onExit={handleBackToMenu}
+      />
+    );
+  }
+
+  if (showQuizTopicSelector && questionSet) {
+    return (
+      <PlayTopicSelector
+        tone="quiz"
+        title={displayName}
+        subtitle={`Mitä haluat harjoitella? ${questionSet.difficulty === 'helppo' ? 'Helppo' : 'Normaali'} pitää saman vaikeustason, vaikka valitset yhden aiheen.`}
+        icon={<ListBullets size={20} weight="duotone" />}
+        onBack={() => router.push('/play?mode=pelaa')}
+        options={[
+          {
+            key: ALL_TOPICS,
+            title: 'Kaikki aiheet',
+            description: `Saat tehtäviä tasaisesti eri aiheista (${quizSafeQuestions.length} kysymystä)`,
+            emphasized: true,
+            onSelect: () => router.push(buildStudyTopicHref(questionSet.code, 'pelaa', null)),
+          },
+          ...availableTopics.map((topic) => ({
+            key: topic,
+            title: topic,
+            description: `Harjoittele vain tämän aiheen tehtäviä (${quizTopicCounts.get(topic) ?? 0} kysymystä)`,
+            onSelect: () => router.push(buildStudyTopicHref(questionSet.code, 'pelaa', topic)),
+          })),
+        ]}
       />
     );
   }

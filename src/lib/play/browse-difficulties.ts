@@ -1,4 +1,5 @@
 import type { Difficulty, QuestionSet, StudyMode } from '@/types';
+import { buildQuizTopicSelectorHref as buildQuizTopicSelectorHrefFromTopicHelpers, hasMultipleTopicOptions as hasMultipleTopicOptionsFromTopicHelpers } from '@/lib/play/flashcard-topic-lookup';
 
 export type BrowseDifficulty = Difficulty | 'aikahaaste';
 
@@ -39,3 +40,6 @@ export const buildDifficultyHref = (
 
   return `/play/${setCode}?mode=${studyMode}`;
 };
+
+export const buildQuizTopicSelectorHref = buildQuizTopicSelectorHrefFromTopicHelpers;
+export const hasMultipleTopicOptions = hasMultipleTopicOptionsFromTopicHelpers;

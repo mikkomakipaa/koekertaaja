@@ -23,6 +23,7 @@ import {
 } from '@/lib/play/primary-action';
 import {
   buildDifficultyHref,
+  buildQuizTopicSelectorHref,
   getAvailableDifficulties,
   getDifficultyTargetSet,
   type BrowseDifficulty,
@@ -35,7 +36,7 @@ import { useSessionProgress } from '@/hooks/useSessionProgress';
 import { useRecentSearches } from '@/hooks/useRecentSearches';
 import { useScrollDetection } from '@/hooks/useScrollDetection';
 import { createLogger } from '@/lib/logger';
-import { stripDifficultySuffix } from '@/lib/question-set-name';
+import { buildGroupedQuestionSets, type GroupedQuestionSets } from '@/lib/play/group-question-sets';
 import {
   Books,
   Circle,
@@ -54,16 +55,6 @@ interface PlayBrowsePageClientProps {
 }
 
 type BrowseState = 'loading' | 'loaded' | 'error';
-
-interface GroupedQuestionSets {
-  key: string;
-  name: string;
-  subject: string;
-  topic?: string;
-  subtopic?: string;
-  grade?: number;
-  sets: QuestionSet[];
-}
 
 const logger = createLogger({ module: 'play.page' });
 
@@ -168,7 +159,10 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
     normaali: normaaliScore,
     aikahaaste: aikahaasteScore,
   };
-  const primaryDifficulty = getPrimaryDifficulty(availableDifficulties, difficultyScores);
+  const primaryDifficulty =
+    normaaliSet
+      ? 'normaali'
+      : getPrimaryDifficulty(availableDifficulties, difficultyScores);
   const primarySet = getDifficultyTargetSet(group.sets, primaryDifficulty);
   const primaryScore = difficultyScores[primaryDifficulty];
   const { progress: primaryProgress } = useSessionProgress(primarySet?.code);
@@ -181,6 +175,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
     hasScore: Boolean(primaryScore),
   });
   const latestDifficultyScore = getLatestDifficultyScore(availableDifficulties, difficultyScores);
+  const topicTargetSet = normaaliSet ?? helppoSet ?? primarySet;
 
   const difficultyOrder: Difficulty[] = ['helppo', 'normaali'];
   const reviewCandidates = difficultyOrder
@@ -218,6 +213,8 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
           ? `${difficultyLabels[primaryDifficulty]} · ${getQuizGradeMeta(primaryScore)}`
           : difficultyLabels[primaryDifficulty]
       : null;
+  const canChooseTopic = studyMode === 'pelaa' && Boolean(topicTargetSet);
+  const hasAikahaaste = studyMode === 'pelaa' && availableDifficulties.includes('aikahaaste') && Boolean(normaaliSet);
 
   return (
     <Card
@@ -274,53 +271,59 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                   }
                 />
 
-                <div
-                  className={cn(
-                    'grid gap-2',
-                    availableDifficulties.length === 3 ? 'grid-cols-3' : 'grid-cols-2'
-                  )}
-                >
-                  {availableDifficulties.map((difficulty) => {
-                    const set = getDifficultyTargetSet(group.sets, difficulty);
-                    const colors = difficultyColors[difficulty];
-                    const icon = difficultyIcons[difficulty];
-                    return (
-                      <Button
-                        key={difficulty}
-                        onClick={() =>
-                          set && router.push(buildDifficultyHref(set.code, studyMode, difficulty))
-                        }
-                        variant="secondary"
-                        size="chip"
-                        className={cn(
-                          'h-10 min-h-10 min-w-10 justify-center gap-1.5 rounded-lg border px-2.5 text-sm font-medium shadow-none max-[480px]:text-xs',
-                          difficulty === primaryDifficulty
-                            ? cn(
-                                colors.bg,
-                                colors.text,
-                                colors.focus,
-                                colors.border,
-                                'ring-1 ring-inset ring-current/12'
-                              )
-                            : 'border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100'
-                        )}
-                        aria-label={`${difficultyLabels[difficulty]} vaikeustaso`}
-                        aria-pressed={difficulty === primaryDifficulty}
-                      >
-                        <span className={cn('shrink-0', difficulty === primaryDifficulty ? colors.icon : 'text-slate-400 dark:text-slate-500')}>
-                          {icon}
-                        </span>
-                        {difficulty === 'aikahaaste' ? (
-                          <span className="truncate">
-                            <span className="sm:hidden">Aika</span>
-                            <span className="hidden sm:inline">Aikahaaste</span>
-                          </span>
-                        ) : (
-                          <span className="truncate">{difficultyLabels[difficulty]}</span>
-                        )}
-                      </Button>
-                    );
-                  })}
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {helppoSet ? (
+                    <Button
+                      onClick={() => router.push(buildDifficultyHref(helppoSet.code, studyMode, 'helppo'))}
+                      variant="secondary"
+                      size="default"
+                      className={cn(
+                        'min-h-11 justify-center rounded-lg border px-3 text-sm font-semibold shadow-none',
+                        difficultyColors.helppo.bg,
+                        difficultyColors.helppo.hover,
+                        difficultyColors.helppo.text,
+                        difficultyColors.helppo.border
+                      )}
+                      aria-label="Helppo"
+                    >
+                      <span className={cn('mr-2 shrink-0', difficultyColors.helppo.icon)}>{difficultyIcons.helppo}</span>
+                      Helppo
+                    </Button>
+                  ) : null}
+
+                  {canChooseTopic ? (
+                    <Button
+                      onClick={() => topicTargetSet && router.push(buildQuizTopicSelectorHref(topicTargetSet.code))}
+                      variant="secondary"
+                      size="default"
+                      className="min-h-11 justify-center rounded-lg border border-sky-200 bg-sky-50 px-3 text-sm font-semibold text-sky-800 shadow-none hover:bg-sky-100 dark:border-sky-700/60 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-sky-950/35"
+                      aria-label="Aihe"
+                    >
+                      <Sparkle size={18} weight="duotone" className="mr-2 shrink-0 text-sky-600 dark:text-sky-300" />
+                      Aihe
+                    </Button>
+                  ) : null}
+
+                  {hasAikahaaste ? (
+                    <Button
+                      onClick={() => normaaliSet && router.push(buildDifficultyHref(normaaliSet.code, studyMode, 'aikahaaste'))}
+                      variant="secondary"
+                      size="default"
+                      className={cn(
+                        'min-h-11 justify-center rounded-lg border px-3 text-sm font-semibold shadow-none',
+                        difficultyColors.aikahaaste.bg,
+                        difficultyColors.aikahaaste.hover,
+                        difficultyColors.aikahaaste.text,
+                        difficultyColors.aikahaaste.border
+                      )}
+                      aria-label="Aikahaaste"
+                    >
+                      <span className={cn('mr-2 shrink-0', difficultyColors.aikahaaste.icon)}>
+                        {difficultyIcons.aikahaaste}
+                      </span>
+                      Aikahaaste
+                    </Button>
+                  ) : null}
                 </div>
 
                 <div className="mt-3 flex min-h-8 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-slate-100 pt-3 dark:border-white/[0.08]">
@@ -571,26 +574,6 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
           throw new Error(message);
         }
 
-        const grouped = sets.reduce((acc, set) => {
-          const cleanName = stripDifficultySuffix(set.name);
-          const key = `${cleanName}|${set.subject}|${set.topic || ''}|${set.subtopic || ''}`;
-
-          if (!acc[key]) {
-            acc[key] = {
-              key,
-              name: cleanName,
-              subject: set.subject,
-              topic: set.topic,
-              subtopic: set.subtopic,
-              grade: set.grade,
-              sets: [],
-            };
-          }
-
-          acc[key].sets.push(set);
-          return acc;
-        }, {} as Record<string, GroupedQuestionSets>);
-
         const latestGroupExamDate = (group: GroupedQuestionSets): number | null => {
           const timestamps = group.sets
             .map((set) => set.exam_date)
@@ -613,7 +596,7 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
           return Math.max(...timestamps);
         };
 
-        const groupedArray = Object.values(grouped).sort((a, b) => {
+        const groupedArray = buildGroupedQuestionSets(sets).sort((a, b) => {
           const examA = latestGroupExamDate(a);
           const examB = latestGroupExamDate(b);
 

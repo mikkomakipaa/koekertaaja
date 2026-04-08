@@ -1,7 +1,13 @@
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
 import type { QuestionSet } from '@/types';
-import { buildDifficultyHref, getAvailableDifficulties, getDifficultyTargetSet } from '@/lib/play/browse-difficulties';
+import {
+  buildDifficultyHref,
+  buildQuizTopicSelectorHref,
+  getAvailableDifficulties,
+  getDifficultyTargetSet,
+  hasMultipleTopicOptions,
+} from '@/lib/play/browse-difficulties';
 
 const createSet = (overrides: Partial<QuestionSet>): QuestionSet => ({
   id: 'set-id',
@@ -61,5 +67,14 @@ describe('browse-difficulties', () => {
   it('builds normal quiz difficulty href with mode query param', () => {
     assert.strictEqual(buildDifficultyHref('XYZ789', 'pelaa', 'helppo'), '/play/XYZ789?mode=pelaa');
     assert.strictEqual(buildDifficultyHref('XYZ789', 'opettele', 'normaali'), '/play/XYZ789?mode=opettele');
+  });
+
+  it('builds quiz topic-selector hrefs on the shared play route', () => {
+    assert.strictEqual(buildQuizTopicSelectorHref('XYZ789'), '/play/XYZ789?mode=pelaa&selectTopic=1');
+  });
+
+  it('detects when browse cards should show topic selection', () => {
+    assert.strictEqual(hasMultipleTopicOptions({ Murtoluvut: 12, Geometria: 8 }), true);
+    assert.strictEqual(hasMultipleTopicOptions({ Murtoluvut: 12 }), false);
   });
 });
