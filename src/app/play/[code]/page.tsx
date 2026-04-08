@@ -1260,16 +1260,7 @@ export default function PlayPage() {
               <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg p-4">
                 <p className="text-amber-900 dark:text-amber-100 font-semibold">Ohitit kysymyksen</p>
               </div>
-            ) : (
-              <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg p-4">
-                <p className="text-red-900 dark:text-red-100 font-semibold">✗ Ei aivan oikein</p>
-                {answerEntryConfig?.feedbackHint && (
-                  <div className="mt-1 text-sm text-red-800 dark:text-red-200">
-                    <MathText>{answerEntryConfig.feedbackHint}</MathText>
-                  </div>
-                )}
-              </div>
-            )}
+            ) : null}
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg p-4">
               <p className="text-sm text-blue-900 dark:text-blue-100 font-medium mb-1">Selitys:</p>
