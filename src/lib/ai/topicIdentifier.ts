@@ -1,3 +1,5 @@
+import { readFile } from 'fs/promises';
+import path from 'path';
 import * as providerRouter from './providerRouter';
 import type { AIMessageContent, AIProvider } from './providerTypes';
 import { Subject, Difficulty } from '@/types';
@@ -7,6 +9,11 @@ import { normalizeSubtopicLabel, normalizeTopicLabel } from '@/lib/topics/normal
 
 const logger = createLogger({ module: 'topicIdentifier' });
 const TOPIC_IDENTIFIER_PROMPT_VERSION = '1.0.0';
+const TOPIC_IDENTIFIER_FALLBACK_VERSION = 'fallback-curriculum-v1';
+const SUBJECT_CURRICULUM_BASE_PATH = path.join(
+  process.cwd(),
+  'src/config/prompt-templates/subjects'
+);
 
 export interface IdentifyTopicsParams {
   subject: Subject;
@@ -59,12 +66,180 @@ export interface TopicAnalysisResult {
   metadata: TopicAnalysisMetadata;
 }
 
+interface FallbackTopicAnalysisParams {
+  subject: Subject;
+  grade?: number;
+  materialText?: string;
+  materialFiles?: Array<{
+    type: string;
+    name: string;
+    data: string;
+  }>;
+}
+
 /**
  * Get simple topic names for legacy code
  * @deprecated Use enhanced topics directly when possible
  */
 export function getSimpleTopics(result: TopicAnalysisResult): string[] {
   return result.topics.map(t => t.name);
+}
+
+function normalizeSubjectCurriculumKey(subject: string): string | null {
+  const normalized = subject.trim().toLowerCase();
+  const subjectMap: Record<string, string> = {
+    english: 'english',
+    englanti: 'english',
+    swedish: 'swedish',
+    ruotsi: 'swedish',
+    math: 'math',
+    matematiikka: 'math',
+    physics: 'physics',
+    fysiikka: 'physics',
+    chemistry: 'chemistry',
+    kemia: 'chemistry',
+    finnish: 'finnish',
+    suomi: 'finnish',
+    'äidinkieli': 'finnish',
+    history: 'history',
+    historia: 'history',
+    biology: 'biology',
+    biologia: 'biology',
+    geography: 'geography',
+    maantiede: 'geography',
+    maantieto: 'geography',
+    'environmental-studies': 'environmental-studies',
+    ympäristöoppi: 'environmental-studies',
+    art: 'art',
+    kuvataide: 'art',
+    music: 'music',
+    musiikki: 'music',
+    pe: 'pe',
+    liikunta: 'pe',
+    religion: 'religion',
+    uskonto: 'religion',
+    ethics: 'ethics',
+    'elämänkatsomustieto': 'ethics',
+    society: 'society',
+    yhteiskuntaoppi: 'society',
+  };
+
+  return subjectMap[normalized] ?? null;
+}
+
+function extractCurriculumBulletTopics(curriculumEntry: string): string[] {
+  return curriculumEntry
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('- '))
+    .map((line) => line.replace(/^- /, '').trim())
+    .filter(Boolean)
+    .slice(0, 5);
+}
+
+function splitTopicLine(rawTopic: string): { name: string; parts: string[] } {
+  const [head, ...rest] = rawTopic.split(':');
+  const name = (head || rawTopic).trim();
+  const tail = rest.join(':').trim();
+  const parts = tail
+    ? tail.split(',').map((part) => part.trim()).filter(Boolean)
+    : [];
+
+  return { name, parts };
+}
+
+function extractKeywords(name: string, parts: string[]): string[] {
+  const source = [name, ...parts].join(' ');
+  const words = Array.from(
+    new Set(
+      source
+        .toLocaleLowerCase('fi-FI')
+        .match(/[a-zåäöA-ZÅÄÖ0-9-]+/g) ?? []
+    )
+  ).filter((word) => word.length >= 4);
+
+  const keywords = words.slice(0, 5);
+  while (keywords.length < 3) {
+    keywords.push(name.toLocaleLowerCase('fi-FI'));
+  }
+
+  return keywords.slice(0, 5);
+}
+
+async function loadCurriculumFallbackTopics(subject: Subject, grade?: number): Promise<string[]> {
+  const curriculumKey = normalizeSubjectCurriculumKey(subject);
+  if (!curriculumKey) {
+    return [];
+  }
+
+  const curriculumPath = path.join(SUBJECT_CURRICULUM_BASE_PATH, `${curriculumKey}.json`);
+  const raw = await readFile(curriculumPath, 'utf8');
+  const parsed = JSON.parse(raw) as Record<string, string>;
+  const gradeKey = grade ? String(grade) : Object.keys(parsed)[0];
+  const selectedEntry = parsed[gradeKey];
+
+  if (!selectedEntry) {
+    return [];
+  }
+
+  return extractCurriculumBulletTopics(selectedEntry);
+}
+
+export async function buildFallbackTopicAnalysis(
+  params: FallbackTopicAnalysisParams
+): Promise<TopicAnalysisResult> {
+  const fallbackTopics = await loadCurriculumFallbackTopics(params.subject, params.grade);
+  if (fallbackTopics.length < 3) {
+    throw new Error('Fallback topic identification could not derive enough curriculum topics');
+  }
+
+  const coverage = Number((1 / fallbackTopics.length).toFixed(2));
+  const materialType: TopicAnalysisMetadata['materialType'] =
+    params.materialText && params.materialFiles?.length
+      ? 'mixed'
+      : params.materialFiles?.length
+        ? 'worksheet'
+        : params.materialText
+          ? 'textbook'
+          : 'notes';
+
+  const topics: EnhancedTopic[] = fallbackTopics.map((rawTopic, index) => {
+    const { name, parts } = splitTopicLine(rawTopic);
+    const normalizedName = normalizeTopicLabel(name);
+    const subtopics = (parts.length > 0 ? parts : [normalizedName, normalizedName])
+      .map((part) => normalizeSubtopicLabel(part))
+      .slice(0, 4);
+
+    while (subtopics.length < 2) {
+      subtopics.push(normalizedName);
+    }
+
+    return {
+      name: normalizedName,
+      coverage: index === fallbackTopics.length - 1
+        ? Number((1 - coverage * (fallbackTopics.length - 1)).toFixed(2))
+        : coverage,
+      difficulty: params.grade && params.grade <= 4 ? 'helppo' : 'normaali',
+      keywords: extractKeywords(normalizedName, subtopics),
+      subtopics,
+      importance: index === 0 ? 'high' : 'medium',
+      questionCapacity: Math.max(6, Math.min(18, subtopics.length * 4 + 4)),
+      flashcardCapacity: Math.max(4, Math.min(12, subtopics.length * 3)),
+    };
+  });
+
+  return {
+    topics,
+    primarySubject: params.subject,
+    metadata: {
+      totalConcepts: topics.reduce((sum, topic) => sum + topic.subtopics.length, 0),
+      estimatedDifficulty: params.grade && params.grade <= 4 ? 'helppo' : 'normaali',
+      completeness: 0.55,
+      materialType,
+      recommendedQuestionPoolSize: Math.min(80, Math.max(30, topics.length * 12)),
+      promptVersion: TOPIC_IDENTIFIER_FALLBACK_VERSION,
+    },
+  };
 }
 
 /**
@@ -194,6 +369,8 @@ export async function identifyTopics(
     provider: selection.provider,
     model: selection.model,
     maxTokens: 3000,
+    reasoningEffort: selection.provider === 'openai' ? 'minimal' : undefined,
+    textVerbosity: selection.provider === 'openai' ? 'low' : undefined,
   });
   logger.info(
     {

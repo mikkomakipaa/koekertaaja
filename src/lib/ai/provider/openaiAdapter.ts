@@ -4,6 +4,8 @@ import { AIProviderError, type AIErrorCategory, type AIMessageContent, type AIRe
 export interface OpenAIAdapterOptions {
   model?: string;
   maxTokens?: number;
+  reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high';
+  textVerbosity?: 'low' | 'medium' | 'high';
 }
 
 interface OpenAIResponsesCreateParams {
@@ -331,6 +333,8 @@ export function createOpenAIAdapter(dependencies: OpenAIAdapterDependencies = {}
     const client = dependencies.client ?? getDefaultClient();
     const model = options.model ?? 'gpt-5-mini';
     const maxOutputTokens = options.maxTokens ?? 16000;
+    const reasoningEffort = options.reasoningEffort;
+    const textVerbosity = options.textVerbosity;
     const inputContent = mapMessagesToInput(messages);
     const startedAt = Date.now();
 
@@ -342,6 +346,8 @@ export function createOpenAIAdapter(dependencies: OpenAIAdapterDependencies = {}
           mappedPartCount: inputContent.length,
           maxOutputTokens,
           model,
+          reasoningEffort,
+          textVerbosity,
         },
         'Calling OpenAI Responses API'
       );
@@ -349,6 +355,8 @@ export function createOpenAIAdapter(dependencies: OpenAIAdapterDependencies = {}
       const response = await client.responses.create({
         model,
         max_output_tokens: maxOutputTokens,
+        reasoning: reasoningEffort ? { effort: reasoningEffort } : undefined,
+        text: textVerbosity ? { verbosity: textVerbosity } : undefined,
         input: [
           {
             role: 'user',

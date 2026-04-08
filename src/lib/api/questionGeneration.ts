@@ -8,6 +8,7 @@
 import { fileTypeFromBuffer } from 'file-type';
 import { generateQuestions } from '@/lib/ai/questionGenerator';
 import { identifyTopics, getSimpleTopics, type EnhancedTopic } from '@/lib/ai/topicIdentifier';
+import { buildFallbackTopicAnalysis } from '@/lib/ai/topicIdentifier';
 import { createQuestionSet, type CreateQuestionSetResult } from '@/lib/supabase/write-queries';
 import { generateCode } from '@/lib/utils';
 import { Subject, Difficulty, QuestionSet, Question } from '@/types';
@@ -396,13 +397,33 @@ export async function identifyTopicsFromMaterial(
     'Identifying topics from material'
   );
 
-  const topicAnalysis = await identifyTopics({
-    subject: request.subject,
-    grade: request.grade,
-    materialText: request.materialText,
-    materialFiles: request.materialFiles,
-    targetProvider: request.targetProvider,
-  });
+  let topicAnalysis: import('@/lib/ai/topicIdentifier').TopicAnalysisResult;
+
+  try {
+    topicAnalysis = await identifyTopics({
+      subject: request.subject,
+      grade: request.grade,
+      materialText: request.materialText,
+      materialFiles: request.materialFiles,
+      targetProvider: request.targetProvider,
+    });
+  } catch (error) {
+    logger.warn(
+      {
+        subject: request.subject,
+        grade: request.grade,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      'AI topic identification failed, falling back to curriculum-derived topics'
+    );
+
+    topicAnalysis = await buildFallbackTopicAnalysis({
+      subject: request.subject,
+      grade: request.grade,
+      materialText: request.materialText,
+      materialFiles: request.materialFiles,
+    });
+  }
 
   const aiRecommendedPoolSize = topicAnalysis.metadata.recommendedQuestionPoolSize;
   const fallbackRecommendedPoolSize = recommendQuestionPoolSize({

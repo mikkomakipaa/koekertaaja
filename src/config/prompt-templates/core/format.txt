@@ -51,7 +51,8 @@ TYYPPIKOHTAINEN MINIMISOPIMUS:
 
 SELITYSTYYLI (INTENT-KRIITTINEN):
 - Kirjoita selitys suoraan oppilaalle (sinä-muoto).
-- Selitys sisältää: miksi oikein, tyypillinen kompastuskohta, lyhyt yhteys/esimerkki.
+- Selitys sisältää: miksi vastaus pitää paikkansa, tyypillinen kompastuskohta, lyhyt yhteys/esimerkki.
+{{explanation_style_rules}}
 
 NUMEROMUOTOILU (SUOMI):
 - Desimaalierotin: pilkku (esim. 15,25).

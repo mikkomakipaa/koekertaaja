@@ -24,3 +24,4 @@ TAGIEN EROTUS (PAKOLLINEN):
 LAATUVAATIMUKSET:
 - Multiple choice -kysymyksissä tasan 4 vaihtoehtoa.
 - Selitykset ovat henkilökohtaisia (sinä-muoto), informatiivisia ja selkeitä.
+- Älä aloita selitystä sanalla "Oikein" tai rakenteella "Oikein —"; mene suoraan perusteluun tai asiayhteyteen.

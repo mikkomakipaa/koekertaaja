@@ -322,6 +322,7 @@ export class PromptBuilder {
 
     const { languageSubjectNote, languageAnswerLanguageRules } =
       this.formatLanguageSubjectNotes(params.subject);
+    const explanationStyleRules = this.formatExplanationStyleRules(params.subject, subjectType);
 
     // NEW: Use distribution if available (Phase 2)
     const distributionSection = params.distribution
@@ -357,6 +358,7 @@ export class PromptBuilder {
       concepts_intro: subjectType === 'concepts' ? conceptsIntro : '',
       language_subject_note: languageSubjectNote,
       language_answer_language_rules: languageAnswerLanguageRules,
+      explanation_style_rules: explanationStyleRules,
     };
   }
 
@@ -599,6 +601,26 @@ TÄRKEÄÄ:
     return `Analysoi ${materialType} ja luo ${questionCount} monipuolista kysymystä aiheesta "${subject}".`;
   }
 
+  private formatExplanationStyleRules(subject: Subject, subjectType: SubjectType): string {
+    const subjectKey = subject.toLowerCase();
+
+    if (subjectType !== 'written') {
+      return '';
+    }
+
+    const rules = [
+      '- Älä aloita selitystä sanalla "Oikein" tai muodolla "Oikein —".',
+      '- Älä käytä rakennetta "Oikea vastaus on ..." muuten kuin pakollisen termin nimeämiseen; suosi suoraa perustelua.',
+      '- Aloita selitys suoraan syyllä, seurauksella, vertailulla tai asiayhteydellä.',
+    ];
+
+    if (this.isHistorySubject(subjectKey)) {
+      rules.push('- Historiassa selitä tapahtuman syy, seuraus tai ajallinen yhteys luonnollisena väitelauseena.');
+    }
+
+    return rules.join('\n');
+  }
+
   private formatLanguageSubjectNotes(subject: Subject): {
     languageSubjectNote: string;
     languageAnswerLanguageRules: string;
@@ -692,6 +714,7 @@ TÄRKEÄÄ:
       maantiede: 'geography',
       maantieto: 'geography',
       'environmental-studies': 'environmental-studies',
+      ympäristöoppi: 'environmental-studies',
       art: 'art',
       music: 'music',
       pe: 'pe',

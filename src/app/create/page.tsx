@@ -394,6 +394,31 @@ export default function CreatePage() {
     );
   };
 
+  const stopCreationAfterTopicFailure = (message: string) => {
+    setCreationSteps((prev) =>
+      prev.map((step) => {
+        if (step.id === 'topics') {
+          return step;
+        }
+
+        if (step.status !== 'pending') {
+          return step;
+        }
+
+        return {
+          ...step,
+          metadata: {
+            ...step.metadata,
+            message: 'Keskeytetty, koska aihealueiden tunnistus epäonnistui.',
+          },
+        };
+      })
+    );
+
+    setState('form');
+    setError(message);
+  };
+
   // Handler for topic confirmation dialog
   const handleTopicConfirmation = (
     totalQuestions: number,
@@ -555,26 +580,34 @@ export default function CreatePage() {
               }
             }
           } else {
-          let errorMessage = 'Aihealueiden tunnistus epäonnistui';
-          try {
-            const errorData = await topicsResponse.json();
-            if (typeof errorData?.error === 'string' && errorData.error.trim()) {
-              errorMessage = errorData.error;
+            let errorMessage = 'Aihealueiden tunnistus epäonnistui';
+            try {
+              const errorData = await topicsResponse.json();
+              if (typeof errorData?.error === 'string' && errorData.error.trim()) {
+                errorMessage = errorData.error;
+              }
+            } catch (parseError) {
+              logger.warn({ parseError }, 'Failed to parse topic identification error response');
             }
-          } catch (parseError) {
-            logger.warn({ parseError }, 'Failed to parse topic identification error response');
+            updateCreationStep('topics', 'error', {
+              message: errorMessage,
+              topics: [],
+            });
+            stopCreationAfterTopicFailure(errorMessage);
+            return;
           }
+        } catch (error) {
+          logger.warn({ error }, 'Topic identification failed');
+          const errorMessage =
+            error instanceof Error && error.message.trim()
+              ? error.message
+              : 'Aihealueiden tunnistus epäonnistui';
           updateCreationStep('topics', 'error', {
             message: errorMessage,
             topics: [],
           });
-        }
-        } catch (error) {
-          logger.warn({ error }, 'Topic identification failed');
-          updateCreationStep('topics', 'error', {
-            message: 'Aihealueiden tunnistus epäonnistui',
-            topics: [],
-          });
+          stopCreationAfterTopicFailure(errorMessage);
+          return;
         }
       }
 

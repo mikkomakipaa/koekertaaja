@@ -11,6 +11,8 @@ export interface GenerateWithAIOptions {
   provider?: AIProvider;
   model?: string;
   maxTokens?: number;
+  reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high';
+  textVerbosity?: 'low' | 'medium' | 'high';
   allowFallback?: boolean;
 }
 
