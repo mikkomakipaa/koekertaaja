@@ -40,7 +40,13 @@ export function PlaySessionHeader({
   const hasProgress = typeof progressCurrent === 'number' && typeof progressTotal === 'number';
 
   return (
-    <div className={sticky ? `${shellClassName} sticky top-0 z-10` : shellClassName}>
+    <div
+      className={
+        sticky
+          ? `${shellClassName} sticky top-0 z-10 pt-[env(safe-area-inset-top)]`
+          : `${shellClassName} pt-[env(safe-area-inset-top)]`
+      }
+    >
       <div className="mx-auto max-w-4xl px-4 py-1.5 md:py-4">
         <div className="grid h-12 grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-2 md:flex md:h-auto md:min-h-0 md:justify-between md:gap-3">
           {actionLabel && onAction ? (
