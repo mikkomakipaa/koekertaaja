@@ -5,11 +5,16 @@ import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import { QuestionDetailCard } from '@/components/play/ResultsScreen';
 import {
+  buildTopicMasteryItems,
   buildQuestionDetails,
   formatResultAnswer,
   getCelebrationQueue,
   getResultsHeaderCopy,
+  getResultsFeedbackMessage,
+  getResultsPerformanceBand,
   getNextCelebration,
+  getNewlyUnlockedBadges,
+  getPrimaryWeakTopicHref,
   getResultsBreakdown,
   getResultsSecondaryMeta,
   getSchoolGrade,
@@ -281,29 +286,78 @@ describe('ResultsScreen', () => {
 
   it('builds grade-first header copy used by the results screen', () => {
     assert.deepEqual(getResultsHeaderCopy(9, 10, 'quiz'), {
-      title: 'Koulunumero 9.5',
-      supportingText: 'Tämän kierroksen arvio näkyy suomalaisella 4-10 asteikolla.',
+      title: 'Tulokset',
+      supportingText: 'Tietovisan yhteenveto',
     });
     assert.equal(getResultsSecondaryMeta(9, 10), '9 / 10 oikein • 90%');
     assert.deepEqual(getResultsHeaderCopy(9, 10, 'flashcard'), {
-      title: 'Harjoitus valmis',
-      supportingText: 'Katso tämän kierroksen yhteenveto ja jatka harjoittelua seuraavaksi.',
+      title: 'Tulokset',
+      supportingText: 'Harjoituskierroksen yhteenveto',
     });
   });
 
-  it('uses the shared grade-first header helper and removes the top metric labels from the source', () => {
+  it('uses the shared minimal header helper and renders the new summary card stack in the source', () => {
     assert.ok(resultsScreenSource.includes('const resultsHeaderCopy = getResultsHeaderCopy(score, total, mode);'));
     assert.ok(resultsScreenSource.includes('{resultsHeaderCopy.title}'));
     assert.ok(resultsScreenSource.includes('{resultsHeaderCopy.supportingText}'));
-    assert.ok(!resultsScreenSource.includes('W Pisteet.'));
-    assert.ok(!resultsScreenSource.includes('Sigma Suoritus.'));
-    assert.ok(!resultsScreenSource.includes('Slay Kierros.'));
-    assert.ok(!resultsScreenSource.includes('Vibe Tulos.'));
-    assert.ok(!resultsScreenSource.includes('Mid Grindi.'));
-    assert.ok(!resultsScreenSource.includes('Paras putki'));
-    assert.ok(!resultsScreenSource.includes('Ohitetut'));
-    assert.ok(!resultsScreenSource.includes('Uusia merkkejä'));
-    assert.ok(!resultsScreenSource.includes('Henkilökohtainen ennätys'));
+    assert.ok(resultsScreenSource.includes('<GradeCard'));
+    assert.ok(resultsScreenSource.includes('newlyUnlockedBadges.length > 0'));
+    assert.ok(resultsScreenSource.includes('<BadgePreviewCard badges={newlyUnlockedBadges} />'));
+    assert.ok(resultsScreenSource.includes('<TopicMasterySection items={topicMasteryItems} />'));
+    assert.ok(resultsScreenSource.includes('primaryWeakTopicHref ?'));
+  });
+
+  it('builds weak-topic guidance and primary review routing from topic mastery data', () => {
+    const items = buildTopicMasteryItems(
+      {
+        Geometria: { correct: 1, total: 4, percentage: 25 },
+        Murtoluvut: { correct: 3, total: 4, percentage: 75 },
+        Yhteenlasku: { correct: 5, total: 5, percentage: 100 },
+      },
+      'FLASH123'
+    );
+
+    assert.equal(items[0]?.topic, 'Geometria');
+    assert.equal(items[0]?.statusLabel, 'Kertaa seuraavaksi');
+    assert.match(items[0]?.guidance ?? '', /kort/);
+    assert.equal(items[0]?.reviewHref, '/play/FLASH123?mode=opettele&topic=Geometria');
+    assert.equal(items[1]?.reviewHref, '/play/FLASH123?mode=opettele&topic=Murtoluvut');
+    assert.equal(items[2]?.reviewHref, null);
+    assert.equal(getPrimaryWeakTopicHref(items), '/play/FLASH123?mode=opettele&topic=Geometria');
+  });
+
+  it('returns no weak-topic primary CTA when topic data is absent or a perfect score has no weak bands', () => {
+    assert.deepEqual(buildTopicMasteryItems({}, 'FLASH123'), []);
+    assert.equal(getPrimaryWeakTopicHref([]), null);
+
+    const perfectItems = buildTopicMasteryItems(
+      {
+        Lukeminen: { correct: 4, total: 4, percentage: 100 },
+      },
+      'FLASH123'
+    );
+
+    assert.equal(getPrimaryWeakTopicHref(perfectItems), null);
+  });
+
+  it('keeps badge preview data empty unless there are newly unlocked badges', () => {
+    const badges = [
+      { id: 'perfect_score', name: 'Täysi onnistuminen' },
+      { id: 'streak_3', name: 'Hyvä vastausputki' },
+    ];
+
+    assert.deepEqual(getNewlyUnlockedBadges(badges, []), []);
+    assert.deepEqual(getNewlyUnlockedBadges(badges, ['streak_3']), [
+      { id: 'streak_3', name: 'Hyvä vastausputki' },
+    ]);
+  });
+
+  it('maps performance bands and feedback copy for the grade card', () => {
+    assert.equal(getResultsPerformanceBand(2, 10), 'weak');
+    assert.equal(getResultsPerformanceBand(7, 10), 'mid');
+    assert.equal(getResultsPerformanceBand(10, 10), 'strong');
+    assert.match(getResultsFeedbackMessage(10, 10), /Täysi osuma/);
+    assert.match(getResultsFeedbackMessage(3, 10), /heikoimmista aiheista/);
   });
 
   it('treats all incorrect answers as wrong when skippedQuestions is omitted', () => {

@@ -8,6 +8,8 @@ import {
 import { BadgeCollectionCard } from '@/components/badges/BadgeCollectionCard';
 import { ExamHistoryTab } from '@/components/achievements/ExamHistoryTab';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { IconButton } from '@/components/ui/icon-button';
+import { PageTitle } from '@/components/ui/page-title';
 import { AchievementsMapSection } from '@/components/mindMap/AchievementsMapSection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getBadgeDefinitionCount, useBadges } from '@/hooks/useBadges';
@@ -56,17 +58,13 @@ export function AchievementsPageContent({
       <div className="mx-auto max-w-4xl space-y-6 p-6 pb-24">
         <section className="border-b border-slate-200/80 pb-4 dark:border-white/10">
           <div className="flex items-center gap-3">
-            <Link
-              href="/play"
-              className="inline-grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-black/[0.08] bg-black/[0.02] text-gray-600 transition-all hover:bg-black/[0.04] hover:text-gray-900 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
-              aria-label="Takaisin"
-            >
-              <ArrowLeft size={20} weight="regular" aria-hidden="true" />
-            </Link>
+            <IconButton asChild aria-label="Takaisin">
+              <Link href="/play">
+                <ArrowLeft size={20} weight="regular" aria-hidden="true" />
+              </Link>
+            </IconButton>
             <div className="min-w-0">
-              <h1 className="text-[22px] font-bold leading-[1.1] tracking-tight text-slate-950 dark:text-slate-50 max-[480px]:text-[19px]">
-                Saavutukset
-              </h1>
+              <PageTitle>Saavutukset</PageTitle>
             </div>
           </div>
         </section>
@@ -111,17 +109,13 @@ function EmptyAchievementsState() {
       <div className="mx-auto max-w-4xl space-y-3">
         <section className="border-b border-slate-200/80 pb-4 dark:border-white/10">
           <div className="flex items-center gap-3">
-            <Link
-              href="/play"
-              className="inline-grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-black/[0.08] bg-black/[0.02] text-gray-600 transition-all hover:bg-black/[0.04] hover:text-gray-900 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
-              aria-label="Takaisin"
-            >
-              <ArrowLeft size={20} weight="regular" aria-hidden="true" />
-            </Link>
+            <IconButton asChild aria-label="Takaisin">
+              <Link href="/play">
+                <ArrowLeft size={20} weight="regular" aria-hidden="true" />
+              </Link>
+            </IconButton>
             <div className="min-w-0">
-              <h1 className="text-[22px] font-bold leading-[1.1] tracking-tight text-slate-950 dark:text-slate-50 max-[480px]:text-[19px]">
-                Saavutukset
-              </h1>
+              <PageTitle>Saavutukset</PageTitle>
             </div>
           </div>
         </section>

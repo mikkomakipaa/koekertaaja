@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { AppShellHeader } from '@/components/layout/AppShellHeader';
 import type { AppShellHeaderTone } from '@/components/layout/AppShellHeader';
@@ -90,14 +91,13 @@ export default function CreateResultsPage() {
             description={headerDescription}
             tone={headerTone}
             leadingAction={
-              <button
-                type="button"
+              <IconButton
                 onClick={() => router.push('/create')}
                 aria-label="Takaisin luontiin"
-                className="inline-grid h-11 w-11 place-items-center rounded-xl bg-transparent text-black/55 transition-colors hover:bg-white/70 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100 dark:focus-visible:ring-indigo-300 dark:focus-visible:ring-offset-gray-900"
+                className="rounded-xl border-transparent bg-transparent text-black/55 hover:bg-white/70 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100"
               >
                 <ArrowLeft size={20} weight="regular" aria-hidden="true" />
-              </button>
+              </IconButton>
             }
           />
 

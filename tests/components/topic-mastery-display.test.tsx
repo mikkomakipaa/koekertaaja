@@ -51,7 +51,7 @@ describe('TopicMasteryDisplay', () => {
     globalThis.localStorage?.setItem(
       'topic_mastery_CTA_TEST',
       JSON.stringify({
-        'Substantiivit ja artikkelit': { correct: 2, total: 2 },
+        'Substantiivit ja artikkelit': { correct: 1, total: 2 },
       })
     );
 
@@ -62,8 +62,8 @@ describe('TopicMasteryDisplay', () => {
       })
     );
 
-    assert.ok(html.includes('Kertaa korteilla'));
-    assert.match(html, /href="\/play\/FLASH123\?mode=opettele"/);
+    assert.ok(html.includes('Kertaa'));
+    assert.match(html, /href="\/play\/FLASH123\?mode=opettele&amp;topic=Substantiivit%20ja%20artikkelit"/);
   });
 
   it('does not render flashcard CTA when flashcardSetCode is missing, null, or empty', () => {
@@ -94,8 +94,8 @@ describe('TopicMasteryDisplay', () => {
       })
     );
 
-    assert.ok(!withoutProp.includes('Kertaa korteilla'));
-    assert.ok(!withNull.includes('Kertaa korteilla'));
-    assert.ok(!withEmptyString.includes('Kertaa korteilla'));
+    assert.ok(!withoutProp.includes('Kertaa'));
+    assert.ok(!withNull.includes('Kertaa'));
+    assert.ok(!withEmptyString.includes('Kertaa'));
   });
 });

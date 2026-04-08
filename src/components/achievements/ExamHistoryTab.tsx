@@ -8,6 +8,8 @@ import { getSubjectConfig } from '@/lib/utils/subject-config';
 import { getSchoolGrade } from '@/lib/play/results-screen';
 import { getGradeColors } from '@/lib/utils/grade-colors';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import type { ExamHistoryEntry } from '@/types/examHistory';
 
 const QUIZ_DIFFICULTIES = new Set(['helppo', 'normaali', 'aikahaaste']);
@@ -259,12 +261,12 @@ function DifficultyRow({
         presentation.containerClassName
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="min-w-[3rem] shrink-0">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="min-w-[3.25rem] shrink-0 self-center">
             <p
               className={cn(
-                'text-[2rem] font-black leading-none tracking-[-0.04em]',
+                'text-[1.75rem] font-black leading-none tracking-[-0.04em]',
                 presentation.gradeClassName,
                 gradeColors?.text
               )}
@@ -281,15 +283,13 @@ function DifficultyRow({
             </p>
           </div>
         </div>
-        <span
-          className={cn(
-            'inline-flex min-h-[32px] items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold transition-colors',
-            presentation.actionClassName
-          )}
+        <Badge
+          size="xs"
+          className={cn('min-h-[32px] gap-1 px-2.5 text-[11px]', presentation.actionClassName)}
         >
           Pelaa
           <ArrowRight size={12} weight="bold" aria-hidden="true" />
-        </span>
+        </Badge>
       </div>
     </div>
   );
@@ -320,9 +320,13 @@ export function ExamHistoryTabContent({
 }) {
   if (isEmpty) {
     return (
-      <div className="rounded-xl border border-gray-200 p-6 text-center text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300">
+      <Card
+        variant="standard"
+        padding="large"
+        className="rounded-xl border-gray-200 text-center text-sm text-gray-600 shadow-none dark:border-gray-700 dark:text-gray-300"
+      >
         Pelaa yksi harjoituskierros, niin koetulokset ilmestyvät tänne.
-      </div>
+      </Card>
     );
   }
 
@@ -330,9 +334,11 @@ export function ExamHistoryTabContent({
     <div className="space-y-3">
       {groupedEntries.map((exam) => {
         return (
-          <article
+          <Card
             key={exam.id}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-none transition-shadow duration-150 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900"
+            variant="standard"
+            padding="compact"
+            className="rounded-2xl border-slate-200 shadow-none dark:border-slate-700 dark:bg-slate-900 hover:shadow-sm"
           >
             <div className="space-y-4">
               <div className="flex items-start gap-3">
@@ -345,11 +351,11 @@ export function ExamHistoryTabContent({
                     {exam.title}
                   </p>
                   {exam.displayDate ? (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {exam.displayDate}
-                    </p>
-                  ) : null}
-                </div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {exam.displayDate}
+                  </p>
+                ) : null}
+              </div>
               </div>
 
               <div className="space-y-2 border-t border-slate-100 pt-3 dark:border-white/[0.08]">
@@ -370,7 +376,7 @@ export function ExamHistoryTabContent({
                 />
               </div>
             </div>
-          </article>
+          </Card>
         );
       })}
     </div>

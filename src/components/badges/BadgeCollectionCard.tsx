@@ -2,10 +2,12 @@ import type { Badge, BadgeId } from '@/types';
 import { BadgeDisplay } from '@/components/badges/BadgeDisplay';
 import { BadgeToken } from '@/components/badges/BadgeToken';
 import { Card, CardContent } from '@/components/ui/card';
+import { SectionHeading } from '@/components/ui/section-heading';
 import { cn } from '@/lib/utils';
 
 interface BadgeCollectionCardProps {
   badges: Badge[];
+  title?: string;
   description?: string;
   highlightedBadgeIds?: BadgeId[];
   className?: string;
@@ -15,6 +17,7 @@ interface BadgeCollectionCardProps {
 
 export function BadgeCollectionCard({
   badges,
+  title,
   description,
   highlightedBadgeIds = [],
   className,
@@ -29,6 +32,9 @@ export function BadgeCollectionCard({
       data-testid={testId}
     >
       <CardContent className={cn('p-5', contentClassName)}>
+        {title ? (
+          <SectionHeading className="mb-4">{title}</SectionHeading>
+        ) : null}
         {description ? (
           <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">{description}</p>
         ) : null}

@@ -61,6 +61,26 @@ export interface ResultsHeaderCopy {
   supportingText: string;
 }
 
+export type ResultsPerformanceBand = 'weak' | 'mid' | 'strong';
+export type TopicMasteryLevel = 'weak' | 'mid' | 'strong';
+
+export interface TopicMasterySourceStat {
+  correct: number;
+  total: number;
+  percentage: number;
+}
+
+export interface TopicMasteryItem {
+  topic: string;
+  correct: number;
+  total: number;
+  percentage: number;
+  level: TopicMasteryLevel;
+  statusLabel: string;
+  guidance: string;
+  reviewHref: string | null;
+}
+
 export function shouldShowReviewMistakesAction(
   reviewMistakeCount: number,
   onReviewMistakes?: (() => void) | null
@@ -287,22 +307,172 @@ export function getResultsHeaderCopy(
   total: number,
   mode: 'quiz' | 'flashcard' = 'quiz'
 ): ResultsHeaderCopy {
+  void score;
+  void total;
+
   if (mode === 'quiz') {
     return {
-      title: `Arvosana ${getSchoolGrade(score, total).label}`,
+      title: 'Tulokset',
       supportingText: '',
     };
   }
 
   return {
-    title: 'Harjoitus valmis',
-    supportingText: 'Katso tämän kierroksen yhteenveto ja jatka harjoittelua seuraavaksi.',
+    title: 'Tulokset',
+    supportingText: '',
   };
 }
 
 export function getResultsSecondaryMeta(score: number, total: number): string {
   const grade = getSchoolGrade(score, total);
   return `${score} / ${total} oikein • ${grade.percentage}%`;
+}
+
+export function getResultsPerformanceBand(score: number, total: number): ResultsPerformanceBand {
+  const { percentage } = getSchoolGrade(score, total);
+
+  if (percentage >= 90) {
+    return 'strong';
+  }
+
+  if (percentage >= 60) {
+    return 'mid';
+  }
+
+  return 'weak';
+}
+
+export function getResultsFeedbackMessage(
+  score: number,
+  total: number,
+  mode: 'quiz' | 'flashcard' = 'quiz'
+): string {
+  const { percentage } = getSchoolGrade(score, total);
+
+  if (mode === 'flashcard') {
+    if (percentage >= 90) {
+      return 'Muistikortit sujuivat vahvasti. Voit jatkaa uuteen kierrokseen tai siirtyä visaan.';
+    }
+
+    if (percentage >= 60) {
+      return 'Perusasiat ovat hallussa. Yksi uusi kierros vahvistaa muistia nopeasti.';
+    }
+
+    return 'Aloita heikoimmista aiheista. Lyhyt kertaus auttaa ennen seuraavaa kierrosta.';
+  }
+
+  if (percentage === 100) {
+    return 'Täysi osuma. Voit pelata uudelleen tai siirtyä vaikeampaan harjoitteluun.';
+  }
+
+  if (percentage >= 90) {
+    return 'Todella vahva tulos. Kertaa vain pienet epävarmat kohdat ennen seuraavaa kierrosta.';
+  }
+
+  if (percentage >= 75) {
+    return 'Hyvä perusta on kasassa. Heikoimpien aiheiden kertaus nostaa tulosta nopeasti.';
+  }
+
+  if (percentage >= 60) {
+    return 'Suunnan perusasiat löytyvät jo. Kohdennettu kertaus auttaa seuraavaan nousuun.';
+  }
+
+  return 'Aloita heikoimmista aiheista ja rakenna varmuus takaisin yksi aihe kerrallaan.';
+}
+
+export function getTopicMasteryLevel(percentage: number): TopicMasteryLevel {
+  if (percentage >= 95) {
+    return 'strong';
+  }
+
+  if (percentage >= 80) {
+    return 'mid';
+  }
+
+  return 'weak';
+}
+
+export function getTopicMasteryStatusLabel(level: TopicMasteryLevel): string {
+  switch (level) {
+    case 'strong':
+      return 'Vahva'
+    case 'mid':
+      return 'Kehittyy'
+    default:
+      return 'Kertaa seuraavaksi'
+  }
+}
+
+export function getTopicMasteryGuidance(level: TopicMasteryLevel): string {
+  switch (level) {
+    case 'strong':
+      return 'Tama aihe pysyy hyvin muistissa.'
+    case 'mid':
+      return 'Yksi lisakierros tekee osaamisesta varmempaa.'
+    default:
+      return 'Aloita kertaus taman aiheen korteista.'
+  }
+}
+
+export function buildTopicMasteryItems(
+  stats: Record<string, TopicMasterySourceStat>,
+  flashcardSetCode?: string | null
+): TopicMasteryItem[] {
+  const entries = Object.entries(stats)
+    .filter(([, value]) => value.total > 0)
+    .map(([topic, value]) => {
+      const level = getTopicMasteryLevel(value.percentage);
+      const reviewHref =
+        flashcardSetCode && level === 'weak'
+          ? `/play/${flashcardSetCode}?mode=opettele&topic=${encodeURIComponent(topic)}`
+          : null;
+
+      return {
+        topic,
+        correct: value.correct,
+        total: value.total,
+        percentage: value.percentage,
+        level,
+        statusLabel: getTopicMasteryStatusLabel(level),
+        guidance: getTopicMasteryGuidance(level),
+        reviewHref,
+      };
+    });
+
+  return entries.sort((left, right) => {
+    const levelOrder: Record<TopicMasteryLevel, number> = {
+      weak: 0,
+      mid: 1,
+      strong: 2,
+    };
+
+    const levelDelta = levelOrder[left.level] - levelOrder[right.level];
+    if (levelDelta !== 0) {
+      return levelDelta;
+    }
+
+    if (left.percentage !== right.percentage) {
+      return left.percentage - right.percentage;
+    }
+
+    return left.topic.localeCompare(right.topic, 'fi-FI');
+  });
+}
+
+export function getPrimaryWeakTopicHref(items: TopicMasteryItem[]): string | null {
+  return items.find((item) => item.reviewHref)?.reviewHref ?? null;
+}
+
+export function getNewlyUnlockedBadges<TBadge extends { id: string }>(
+  badges: TBadge[],
+  newlyUnlocked: string[]
+): TBadge[] {
+  if (newlyUnlocked.length === 0) {
+    return [];
+  }
+
+  const unlockedIds = new Set(newlyUnlocked);
+  return badges.filter((badge) => unlockedIds.has(badge.id));
 }
 
 /**

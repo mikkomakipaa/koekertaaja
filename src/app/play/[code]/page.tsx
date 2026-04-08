@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link.js';
 import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from 'react';
 
 // Force dynamic rendering (no static optimization)
@@ -9,7 +10,9 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { IconButton } from '@/components/ui/icon-button';
 import { MathText } from '@/components/ui/math-text';
+import { PageTitle } from '@/components/ui/page-title';
 import { Textarea } from '@/components/ui/textarea';
 import { LoadingScreen } from '@/components/ui/loading';
 import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
@@ -53,6 +56,7 @@ import {
   ArrowCounterClockwise,
   GameController,
   ArrowRight,
+  MagnifyingGlass,
   TextT,
   ListChecks,
   CheckCircle,
@@ -62,6 +66,7 @@ import {
   Article,
   Smiley,
   Target,
+  Trophy,
   X,
   Flag,
 } from '@phosphor-icons/react';
@@ -997,76 +1002,112 @@ export default function PlayPage() {
     // Show topic selection if topics are available and none is selected
     if (availableTopics.length > 1 && !selectedTopic) {
       return (
-        <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
-          <div className="max-w-2xl mx-auto p-6 md:p-12">
-            <div className="mb-8">
-              <Book size={32} weight="duotone" className="text-teal-600 dark:text-teal-400 mb-3" />
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                Valitse harjoiteltava aihe
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Tämä korttisarja sisältää {availableTopics.length} aihetta. Valitse mitä haluat harjoitella.
-              </p>
-            </div>
-
-            <div className="grid gap-3">
-              {/* All Topics Option */}
-              <button
-                onClick={() => setSelectedTopic('ALL')}
-                className="bg-white dark:bg-gray-800 border-2 border-teal-500 dark:border-teal-400 rounded-xl p-6 text-left hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all group"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
-                      Kaikki aiheet
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Harjoittele kaikkia aiheita ({flashcards.length} korttia)
-                    </p>
-                  </div>
-                  <div className="text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform">
-                    →
-                  </div>
+        <div className="min-h-screen bg-white p-4 pb-24 transition-colors dark:bg-gray-900 md:p-8">
+          <div className="mx-auto max-w-5xl space-y-6">
+            <section className="border-b border-slate-200/80 pb-4 dark:border-white/10">
+              <div className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2.5 pb-3">
+                <IconButton
+                  onClick={() => router.push('/play')}
+                  aria-label="Takaisin"
+                >
+                  <ArrowRight size={20} weight="regular" className="rotate-180" aria-hidden="true" />
+                </IconButton>
+                <PageTitle className="truncate text-slate-900 dark:text-slate-100">
+                  Koekertaaja
+                </PageTitle>
+                <div className="flex items-center gap-2">
+                  <IconButton asChild aria-label="Haku">
+                    <Link href="/play">
+                      <MagnifyingGlass size={18} weight="duotone" />
+                    </Link>
+                  </IconButton>
+                  <IconButton asChild aria-label="Saavutukset">
+                    <Link href="/play/achievements">
+                      <Trophy size={18} weight="duotone" />
+                    </Link>
+                  </IconButton>
                 </div>
-              </button>
+              </div>
 
-              {/* Individual Topic Options */}
+              <div className="min-w-0">
+                <PageTitle
+                  as="h2"
+                  className="text-slate-950 dark:text-slate-50"
+                >
+                  Valitse harjoiteltava aihe
+                </PageTitle>
+                <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300">
+                  Tämä korttisarja sisältää {availableTopics.length} aihetta. Valitse mitä haluat harjoitella.
+                </p>
+              </div>
+            </section>
+
+            <div className="space-y-3">
+              <Card
+                variant="interactive"
+                padding="none"
+                className="border-teal-300/80 bg-teal-50/70 dark:border-teal-700/70 dark:bg-teal-950/20"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedTopic('ALL')}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setSelectedTopic('ALL');
+                  }
+                }}
+              >
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                        Kaikki aiheet
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                        Harjoittele kaikkia aiheita ({flashcards.length} korttia)
+                      </p>
+                    </div>
+                    <ArrowRight size={18} weight="bold" className="shrink-0 text-teal-600 dark:text-teal-400" aria-hidden="true" />
+                  </div>
+                </CardContent>
+              </Card>
+
               {availableTopics.map((topic) => {
                 const topicCardCount = flashcardTopicCounts.get(topic) ?? 0;
 
                 return (
-                  <button
+                  <Card
                     key={topic}
+                    variant="interactive"
+                    padding="none"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setSelectedTopic(topic)}
-                    className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 text-left hover:border-teal-500 dark:hover:border-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all group"
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setSelectedTopic(topic);
+                      }
+                    }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
-                          {topic}
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {topicCardCount} korttia
-                        </p>
+                    <CardContent className="p-5">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="min-w-0">
+                          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                            {topic}
+                          </h3>
+                          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                            {topicCardCount} korttia
+                          </p>
+                        </div>
+                        <ArrowRight size={18} weight="bold" className="shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
                       </div>
-                      <div className="text-gray-400 dark:text-gray-500 group-hover:text-teal-600 dark:group-hover:text-teal-400 group-hover:translate-x-1 transition-all">
-                        →
-                      </div>
-                    </div>
-                  </button>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
 
-            <div className="mt-8 text-center">
-              <Button
-                onClick={() => router.push('/play')}
-                variant="ghost"
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                ← Takaisin
-              </Button>
-            </div>
           </div>
         </div>
       );

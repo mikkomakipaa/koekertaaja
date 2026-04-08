@@ -1,9 +1,12 @@
 'use client';
 
+import Link from 'next/link.js';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Flashcard } from '@/types';
 import { FlashcardCard } from './FlashcardCard';
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
+import { PageTitle } from '@/components/ui/page-title';
 import { createLogger } from '@/lib/logger';
 import {
   Book,
@@ -11,6 +14,9 @@ import {
   X,
   ArrowsClockwise,
   ArrowLeft,
+  ArrowRight,
+  MagnifyingGlass,
+  Trophy,
 } from '@phosphor-icons/react';
 
 const FLIP_HINT_KEY = 'has_seen_flip_hint';
@@ -283,94 +289,104 @@ export function FlashcardSession({
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
-      {/* Header with progress */}
-      <div className="bg-gradient-to-r from-teal-600 to-teal-500 dark:from-teal-700 dark:to-teal-600 text-white sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Book size={20} weight="fill" className="text-teal-100" />
-              <div>
-                <h2 className="text-lg font-semibold">{questionSetName}</h2>
-                <p className="text-sm text-teal-100">
-                  Kortti {currentIndex + 1} / {totalCards}
-                </p>
-              </div>
-            </div>
-            <Button
+    <div className="min-h-screen bg-white p-4 pb-24 transition-colors dark:bg-gray-900 md:p-8">
+      <div className="max-w-5xl mx-auto">
+        <section className="mb-4 border-b border-slate-200/80 pb-4 dark:border-white/10">
+          <div className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2.5 pb-3">
+            <IconButton
               onClick={handleExit}
-              variant="ghost"
-              size="sm"
-              aria-label="Lopeta opettelu"
-              className="text-white/90 hover:text-white hover:bg-white/10"
+              aria-label="Takaisin"
             >
-              <X className="w-5 h-5 mr-1" />
-              Lopeta
-            </Button>
+              <ArrowRight size={20} weight="regular" className="rotate-180" aria-hidden="true" />
+            </IconButton>
+            <PageTitle className="truncate text-slate-900 dark:text-slate-100">
+              Koekertaaja
+            </PageTitle>
+            <div className="flex items-center gap-2">
+              <IconButton asChild aria-label="Haku">
+                <Link href="/play">
+                  <MagnifyingGlass size={18} weight="duotone" />
+                </Link>
+              </IconButton>
+              <IconButton asChild aria-label="Saavutukset">
+                <Link href="/play/achievements">
+                  <Trophy size={18} weight="duotone" />
+                </Link>
+              </IconButton>
+            </div>
           </div>
 
-          {/* Progress bar + Percentage (same row) */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 bg-white/30 rounded-full h-2 overflow-hidden">
-              <div
-                className="bg-white h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
+          <div className="space-y-3">
+            <div>
+              <PageTitle as="h2">
+                {questionSetName}
+              </PageTitle>
+              <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300">
+                Kortti {currentIndex + 1} / {totalCards}
+              </p>
             </div>
-            <span className="text-sm text-teal-100 font-medium whitespace-nowrap">
-              {Math.round(progress)}% valmis
+            <div className="flex items-center gap-3">
+              <div className="flex-1 rounded-full bg-slate-200 h-2 overflow-hidden dark:bg-slate-800">
+                <div
+                  className="bg-teal-500 dark:bg-teal-400 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className="text-sm font-medium whitespace-nowrap text-slate-600 dark:text-slate-300">
+                {Math.round(progress)}% valmis
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Flashcard */}
+        <div className="max-w-4xl mx-auto py-4">
+          <FlashcardCard
+            flashcard={currentFlashcard}
+            isFlipped={isFlipped}
+            onPrimaryAction={handlePrimaryCardAction}
+            onShowAnswer={() => setIsFlipped(true)}
+            onShowQuestion={() => setIsFlipped(false)}
+            overlay={overlay}
+          />
+
+          <div className="mt-4 flex gap-3">
+            <Button
+              onClick={handlePrevious}
+              disabled={currentIndex === 0}
+              variant="outline"
+              className="py-6 rounded-xl font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ArrowLeft size={20} className="mr-2" />
+              Edellinen
+            </Button>
+            <p className="flex-1 self-center text-sm text-gray-600 dark:text-gray-300">
+              {isFlipped
+                ? 'Napauta korttia uudelleen siirtyäksesi seuraavaan.'
+                : 'Napauta korttia nähdäksesi vastauksen.'}
+            </p>
+          </div>
+
+          <div className="mt-8 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-4">
+            <span className="inline-flex items-center gap-1">
+              <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono">
+                Enter
+              </kbd>
+              näyttää vastauksen tai siirtyy seuraavaan
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono">
+                ←
+              </kbd>
+              edellinen
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono">
+                →
+              </kbd>
+              seuraava
             </span>
           </div>
-        </div>
-      </div>
-
-      {/* Flashcard */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <FlashcardCard
-          flashcard={currentFlashcard}
-          isFlipped={isFlipped}
-          onPrimaryAction={handlePrimaryCardAction}
-          onShowAnswer={() => setIsFlipped(true)}
-          onShowQuestion={() => setIsFlipped(false)}
-          overlay={overlay}
-        />
-
-        <div className="mt-4 flex gap-3">
-          <Button
-            onClick={handlePrevious}
-            disabled={currentIndex === 0}
-            variant="outline"
-            className="py-6 rounded-xl font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ArrowLeft size={20} className="mr-2" />
-            Edellinen
-          </Button>
-          <p className="flex-1 self-center text-sm text-gray-600 dark:text-gray-300">
-            {isFlipped
-              ? 'Napauta korttia uudelleen siirtyäksesi seuraavaan.'
-              : 'Napauta korttia nähdäksesi vastauksen.'}
-          </p>
-        </div>
-
-        <div className="mt-8 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-4">
-          <span className="inline-flex items-center gap-1">
-            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono">
-              Enter
-            </kbd>
-            näyttää vastauksen tai siirtyy seuraavaan
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono">
-              ←
-            </kbd>
-            edellinen
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 font-mono">
-              →
-            </kbd>
-            seuraava
-          </span>
         </div>
       </div>
 

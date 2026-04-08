@@ -6,6 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LoadingScreen } from '@/components/ui/loading';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 function LoginForm() {
   const router = useRouter();
@@ -48,14 +50,7 @@ function LoginForm() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Ladataan...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Ladataan..." className="bg-gradient-to-br from-blue-50 to-indigo-100" />;
   }
 
   return (
@@ -73,9 +68,12 @@ function LoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {(error || authError) && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                <p className="text-sm">{error || authError}</p>
-              </div>
+              <Alert
+                variant="destructive"
+                className="bg-red-50 border-red-200 text-red-700 px-4 py-3"
+              >
+                <AlertDescription>{error || authError}</AlertDescription>
+              </Alert>
             )}
 
             <div className="space-y-2">
@@ -139,14 +137,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Ladataan...</p>
-          </div>
-        </div>
-      }
+      fallback={<LoadingScreen message="Ladataan..." className="bg-gradient-to-br from-blue-50 to-indigo-100" />}
     >
       <LoginForm />
     </Suspense>
