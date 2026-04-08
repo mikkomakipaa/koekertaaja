@@ -1001,8 +1001,7 @@ export default function PlayPage() {
         <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
           <PlaySessionHeader
             tone="flashcard"
-            title="Valitse harjoiteltava aihe"
-            subtitle={`Tämä korttisarja sisältää ${availableTopics.length} aihetta. Valitse mitä haluat harjoitella.`}
+            title={displayName}
             icon={<Book size={20} weight="duotone" />}
             actionLabel="Takaisin"
             actionIcon={<ArrowLeft size={18} weight="bold" />}

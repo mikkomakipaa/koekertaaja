@@ -66,7 +66,11 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[linear-gradient(180deg,rgba(99,102,241,0.18)_0%,rgba(99,102,241,0.10)_18%,rgba(255,255,255,1)_34%)] transition-colors duration-300 ease-out dark:bg-[linear-gradient(180deg,rgba(99,102,241,0.85)_0%,rgba(99,102,241,0.55)_20%,rgba(17,24,39,1)_36%)]">
+    <div className="relative isolate flex min-h-screen flex-col bg-[linear-gradient(180deg,rgba(99,102,241,0.18)_0%,rgba(99,102,241,0.10)_18%,rgba(255,255,255,1)_34%)] transition-colors duration-300 ease-out dark:bg-[linear-gradient(180deg,rgba(99,102,241,0.85)_0%,rgba(99,102,241,0.55)_20%,rgba(17,24,39,1)_36%)]">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[calc(env(safe-area-inset-top)+10rem)] bg-[linear-gradient(180deg,rgba(99,102,241,0.18)_0%,rgba(99,102,241,0.10)_55%,rgba(255,255,255,0)_100%)] dark:bg-[linear-gradient(180deg,rgba(99,102,241,0.85)_0%,rgba(99,102,241,0.55)_60%,rgba(17,24,39,0)_100%)]"
+      />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-6 focus:top-6 focus:z-50 rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-700"
@@ -74,7 +78,7 @@ export default function HomePage() {
         Siirry sisältöön
       </a>
 
-      <main id="main-content" tabIndex={-1} className="flex-1">
+      <main id="main-content" tabIndex={-1} className="relative z-10 flex-1">
         <header className="hero-fade">
           <section
             aria-labelledby="dashboard-heading"
