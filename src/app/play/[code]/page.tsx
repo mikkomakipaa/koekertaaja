@@ -26,6 +26,7 @@ import { useSpeedQuizTimer } from '@/hooks/useSpeedQuizTimer';
 import { getAnswerEntryConfig } from '@/lib/questions/answer-entry';
 import { getQuestionSetByCode } from '@/lib/supabase/queries';
 import { convertQuestionsToFlashcards } from '@/lib/utils/flashcardConverter';
+import { getSubjectConfig } from '@/lib/utils/subject-config';
 import { shuffleArray } from '@/lib/utils';
 import {
   AIKAHAASTE_QUESTION_COUNT,
@@ -1155,6 +1156,9 @@ export default function PlayPage() {
   const difficultyIcon = difficulty === 'helppo'
     ? <Smiley size={14} weight="fill" />
     : <Target size={14} weight="duotone" />;
+  const subjectHeaderIcon = questionSet?.subject
+    ? getSubjectConfig(questionSet.subject).icon
+    : <GameController size={20} weight="fill" className="text-indigo-100" />;
   const canSubmit = !isAnswerEmpty(userAnswer);
   const showKeyboardHint = currentQuestion.question_type === 'fill_blank' && !showExplanation;
   const hasFlaggedCurrent = flaggedQuestionIds.includes(currentQuestion.id);
@@ -1167,7 +1171,7 @@ export default function PlayPage() {
         <PlaySessionHeader
           tone="quiz"
           title={displayName}
-          icon={<GameController size={20} weight="fill" className="text-indigo-100" />}
+          icon={subjectHeaderIcon}
           actionLabel={canPause ? 'Lopeta' : undefined}
           actionIcon={canPause ? <X size={18} weight="bold" /> : undefined}
           actionAriaLabel="Lopeta harjoitus"
@@ -1196,20 +1200,6 @@ export default function PlayPage() {
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>{mistakesError || sessionMistakesError}</AlertDescription>
           </Alert>
-        )}
-
-        {isReviewMode && (
-          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg p-4 mb-5">
-            <div className="flex items-center gap-2">
-              <ArrowCounterClockwise size={24} weight="bold" className="text-red-600 dark:text-red-400" />
-              <span className="font-semibold text-red-900 dark:text-red-100">
-                Kertaat virheitä ({mistakeQuestions.length} kysymystä)
-              </span>
-            </div>
-            <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-              Vastaa oikein poistaaksesi kysymyksen virhelistalta
-            </p>
-          </div>
         )}
 
         {/* Question Card */}
@@ -1256,11 +1246,12 @@ export default function PlayPage() {
         {/* Feedback */}
         {showExplanation && (
           <div className="space-y-3 mb-6">
-            {lastWasCorrect ? null : lastWasSkipped ? (
-              <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg p-4">
-                <p className="text-amber-900 dark:text-amber-100 font-semibold">Ohitit kysymyksen</p>
+            {lastWasSkipped && (
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-800 dark:border-amber-700/70 dark:bg-amber-900/20 dark:text-amber-200">
+                <ArrowRight size={16} weight="bold" className="shrink-0" />
+                <span>Ohitettu</span>
               </div>
-            ) : null}
+            )}
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg p-4">
               <p className="text-sm text-blue-900 dark:text-blue-100 font-medium mb-1">Selitys:</p>

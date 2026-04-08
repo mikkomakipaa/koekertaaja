@@ -51,7 +51,7 @@ TYYPPIKOHTAINEN MINIMISOPIMUS:
 
 SELITYSTYYLI (INTENT-KRIITTINEN):
 - Kirjoita selitys suoraan oppilaalle (sinä-muoto).
-- Selitys sisältää: miksi vastaus pitää paikkansa, tyypillinen kompastuskohta, lyhyt yhteys/esimerkki.
+- Selitys sisältää: miksi vastaus pitää paikkansa, asia joka menee helposti sekaisin, lyhyt yhteys/esimerkki.
 {{explanation_style_rules}}
 
 NUMEROMUOTOILU (SUOMI):

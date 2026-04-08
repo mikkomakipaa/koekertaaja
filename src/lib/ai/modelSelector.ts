@@ -1,5 +1,6 @@
 import { Subject } from '@/types';
 import type { AIModelSelection, AIProvider } from './providerTypes';
+import { getSubjectType } from '@/lib/prompts/subjectTypeMapping';
 
 export type ClaudeModel =
   | 'claude-haiku-4-5-20251001'
@@ -9,6 +10,7 @@ export type ClaudeModel =
 export type OpenAIModel =
   | 'gpt-5-nano'
   | 'gpt-5-mini'
+  | 'gpt-5.2'
   | 'gpt-5.1';
 
 export type AIModel = ClaudeModel | OpenAIModel;
@@ -19,6 +21,7 @@ export const AI_MODEL_VALUES = [
   'claude-opus-4-6-20250514',
   'gpt-5-nano',
   'gpt-5-mini',
+  'gpt-5.2',
   'gpt-5.1',
 ] as const;
 
@@ -43,13 +46,17 @@ export function selectModelForTask(
   task: AITask,
   options: ModelSelectionOptions = {}
 ): AIModelSelection {
-  const { isConceptual, targetProvider = 'anthropic' } = options;
+  const { isConceptual, targetProvider = 'anthropic', subject } = options;
+  const subjectType = subject ? getSubjectType(subject) : undefined;
 
   if (targetProvider === 'openai') {
     switch (task) {
       case 'topic_identification':
         return { provider: 'openai', model: 'gpt-5-mini' };
       case 'question_generation':
+        if (subjectType === 'written') {
+          return { provider: 'openai', model: 'gpt-5.2' };
+        }
         return { provider: 'openai', model: 'gpt-5-mini' };
       case 'flashcard_creation':
         if (isConceptual) {
@@ -148,6 +155,13 @@ export function getModelMetadataByModel(model: AIModel): ModelMetadata {
         model,
         name: 'GPT-5 mini',
         pricing: { input: 0.25, output: 2 },
+      };
+    case 'gpt-5.2':
+      return {
+        provider: 'openai',
+        model,
+        name: 'GPT-5.2',
+        pricing: { input: 1.75, output: 14 },
       };
     case 'gpt-5.1':
       return {

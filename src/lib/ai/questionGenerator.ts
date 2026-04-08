@@ -966,7 +966,7 @@ export async function generateQuestions(
   // Parse JSON response
   let cleanContent = response.content.replace(/```json|```/g, '').trim();
 
-  // GPT-5-mini can occasionally return an empty list for large quiz payloads.
+  // OpenAI mini-tier models can occasionally return an empty list for large quiz payloads.
   // Retry once with a stronger model before failing.
   if (
     mode === 'quiz' &&
@@ -976,11 +976,11 @@ export async function generateQuestions(
     aiRetryCount += 1;
     logger.warn(
       { model: selectedModel.model, contentLength: cleanContent.length },
-      'OpenAI returned empty/near-empty quiz payload - retrying once with gpt-5.1'
+      'OpenAI returned empty/near-empty quiz payload - retrying once with gpt-5.2'
     );
     response = await generateWithAI(messageContent, {
       provider: 'openai',
-      model: 'gpt-5.1',
+      model: 'gpt-5.2',
       maxTokens: 32000,
     });
     cleanContent = response.content.replace(/```json|```/g, '').trim();
