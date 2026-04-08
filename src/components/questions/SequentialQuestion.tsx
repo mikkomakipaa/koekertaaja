@@ -5,7 +5,7 @@ import { SequentialQuestion as SequentialQuestionType } from '@/types';
 import { MathText } from '@/components/ui/math-text';
 import { TimelineView } from '@/components/questions/TimelineView';
 import { getSequentialDisplayMode, normalizeSequentialItems } from '@/lib/questions/sequential-utils';
-import { ArrowUp, ArrowDown, ListNumbers, CheckCircle, XCircle } from '@phosphor-icons/react';
+import { ArrowUp, ArrowDown, CheckCircle, XCircle } from '@phosphor-icons/react';
 
 interface SequentialQuestionProps {
   question: SequentialQuestionType;
@@ -72,12 +72,6 @@ export function SequentialQuestion({
 
   return (
     <div className="space-y-4">
-      {/* Question Text */}
-      <div className="text-lg font-medium text-gray-900 dark:text-gray-100 flex items-start gap-2">
-        <ListNumbers size={24} weight="duotone" className="text-purple-600 dark:text-purple-400 flex-shrink-0 mt-1" />
-        <MathText>{question.question_text}</MathText>
-      </div>
-
       {displayMode === 'timeline' ? (
         <TimelineView
           items={normalizedItems}
