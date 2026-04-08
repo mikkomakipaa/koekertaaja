@@ -1,20 +1,16 @@
 'use client';
 
 import { useMemo, type ReactNode } from 'react';
-import Link from 'next/link';
-import { ArrowRight, BookOpenText, Check, Minus } from '@phosphor-icons/react';
+import Link from 'next/link.js';
+import { ArrowRight, BookOpenText } from '@phosphor-icons/react';
 import { useExamHistory } from '@/hooks/useExamHistory';
 import { getSubjectConfig } from '@/lib/utils/subject-config';
+import { getSchoolGrade } from '@/lib/play/results-screen';
+import { getGradeColors } from '@/lib/utils/grade-colors';
 import { cn } from '@/lib/utils';
 import type { ExamHistoryEntry } from '@/types/examHistory';
 
 const QUIZ_DIFFICULTIES = new Set(['helppo', 'normaali', 'aikahaaste']);
-
-const DIFFICULTY_LABELS: Record<string, string> = {
-  helppo: 'Helppo',
-  normaali: 'Normaali',
-  aikahaaste: 'Aikahaaste',
-};
 
 const fallbackSubjectConfig = {
   icon: <BookOpenText size={20} weight="duotone" />,
@@ -42,27 +38,6 @@ function formatExamDate(examDate: string | null): string | null {
   }).format(parsedDate);
 }
 
-function getDifficultyLabel(difficulty: string | null): string | null {
-  if (!difficulty) return null;
-  return DIFFICULTY_LABELS[difficulty] ?? null;
-}
-
-function getScorePillClasses(percentage: number | null): string {
-  if (percentage === null) {
-    return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
-  }
-
-  if (percentage >= 80) {
-    return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200';
-  }
-
-  if (percentage >= 60) {
-    return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200';
-  }
-
-  return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200';
-}
-
 function getPlayMode(difficulty: string | null): 'pelaa' | 'opettele' {
   if (!difficulty) return 'opettele';
   return QUIZ_DIFFICULTIES.has(difficulty) ? 'pelaa' : 'opettele';
@@ -70,31 +45,34 @@ function getPlayMode(difficulty: string | null): 'pelaa' | 'opettele' {
 
 interface DifficultyStats {
   entry: ExamHistoryEntry | null;
-  percentage: number;
-  complete: boolean;
+  gradeLabel: string | null;
+  gradeValue: number | null;
+  scoreText: string;
+  href: string;
 }
 
 interface GroupedExamSummary {
   id: string;
   title: string;
+  displayDate: string | null;
   sortTimestamp: number;
   subjectConfig: {
     icon: ReactNode;
     label: string;
     color: string;
   };
-  bestScore: number;
-  sessionCount: number;
   helppo: DifficultyStats;
   normaali: DifficultyStats;
-  playCode: string;
-  playMode: 'pelaa' | 'opettele';
 }
 
-const clampPercentage = (percentage: number | null | undefined): number => {
-  if (typeof percentage !== 'number' || !Number.isFinite(percentage)) return 0;
-  return Math.max(0, Math.min(100, Math.round(percentage)));
-};
+type DifficultyRowTone = 'empty' | 'fail' | 'pass' | 'perfect';
+
+export interface DifficultyRowPresentation {
+  tone: DifficultyRowTone;
+  containerClassName: string;
+  gradeClassName: string;
+  actionClassName: string;
+}
 
 const parseSortableDate = (value?: string | null): number | null => {
   if (!value) return null;
@@ -120,7 +98,78 @@ const buildGroupKey = (entry: ExamHistoryEntry): string => {
   return `${subject}|${examDate}|${name}`;
 };
 
-const buildGroupedExamSummaries = (entries: ExamHistoryEntry[]): GroupedExamSummary[] => {
+const getGradeValueFromLabel = (gradeLabel: string | null): number | null => {
+  if (!gradeLabel) return null;
+
+  if (gradeLabel === '10') return 10;
+
+  const numeric = Number.parseFloat(gradeLabel.replace('+', '.25').replace('-', '.75'));
+  return Number.isFinite(numeric) ? numeric : null;
+};
+
+const getDifficultyStats = (
+  entry: ExamHistoryEntry | null,
+  fallbackCode: string,
+  fallbackMode: 'pelaa' | 'opettele'
+): DifficultyStats => {
+  const gradeLabel = entry?.lastScore
+    ? getSchoolGrade(entry.lastScore.score, entry.lastScore.total).label
+    : null;
+  const gradeValue = getGradeValueFromLabel(gradeLabel);
+
+  return {
+    entry,
+    gradeLabel,
+    gradeValue,
+    scoreText: entry?.lastScore
+      ? `${entry.lastScore.score}/${entry.lastScore.total} oikein`
+      : 'Ei tulosta',
+    href: entry
+      ? `/play/${entry.code}?mode=${getPlayMode(entry.difficulty)}`
+      : `/play/${fallbackCode}?mode=${fallbackMode}`,
+  };
+};
+
+export function getDifficultyRowPresentation(
+  gradeLabel: string | null,
+  gradeValue: number | null
+): DifficultyRowPresentation {
+  if (!gradeLabel || gradeValue == null) {
+    return {
+      tone: 'empty',
+      containerClassName: 'border-slate-200/80 bg-slate-50/85 dark:border-slate-700/80 dark:bg-slate-800/55',
+      gradeClassName: 'text-slate-400 dark:text-slate-500',
+      actionClassName: 'text-slate-500 hover:bg-slate-200/80 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700/80 dark:hover:text-slate-200',
+    };
+  }
+
+  if (gradeValue >= 10) {
+    return {
+      tone: 'perfect',
+      containerClassName: 'border-emerald-300/80 bg-emerald-50/90 ring-1 ring-emerald-200/80 dark:border-emerald-700/70 dark:bg-emerald-950/35 dark:ring-emerald-800/60',
+      gradeClassName: 'text-emerald-700 dark:text-emerald-300',
+      actionClassName: 'text-emerald-700 hover:bg-emerald-100/80 hover:text-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-900/60 dark:hover:text-emerald-100',
+    };
+  }
+
+  if (gradeValue < 6) {
+    return {
+      tone: 'fail',
+      containerClassName: 'border-amber-300/80 bg-amber-50/90 dark:border-amber-700/70 dark:bg-amber-950/30',
+      gradeClassName: 'text-amber-700 dark:text-amber-300',
+      actionClassName: 'text-amber-700 hover:bg-amber-100/80 hover:text-amber-800 dark:text-amber-300 dark:hover:bg-amber-900/60 dark:hover:text-amber-100',
+    };
+  }
+
+  return {
+    tone: 'pass',
+    containerClassName: 'border-emerald-200/80 bg-emerald-50/65 dark:border-emerald-800/70 dark:bg-emerald-950/20',
+    gradeClassName: 'text-emerald-700 dark:text-emerald-300',
+    actionClassName: 'text-emerald-700 hover:bg-emerald-100/80 hover:text-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-900/60 dark:hover:text-emerald-100',
+  };
+}
+
+export const buildGroupedExamSummaries = (entries: ExamHistoryEntry[]): GroupedExamSummary[] => {
   const groups = new Map<string, ExamHistoryEntry[]>();
 
   for (const entry of entries) {
@@ -145,8 +194,7 @@ const buildGroupedExamSummaries = (entries: ExamHistoryEntry[]): GroupedExamSumm
     const title = representative.subject
       ? subjectConfig.label
       : sanitizedName ?? fallbackSubjectConfig.label;
-    const subtitle = formatExamDate(representative.examDate);
-    const titleWithDate = subtitle ? `${title} • ${subtitle}` : title;
+    const displayDate = formatExamDate(representative.examDate);
 
     const byDifficulty = new Map<string, ExamHistoryEntry>();
     for (const entry of groupEntries) {
@@ -157,40 +205,25 @@ const buildGroupedExamSummaries = (entries: ExamHistoryEntry[]): GroupedExamSumm
     const helppoEntry = byDifficulty.get('helppo') ?? null;
     const normaaliEntry = byDifficulty.get('normaali') ?? null;
 
-    const helppoPercentage = clampPercentage(helppoEntry?.lastScore?.percentage);
-    const normaaliPercentage = clampPercentage(normaaliEntry?.lastScore?.percentage);
     const sortTimestamp = parseSortableDate(representative.examDate)
       ?? Math.max(...groupEntries.map((entry) => entry.sortTimestamp));
 
-    const bestScore = Math.max(
-      ...groupEntries.map((entry) => clampPercentage(entry.lastScore?.percentage))
-    );
-    const sessionCount = groupEntries.filter((entry) => entry.lastScore).length;
-
+    const helppoPercentage = helppoEntry?.lastScore?.percentage ?? 0;
     const recommendedEntry = helppoPercentage < 80
       ? (helppoEntry ?? normaaliEntry)
       : (normaaliEntry ?? helppoEntry);
     const fallbackEntry = recommendedEntry ?? groupEntries[0];
+    const helppo = getDifficultyStats(helppoEntry, fallbackEntry.code, getPlayMode(fallbackEntry.difficulty));
+    const normaali = getDifficultyStats(normaaliEntry, fallbackEntry.code, getPlayMode(fallbackEntry.difficulty));
 
     return {
       id: `${representative.code}-${representative.sortTimestamp}`,
-      title: titleWithDate,
+      title,
+      displayDate,
       sortTimestamp,
       subjectConfig,
-      bestScore,
-      sessionCount,
-      helppo: {
-        entry: helppoEntry,
-        percentage: helppoPercentage,
-        complete: helppoPercentage === 100,
-      },
-      normaali: {
-        entry: normaaliEntry,
-        percentage: normaaliPercentage,
-        complete: normaaliPercentage === 100,
-      },
-      playCode: fallbackEntry.code,
-      playMode: getPlayMode(fallbackEntry.difficulty),
+      helppo,
+      normaali,
     };
   });
 
@@ -202,67 +235,69 @@ const buildGroupedExamSummaries = (entries: ExamHistoryEntry[]): GroupedExamSumm
 
 function DifficultyRow({
   label,
-  percentage,
+  gradeLabel,
+  gradeValue,
   scoreText,
   href,
 }: {
   label: string;
-  percentage: number;
+  gradeLabel: string | null;
+  gradeValue: number | null;
   scoreText: string;
-  href: string | null;
+  href: string;
 }) {
-  const isMastered = percentage >= 90;
-  const barColor = isMastered
-    ? 'bg-emerald-500'
-    : percentage >= 70
-      ? 'bg-teal-500'
-      : percentage >= 50
-      ? 'bg-amber-500'
-      : 'bg-slate-400';
-  const textColor = isMastered
-    ? 'text-emerald-700 dark:text-emerald-300'
-    : percentage >= 70
-      ? 'text-teal-700 dark:text-teal-300'
-      : percentage >= 50
-      ? 'text-amber-700 dark:text-amber-300'
-      : 'text-slate-600 dark:text-slate-400';
+  const presentation = getDifficultyRowPresentation(gradeLabel, gradeValue);
+  const isPerfectGrade = gradeValue != null && gradeValue >= 10;
+  const gradeInteger = gradeValue == null ? null : Math.max(4, Math.min(9, Math.floor(gradeValue)));
+  const gradeColors = gradeInteger == null || isPerfectGrade ? null : getGradeColors(gradeInteger);
 
   const rowContent = (
-    <div className="rounded-lg px-1 py-1">
-      <div className="flex items-center justify-between text-xs">
-        <span className="font-medium text-gray-700 dark:text-gray-300">{label}</span>
-        <span className={`text-xs font-semibold ${textColor}`}>{percentage}%</span>
-      </div>
-      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-        <div
-          className={`h-full transition-all duration-500 ease-out ${barColor}`}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-      <div className="mt-1.5 flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400">
-        <span>{scoreText}</span>
-        {href ? (
-          <span className="inline-flex min-h-[32px] items-center gap-1 px-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
-            Pelaa
-            <ArrowRight size={12} weight="bold" aria-hidden="true" />
-          </span>
-        ) : (
-          <span className="inline-flex min-h-[32px] items-center px-1 text-[11px] font-semibold text-gray-400 dark:text-gray-500">
-            {percentage === 100 ? <Check size={12} weight="bold" /> : <Minus size={12} weight="bold" />}
-          </span>
-        )}
+    <div
+      data-tone={presentation.tone}
+      className={cn(
+        'rounded-2xl border px-3.5 py-3.5 transition-colors',
+        presentation.containerClassName
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="min-w-[3rem] shrink-0">
+            <p
+              className={cn(
+                'text-[2rem] font-black leading-none tracking-[-0.04em]',
+                presentation.gradeClassName,
+                gradeColors?.text
+              )}
+            >
+              {gradeLabel ?? '–'}
+            </p>
+          </div>
+          <div className="min-w-0 space-y-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+              {label}
+            </p>
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+              {scoreText}
+            </p>
+          </div>
+        </div>
+        <span
+          className={cn(
+            'inline-flex min-h-[32px] items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold transition-colors',
+            presentation.actionClassName
+          )}
+        >
+          Pelaa
+          <ArrowRight size={12} weight="bold" aria-hidden="true" />
+        </span>
       </div>
     </div>
   );
 
-  if (!href) {
-    return rowContent;
-  }
-
   return (
     <Link
       href={href}
-      className="block cursor-pointer rounded-lg transition-colors hover:bg-indigo-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:hover:bg-indigo-900/20"
+      className="block cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
     >
       {rowContent}
     </Link>
@@ -273,6 +308,16 @@ export function ExamHistoryTab() {
   const { entries, isEmpty } = useExamHistory();
   const groupedEntries = useMemo(() => buildGroupedExamSummaries(entries), [entries]);
 
+  return <ExamHistoryTabContent groupedEntries={groupedEntries} isEmpty={isEmpty} />;
+}
+
+export function ExamHistoryTabContent({
+  groupedEntries,
+  isEmpty,
+}: {
+  groupedEntries: GroupedExamSummary[];
+  isEmpty: boolean;
+}) {
   if (isEmpty) {
     return (
       <div className="rounded-xl border border-gray-200 p-6 text-center text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300">
@@ -287,42 +332,41 @@ export function ExamHistoryTab() {
         return (
           <article
             key={exam.id}
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-none transition-shadow duration-150 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900"
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-none transition-shadow duration-150 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900"
           >
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <div className="flex items-start gap-3">
+                <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${exam.subjectConfig.color}`}>
                   {exam.subjectConfig.icon}
                 </div>
 
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 space-y-1">
                   <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
                     {exam.title}
                   </p>
+                  {exam.displayDate ? (
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {exam.displayDate}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-2 border-t border-slate-100 pt-3 dark:border-white/[0.08]">
                 <DifficultyRow
                   label="Helppo"
-                  percentage={exam.helppo.percentage}
-                  scoreText={exam.helppo.entry?.lastScore
-                    ? `${exam.helppo.entry.lastScore.score}/${exam.helppo.entry.lastScore.total} oikein`
-                    : 'Ei tulosta'}
-                  href={exam.helppo.entry
-                    ? `/play/${exam.helppo.entry.code}?mode=${getPlayMode(exam.helppo.entry.difficulty)}`
-                    : null}
+                  gradeLabel={exam.helppo.gradeLabel}
+                  gradeValue={exam.helppo.gradeValue}
+                  scoreText={exam.helppo.scoreText}
+                  href={exam.helppo.href}
                 />
 
                 <DifficultyRow
                   label="Normaali"
-                  percentage={exam.normaali.percentage}
-                  scoreText={exam.normaali.entry?.lastScore
-                    ? `${exam.normaali.entry.lastScore.score}/${exam.normaali.entry.lastScore.total} oikein`
-                    : 'Ei tulosta'}
-                  href={exam.normaali.entry
-                    ? `/play/${exam.normaali.entry.code}?mode=${getPlayMode(exam.normaali.entry.difficulty)}`
-                    : null}
+                  gradeLabel={exam.normaali.gradeLabel}
+                  gradeValue={exam.normaali.gradeValue}
+                  scoreText={exam.normaali.scoreText}
+                  href={exam.normaali.href}
                 />
               </div>
             </div>

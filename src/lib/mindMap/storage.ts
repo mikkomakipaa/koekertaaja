@@ -1,6 +1,8 @@
 import { createLogger } from '@/lib/logger';
 import type { PracticedSetDropdownItem, PracticedSetMetadata, TopicMasteryStats } from '@/types/mindMap';
 import { normalizeTopicLabel } from '@/lib/topics/normalization';
+import { getSubjectConfig } from '@/lib/utils/subject-config';
+import { stripDifficultySuffix } from '@/lib/question-set-name';
 
 const logger = createLogger({ module: 'mindMap/storage' });
 
@@ -241,9 +243,12 @@ export const formatPracticedSetDropdownLabel = (item: Pick<
   'code' | 'label' | 'subject' | 'examDate' | 'difficulty' | 'grade'
 >): string => {
   const fallbackCode = sanitizeLabelPart(item.code) ?? item.code;
-  const subject = sanitizeLabelPart(item.subject)
-    ?? sanitizeLabelPart(item.label)
-    ?? fallbackCode;
+  const label = sanitizeLabelPart(item.label);
+  const baseName = label ? stripDifficultySuffix(label).trim() : null;
+  const subject = sanitizeLabelPart(item.subject);
+  const primaryTitle = subject
+    ? getSubjectConfig(subject).label
+    : baseName || fallbackCode;
   const examDate = sanitizeLabelPart(item.examDate);
   const difficultyRaw = sanitizeLabelPart(item.difficulty);
   const difficultyLabel = difficultyRaw === 'helppo'
@@ -253,12 +258,11 @@ export const formatPracticedSetDropdownLabel = (item: Pick<
       : difficultyRaw === 'aikahaaste'
         ? 'Aikahaaste'
         : difficultyRaw;
-  const grade = sanitizeLabelPart(item.grade);
-  const gradeLabel = grade ? `${grade}. lk` : null;
 
-  const parts = [subject, examDate, difficultyLabel, gradeLabel].filter(Boolean) as string[];
-  const uniqueParts = Array.from(new Set(parts));
-  return uniqueParts.length > 0 ? uniqueParts.join(' • ') : fallbackCode;
+  const titleParts = [primaryTitle, examDate].filter(Boolean) as string[];
+  const title = titleParts.length > 0 ? Array.from(new Set(titleParts)).join(' • ') : fallbackCode;
+
+  return difficultyLabel ? `${title} (${difficultyLabel})` : title;
 };
 
 export const readPracticedSetMetadataFromStorage = (

@@ -3,11 +3,7 @@
 import type { ComponentProps } from 'react';
 import Link from 'next/link.js';
 import {
-  Medal,
   ArrowLeft,
-  Fire,
-  Star,
-  Sparkle,
 } from '@phosphor-icons/react';
 import { BadgeCollectionCard } from '@/components/badges/BadgeCollectionCard';
 import { ExamHistoryTab } from '@/components/achievements/ExamHistoryTab';
@@ -74,7 +70,6 @@ export function AchievementsPageContent({
             </div>
           </div>
         </section>
-        <StatsSection stats={stats} unlockedCount={unlockedCount} />
         <Tabs defaultValue="exams" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3 rounded-xl border border-slate-200 bg-white p-1 shadow-none dark:border-slate-800 dark:bg-slate-900">
             <TabsTrigger value="exams" className="rounded-xl text-sm md:text-base">
@@ -99,66 +94,6 @@ export function AchievementsPageContent({
         </Tabs>
       </div>
     </div>
-  );
-}
-
-function StatsSection({ stats, unlockedCount }: { stats: BadgeStats; unlockedCount: number }) {
-  return (
-    <section className="space-y-3">
-      <div className="space-y-1">
-        <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
-          <Medal size={16} weight="duotone" className="text-slate-500 dark:text-slate-300" />
-          Tilastot
-        </p>
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Harjoittelun yhteenveto</h2>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
-          <CardContent>
-            <div className="mb-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <Fire size={18} weight="duotone" className="text-orange-500" />
-              Sessiota
-            </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 md:text-3xl">{stats.totalSessions}</div>
-          </CardContent>
-        </Card>
-
-        <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
-          <CardContent>
-            <div className="mb-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <Star size={18} weight="fill" className="text-yellow-500" />
-              Täydellistä
-            </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 md:text-3xl">{stats.perfectScores}</div>
-          </CardContent>
-        </Card>
-
-        <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
-          <CardContent>
-            <div className="mb-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <Sparkle size={18} weight="duotone" className="text-emerald-500" />
-              Ennätys
-            </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 md:text-3xl">
-              {stats.personalBest > 0 ? stats.personalBest.toLocaleString('fi-FI') : '—'}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card variant="standard" padding="compact" className="rounded-xl border-slate-200 shadow-none dark:border-slate-800">
-          <CardContent>
-            <div className="mb-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <Medal size={18} weight="duotone" className="text-blue-500" />
-              Merkkejä
-            </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 md:text-3xl">
-              {unlockedCount}/{BADGE_TOTAL}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </section>
   );
 }
 

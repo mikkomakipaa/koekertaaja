@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { MapTrifold } from '@phosphor-icons/react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TopicMasteryDisplay } from '@/components/play/TopicMasteryDisplay';
 import { colors } from '@/lib/design-tokens';
@@ -86,7 +85,7 @@ export function AchievementsMapSection({
   loadQuestionSetByCode = defaultLoadQuestionSetByCode,
 }: AchievementsMapSectionProps) {
   const [items, setItems] = useState<PracticedSetDropdownItem[]>(initialItems ?? []);
-  const [selectedCode, setSelectedCode] = useState<string>(() => initialItems?.[0]?.code ?? '');
+  const [selectedCode, setSelectedCode] = useState<string>('');
   const [relatedFlashcardCodes, setRelatedFlashcardCodes] = useState<Record<string, string | null>>({});
 
   const selectableItems = useMemo(() => {
@@ -110,7 +109,6 @@ export function AchievementsMapSection({
     if (initialItems) return;
     const nextItems = listPracticedSetDropdownItemsFromStorage();
     setItems(nextItems);
-    setSelectedCode((currentCode) => currentCode || nextItems[0]?.code || '');
   }, [initialItems]);
 
   useEffect(() => {
@@ -186,26 +184,18 @@ export function AchievementsMapSection({
     }
 
     const hasSelected = selectableItems.some((item) => item.code === selectedCode);
-    if (!hasSelected) {
+    if (!hasSelected || !selectedCode) {
       setSelectedCode(selectableItems[0]?.code ?? '');
     }
   }, [selectableItems, selectedCode]);
 
   const hasPracticedSets = selectableItems.length > 0;
   const hasSelectedSet = Boolean(selectedCode);
-  const sectionHeadingId = 'achievements-mastery-heading';
-
   return (
     <section
       data-testid="achievements-map-section"
-      aria-labelledby={sectionHeadingId}
       className="rounded-xl border border-slate-200/85 bg-white/90 p-4 sm:p-6 dark:border-slate-800 dark:bg-slate-900"
     >
-      <header className="mb-4 flex items-center gap-2">
-        <MapTrifold size={20} weight="duotone" className="text-slate-500 dark:text-slate-300" aria-hidden="true" />
-        <h2 id={sectionHeadingId} className="text-lg font-semibold text-gray-900 dark:text-gray-100">Aiheiden hallinta</h2>
-      </header>
-
       {!hasPracticedSets ? (
         <Alert data-testid="achievements-map-empty">
           <AlertDescription>
