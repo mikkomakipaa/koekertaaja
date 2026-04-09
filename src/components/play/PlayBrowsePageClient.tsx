@@ -43,6 +43,7 @@ import {
   CircleNotch,
   CirclesFour,
   Timer,
+  Sparkle,
   Rows,
   Book,
   ArrowCounterClockwise,

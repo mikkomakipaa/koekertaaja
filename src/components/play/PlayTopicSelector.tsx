@@ -17,7 +17,7 @@ interface PlayTopicSelectorOption {
 interface PlayTopicSelectorProps {
   tone: 'quiz' | 'flashcard';
   title: string;
-  subtitle: string;
+  subtitle?: string;
   icon: ReactNode;
   onBack: () => void;
   options: PlayTopicSelectorOption[];
