@@ -1,0 +1,33 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Koekertaaja icon">
+  <defs>
+    <clipPath id="backCardClip">
+      <rect x="88" y="32" width="140" height="150" rx="22"></rect>
+    </clipPath>
+    <clipPath id="frontCardClip">
+      <rect x="28" y="72" width="160" height="156" rx="22"></rect>
+    </clipPath>
+  </defs>
+
+  <!-- Back card (moved right) -->
+  <rect x="88" y="32" width="140" height="150" rx="22" fill="#14B8A6"></rect>
+  <g clip-path="url(#backCardClip)">
+    <rect x="88" y="122" width="140" height="60" fill="#E5E7EB"></rect>
+    <rect x="180" y="122" width="48" height="60" fill="#D1D5DB"></rect>
+  </g>
+  <rect x="118" y="140" width="60" height="10" rx="5" fill="#475569"></rect>
+  <rect x="118" y="160" width="42" height="10" rx="5" fill="#64748B"></rect>
+  <rect x="88" y="32" width="140" height="150" rx="22" stroke="#1F2937" stroke-width="5"></rect>
+
+  <!-- Front card (bigger, more dominant) -->
+  <rect x="28" y="72" width="160" height="156" rx="22" fill="#6366F1"></rect>
+  <g clip-path="url(#frontCardClip)">
+    <rect x="28" y="176" width="160" height="52" fill="#E5E7EB"></rect>
+  </g>
+  <rect x="70" y="194" width="82" height="10" rx="5" fill="#475569"></rect>
+  <rect x="28" y="72" width="160" height="156" rx="22" stroke="#1F2937" stroke-width="5"></rect>
+
+  <!-- Result number -->
+  <text x="108" y="150" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="800" fill="#FFFFFF">
+    9<tspan dy="-14" font-size="42">+</tspan>
+  </text>
+</svg>

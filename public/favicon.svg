@@ -1,0 +1,30 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Koekertaaja favicon">
+  <defs>
+    <clipPath id="backCardClip">
+      <rect x="84" y="46" width="124" height="136" rx="18"></rect>
+    </clipPath>
+    <clipPath id="frontCardClip">
+      <rect x="44" y="84" width="138" height="140" rx="18"></rect>
+    </clipPath>
+  </defs>
+
+  <rect x="84" y="46" width="124" height="136" rx="18" fill="#14B8A6"></rect>
+  <g clip-path="url(#backCardClip)">
+    <rect x="84" y="124" width="124" height="58" fill="#E5E7EB"></rect>
+    <rect x="168" y="124" width="40" height="58" fill="#D1D5DB"></rect>
+  </g>
+  <rect x="108" y="138" width="52" height="8" rx="4" fill="#475569"></rect>
+  <rect x="108" y="154" width="36" height="8" rx="4" fill="#64748B"></rect>
+  <rect x="84" y="46" width="124" height="136" rx="18" stroke="#1F2937" stroke-width="6"></rect>
+
+  <rect x="44" y="84" width="138" height="140" rx="18" fill="#6366F1"></rect>
+  <g clip-path="url(#frontCardClip)">
+    <rect x="44" y="176" width="138" height="48" fill="#E5E7EB"></rect>
+  </g>
+  <rect x="78" y="192" width="70" height="8" rx="4" fill="#475569"></rect>
+  <rect x="44" y="84" width="138" height="140" rx="18" stroke="#1F2937" stroke-width="6"></rect>
+
+  <text x="113" y="152" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="60" font-weight="800" fill="#FFFFFF">
+    9<tspan dy="-12" font-size="36">+</tspan>
+  </text>
+</svg>

@@ -86,21 +86,21 @@ export default function HomePage() {
           >
             <div className="mx-auto max-w-4xl px-4 pt-4 pb-5 md:px-8 md:pt-5 md:pb-6 dark:pt-5 dark:pb-8 md:dark:pt-6 md:dark:pb-10">
               <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/80 ring-1 ring-indigo-200/80 backdrop-blur dark:bg-white/12 dark:ring-white/15">
+                <div className="flex h-12 w-12 shrink-0 translate-y-[-1px] items-center justify-center rounded-xl bg-white/80 p-1.5 ring-1 ring-indigo-200/80 backdrop-blur dark:bg-white/12 dark:ring-white/15">
                   <Image
-                    src="/panda-scholar-graduation.png"
-                    alt="Koekertaaja panda -logo"
+                    src="/kk.svg"
+                    alt="Koekertaaja logo"
                     width={48}
                     height={48}
                     className="rounded-lg"
                   />
                 </div>
 
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 max-w-[520px]">
                   <h1 id="dashboard-heading" className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl">
                     Koekertaaja
                   </h1>
-                  <p className="mt-2 max-w-xl text-base font-medium text-[rgba(0,0,0,0.78)] dark:text-white/90 md:text-[17px]">
+                  <p className="mt-1 text-base font-medium text-[rgba(0,0,0,0.78)] dark:text-white/90 md:text-[17px]">
                     Harjoittele kokeisiin ja opi uutta.
                   </p>
                 </div>
