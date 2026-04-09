@@ -14,19 +14,16 @@ interface TopicMasterySectionProps {
 
 const toneClasses = {
   weak: {
-    border: 'border-amber-300/80 bg-amber-50/80 dark:border-amber-700/70 dark:bg-amber-950/25',
-    progress: 'bg-amber-500 dark:bg-amber-400',
-    status: 'bg-amber-100 text-amber-800 dark:bg-amber-900/70 dark:text-amber-200',
+    card: 'border-amber-300 bg-white dark:border-amber-800/80 dark:bg-slate-900',
+    percentage: 'text-amber-900 dark:text-amber-100',
   },
   mid: {
-    border: 'border-sky-200/80 bg-sky-50/80 dark:border-sky-800/70 dark:bg-sky-950/20',
-    progress: 'bg-sky-500 dark:bg-sky-400',
-    status: 'bg-sky-100 text-sky-800 dark:bg-sky-900/70 dark:text-sky-200',
+    card: 'border-sky-300 bg-white dark:border-sky-800/80 dark:bg-slate-900',
+    percentage: 'text-sky-900 dark:text-sky-100',
   },
   strong: {
-    border: 'border-emerald-200/80 bg-emerald-50/75 dark:border-emerald-800/70 dark:bg-emerald-950/20',
-    progress: 'bg-emerald-500 dark:bg-emerald-400',
-    status: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-200',
+    card: 'border-emerald-300 bg-white dark:border-emerald-800/80 dark:bg-slate-900',
+    percentage: 'text-emerald-900 dark:text-emerald-100',
   },
 } as const;
 
@@ -62,41 +59,53 @@ export function TopicMasterySection({ items }: TopicMasterySectionProps) {
               return (
                 <div
                   key={item.topic}
-                  className={cn('rounded-xl border p-4', tone.border)}
+                  className={cn('rounded-xl border p-4 shadow-sm shadow-slate-950/[0.03]', tone.card)}
                   data-testid={`topic-card-${encodeURIComponent(item.topic)}`}
                 >
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
                         <p className="text-base font-semibold text-slate-950 dark:text-slate-50">{item.topic}</p>
+
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
+                          <span>{item.correct}/{item.total} oikein</span>
+                        </div>
                       </div>
 
-                      <div className="mt-3 flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-400">
-                        <span>{item.correct}/{item.total} oikein</span>
-                        <span className="font-semibold text-slate-900 dark:text-slate-100">{item.percentage}%</span>
-                      </div>
-
-                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/80 dark:bg-slate-900/60">
-                        <div
-                          className={cn('h-full rounded-full transition-all duration-500 ease-out', tone.progress)}
-                          style={{ width: `${item.percentage}%` }}
-                          role="progressbar"
-                          aria-label={`${item.topic}: ${item.percentage}% hallinnassa`}
-                          aria-valuenow={item.percentage}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                        />
+                      <div className="shrink-0 text-left sm:text-right">
+                        <p className={cn('text-lg font-semibold tracking-tight', tone.percentage)}>{item.percentage}%</p>
                       </div>
                     </div>
 
-                    {item.reviewHref ? (
-                      <Button asChild mode="study" variant="primary" className="w-full sm:w-auto" size="sm">
-                        <Link href={item.reviewHref}>
-                          Opettele
-                          <ArrowRight size={14} weight="bold" aria-hidden="true" />
-                        </Link>
-                      </Button>
-                    ) : null}
+                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-start">
+                      {item.playHref ? (
+                        <Button
+                          asChild
+                          mode="quiz"
+                          variant="primary"
+                          className="min-h-11 w-full rounded-lg sm:w-auto"
+                        >
+                          <Link href={item.playHref}>
+                            Pelaa
+                            <ArrowRight size={14} weight="bold" aria-hidden="true" />
+                          </Link>
+                        </Button>
+                      ) : null}
+
+                      {item.reviewHref ? (
+                        <Button
+                          asChild
+                          mode="study"
+                          variant="primary"
+                          className="min-h-11 w-full rounded-lg bg-teal-600 text-white shadow-md hover:bg-teal-700 hover:shadow-lg dark:bg-teal-600 dark:hover:bg-teal-500 sm:w-auto"
+                        >
+                          <Link href={item.reviewHref}>
+                            Opettele
+                            <ArrowRight size={14} weight="bold" aria-hidden="true" />
+                          </Link>
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               );

@@ -511,9 +511,6 @@ function PlayBrowseContentLoading() {
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
             Harjoitukset latautuvat
           </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Voit jo käyttää yläreunan navigointia samalla kun sisältö haetaan.
-          </p>
         </div>
 
         <div className="w-full max-w-2xl space-y-3 pt-2">

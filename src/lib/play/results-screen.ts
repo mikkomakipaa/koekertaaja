@@ -78,6 +78,7 @@ export interface TopicMasteryItem {
   level: TopicMasteryLevel;
   statusLabel: string;
   guidance: string;
+  playHref: string | null;
   reviewHref: string | null;
 }
 
@@ -416,12 +417,16 @@ export function getTopicMasteryGuidance(level: TopicMasteryLevel): string {
 
 export function buildTopicMasteryItems(
   stats: Record<string, TopicMasterySourceStat>,
-  flashcardSetCode?: string | null
+  flashcardSetCode?: string | null,
+  quizSetCode?: string | null
 ): TopicMasteryItem[] {
   const entries = Object.entries(stats)
     .filter(([, value]) => value.total > 0)
     .map(([topic, value]) => {
       const level = getTopicMasteryLevel(value.percentage);
+      const playHref = quizSetCode
+        ? `/play/${quizSetCode}?mode=pelaa&topic=${encodeURIComponent(topic)}`
+        : null;
       const reviewHref =
         flashcardSetCode && level === 'weak'
           ? `/play/${flashcardSetCode}?mode=opettele&topic=${encodeURIComponent(topic)}`
@@ -435,6 +440,7 @@ export function buildTopicMasteryItems(
         level,
         statusLabel: getTopicMasteryStatusLabel(level),
         guidance: getTopicMasteryGuidance(level),
+        playHref,
         reviewHref,
       };
     });

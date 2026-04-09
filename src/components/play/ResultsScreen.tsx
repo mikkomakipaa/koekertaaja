@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
-import Link from 'next/link.js';
 import { Answer } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -377,11 +376,9 @@ export function ResultsScreen({
     [badges, newlyUnlocked]
   );
   const topicMasteryItems = useMemo(
-    () => (hasMasteryData() ? buildTopicMasteryItems(getMasteryStats(), flashcardCode) : []),
-    [flashcardCode, getMasteryStats, hasMasteryData]
+    () => (hasMasteryData() ? buildTopicMasteryItems(getMasteryStats(), flashcardCode, questionSetCode) : []),
+    [flashcardCode, getMasteryStats, hasMasteryData, questionSetCode]
   );
-  const primaryWeakTopicHref = getPrimaryWeakTopicHref(topicMasteryItems);
-  const primaryWeakTopic = topicMasteryItems.find((item) => item.reviewHref === primaryWeakTopicHref) ?? null;
   const difficultyLabel =
     difficulty && difficulty in difficultyLabels
       ? difficultyLabels[difficulty as keyof typeof difficultyLabels]
@@ -398,14 +395,14 @@ export function ResultsScreen({
     <div className="min-h-screen bg-white p-4 pb-24 transition-colors dark:bg-gray-900 md:p-8">
       <div className="max-w-5xl mx-auto">
         <section className="mb-4 border-b border-slate-200/80 pb-4 dark:border-white/10">
-          <div className="flex items-start gap-3">
+          <div className="flex items-center gap-3">
             <IconButton
               onClick={onBackToMenu}
               aria-label="Takaisin"
             >
               <ArrowRight size={20} weight="regular" className="rotate-180" aria-hidden="true" />
             </IconButton>
-            <div className="min-w-0">
+            <div className="min-w-0 self-center">
               <PageTitle>
                 {resultsHeaderCopy.title}
               </PageTitle>
@@ -610,22 +607,6 @@ export function ResultsScreen({
                   Pelaa uudelleen
                 </Button>
               )}
-              {primaryWeakTopicHref ? (
-                <Button asChild mode="study" variant="secondary" className="w-full md:flex-1">
-                  <Link href={primaryWeakTopicHref}>
-                    {primaryWeakTopic ? `Opettele: ${primaryWeakTopic.topic}` : 'Opettele heikoin aihe'}
-                  </Link>
-                </Button>
-              ) : null}
-              {!showReviewMistakesAction || !onReviewMistakes ? (
-                <Button
-                  onClick={onPlayAgain}
-                  variant="secondary"
-                  className="w-full md:flex-1"
-                >
-                  Pelaa uudelleen
-                </Button>
-              ) : null}
               <Button
                 onClick={onBackToMenu}
                 variant="secondary"

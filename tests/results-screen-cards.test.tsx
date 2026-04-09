@@ -30,7 +30,8 @@ describe('results screen cards', () => {
     assert.ok(html.includes('Matematiikka'));
     assert.ok(html.includes('Normaali'));
     assert.match(html, /10(?:<!-- -->)?\s*\/\s*(?:<!-- -->)?10(?:<!-- -->)? oikein/);
-    assert.ok(html.includes('Täysi osuma'));
+    assert.ok(html.includes('Kierroksen tulos'));
+    assert.ok(html.includes('Arvosana'));
   });
 
   it('renders badge preview only when new badges exist', () => {
@@ -61,6 +62,7 @@ describe('results screen cards', () => {
             level: 'weak',
             statusLabel: 'Kertaa seuraavaksi',
             guidance: 'Aloita kertaus taman aiheen korteista.',
+            playHref: '/play/QUIZ123?mode=pelaa&topic=Geometria',
             reviewHref: '/play/FLASH123?mode=opettele&topic=Geometria',
           },
           {
@@ -71,6 +73,7 @@ describe('results screen cards', () => {
             level: 'strong',
             statusLabel: 'Vahva',
             guidance: 'Tama aihe pysyy hyvin muistissa.',
+            playHref: '/play/QUIZ123?mode=pelaa&topic=Yhteenlasku',
             reviewHref: null,
           },
         ],
@@ -78,8 +81,16 @@ describe('results screen cards', () => {
     );
 
     assert.ok(html.includes('Geometria'));
-    assert.ok(html.includes('Kertaa seuraavaksi'));
+    assert.ok(!html.includes('Kertaa seuraavaksi'));
+    assert.ok(!html.includes('Vahva'));
+    assert.match(html, /1(?:<!-- -->)?\/(?:<!-- -->)?4(?:<!-- -->)? oikein/);
+    assert.match(html, /25(?:<!-- -->)?%/);
+    assert.ok(html.includes('Pelaa'));
+    assert.ok(html.includes('Opettele'));
+    assert.ok(!html.includes('progressbar'));
+    assert.match(html, /href="\/play\/QUIZ123\?mode=pelaa&amp;topic=Geometria"/);
     assert.match(html, /href="\/play\/FLASH123\?mode=opettele&amp;topic=Geometria"/);
     assert.ok(html.includes('Yhteenlasku'));
+    assert.match(html, /href="\/play\/QUIZ123\?mode=pelaa&amp;topic=Yhteenlasku"/);
   });
 });

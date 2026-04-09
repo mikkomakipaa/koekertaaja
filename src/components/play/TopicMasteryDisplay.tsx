@@ -11,6 +11,7 @@ interface TopicMasteryDisplayProps {
   flashcardSetCode?: string | null;
   className?: string;
   showHeader?: boolean;
+  showProgressBar?: boolean;
 }
 
 export function TopicMasteryDisplay({
@@ -18,6 +19,7 @@ export function TopicMasteryDisplay({
   flashcardSetCode,
   className = '',
   showHeader = true,
+  showProgressBar = true,
 }: TopicMasteryDisplayProps) {
   const { getMasteryStats, hasMasteryData } = useTopicMastery(questionSetCode);
 
@@ -82,17 +84,19 @@ export function TopicMasteryDisplay({
                 <span className={`text-sm font-semibold ${colors.text}`}>{item.percentage}%</span>
               </div>
 
-              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                <div
-                  className={`h-full ${colors.bg} transition-all duration-500 ease-out`}
-                  style={{ width: `${item.percentage}%` }}
-                  role="progressbar"
-                  aria-valuenow={item.percentage}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={`${item.topic}: ${item.percentage}% hallinnassa`}
-                />
-              </div>
+              {showProgressBar ? (
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div
+                    className={`h-full ${colors.bg} transition-all duration-500 ease-out`}
+                    style={{ width: `${item.percentage}%` }}
+                    role="progressbar"
+                    aria-valuenow={item.percentage}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${item.topic}: ${item.percentage}% hallinnassa`}
+                  />
+                </div>
+              ) : null}
 
               <div className="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                 <span>{item.correct}/{item.total} oikein</span>

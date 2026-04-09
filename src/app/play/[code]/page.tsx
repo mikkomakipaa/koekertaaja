@@ -1291,26 +1291,7 @@ export default function PlayPage() {
           )}
           <Dialog.Root open={flagDialogOpen} onOpenChange={setFlagDialogOpen}>
             {showExplanation ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/30 p-3 transition-shadow duration-150 hover:shadow-md">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">Valitse eri aihealue</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Selaa muita kysymyssarjoja.
-                      </p>
-                    </div>
-                    <Button
-                      onClick={() => setShowExitConfirm(true)}
-                      variant="ghost"
-                      size="sm"
-                      className="gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-100 dark:hover:text-white dark:hover:bg-white/10"
-                    >
-                      <ListBullets weight="duotone" className="w-4 h-4" />
-                      Valitse
-                    </Button>
-                  </div>
-                </div>
+              <div className="grid gap-3">
                 <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/30 p-3 transition-shadow duration-150 hover:shadow-md">
                   <div className="flex items-center justify-between gap-3">
                     <div>
@@ -1349,16 +1330,7 @@ export default function PlayPage() {
                   )}
                 </div>
               </div>
-            ) : (
-              <Button
-                onClick={handleBrowseQuestionSets}
-                variant="ghost"
-                className="w-full text-gray-600 hover:text-gray-900 dark:text-gray-100 dark:hover:text-white dark:hover:bg-white/10"
-              >
-                <ListBullets weight="duotone" className="w-4 h-4 mr-2 text-gray-600 dark:text-emerald-300" />
-                Valitse eri aihealue
-              </Button>
-            )}
+            ) : null}
             <Dialog.Portal>
               <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" />
               <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-700">

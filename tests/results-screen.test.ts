@@ -287,12 +287,12 @@ describe('ResultsScreen', () => {
   it('builds grade-first header copy used by the results screen', () => {
     assert.deepEqual(getResultsHeaderCopy(9, 10, 'quiz'), {
       title: 'Tulokset',
-      supportingText: 'Tietovisan yhteenveto',
+      supportingText: '',
     });
     assert.equal(getResultsSecondaryMeta(9, 10), '9 / 10 oikein • 90%');
     assert.deepEqual(getResultsHeaderCopy(9, 10, 'flashcard'), {
       title: 'Tulokset',
-      supportingText: 'Harjoituskierroksen yhteenveto',
+      supportingText: '',
     });
   });
 
@@ -314,27 +314,32 @@ describe('ResultsScreen', () => {
         Murtoluvut: { correct: 3, total: 4, percentage: 75 },
         Yhteenlasku: { correct: 5, total: 5, percentage: 100 },
       },
-      'FLASH123'
+      'FLASH123',
+      'QUIZ123'
     );
 
     assert.equal(items[0]?.topic, 'Geometria');
     assert.equal(items[0]?.statusLabel, 'Kertaa seuraavaksi');
     assert.match(items[0]?.guidance ?? '', /kort/);
+    assert.equal(items[0]?.playHref, '/play/QUIZ123?mode=pelaa&topic=Geometria');
     assert.equal(items[0]?.reviewHref, '/play/FLASH123?mode=opettele&topic=Geometria');
+    assert.equal(items[1]?.playHref, '/play/QUIZ123?mode=pelaa&topic=Murtoluvut');
     assert.equal(items[1]?.reviewHref, '/play/FLASH123?mode=opettele&topic=Murtoluvut');
+    assert.equal(items[2]?.playHref, '/play/QUIZ123?mode=pelaa&topic=Yhteenlasku');
     assert.equal(items[2]?.reviewHref, null);
     assert.equal(getPrimaryWeakTopicHref(items), '/play/FLASH123?mode=opettele&topic=Geometria');
   });
 
   it('returns no weak-topic primary CTA when topic data is absent or a perfect score has no weak bands', () => {
-    assert.deepEqual(buildTopicMasteryItems({}, 'FLASH123'), []);
+    assert.deepEqual(buildTopicMasteryItems({}, 'FLASH123', 'QUIZ123'), []);
     assert.equal(getPrimaryWeakTopicHref([]), null);
 
     const perfectItems = buildTopicMasteryItems(
       {
         Lukeminen: { correct: 4, total: 4, percentage: 100 },
       },
-      'FLASH123'
+      'FLASH123',
+      'QUIZ123'
     );
 
     assert.equal(getPrimaryWeakTopicHref(perfectItems), null);

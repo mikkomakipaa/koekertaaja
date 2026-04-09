@@ -135,9 +135,6 @@ export default function HomePage() {
               <h2 id="modes-heading" className="text-xl font-semibold text-gray-900 transition-colors dark:text-gray-100">
                 Kaksi tapaa harjoitella
               </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                Valitse sopiva tila ja siirry suoraan harjoituksiin.
-              </p>
             </div>
 
             <div className="mt-2.5 grid grid-cols-1 gap-3.5 md:grid-cols-2 md:gap-4">
