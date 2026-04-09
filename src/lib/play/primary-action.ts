@@ -48,7 +48,7 @@ export function getQuizLatestResultSummary({
   score: Pick<LastScore, 'score' | 'total'>;
   difficulty: BrowseDifficulty;
 }): string {
-  return `Viimeisin: ${getQuizGradeMeta(score)} (${difficultyLabels[difficulty]})`;
+  return `${getQuizGradeMeta(score)} (${difficultyLabels[difficulty]})`;
 }
 
 export interface DashboardPrimaryAction {

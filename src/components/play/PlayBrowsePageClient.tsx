@@ -43,7 +43,7 @@ import {
   CircleNotch,
   CirclesFour,
   Timer,
-  Sparkle,
+  Rows,
   Book,
   ArrowCounterClockwise,
   MagnifyingGlass,
@@ -299,7 +299,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
                       className="min-h-11 justify-center rounded-lg border border-sky-200 bg-sky-50 px-3 text-sm font-semibold text-sky-800 shadow-none hover:bg-sky-100 dark:border-sky-700/60 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-sky-950/35"
                       aria-label="Aihe"
                     >
-                      <Sparkle size={18} weight="duotone" className="mr-2 shrink-0 text-sky-600 dark:text-sky-300" />
+                      <Rows size={18} weight="duotone" className="mr-2 shrink-0 text-sky-600 dark:text-sky-300" />
                       Aihe
                     </Button>
                   ) : null}

@@ -994,6 +994,9 @@ export default function PlayPage() {
   }
 
   const displayName = questionSet?.name ? stripDifficultySuffix(questionSet.name) : 'Kysymyssarja';
+  const subjectHeaderIcon = questionSet?.subject
+    ? getSubjectConfig(questionSet.subject).icon
+    : <GameController size={20} weight="fill" className="text-indigo-100" />;
   const canPause = !isAikahaaste;
 
   // Flashcard mode
@@ -1061,8 +1064,7 @@ export default function PlayPage() {
       <PlayTopicSelector
         tone="quiz"
         title={displayName}
-        subtitle={`Mitä haluat harjoitella? ${questionSet.difficulty === 'helppo' ? 'Helppo' : 'Normaali'} pitää saman vaikeustason, vaikka valitset yhden aiheen.`}
-        icon={<ListBullets size={20} weight="duotone" />}
+        icon={subjectHeaderIcon}
         onBack={() => router.push('/play?mode=pelaa')}
         options={[
           {
@@ -1148,9 +1150,6 @@ export default function PlayPage() {
   const difficultyIcon = difficulty === 'helppo'
     ? <Smiley size={14} weight="fill" />
     : <Target size={14} weight="duotone" />;
-  const subjectHeaderIcon = questionSet?.subject
-    ? getSubjectConfig(questionSet.subject).icon
-    : <GameController size={20} weight="fill" className="text-indigo-100" />;
   const canSubmit = !isAnswerEmpty(userAnswer);
   const showKeyboardHint = currentQuestion.question_type === 'fill_blank' && !showExplanation;
   const hasFlaggedCurrent = flaggedQuestionIds.includes(currentQuestion.id);
