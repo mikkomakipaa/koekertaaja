@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { createLogger } from '@/lib/logger';
-import { requireAdmin, resolveAuthError, verifyAuth } from '@/lib/supabase/server-auth';
+import {
+  requireAdmin,
+  requireAuth,
+  resolveAuthError,
+} from '@/lib/supabase/server-auth';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { buildServerRateLimitKey } from '@/lib/ratelimit';
 import {
@@ -43,6 +47,18 @@ export async function POST(request: NextRequest) {
   logger.info({ method: 'POST' }, 'Request received');
 
   try {
+    let userId: string;
+    try {
+      const user = await requireAuth(request);
+      userId = user.id;
+    } catch (authError) {
+      const { status, message } = resolveAuthError(authError, {
+        unauthorized: 'Unauthorized. Please log in to submit flags.',
+      });
+      logger.warn({ authError: message, status }, 'Authentication failed');
+      return NextResponse.json({ error: message }, { status });
+    }
+
     const body = await request.json();
     const validationResult = flagSchema.safeParse(body);
 
@@ -57,10 +73,9 @@ export async function POST(request: NextRequest) {
 
     const { questionId, questionSetId, reason, note } = validationResult.data;
     const admin = getSupabaseAdmin();
-    const user = await verifyAuth();
     const abuseIdentity = buildServerRateLimitKey(request.headers, {
       prefix: 'question-flags',
-      userId: user?.id,
+      userId,
     });
 
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();

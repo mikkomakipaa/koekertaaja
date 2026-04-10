@@ -51,8 +51,14 @@ Key columns:
 | `exam_date` | `date` | Nullable |
 | `topic`, `subtopic` | `text` | Nullable topic metadata |
 | `prompt_metadata` | `jsonb` | Prompt/version metadata |
-| `user_id` | `uuid` | Nullable owner |
+| `user_id` | `uuid` | Nullable owner; authenticated writes are owner-scoped by RLS |
 | `created_at`, `updated_at` | `timestamptz` | Timestamps, default `now()` |
+
+RLS notes:
+
+- Public read access remains available for published/playback flows per existing policies.
+- `INSERT` and `UPDATE` on `public.question_sets` are restricted to the owning authenticated user via `auth.uid() = user_id`.
+- Service-role writes used by server-side admin/API routes remain allowed.
 
 ---
 

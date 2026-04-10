@@ -66,11 +66,56 @@ export interface AuthUser {
  * Returns user if authenticated, null otherwise
  */
 export async function getServerUser(): Promise<AuthUser | null> {
-  // For now, we'll use a simple approach with cookies
-  // In a full implementation, you'd use Next.js cookies() API
-  // and validate the session token with Supabase
+  if (typeof window !== 'undefined') {
+    return null;
+  }
 
-  // This is a placeholder - we'll implement proper server-side auth
-  // using middleware or server components
-  return null;
+  const [{ createServerClient }, { cookies }, { getServerEnv }] =
+    await Promise.all([
+      import('@supabase/ssr'),
+      import('next/headers'),
+      import('@/lib/env'),
+    ]);
+
+  const cookieStore = await cookies();
+  const env = getServerEnv();
+  const supabase = createServerClient<Database>(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch {
+            // Server components cannot always mutate cookies.
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: '', ...options, maxAge: 0 });
+          } catch {
+            // Server components cannot always mutate cookies.
+          }
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    email: user.email,
+  };
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
+import Link from 'next/link';
 import { Answer } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,6 +16,7 @@ import { BadgeCollectionCard } from '@/components/badges/BadgeCollectionCard';
 import { useBadges } from '@/hooks/useBadges';
 import { useReviewMistakes } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
+import { useProgressionNudge } from '@/hooks/useProgressionNudge';
 import { useRelatedFlashcardSet } from '@/hooks/useRelatedFlashcardSet';
 import { useTopicMastery } from '@/hooks/useTopicMastery';
 import { difficultyLabels } from '@/lib/play/primary-action';
@@ -241,6 +243,12 @@ export function ResultsScreen({
   onReviewMistakes,
   onBackToMenu,
 }: ResultsScreenProps) {
+  const { shouldNudge, normaaliCode, dismiss } = useProgressionNudge(
+    questionSetCode,
+    difficulty,
+    score,
+    total
+  );
   const {
     badges,
     newlyUnlocked,
@@ -423,6 +431,47 @@ export function ResultsScreen({
             difficultyLabel={questionSetAlreadyIncludesDifficulty ? null : difficultyLabel}
             mode={mode}
           />
+          {mode === 'quiz' && shouldNudge ? (
+            <Card className="relative overflow-hidden rounded-2xl border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 shadow-sm dark:border-amber-800/70 dark:from-amber-950/40 dark:via-slate-900 dark:to-orange-950/30">
+              <CardContent className="p-4 sm:p-5">
+                <button
+                  type="button"
+                  onClick={dismiss}
+                  className="absolute right-3 top-3 inline-flex h-12 w-12 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-200/70 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-slate-900"
+                  aria-label="Piilota vaikeustason suositus"
+                >
+                  <X size={20} weight="bold" aria-hidden="true" />
+                </button>
+                <div className="pr-14">
+                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+                    Olet valmis Normaali-tasolle! 🎉
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700 dark:text-slate-200">
+                    Olet saanut hyvän tuloksen tästä tasosta kahdesti. Kokeile vaikeampaa haastetta!
+                  </p>
+                  <div className="mt-4">
+                    {normaaliCode ? (
+                      <Button
+                        asChild
+                        mode="neutral"
+                        variant="primary"
+                        className="w-full justify-center sm:w-auto"
+                      >
+                        <Link href={`/play/${normaaliCode}`}>
+                          Kokeile Normaali-tasoa
+                          <ArrowRight size={18} weight="bold" aria-hidden="true" />
+                        </Link>
+                      </Button>
+                    ) : (
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                        Pyydä opettajaltasi Normaali-tason koodi.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
           {newlyUnlockedBadges.length > 0 ? (
             <BadgePreviewCard badges={newlyUnlockedBadges} />
           ) : null}

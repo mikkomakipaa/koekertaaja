@@ -74,7 +74,7 @@ Use a three-step workflow: Plan and create tasks, Executes tasks and test, then 
 **Step 2: Task execution (Tool-agnostic)**
 - User will run tasks sequentially using `scripts/run-tasks-codex.sh` or `scripts/run-tasks-claude.sh`
 - Each task is executed in isolation; no combined mega-prompts
-- Outputs are captured in `results/` for traceability (cleaned to only the RESULT OUTPUT FORMAT); raw logs go to `results/raw/`
+- Outputs are captured in `results/` for traceability using the exact `results/RESULTS.md` template; raw logs go to `results/raw/`
 - Script commands must be executed directly without asking for validation; only pause for architectural decision clarifications
 - Use `DWF/` folder documents as reference.
 - Update DWF folder documents based on development.
@@ -130,7 +130,7 @@ CODEX_TASK_RUNNER_HOME=1 bash scripts/run-tasks-codex.sh  # Keep Codex HOME/XDG 
 npm test -- tests/path/to.test.ts # Run a single Node test file via scripts/ts-node-loader.mjs
 ```
 
-TODO: Confirm whether `scripts/run-tasks-codex-improved.sh` should replace `scripts/run-tasks-codex.sh` in the default workflow.
+`scripts/run-tasks-codex.sh` is the default Codex task runner and must write `results/<task>.md` using the exact `results/RESULTS.md` template while keeping full raw CLI logs in `results/raw/`.
 
 ## Project Structure
 

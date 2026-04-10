@@ -8,7 +8,7 @@ import { isAdmin } from '@/lib/auth/admin';
 import { normalizeTopicLabel } from '@/lib/topics/normalization';
 import { parseDatabaseQuestion } from '@/types/database';
 import { createLogger } from '@/lib/logger';
-import { findRelatedFlashcardCode } from '@/lib/supabase/queries';
+import { findRelatedFlashcardCode, findRelatedNormalCode } from '@/lib/supabase/queries';
 import type { QuestionSet, QuestionSetStatus } from '@/types/questions';
 import type { QuestionSet as PublicQuestionSet } from '@/types';
 
@@ -21,10 +21,17 @@ export async function GET(request: NextRequest) {
   const code = url.searchParams.get('code')?.toUpperCase();
   const includeDrafts = url.searchParams.get('includeDrafts') === '1';
   const includeRelatedFlashcard = url.searchParams.get('relatedFlashcard') === '1';
+  const includeRelatedNormal = url.searchParams.get('relatedNormal') === '1';
   const scope = (url.searchParams.get('scope') as FlagScope | null) ?? 'play';
 
   if (code) {
-    return getQuestionSetByCode(request, code, includeDrafts, includeRelatedFlashcard);
+    return getQuestionSetByCode(
+      request,
+      code,
+      includeDrafts,
+      includeRelatedFlashcard,
+      includeRelatedNormal
+    );
   }
 
   if (scope === 'created') {
@@ -38,7 +45,8 @@ async function getQuestionSetByCode(
   request: NextRequest,
   code: string,
   includeDrafts: boolean,
-  includeRelatedFlashcard: boolean
+  includeRelatedFlashcard: boolean,
+  includeRelatedNormal: boolean
 ) {
   const logger = createLogger({
     requestId: crypto.randomUUID(),
@@ -92,6 +100,18 @@ async function getQuestionSetByCode(
           'Failed to resolve related flashcard code'
         );
         responseData.relatedFlashcardCode = null;
+      }
+    }
+
+    if (includeRelatedNormal) {
+      try {
+        responseData.relatedNormalCode = await findRelatedNormalCode(code);
+      } catch (relatedNormalError) {
+        logger.warn(
+          { error: relatedNormalError, code },
+          'Failed to resolve related normal code'
+        );
+        responseData.relatedNormalCode = null;
       }
     }
 

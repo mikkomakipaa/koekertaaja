@@ -282,3 +282,75 @@ export async function findRelatedFlashcardCode(quizCode: string): Promise<string
 
   return null;
 }
+
+/**
+ * Find related published normal quiz set code for a Helppo quiz set code.
+ * Matches by subject, grade, and base name without difficulty suffix.
+ */
+export async function findRelatedNormalCode(helppoCode: string): Promise<string | null> {
+  const normalizedCode = helppoCode.trim().toUpperCase();
+  if (!normalizedCode) {
+    return null;
+  }
+
+  try {
+    const { data: helppoSet, error: helppoError } = await supabase
+      .from('question_sets')
+      .select('subject, grade, name')
+      .eq('code', normalizedCode)
+      .single();
+
+    if (helppoError) {
+      logger.error(
+        { error: helppoError, helppoCode: normalizedCode },
+        'Error fetching Helppo question set for related normal lookup'
+      );
+      return null;
+    }
+
+    if (!helppoSet?.subject || helppoSet.grade == null || !helppoSet.name) {
+      return null;
+    }
+
+    const baseName = stripDifficultySuffix(helppoSet.name);
+    if (!baseName) {
+      return null;
+    }
+
+    const { data: normalCandidates, error: normalError } = await supabase
+      .from('question_sets')
+      .select('code, name')
+      .eq('subject', helppoSet.subject)
+      .eq('grade', helppoSet.grade)
+      .eq('mode', 'quiz')
+      .eq('difficulty', 'normaali')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false });
+
+    if (normalError) {
+      logger.error(
+        { error: normalError, helppoCode: normalizedCode },
+        'Error fetching related normal candidates'
+      );
+      return null;
+    }
+
+    for (const candidate of normalCandidates ?? []) {
+      if (!candidate.code || !candidate.name) {
+        continue;
+      }
+
+      if (stripDifficultySuffix(candidate.name) === baseName) {
+        return candidate.code;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    logger.error(
+      { error, helppoCode: normalizedCode },
+      'Unexpected error finding related normal code'
+    );
+    return null;
+  }
+}

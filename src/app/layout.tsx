@@ -1,10 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from 'sonner';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.koekertaaja.fi'),
@@ -75,7 +72,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} flex min-h-full flex-col`}>
+      <body className="flex min-h-full flex-col antialiased">
         <main className="flex-1">
           {children}
         </main>
