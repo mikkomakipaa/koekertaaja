@@ -205,7 +205,7 @@ export function CelebrationModal({ type, onClose, questionSetName, badges = [] }
         )}
       >
         <div role="status" aria-live="polite" className="sr-only">
-          {type === 'perfect-score' && 'W Pisteet. Sait kaikki kysymykset oikein.'}
+          {type === 'perfect-score' && 'Täysi 10. Sait kaikki kysymykset oikein.'}
           {type === 'all-badges' && 'Goated Merkit. Olet avannut kaikki merkit.'}
         </div>
 
@@ -214,7 +214,7 @@ export function CelebrationModal({ type, onClose, questionSetName, badges = [] }
             {!prefersReducedMotion && showConfetti && <Confetti count={60} onComplete={() => setShowConfetti(false)} />}
             <div className="text-center">
               <h2 id={titleId} className="mb-4 text-3xl font-bold text-indigo-600 dark:text-indigo-400 md:text-4xl">
-                W Pisteet.
+                Täysi 10.
               </h2>
               <p id={descriptionId} className="mb-6 text-lg text-slate-900 dark:text-slate-100 md:text-xl">
                 Sait kaikki kysymykset oikein!
