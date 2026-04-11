@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, type KeyboardEvent } from 'react';
+import { useRef, type KeyboardEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Book, GameController, GraduationCap, MagnifyingGlass, Trophy, X } from '@phosphor-icons/react';
 import { CollapsibleSearch } from '@/components/ui/collapsible-search';
@@ -35,6 +35,7 @@ interface ModeClassBarProps {
   onBack: () => void;
   onSearchClose: () => void;
   scrolled: boolean;
+  headerActionBeforeSearch?: ReactNode;
   className?: string;
 }
 
@@ -74,6 +75,7 @@ export function ModeClassBar({
   onBack,
   onSearchClose,
   scrolled,
+  headerActionBeforeSearch,
   className,
 }: ModeClassBarProps) {
   const modeRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -125,6 +127,7 @@ export function ModeClassBar({
           </PageTitle>
 
           <div className="flex items-center gap-2">
+            {headerActionBeforeSearch}
             <IconButton
               aria-label="Avaa haku"
               onClick={() => onSearchOpenChange(true)}
@@ -258,6 +261,7 @@ export function ModeClassBar({
             </div>
 
             <div className="relative flex flex-shrink-0 items-center gap-2">
+              {headerActionBeforeSearch}
               <div className="relative">
                 <CollapsibleSearch
                   placeholder="Etsi aihealuetta, ainetta tai aihetta..."

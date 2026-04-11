@@ -1,14 +1,29 @@
 import { createServerClient as createSSRServerClient } from '@supabase/ssr';
-import { NextRequest } from 'next/server';
+import type { NextRequest, NextResponse } from 'next/server';
 import { Database } from '@/types/database';
 import type { WriteActorContext } from '@/types/questions';
-import { cookies } from 'next/headers';
 import { isAdmin } from '@/lib/auth/admin';
 import { getServerEnv } from '@/lib/env';
 import {
   CSRF_FAILURE_MESSAGE,
   validateCsrfRequest,
 } from '@/lib/security/csrf';
+
+type CookieStoreAdapter = {
+  get(name: string): string | undefined;
+  set(name: string, value: string, options: CookieOptions): void;
+  remove(name: string, options: CookieOptions): void;
+};
+
+type CookieOptions = {
+  domain?: string;
+  maxAge?: number;
+  path?: string;
+  sameSite?: 'lax' | 'strict' | 'none' | boolean;
+  secure?: boolean;
+  httpOnly?: boolean;
+  expires?: Date;
+};
 
 export class AuthError extends Error {
   constructor(
@@ -57,32 +72,68 @@ export function resolveAuthError(
  * Uses @supabase/ssr to properly handle cookies in Next.js App Router
  */
 export async function createServerClient() {
+  const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
+  return createSupabaseServerClient({
+    get(name) {
+      return cookieStore.get(name)?.value;
+    },
+    set(name, value, options) {
+      try {
+        cookieStore.set({ name, value, ...options });
+      } catch {
+        // Cookie setting can fail in some server render contexts.
+      }
+    },
+    remove(name, options) {
+      try {
+        cookieStore.set({ name, value: '', ...options, maxAge: 0 });
+      } catch {
+        // Cookie removal can fail in some server render contexts.
+      }
+    },
+  });
+}
 
+/**
+ * Create a Supabase client for Next.js middleware so auth cookies refresh
+ * on every matched request.
+ */
+export function createMiddlewareClient(
+  request: NextRequest,
+  response: NextResponse
+) {
+  return createSupabaseServerClient({
+    get(name) {
+      return request.cookies.get(name)?.value;
+    },
+    set(name, value, options) {
+      request.cookies.set({ name, value, ...options });
+      response.cookies.set({ name, value, ...options });
+    },
+    remove(name, options) {
+      request.cookies.set({ name, value: '' });
+      response.cookies.set({ name, value: '', ...options, maxAge: 0 });
+    },
+  });
+}
+
+export function copyResponseCookies(
+  source: NextResponse,
+  target: NextResponse
+) {
+  for (const cookie of source.cookies.getAll()) {
+    target.cookies.set(cookie);
+  }
+}
+
+function createSupabaseServerClient(cookieAdapter: CookieStoreAdapter) {
   const env = getServerEnv();
   const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   return createSSRServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value;
-      },
-      set(name: string, value: string, options: any) {
-        try {
-          cookieStore.set({ name, value, ...options });
-        } catch {
-          // Cookie setting can fail in middleware
-        }
-      },
-      remove(name: string, options: any) {
-        try {
-          cookieStore.set({ name, value: '', ...options, maxAge: 0 });
-        } catch {
-          // Cookie removal can fail in middleware
-        }
-      },
-    },
+    cookies: cookieAdapter,
   });
 }
 

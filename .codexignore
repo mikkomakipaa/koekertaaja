@@ -1,0 +1,16 @@
+# Exclude large generated/vendor files from Codex context
+.next/
+node_modules/
+results/raw/
+*.lock
+package-lock.json
+
+# Large AI/prompt files rarely needed for most tasks
+src/lib/ai/questionGenerator.ts
+src/lib/api/questionGeneration.ts
+src/lib/prompts/PromptBuilder.ts
+src/config/prompt-templates/
+
+# Large UI file - only needed for create-form tasks
+src/app/create/page.tsx
+src/components/create/

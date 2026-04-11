@@ -28,3 +28,23 @@ export const logger = pino({
 export function createLogger(context: Record<string, any>) {
   return logger.child(context);
 }
+
+export function serializeError(error: unknown) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+
+  if (typeof error === 'string') {
+    return { message: error };
+  }
+
+  if (error && typeof error === 'object') {
+    return error;
+  }
+
+  return { message: String(error) };
+}

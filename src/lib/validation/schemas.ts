@@ -38,6 +38,9 @@ export const createQuestionSetSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Exam date must be in YYYY-MM-DD format')
     .optional(),
+  school_id: z
+    .string()
+    .uuid('School must be a valid UUID'),
   grade: z
     .number()
     .int('Grade must be an integer')

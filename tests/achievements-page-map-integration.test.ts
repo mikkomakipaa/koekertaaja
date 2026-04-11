@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
-import { AchievementsPageContent } from '@/app/play/achievements/page';
+import { AchievementsPageContent } from '@/app/play/achievements/AchievementsPageContent';
 import type { Badge } from '@/types';
 import type { MindMapNode, PracticedSetDropdownItem } from '@/types/mindMap';
 

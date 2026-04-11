@@ -34,9 +34,11 @@ import { readMistakesFromStorage } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
 import { useSessionProgress } from '@/hooks/useSessionProgress';
 import { useRecentSearches } from '@/hooks/useRecentSearches';
+import { useSelectedSchool } from '@/hooks/useSelectedSchool';
 import { useScrollDetection } from '@/hooks/useScrollDetection';
 import { createLogger } from '@/lib/logger';
 import { buildGroupedQuestionSets, type GroupedQuestionSets } from '@/lib/play/group-question-sets';
+import { SchoolSwitcher } from '@/components/play/SchoolSwitcher';
 import {
   Books,
   Circle,
@@ -419,6 +421,7 @@ function PlayBrowsePageSkeleton({ initialModeParam, initialGradeParam }: PlayBro
 
 interface PlayBrowsePageShellProps {
   children: ReactNode;
+  headerActionBeforeSearch?: ReactNode;
   scrolled: boolean;
   studyMode: StudyMode;
   onStudyModeChange: (mode: StudyMode) => void;
@@ -443,6 +446,7 @@ interface PlayBrowsePageShellProps {
 
 function PlayBrowsePageShell({
   children,
+  headerActionBeforeSearch,
   scrolled,
   studyMode,
   onStudyModeChange,
@@ -487,6 +491,7 @@ function PlayBrowsePageShell({
         onBack={onBack}
         onSearchClose={onSearchClose}
         scrolled={scrolled}
+        headerActionBeforeSearch={headerActionBeforeSearch}
       />
 
       <div className="mx-auto max-w-4xl px-4 pb-8 pt-3 md:px-8 md:pb-10 md:pt-8">
@@ -537,6 +542,7 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { schoolId, schoolName, isLoaded, setSchool } = useSelectedSchool();
 
   const [state, setState] = useState<BrowseState>('loading');
   const [groupedSets, setGroupedSets] = useState<GroupedQuestionSets[]>([]);
@@ -551,17 +557,27 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
   const scrolled = useScrollDetection();
 
   useEffect(() => {
+    if (isLoaded && !schoolId) {
+      router.replace('/play/select-school');
+    }
+  }, [isLoaded, router, schoolId]);
+
+  useEffect(() => {
+    if (!isLoaded || !schoolId) {
+      return;
+    }
+
     const loadQuestionSets = async () => {
       try {
         setState('loading');
         let sets: QuestionSet[] = [];
         const [quizResponse, flashcardResponse] = await Promise.all([
-          fetch('/api/question-sets?scope=play&limit=100&mode=quiz', { method: 'GET', credentials: 'same-origin' }),
-          fetch('/api/question-sets?scope=play&limit=100&mode=flashcard', { method: 'GET', credentials: 'same-origin' }),
+          fetch(`/api/question-sets?scope=play&limit=100&mode=quiz&schoolId=${encodeURIComponent(schoolId)}`, { method: 'GET', credentials: 'same-origin' }),
+          fetch(`/api/question-sets?scope=play&limit=100&mode=flashcard&schoolId=${encodeURIComponent(schoolId)}`, { method: 'GET', credentials: 'same-origin' }),
         ]);
 
         if (quizResponse.status === 401) {
-          sets = await getRecentQuestionSets(100);
+          sets = await getRecentQuestionSets({ limit: 100, schoolId });
         } else if (quizResponse.ok) {
           const quizPayload = await quizResponse.json();
           const flashcardPayload = flashcardResponse.ok ? await flashcardResponse.json() : { data: [] };
@@ -625,8 +641,8 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
       }
     };
 
-    loadQuestionSets();
-  }, []);
+    void loadQuestionSets();
+  }, [isLoaded, schoolId]);
 
   const availableGrades = useMemo(() => {
     return Array.from(new Set(groupedSets.map((g) => g.grade).filter((g): g is number => g !== undefined))).sort(
@@ -751,6 +767,16 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
 
   return (
     <PlayBrowsePageShell
+      headerActionBeforeSearch={
+        isLoaded && schoolId ? (
+          <SchoolSwitcher
+            currentSchoolId={schoolId}
+            currentSchoolName={schoolName}
+            disabled={state === 'loading'}
+            onSelectSchool={(school) => setSchool(school.id, school.name)}
+          />
+        ) : null
+      }
       scrolled={scrolled}
       studyMode={studyMode}
       onStudyModeChange={setStudyMode}

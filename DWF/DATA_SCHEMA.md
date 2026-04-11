@@ -1,20 +1,21 @@
 # Data Schema (Supabase Snapshot)
 
-**Version**: 1.1  
-**Last Updated**: 2026-03-16  
-**Source**: Supabase MCP (`get_project_url`, `list_tables`, `list_extensions`, `list_migrations`)  
+**Version**: 1.3  
+**Last Updated**: 2026-04-11  
+**Source**: Supabase MCP (`get_project_url`, `list_tables`, `list_extensions`, `list_migrations`) plus tracked local migrations under `supabase/migrations/`  
 **Scope**: Live schema snapshot for `public`, plus managed schema overview for `auth` and `storage`
 
 ---
 
 ## Overview
 
-This document is a database schema snapshot generated from the currently linked Supabase project via MCP.
+This document is a database schema snapshot generated from the currently linked Supabase project via MCP, annotated with tracked local migrations that are not yet reflected in the linked project.
 
 - Primary application tables are in `public`.
 - Authentication and object storage infrastructure lives in managed `auth` and `storage` schemas.
 - Row Level Security (RLS) is enabled on all application-facing `public` tables.
 - Current linked project URL: `https://fzqepoqqagwyhmzowhyr.supabase.co`
+- School selection schema is tracked in local migrations dated `2026-04-11` and should be applied to the dev Supabase project.
 
 ---
 
@@ -22,11 +23,13 @@ This document is a database schema snapshot generated from the currently linked 
 
 ### `public.question_sets`
 
-- Rows: 32
+- Rows: 45
 - RLS: enabled
 - Primary key: `id`
 - Foreign keys:
   - `user_id -> auth.users.id`
+  - `school_id -> public.schools.id`
+  - `class_id -> public.classes.id`
   - Referenced by:
     - `questions.question_set_id`
     - `map_questions.question_set_id`
@@ -52,6 +55,8 @@ Key columns:
 | `topic`, `subtopic` | `text` | Nullable topic metadata |
 | `prompt_metadata` | `jsonb` | Prompt/version metadata |
 | `user_id` | `uuid` | Nullable owner; authenticated writes are owner-scoped by RLS |
+| `school_id` | `uuid` | Nullable school assignment; `ON DELETE SET NULL` |
+| `class_id` | `uuid` | Nullable class assignment for future class-scoped targeting; `ON DELETE SET NULL` |
 | `created_at`, `updated_at` | `timestamptz` | Timestamps, default `now()` |
 
 RLS notes:
@@ -59,12 +64,92 @@ RLS notes:
 - Public read access remains available for published/playback flows per existing policies.
 - `INSERT` and `UPDATE` on `public.question_sets` are restricted to the owning authenticated user via `auth.uid() = user_id`.
 - Service-role writes used by server-side admin/API routes remain allowed.
+- Admin creation flow now persists `school_id` during question-set generation so new sets are visible in the matching school-scoped browse flow after publishing.
+
+---
+
+### `public.schools` (tracked local migration)
+
+- Rows: 2 in linked project
+- RLS: enabled
+- Primary key: `id`
+- Referenced by:
+  - `question_sets.school_id`
+  - `school_members.school_id`
+  - `classes.school_id`
+
+Key columns:
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `uuid` | PK, default `gen_random_uuid()` |
+| `name` | `text` | School name |
+| `municipality` | `text` | Nullable municipality/city |
+| `created_at` | `timestamptz` | Default `now()` |
+
+RLS notes:
+
+- Public read access is enabled so student-facing school pickers and header school switchers can list schools directly from `public.schools`.
+- Phase 1 writes are service-role only.
+
+---
+
+### `public.school_members` (tracked local migration)
+
+- Rows: n/a in linked project (stub table for future multi-user admin)
+- RLS: enabled
+- Primary key: `id`
+- Foreign keys:
+  - `user_id -> auth.users.id`
+  - `school_id -> public.schools.id`
+
+Key columns:
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `uuid` | PK, default `gen_random_uuid()` |
+| `user_id` | `uuid` | School admin/teacher user |
+| `school_id` | `uuid` | Parent school |
+| `role` | `text` | Checked to `admin` or `teacher` |
+| `created_at` | `timestamptz` | Default `now()` |
+
+RLS notes:
+
+- Authenticated users can read only their own membership rows.
+- Phase 1 writes are service-role only.
+
+---
+
+### `public.classes` (tracked local migration)
+
+- Rows: n/a in linked project (stub table for future class-targeted sets)
+- RLS: enabled
+- Primary key: `id`
+- Foreign keys:
+  - `school_id -> public.schools.id`
+  - Referenced by:
+    - `question_sets.class_id`
+
+Key columns:
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `uuid` | PK, default `gen_random_uuid()` |
+| `school_id` | `uuid` | Parent school |
+| `name` | `text` | Class name, e.g. `7B` |
+| `grade` | `int4` | Nullable grade level |
+| `created_at` | `timestamptz` | Default `now()` |
+
+RLS notes:
+
+- Public read access is enabled for future school/class selection flows.
+- Phase 1 writes are service-role only.
 
 ---
 
 ### `public.questions`
 
-- Rows: 1168
+- Rows: 1834
 - RLS: enabled
 - Primary key: `id`
 - Foreign keys:
@@ -143,7 +228,7 @@ Key columns:
 
 ### `public.prompt_metrics`
 
-- Rows: 23
+- Rows: 49
 - RLS: enabled
 - Primary key: `id`
 - Foreign keys:
@@ -212,7 +297,7 @@ Note: Supabase MCP returns both installed and available extension metadata. The 
 
 ## Latest Observed Tracked Migrations
 
-From MCP `list_migrations` on 2026-03-16:
+From MCP `list_migrations` on 2026-04-10 plus tracked local migrations dated 2026-04-11:
 
 - `20251213111808` `add_insert_update_policies`
 - `20260118232030` `add_subject_type_and_question_subtopic`
@@ -223,6 +308,10 @@ From MCP `list_migrations` on 2026-03-16:
 - `20260212055905` `fix_questions_type_check_for_flashcard_v2`
 - `20260220113534` `enforce_rls_on_public_spatial_ref_sys`
 - `20260223161207` `backfill_exam_date_from_created_at`
+- `20260411` `add_question_sets_write_policies` (tracked locally)
+- `20260411` `add_schools_table` (tracked locally)
+- `20260411` `add_school_id_to_question_sets` (tracked locally)
+- `20260411` `add_school_members_and_classes` (tracked locally)
 
 ---
 

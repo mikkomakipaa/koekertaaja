@@ -182,6 +182,7 @@ async function getPlayableQuestionSets(request: NextRequest) {
     const limit = limitParam ? Number(limitParam) : 100;
     const modeParam = url.searchParams.get('mode');
     const mode = modeParam === 'flashcard' ? 'flashcard' : 'quiz';
+    const schoolId = url.searchParams.get('schoolId');
 
     const userIsAdmin = user ? isAdmin(user.email || '') : false;
     const supabase = userIsAdmin ? getSupabaseAdmin() : await createServerClient();
@@ -195,6 +196,10 @@ async function getPlayableQuestionSets(request: NextRequest) {
 
     if (!userIsAdmin) {
       query.eq('status', 'published');
+    }
+
+    if (schoolId) {
+      query.eq('school_id', schoolId);
     }
 
     const { data, error } = await query;

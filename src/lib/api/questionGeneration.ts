@@ -53,6 +53,7 @@ export interface MaterialFile {
 
 export interface GenerationRequest {
   userId?: string;
+  schoolId?: string;
   subject: string;
   subjectType?: string;
   grade?: number;
@@ -704,6 +705,7 @@ export async function generateQuizSets(
         {
           code,
           user_id: request.userId ?? null,
+          school_id: request.schoolId ?? null,
           name: setName,
           subject: request.subject as Subject,
           difficulty,
@@ -1048,6 +1050,7 @@ export async function generateFlashcardSet(
       {
         code,
         user_id: request.userId ?? null,
+        school_id: request.schoolId ?? null,
         name: setName,
         subject: request.subject as Subject,
         difficulty: 'normaali',

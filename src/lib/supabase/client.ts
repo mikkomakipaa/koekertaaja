@@ -1,6 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
-import { getPublicEnv } from '@/lib/env';
 
 // Lazy initialization to avoid errors during build time when env vars might not be set
 let supabaseInstance: SupabaseClient<Database> | null = null;
@@ -10,9 +9,12 @@ function getSupabaseClient(): SupabaseClient<Database> {
     return supabaseInstance;
   }
 
-  const env = getPublicEnv();
-  const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing public Supabase environment variables');
+  }
 
   supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey);
   return supabaseInstance;
@@ -21,6 +23,13 @@ function getSupabaseClient(): SupabaseClient<Database> {
 // Export as a getter to maintain backward compatibility
 export const supabase = new Proxy({} as SupabaseClient<Database>, {
   get(_target, prop) {
-    return getSupabaseClient()[prop as keyof SupabaseClient<Database>];
+    const client = getSupabaseClient();
+    const value = client[prop as keyof SupabaseClient<Database>];
+
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+
+    return value;
   }
 });

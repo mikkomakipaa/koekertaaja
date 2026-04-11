@@ -7,7 +7,7 @@ import {
   getSpeedQuizModeData,
   isSpeedQuizEligible,
   SpeedQuizModePageContent,
-} from '@/app/play/speed-quiz/page';
+} from '@/app/play/speed-quiz/speedQuizPageContent';
 
 function createQuestionSet(overrides: Partial<QuestionSet> = {}): QuestionSet {
   return {

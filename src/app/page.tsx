@@ -1,69 +1,22 @@
 'use client';
 
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Book, BookOpenText, Cards, GameController, ArrowRight } from '@phosphor-icons/react';
+import { BookOpenText, Cards, GameController, ArrowRight } from '@phosphor-icons/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Footer } from '@/components/shared/Footer';
 import { AudienceTabs } from '@/components/landing/AudienceTabs';
 import { PrimaryActionButton } from '@/components/play/PrimaryActionButton';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
-import { readLastScoreFromStorage } from '@/hooks/useLastScore';
-import { readSessionProgressFromStorage } from '@/hooks/useSessionProgress';
-import { resolveDashboardPrimaryAction, type DashboardPrimaryAction } from '@/lib/play/primary-action';
-import { getRecentQuestionSets } from '@/lib/supabase/queries';
-import type { QuestionSet } from '@/types';
-
-const defaultDashboardAction: DashboardPrimaryAction = {
-  href: '/play?mode=pelaa',
-  label: 'Aloita harjoittelu',
-  description: '',
-  mode: 'quiz',
-};
-
-const hasPublicSupabaseEnv = Boolean(
-  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+import { useSelectedSchool } from '@/hooks/useSelectedSchool';
 
 export default function HomePage() {
   const router = useRouter();
+  const { schoolId, isLoaded } = useSelectedSchool();
   const [activeAudience, setActiveAudience] = useState<'oppilaille' | 'huoltajille'>('oppilaille');
-  const [dashboardAction, setDashboardAction] = useState<DashboardPrimaryAction>(defaultDashboardAction);
   useScrollAnimation();
-
-  useEffect(() => {
-    let active = true;
-
-    const loadDashboardAction = async () => {
-      let recentQuestionSets: QuestionSet[] = [];
-
-      if (hasPublicSupabaseEnv) {
-        try {
-          recentQuestionSets = await getRecentQuestionSets(12);
-        } catch (error) {
-          console.warn('Dashboard action fallback activated because recent question sets could not be loaded.', error);
-        }
-      }
-
-      if (!active) return;
-
-      setDashboardAction(
-        resolveDashboardPrimaryAction({
-          questionSets: recentQuestionSets,
-          getLastScore: readLastScoreFromStorage,
-          getSessionProgress: readSessionProgressFromStorage,
-        })
-      );
-    };
-
-    void loadDashboardAction();
-
-    return () => {
-      active = false;
-    };
-  }, []);
 
   return (
     <div className="relative isolate flex min-h-screen flex-col bg-white transition-colors duration-300 ease-out dark:bg-gray-900">
@@ -108,18 +61,19 @@ export default function HomePage() {
 
               <div className="mt-5 flex flex-col gap-2.5">
                 <PrimaryActionButton
-                  onClick={() => router.push(dashboardAction.href)}
-                  mode={dashboardAction.mode}
+                  onClick={() => {
+                    if (!isLoaded || !schoolId) {
+                      router.push('/play/select-school');
+                      return;
+                    }
+
+                    router.push('/play?mode=pelaa');
+                  }}
+                  mode="quiz"
                   surface="hero"
-                  icon={
-                    dashboardAction.mode === 'study' ? (
-                      <Book size={20} weight="duotone" />
-                    ) : (
-                      <BookOpenText size={20} weight="duotone" />
-                    )
-                  }
-                  label={dashboardAction.label}
-                  ariaLabel={dashboardAction.label}
+                  icon={<BookOpenText size={20} weight="duotone" />}
+                  label="Aloita harjoittelu"
+                  ariaLabel="Aloita harjoittelu"
                 />
               </div>
             </div>

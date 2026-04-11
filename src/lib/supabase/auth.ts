@@ -1,5 +1,6 @@
 import { createBrowserClient as createSSRBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/database';
+import { createServerClient } from '@/lib/supabase/server-auth';
 
 /**
  * Client-side Supabase client for authentication
@@ -70,40 +71,7 @@ export async function getServerUser(): Promise<AuthUser | null> {
     return null;
   }
 
-  const [{ createServerClient }, { cookies }, { getServerEnv }] =
-    await Promise.all([
-      import('@supabase/ssr'),
-      import('next/headers'),
-      import('@/lib/env'),
-    ]);
-
-  const cookieStore = await cookies();
-  const env = getServerEnv();
-  const supabase = createServerClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          try {
-            cookieStore.set({ name, value, ...options });
-          } catch {
-            // Server components cannot always mutate cookies.
-          }
-        },
-        remove(name: string, options: any) {
-          try {
-            cookieStore.set({ name, value: '', ...options, maxAge: 0 });
-          } catch {
-            // Server components cannot always mutate cookies.
-          }
-        },
-      },
-    }
-  );
+  const supabase = await createServerClient();
 
   const {
     data: { user },

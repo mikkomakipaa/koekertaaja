@@ -5,6 +5,10 @@
 -- owner-scoped authenticated policies.
 DROP POLICY IF EXISTS "Enable insert for service role" ON public.question_sets;
 DROP POLICY IF EXISTS "Enable update for service role" ON public.question_sets;
+DROP POLICY IF EXISTS "Enable insert for question_sets owners" ON public.question_sets;
+DROP POLICY IF EXISTS "Enable update for question_sets owners" ON public.question_sets;
+DROP POLICY IF EXISTS "Enable insert for service role on question_sets" ON public.question_sets;
+DROP POLICY IF EXISTS "Enable update for service role on question_sets" ON public.question_sets;
 
 -- Authenticated users may only create rows owned by themselves.
 CREATE POLICY "Enable insert for question_sets owners" ON public.question_sets

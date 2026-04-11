@@ -60,6 +60,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { createLogger } from '@/lib/logger';
 import { withCsrfHeaders } from '@/lib/security/csrf-client';
 import { SUBJECT_GROUPS, getSubjectById, subjectRequiresGrade } from '@/config/subjects';
+import { getAllSchools } from '@/lib/supabase/schools';
 import type { MaterialCapacity, QuestionCountValidation } from '@/lib/utils/materialAnalysis';
 import {
   appendProviderPreference,
@@ -68,6 +69,7 @@ import {
   DEFAULT_CREATE_PROVIDER_LABEL,
   type ProviderPreference,
 } from '@/lib/create/providerPreference';
+import type { School } from '@/types';
 
 type CreateState = 'form' | 'loading' | 'success';
 
@@ -191,6 +193,10 @@ export default function CreatePage() {
   const [contentType, setContentType] = useState<'vocabulary' | 'grammar' | 'mixed'>('vocabulary');
   const [providerPreference, setProviderPreference] =
     useState<ProviderPreference>(DEFAULT_CREATE_PROVIDER);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [selectedSchoolId, setSelectedSchoolId] = useState('');
+  const [loadingSchools, setLoadingSchools] = useState(false);
+  const [schoolLoadError, setSchoolLoadError] = useState('');
   const [error, setError] = useState('');
   const [capacityWarning, setCapacityWarning] = useState<CapacityWarningState | null>(null);
   const [topicConfirmation, setTopicConfirmation] = useState<{
@@ -244,6 +250,7 @@ export default function CreatePage() {
   const hasSubjectType = Boolean(subjectType);
   const hasRequiredGrade = !requiresGrade || Boolean(grade);
   const hasExamDate = Boolean(examDate);
+  const hasSelectedSchool = Boolean(selectedSchoolId);
   const hasMaterials = materialText.trim().length > 0 || uploadedFiles.length > 0;
   const selectedProviderLabel =
     providerOptions.find((option) => option.value === providerPreference)?.label ??
@@ -303,6 +310,7 @@ export default function CreatePage() {
       formData.append('examDate', examDate);
     }
     formData.append('questionSetName', questionSetName);
+    formData.append('school_id', selectedSchoolId);
     if (grade) {
       formData.append('grade', grade.toString());
     }
@@ -489,6 +497,11 @@ export default function CreatePage() {
 
     if (!examDate) {
       setError('Valitse koepäivä!');
+      return;
+    }
+
+    if (!selectedSchoolId) {
+      setError('Valitse koulu!');
       return;
     }
 
@@ -841,6 +854,26 @@ export default function CreatePage() {
       logger.error({ error }, 'Error loading question sets');
     } finally {
       setLoadingQuestionSets(false);
+    }
+  };
+
+  const loadSchools = async () => {
+    setLoadingSchools(true);
+    setSchoolLoadError('');
+
+    try {
+      const nextSchools = await getAllSchools();
+      setSchools(nextSchools);
+
+      if (nextSchools.length === 0) {
+        setSchoolLoadError('Kouluja ei löytynyt. Lisää koulu ensin Supabaseen.');
+      }
+    } catch (loadError) {
+      logger.error({ error: loadError }, 'Error loading schools for create form');
+      setSchools([]);
+      setSchoolLoadError('Koulujen lataus epäonnistui. Päivitä sivu ja yritä uudelleen.');
+    } finally {
+      setLoadingSchools(false);
     }
   };
 
@@ -1394,6 +1427,7 @@ export default function CreatePage() {
   useEffect(() => {
     loadQuestionSets();
     checkAdminStatus();
+    void loadSchools();
   }, []);
 
   useEffect(() => {
@@ -1617,6 +1651,51 @@ export default function CreatePage() {
                 onChange={(e) => setExamDate(e.target.value)}
                 className="text-base bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
               />
+            </div>
+
+            <div>
+              <label className="mb-3 block text-base font-semibold text-slate-900 dark:text-slate-100">
+                <span className="inline-flex items-center gap-2">
+                  <GraduationCap weight="duotone" className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  Koulu
+                </span>
+              </label>
+              <select
+                value={selectedSchoolId}
+                onChange={(e) => {
+                  setSelectedSchoolId(e.target.value);
+                  if (error === 'Valitse koulu!') {
+                    setError('');
+                  }
+                }}
+                required
+                disabled={loadingSchools || schools.length === 0}
+                aria-invalid={error === 'Valitse koulu!' ? 'true' : 'false'}
+                className="w-full rounded-lg border bg-white p-3 text-base text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              >
+                <option value="">
+                  {loadingSchools
+                    ? 'Kouluja ladataan...'
+                    : schools.length > 0
+                      ? '-- Valitse koulu --'
+                      : 'Ei kouluja saatavilla'}
+                </option>
+                {schools.map((school) => (
+                  <option key={school.id} value={school.id}>
+                    {school.name}
+                    {school.municipality ? ` (${school.municipality})` : ''}
+                  </option>
+                ))}
+              </select>
+              {schoolLoadError ? (
+                <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">
+                  {schoolLoadError}
+                </p>
+              ) : (
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                  Kysymyssarja liitetään tähän kouluun ja näkyy vain sen koulun pelinäkymässä.
+                </p>
+              )}
             </div>
 
             <div>
@@ -1955,7 +2034,7 @@ export default function CreatePage() {
                 mode="quiz"
                 variant="primary"
                 className="flex-1"
-                disabled={!questionSetName.trim() || !hasSubject || !hasSubjectType || !hasRequiredGrade || !hasExamDate || !hasMaterials}
+                disabled={!questionSetName.trim() || !hasSubject || !hasSubjectType || !hasRequiredGrade || !hasExamDate || !hasSelectedSchool || !hasMaterials}
               >
                 Luo kysymyssarjat
               </Button>

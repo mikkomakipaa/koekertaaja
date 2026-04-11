@@ -12,6 +12,16 @@ import { stripDifficultySuffix } from '@/lib/question-set-name';
 
 const logger = createLogger({ module: 'supabase.queries' });
 
+type QuestionSetSchoolFilter = {
+  schoolId?: string;
+};
+
+type RecentQuestionSetsOptions = QuestionSetSchoolFilter & {
+  limit?: number;
+};
+
+type QuestionSetsReadClient = Pick<typeof supabase, 'from'>;
+
 export function normalizeUniqueQuestionTopics(
   rows: Array<{ topic?: string | null }>,
   options?: { context?: string; questionSetId?: string }
@@ -82,17 +92,34 @@ export async function getQuestionSetByCode(
  * Get recent question sets (for future browse feature)
  * Only returns published question sets
  */
-export async function getRecentQuestionSets(limit = 10): Promise<QuestionSet[]> {
-  const { data, error } = await supabase
+export async function getRecentQuestionSets(
+  limitOrOptions: number | RecentQuestionSetsOptions = 10,
+  legacyOptions?: QuestionSetSchoolFilter,
+  client: QuestionSetsReadClient = supabase
+): Promise<QuestionSet[]> {
+  const resolvedLimit =
+    typeof limitOrOptions === 'number' ? limitOrOptions : (limitOrOptions?.limit ?? 10);
+  const resolvedSchoolId =
+    typeof limitOrOptions === 'number'
+      ? legacyOptions?.schoolId
+      : limitOrOptions?.schoolId;
+
+  let query = client
     .from('question_sets')
     .select('*')
-    .eq('status', 'published')
+    .eq('status', 'published');
+
+  if (resolvedSchoolId) {
+    query = query.eq('school_id', resolvedSchoolId);
+  }
+
+  const { data, error } = await query
     .order('exam_date', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
-    .limit(limit);
+    .limit(resolvedLimit);
 
   if (error) {
-    logger.error({ error }, 'Error fetching recent question sets');
+    logger.error({ error, schoolId: resolvedSchoolId }, 'Error fetching recent question sets');
     return [];
   }
 
@@ -127,15 +154,23 @@ export async function getQuestionSetsBySubject(
  * Get all question sets
  * Only returns published question sets
  */
-export async function getAllQuestionSets(): Promise<QuestionSet[]> {
-  const { data, error } = await supabase
+export async function getAllQuestionSets(
+  options?: QuestionSetSchoolFilter,
+  client: QuestionSetsReadClient = supabase
+): Promise<QuestionSet[]> {
+  let query = client
     .from('question_sets')
     .select('*')
-    .eq('status', 'published')
-    .order('created_at', { ascending: false });
+    .eq('status', 'published');
+
+  if (options?.schoolId) {
+    query = query.eq('school_id', options.schoolId);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) {
-    logger.error({ error }, 'Error fetching all question sets');
+    logger.error({ error, schoolId: options?.schoolId }, 'Error fetching all question sets');
     return [];
   }
 
@@ -146,8 +181,11 @@ export async function getAllQuestionSets(): Promise<QuestionSet[]> {
  * Fetch published question sets for browse-mode pages.
  * Alias kept explicit for route-level readability.
  */
-export async function fetchPublishedQuestionSets(): Promise<QuestionSet[]> {
-  return getAllQuestionSets();
+export async function fetchPublishedQuestionSets(
+  options?: QuestionSetSchoolFilter,
+  client: QuestionSetsReadClient = supabase
+): Promise<QuestionSet[]> {
+  return getAllQuestionSets(options, client);
 }
 
 /**

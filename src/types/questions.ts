@@ -136,6 +136,8 @@ export type Question =
 export interface QuestionSet {
   id: string;
   user_id?: string | null;
+  school_id?: string | null;
+  class_id?: string | null;
   code: string;
   name: string;
   subject: Subject;
