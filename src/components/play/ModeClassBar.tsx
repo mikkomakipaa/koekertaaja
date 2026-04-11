@@ -122,9 +122,7 @@ export function ModeClassBar({
             <ArrowLeft size={20} weight="regular" aria-hidden="true" />
           </IconButton>
 
-          <PageTitle className="truncate text-slate-900 dark:text-slate-100">
-            Koekertaaja
-          </PageTitle>
+          <div />
 
           <div className="flex items-center gap-2">
             {headerActionBeforeSearch}

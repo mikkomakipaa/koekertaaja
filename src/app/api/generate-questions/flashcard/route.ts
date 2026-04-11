@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createLogger } from '@/lib/logger';
+import { getSchoolForUser } from '@/lib/auth/roles';
 import { requireAuth, resolveAuthError } from '@/lib/supabase/server-auth';
 import { createQuestionSetSchema } from '@/lib/validation/schemas';
 import {
@@ -53,6 +54,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: message },
         { status }
+      );
+    }
+
+    const schoolId = await getSchoolForUser(userId);
+    if (!schoolId) {
+      logger.warn({ userId }, 'User has no school membership');
+      return NextResponse.json(
+        { error: 'Tiliäsi ei ole liitetty kouluun. Ota yhteyttä ylläpitäjään.' },
+        { status: 403 }
       );
     }
 
@@ -109,7 +119,6 @@ export async function POST(request: NextRequest) {
       questionCount: parseInt(formData.get('questionCount') as string),
       examLength: parseInt(formData.get('examLength') as string),
       examDate: (formData.get('examDate') as string | null) || undefined,
-      school_id: formData.get('school_id') as string,
       questionSetName: formData.get('questionSetName') as string,
       grade: formData.get('grade') ? parseInt(formData.get('grade') as string) : undefined,
       topic: (formData.get('topic') as string | null) || undefined,
@@ -136,7 +145,6 @@ export async function POST(request: NextRequest) {
       questionCount,
       examLength,
       examDate,
-      school_id,
       questionSetName,
       grade,
       topic,
@@ -305,7 +313,7 @@ export async function POST(request: NextRequest) {
       userId,
       subject,
       subjectType,
-      schoolId: school_id,
+      schoolId,
       questionCount,
       examLength,
       examDate,

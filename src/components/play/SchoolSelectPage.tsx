@@ -130,9 +130,6 @@ export function SchoolSelectPage() {
       <div className="mx-auto max-w-4xl px-4 pb-8 pt-6 md:px-8 md:pb-10 md:pt-8">
         <section className="rounded-2xl border border-slate-200 bg-white/95 px-5 py-5 shadow-none dark:border-slate-800 dark:bg-slate-900/95 md:px-6 md:py-6">
           <div className="space-y-2">
-            <span className="inline-flex h-8 items-center rounded-full border border-sky-200 bg-sky-50 px-3 text-xs font-semibold tracking-[0.01em] text-sky-700 dark:border-sky-800/70 dark:bg-sky-950/35 dark:text-sky-200">
-              Pelaaminen alkaa koulun valinnasta
-            </span>
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 md:text-3xl">
               Valitse oma koulu
             </h1>

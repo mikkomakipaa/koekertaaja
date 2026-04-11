@@ -310,7 +310,6 @@ export default function CreatePage() {
       formData.append('examDate', examDate);
     }
     formData.append('questionSetName', questionSetName);
-    formData.append('school_id', selectedSchoolId);
     if (grade) {
       formData.append('grade', grade.toString());
     }
@@ -838,7 +837,7 @@ export default function CreatePage() {
   const loadQuestionSets = async () => {
     setLoadingQuestionSets(true);
     try {
-      const response = await fetch('/api/question-sets?scope=created', {
+      const response = await fetch('/api/question-sets?scope=manage', {
         method: 'GET',
         credentials: 'same-origin',
       });

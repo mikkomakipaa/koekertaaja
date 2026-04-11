@@ -12,7 +12,7 @@ import { findRelatedFlashcardCode, findRelatedNormalCode } from '@/lib/supabase/
 import type { QuestionSet, QuestionSetStatus } from '@/types/questions';
 import type { QuestionSet as PublicQuestionSet } from '@/types';
 
-type FlagScope = 'play' | 'created';
+type FlagScope = 'play' | 'created' | 'manage';
 
 type FlagRow = never;
 
@@ -32,6 +32,10 @@ export async function GET(request: NextRequest) {
       includeRelatedFlashcard,
       includeRelatedNormal
     );
+  }
+
+  if (scope === 'manage') {
+    return getManageQuestionSets();
   }
 
   if (scope === 'created') {
@@ -127,14 +131,71 @@ async function getQuestionSetByCode(
 
 async function getCreatedQuestionSets() {
   try {
-    await requireAuth();
+    const user = await requireAuth();
 
     const supabaseAdmin = getSupabaseAdmin();
     const { data: questionSets, error } = await supabaseAdmin
       .from('question_sets')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(200);
+
+    if (error) {
+      return NextResponse.json({ error: 'Failed to load question sets' }, { status: 500 });
+    }
+
+    const typedQuestionSets = (questionSets || []) as PublicQuestionSet[];
+    const setsWithDistribution = await Promise.all(
+      typedQuestionSets.map(async (set) => {
+        const { data: questions } = await supabaseAdmin
+          .from('questions')
+          .select('question_type, topic')
+          .eq('question_set_id', set.id);
+
+        const typeDistribution: Record<string, number> = {};
+        const topicDistribution: Record<string, number> = {};
+        if (questions) {
+          (questions as Array<{ question_type: string; topic: string | null }>).forEach((q) => {
+            typeDistribution[q.question_type] = (typeDistribution[q.question_type] || 0) + 1;
+            const topicKey = q.topic ?? '__null__';
+            topicDistribution[topicKey] = (topicDistribution[topicKey] || 0) + 1;
+          });
+        }
+
+        return {
+          ...set,
+          type_distribution: typeDistribution,
+          topic_distribution: topicDistribution,
+        };
+      })
+    );
+
+    return NextResponse.json({ data: setsWithDistribution });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unauthorized';
+    const status = message.includes('Unauthorized') ? 401 : 500;
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+
+async function getManageQuestionSets() {
+  try {
+    const user = await requireAuth();
+    const userIsAdmin = isAdmin(user.email || '');
+    const supabaseAdmin = getSupabaseAdmin();
+
+    let query = supabaseAdmin
+      .from('question_sets')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+
+    if (!userIsAdmin) {
+      query = query.eq('user_id', user.id);
+    }
+
+    const { data: questionSets, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: 'Failed to load question sets' }, { status: 500 });
