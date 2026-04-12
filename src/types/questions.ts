@@ -15,6 +15,7 @@ export type QuestionType =
 export type Subject = string;
 
 export type Difficulty = 'helppo' | 'normaali';
+export type QuestionDifficulty = 'helppo' | 'normaali' | 'vaikea';
 
 export type Mode = 'quiz' | 'flashcard';
 
@@ -43,6 +44,7 @@ export interface BaseQuestion {
   question_set_id: string;
   question_text: string;
   question_type: QuestionType;
+  difficulty?: QuestionDifficulty | null;
   explanation: string;
   image_url?: string;
   image_reference?: string;

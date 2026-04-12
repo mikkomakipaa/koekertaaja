@@ -21,7 +21,7 @@
  * are centralized under /src/config/prompt-templates/core/.
  * For template editing, see /Prompt-separation-plan.md
  */
-import { Question, Subject, Difficulty, SequentialItem, isSequentialItemArray, isStringArray } from '@/types';
+import { Question, Subject, Difficulty, QuestionDifficulty, SequentialItem, isSequentialItemArray, isStringArray } from '@/types';
 import * as providerRouter from './providerRouter';
 import type { AIMessageContent } from './providerTypes';
 import type { AIProvider } from './providerTypes';
@@ -62,6 +62,23 @@ const normalizeSkillTag = (value: unknown): string | undefined => {
     return undefined;
   }
   return trimmed.toLowerCase().replace(/[^a-z_]/g, '_');
+};
+
+const normalizeQuestionDifficulty = (value: unknown): QuestionDifficulty | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  switch (normalized) {
+    case 'helppo':
+    case 'normaali':
+    case 'vaikea':
+      return normalized;
+    default:
+      return undefined;
+  }
 };
 
 function shouldPreserveJsonEscape(
@@ -259,9 +276,11 @@ export interface GenerateQuestionsParams {
   contentType?: 'vocabulary' | 'grammar' | 'mixed';
   visuals?: ExtractedVisual[];
   targetProvider?: AIProvider;
+  apiKey?: string;
   onPromptMetadata?: (promptMetadata: PromptMetadata) => void;
   metricsContext?: {
     userId?: string;
+    schoolId?: string;
     questionSetId?: string;
     retryCount?: number;
   };
@@ -677,6 +696,13 @@ function normalizeAIQuestionShape(
     question.acceptable_answers = question.acceptableAnswers;
   }
 
+  const normalizedDifficulty = normalizeQuestionDifficulty(
+    question.difficulty ?? question.question_difficulty ?? question.level
+  );
+  if (normalizedDifficulty) {
+    question.difficulty = normalizedDifficulty;
+  }
+
   if (!question.options && Array.isArray(question.choices)) {
     question.options = question.choices;
   }
@@ -766,6 +792,7 @@ export async function generateQuestions(
   params: GenerateQuestionsParams,
   deps: GenerateQuestionsDeps = {}
 ): Promise<Question[]> {
+  const generationStartedAt = Date.now();
   const {
     subject,
     subjectType,
@@ -951,6 +978,8 @@ export async function generateQuestions(
     provider: selectedModel.provider,
     model: selectedModel.model,
     maxTokens: 32000,
+    apiKey: params.apiKey,
+    allowFallback: false,
   });
   logger.info(
     {
@@ -1032,6 +1061,7 @@ export async function generateQuestions(
 
       logPromptMetricsFireAndForget({
         user_id: metricsContext?.userId ?? null,
+        school_id: metricsContext?.schoolId ?? null,
         question_set_id: metricsContext?.questionSetId ?? null,
         subject,
         difficulty,
@@ -1039,13 +1069,14 @@ export async function generateQuestions(
         question_count_requested: questionCount,
         provider: selectedModel.provider,
         model: selectedModel.model,
-        prompt_version: promptMetadata?.versions ?? null,
-        question_count_generated: 0,
-        question_count_valid: 0,
-        generation_latency_ms: Date.now() - aiCallStartedAt,
-        input_tokens: response.usage?.input_tokens ?? null,
-        output_tokens: response.usage?.output_tokens ?? null,
-        estimated_cost_usd: calculateCost(response.usage, selectedModel.model),
+      prompt_version: promptMetadata?.versions ?? null,
+      question_count_generated: 0,
+      question_count_valid: 0,
+      generation_latency_ms: Date.now() - aiCallStartedAt,
+      duration_ms: Date.now() - generationStartedAt,
+      input_tokens: response.usage?.input_tokens ?? null,
+      output_tokens: response.usage?.output_tokens ?? null,
+      estimated_cost_usd: calculateCost(response.usage, selectedModel.model),
         validation_pass_rate: 0,
         skill_coverage: 0,
         topic_coverage: 0,
@@ -1431,6 +1462,7 @@ export async function generateQuestions(
     );
     logPromptMetricsFireAndForget({
       user_id: metricsContext?.userId ?? null,
+      school_id: metricsContext?.schoolId ?? null,
       question_set_id: metricsContext?.questionSetId ?? null,
       subject,
       difficulty,
@@ -1442,6 +1474,7 @@ export async function generateQuestions(
       question_count_generated: totalGeneratedByAI,
       question_count_valid: validQuestions.length,
       generation_latency_ms: Date.now() - aiCallStartedAt,
+      duration_ms: Date.now() - generationStartedAt,
       input_tokens: response.usage?.input_tokens ?? null,
       output_tokens: response.usage?.output_tokens ?? null,
       estimated_cost_usd: calculateCost(response.usage, selectedModel.model),
@@ -1525,8 +1558,10 @@ export async function generateQuestions(
     : 0;
   const typeVarietyScore = calculateVarietyScore(parsedQuestions);
   const generationLatencyMs = Date.now() - aiCallStartedAt;
+  const durationMs = Date.now() - generationStartedAt;
   const metricsData: PromptMetricsInsert = {
     user_id: metricsContext?.userId ?? null,
+    school_id: metricsContext?.schoolId ?? null,
     question_set_id: metricsContext?.questionSetId ?? null,
     subject,
     difficulty,
@@ -1538,6 +1573,7 @@ export async function generateQuestions(
     question_count_generated: generatedCount,
     question_count_valid: validCount,
     generation_latency_ms: generationLatencyMs,
+    duration_ms: durationMs,
     input_tokens: response.usage?.input_tokens ?? null,
     output_tokens: response.usage?.output_tokens ?? null,
     estimated_cost_usd: calculateCost(response.usage, selectedModel.model),
@@ -1563,6 +1599,7 @@ export async function generateQuestions(
       id: '', // Will be set by database
       question_set_id: '', // Will be set by database
       question_text: q.question,
+      difficulty: q.difficulty ?? null,
       explanation: q.explanation || '',
       order_index: index,
       image_reference: imageReference,

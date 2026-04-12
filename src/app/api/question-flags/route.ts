@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { z } from 'zod';
+import { isAdmin } from '@/lib/auth/admin';
 import { createLogger } from '@/lib/logger';
 import {
-  requireAdmin,
   requireAuth,
   resolveAuthError,
 } from '@/lib/supabase/server-auth';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { buildServerRateLimitKey } from '@/lib/ratelimit';
+import { requireSchoolMember } from '@/lib/auth/roles';
 import {
   flagSchema,
   PER_QUESTION_WINDOW_MS,
@@ -39,6 +40,20 @@ type FlagRow = {
 const dismissSchema = z.object({
   questionId: z.string().uuid(),
 });
+
+async function getOwnedQuestionSetIds(userId: string): Promise<string[]> {
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin
+    .from('question_sets')
+    .select('id')
+    .eq('user_id', userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).map((row) => row.id as string);
+}
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
@@ -166,22 +181,41 @@ export async function GET() {
   logger.info({ method: 'GET' }, 'Request received');
 
   try {
+    let userId: string;
+    let userIsGlobalAdmin = false;
+
     try {
-      await requireAdmin();
+      const user = await requireAuth();
+      userId = user.id;
+      userIsGlobalAdmin = isAdmin(user.email || '');
+
+      if (!userIsGlobalAdmin) {
+        await requireSchoolMember(user.id);
+      }
     } catch (authError) {
-      logger.warn({ authError }, 'Admin access denied');
+      logger.warn({ authError }, 'Flag access denied');
       return NextResponse.json(
-        { error: 'Forbidden. Admin access required to view flags.' },
+        { error: 'Forbidden. You do not have access to flagged questions.' },
         { status: 403 }
       );
     }
 
     const admin = getSupabaseAdmin();
-    const { data, error } = await admin
+    let query = admin
       .from('question_flags')
       .select(
         'question_id, question_set_id, reason, note, created_at, questions(id, question_text, question_type, correct_answer, options), question_sets(id, name, code, subject)'
       );
+
+    if (!userIsGlobalAdmin) {
+      const ownedQuestionSetIds = await getOwnedQuestionSetIds(userId);
+      if (ownedQuestionSetIds.length === 0) {
+        return NextResponse.json({ data: [] });
+      }
+      query = query.in('question_set_id', ownedQuestionSetIds);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       logger.error({ error }, 'Failed to load flagged questions');
@@ -269,14 +303,23 @@ export async function DELETE(request: NextRequest) {
   logger.info({ method: 'DELETE' }, 'Request received');
 
   try {
+    let userId: string;
+    let userIsGlobalAdmin = false;
+
     try {
-      await requireAdmin(request);
+      const user = await requireAuth(request);
+      userId = user.id;
+      userIsGlobalAdmin = isAdmin(user.email || '');
+
+      if (!userIsGlobalAdmin) {
+        await requireSchoolMember(user.id);
+      }
     } catch (authError) {
       const { status, message } = resolveAuthError(authError, {
         unauthorized: 'Unauthorized. Please log in.',
-        forbidden: 'Forbidden. Admin access required to manage flags.',
+        forbidden: 'Forbidden. You do not have access to manage flags.',
       });
-      logger.warn({ authError: message, status }, 'Admin access denied');
+      logger.warn({ authError: message, status }, 'Flag management access denied');
       return NextResponse.json(
         { error: message },
         { status }
@@ -297,11 +340,25 @@ export async function DELETE(request: NextRequest) {
 
     const { questionId } = validationResult.data;
     const admin = getSupabaseAdmin();
+    const ownedQuestionSetIds = userIsGlobalAdmin ? null : await getOwnedQuestionSetIds(userId);
 
-    const { error } = await admin
+    if (!userIsGlobalAdmin && (!ownedQuestionSetIds || ownedQuestionSetIds.length === 0)) {
+      return NextResponse.json(
+        { error: 'Forbidden. You do not have access to manage flags.' },
+        { status: 403 }
+      );
+    }
+
+    let deleteQuery = admin
       .from('question_flags')
       .delete()
       .eq('question_id', questionId);
+
+    if (ownedQuestionSetIds) {
+      deleteQuery = deleteQuery.in('question_set_id', ownedQuestionSetIds);
+    }
+
+    const { error } = await deleteQuery;
 
     if (error) {
       logger.error({ error }, 'Failed to dismiss flags');

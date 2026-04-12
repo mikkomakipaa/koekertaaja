@@ -14,6 +14,7 @@ export interface GenerateWithAIOptions {
   reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high';
   textVerbosity?: 'low' | 'medium' | 'high';
   allowFallback?: boolean;
+  apiKey?: string;
 }
 
 type ProviderAdapters = {

@@ -1,4 +1,5 @@
 import { CircleNotch, CheckCircle, XCircle } from '@phosphor-icons/react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface CreationStep {
@@ -15,9 +16,14 @@ interface CreationStep {
 interface CreationProgressStepperProps {
   steps: CreationStep[];
   className?: string;
+  onRetry?: (stepId: string) => void;
 }
 
-export function CreationProgressStepper({ steps, className }: CreationProgressStepperProps) {
+export function CreationProgressStepper({
+  steps,
+  className,
+  onRetry,
+}: CreationProgressStepperProps) {
   const completedCount = steps.filter((s) => s.status === 'completed').length;
   const totalCount = steps.length;
   const statusText: Record<CreationStep['status'], string> = {
@@ -93,6 +99,20 @@ export function CreationProgressStepper({ steps, className }: CreationProgressSt
               >
                 {step.label}
               </h3>
+
+              {step.status === 'error' && onRetry && (
+                <div className="mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 border-rose-300 bg-white/80 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:bg-slate-950/40 dark:text-rose-200 dark:hover:bg-rose-950/30"
+                    onClick={() => onRetry(step.id)}
+                  >
+                    Yritä uudelleen
+                  </Button>
+                </div>
+              )}
 
               {/* Metadata display */}
               {step.metadata?.message && (

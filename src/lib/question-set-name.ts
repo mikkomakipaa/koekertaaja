@@ -1,4 +1,4 @@
-const DIFFICULTY_SUFFIXES = [' - Helppo', ' - Normaali', ' - Aikahaaste', ' - Kortit'] as const;
+const DIFFICULTY_SUFFIXES = [' - Helppo', ' - Normaali', ' - Aikahaaste', ' - Kortit', ' - Muistikortit'] as const;
 
 export function stripDifficultySuffix(name: string): string {
   for (const suffix of DIFFICULTY_SUFFIXES) {

@@ -288,6 +288,13 @@ export class PromptBuilder {
     return [
       difficultyInstructions,
       [
+        'VAIKEUSTASO PER KYSYMYS:',
+        '- Lisää jokaiselle kysymykselle difficulty-kenttä.',
+        '- Käytä vain arvoja "helppo", "normaali" tai "vaikea".',
+        '- Varioi vaikeustasoa luonnollisesti saman kysymyssetin sisällä.',
+        '- helppo = suora muistaminen, normaali = ymmärtäminen, vaikea = soveltaminen tai yhdistely.',
+      ].join('\n'),
+      [
         modeLabel,
         questionTypeGuidance,
         ...extraNotes,

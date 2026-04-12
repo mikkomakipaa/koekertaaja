@@ -1,6 +1,6 @@
 # Data Schema (Supabase Snapshot)
 
-**Version**: 1.3  
+**Version**: 1.4  
 **Last Updated**: 2026-04-11  
 **Source**: Supabase MCP (`get_project_url`, `list_tables`, `list_extensions`, `list_migrations`) plus tracked local migrations under `supabase/migrations/`  
 **Scope**: Live schema snapshot for `public`, plus managed schema overview for `auth` and `storage`
@@ -30,7 +30,7 @@ This document is a database schema snapshot generated from the currently linked 
   - `user_id -> auth.users.id`
   - `school_id -> public.schools.id`
   - `class_id -> public.classes.id`
-  - Referenced by:
+- Referenced by:
     - `questions.question_set_id`
     - `map_questions.question_set_id`
     - `question_flags.question_set_id`
@@ -54,7 +54,7 @@ Key columns:
 | `exam_date` | `date` | Nullable |
 | `topic`, `subtopic` | `text` | Nullable topic metadata |
 | `prompt_metadata` | `jsonb` | Prompt/version metadata |
-| `user_id` | `uuid` | Nullable owner; authenticated writes are owner-scoped by RLS |
+| `user_id` | `uuid` | Nullable owner; authenticated updates/deletes are creator-scoped by RLS |
 | `school_id` | `uuid` | Nullable school assignment; `ON DELETE SET NULL` |
 | `class_id` | `uuid` | Nullable class assignment for future class-scoped targeting; `ON DELETE SET NULL` |
 | `created_at`, `updated_at` | `timestamptz` | Timestamps, default `now()` |
@@ -62,7 +62,8 @@ Key columns:
 RLS notes:
 
 - Public read access remains available for published/playback flows per existing policies.
-- `INSERT` and `UPDATE` on `public.question_sets` are restricted to the owning authenticated user via `auth.uid() = user_id`.
+- `INSERT` on `public.question_sets` is restricted to authenticated users whose `school_members.school_id` matches the row `school_id`.
+- `UPDATE` and `DELETE` on `public.question_sets` are restricted to the row creator via `auth.uid() = user_id`.
 - Service-role writes used by server-side admin/API routes remain allowed.
 - Admin creation flow now persists `school_id` during question-set generation so new sets are visible in the matching school-scoped browse flow after publishing.
 
@@ -91,6 +92,7 @@ RLS notes:
 
 - Public read access is enabled so student-facing school pickers and header school switchers can list schools directly from `public.schools`.
 - Phase 1 writes are service-role only.
+- Pilot signup note: new admins select an existing school from this table; self-service signup does not create new `schools` rows.
 
 ---
 
@@ -110,13 +112,14 @@ Key columns:
 | `id` | `uuid` | PK, default `gen_random_uuid()` |
 | `user_id` | `uuid` | School admin/teacher user |
 | `school_id` | `uuid` | Parent school |
-| `role` | `text` | Checked to `admin` or `teacher` |
+| `role` | `text` | Checked to `admin` only |
 | `created_at` | `timestamptz` | Default `now()` |
 
 RLS notes:
 
 - Authenticated users can read only their own membership rows.
 - Phase 1 writes are service-role only.
+- Admin signup uses service-role writes to create one `school_members` row for the selected existing school.
 
 ---
 
@@ -147,6 +150,33 @@ RLS notes:
 
 ---
 
+### `public.school_settings` (tracked local migration)
+
+- Rows: n/a in linked project (stub table for per-school model secret references)
+- RLS: enabled
+- Primary key: `id`
+- Foreign keys:
+  - `school_id -> public.schools.id`
+
+Key columns:
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `uuid` | PK, default `gen_random_uuid()` |
+| `school_id` | `uuid` | Unique school reference; `ON DELETE CASCADE` |
+| `anthropic_key_secret_id` | `uuid` | Nullable secret reference for Anthropic BYOK |
+| `openai_key_secret_id` | `uuid` | Nullable secret reference for OpenAI BYOK |
+| `created_at`, `updated_at` | `timestamptz` | Default `now()` |
+
+RLS notes:
+
+- School admins can `SELECT` the row for their own school via `school_members`.
+- Authenticated school members cannot `INSERT`, `UPDATE`, or `DELETE` directly.
+- Service-role writes are allowed for admin/API routes.
+- Admin signup may upsert the selected provider secret reference onto the existing school row during initial provisioning.
+
+---
+
 ### `public.questions`
 
 - Rows: 1834
@@ -164,6 +194,7 @@ Key columns:
 | `question_set_id` | `uuid` | Parent set |
 | `question_text` | `text` | Question prompt |
 | `question_type` | `varchar` | Checked against app-supported types (`multiple_choice`, `multiple_select`, `fill_blank`, `true_false`, `short_answer`, `matching`, `sequential`, `flashcard`, `map`) |
+| `difficulty` | `text` | Nullable per-question difficulty: `helppo` / `normaali` / `vaikea` |
 | `correct_answer` | `jsonb` | Required |
 | `options` | `jsonb` | Nullable |
 | `explanation` | `text` | Explanation text |
@@ -234,6 +265,7 @@ Key columns:
 - Foreign keys:
   - `user_id -> auth.users.id`
   - `question_set_id -> public.question_sets.id`
+  - `school_id -> public.schools.id`
 
 Key columns:
 
@@ -242,6 +274,7 @@ Key columns:
 | `id` | `uuid` | PK, default `gen_random_uuid()` |
 | `user_id` | `uuid` | Nullable actor |
 | `question_set_id` | `uuid` | Nullable related set |
+| `school_id` | `uuid` | Nullable school context for per-school admin metrics |
 | `subject`, `difficulty`, `mode` | `text` | Mode checked to `quiz` / `flashcard` |
 | `provider`, `model` | `text` | AI provider/model used |
 | `prompt_version` | `jsonb` | Nullable version payload |
@@ -312,6 +345,10 @@ From MCP `list_migrations` on 2026-04-10 plus tracked local migrations dated 202
 - `20260411` `add_schools_table` (tracked locally)
 - `20260411` `add_school_id_to_question_sets` (tracked locally)
 - `20260411` `add_school_members_and_classes` (tracked locally)
+- `20260411` `add_school_settings` (tracked locally)
+- `20260411` `add_school_id_to_prompt_metrics` (tracked locally)
+- `20260411` `upgrade_question_sets_rls_to_school_members` (tracked locally)
+- `20260411` `fix_school_members_role_constraint` (tracked locally)
 
 ---
 

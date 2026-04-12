@@ -144,6 +144,7 @@ export function mapQuestionsToInsertRows(
       question_set_id: questionSetId,
       question_text: q.question_text,
       question_type: q.question_type,
+      difficulty: (q as any).difficulty ?? null,
       explanation: q.explanation,
       image_url: q.image_url,
       image_reference: q.image_reference || null,

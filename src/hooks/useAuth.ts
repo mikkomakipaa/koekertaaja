@@ -62,24 +62,6 @@ export function useAuth() {
     return { success: true, user: data.user };
   };
 
-  const signUp = async (email: string, password: string) => {
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-    const supabase = getSupabase();
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      setState((prev) => ({ ...prev, loading: false, error: error.message }));
-      return { success: false, error: error.message };
-    }
-
-    setState({ user: data.user, loading: false, error: null });
-    return { success: true, user: data.user };
-  };
-
   const signOut = async () => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     const supabase = getSupabase();
@@ -98,7 +80,6 @@ export function useAuth() {
   return {
     ...state,
     signIn,
-    signUp,
     signOut,
   };
 }

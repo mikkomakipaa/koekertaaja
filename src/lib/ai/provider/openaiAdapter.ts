@@ -74,6 +74,7 @@ type OpenAIResponsesClient = {
 interface OpenAIAdapterDependencies {
   client?: OpenAIResponsesClient;
   logger?: ReturnType<typeof createLogger>;
+  apiKey?: string;
 }
 
 const defaultLogger = createLogger({ module: 'openai' });
@@ -204,18 +205,18 @@ async function parseOpenAIErrorPayload(response: Response): Promise<OpenAIRespon
   }
 }
 
-function getDefaultClient(): OpenAIResponsesClient {
-  if (defaultClient) {
+function getDefaultClient(apiKey?: string): OpenAIResponsesClient {
+  if (!apiKey && defaultClient) {
     return defaultClient;
   }
 
-  defaultClient = {
+  const client: OpenAIResponsesClient = {
     responses: {
       create: async (params: OpenAIResponsesCreateParams) => {
         const response = await fetch(OPENAI_RESPONSES_URL, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${getOpenAIAPIKey()}`,
+            Authorization: `Bearer ${apiKey ?? getOpenAIAPIKey()}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(params),
@@ -235,7 +236,11 @@ function getDefaultClient(): OpenAIResponsesClient {
     },
   };
 
-  return defaultClient;
+  if (!apiKey) {
+    defaultClient = client;
+  }
+
+  return client;
 }
 
 function collectErrorSignals(error: unknown): string {
@@ -330,7 +335,7 @@ export function createOpenAIAdapter(dependencies: OpenAIAdapterDependencies = {}
     messages: AIMessageContent[],
     options: OpenAIAdapterOptions = {}
   ): Promise<AIResponse> {
-    const client = dependencies.client ?? getDefaultClient();
+    const client = dependencies.client ?? getDefaultClient(dependencies.apiKey);
     const model = options.model ?? 'gpt-5-mini';
     const maxOutputTokens = options.maxTokens ?? 16000;
     const reasoningEffort = options.reasoningEffort;

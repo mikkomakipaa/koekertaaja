@@ -5,12 +5,15 @@ import { z } from 'zod';
 import { createServerClient, requireAdmin, requireAuth, resolveAuthError, verifyAuth } from '@/lib/supabase/server-auth';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { isAdmin } from '@/lib/auth/admin';
+import { getSchoolForUser } from '@/lib/auth/roles';
 import { normalizeTopicLabel } from '@/lib/topics/normalization';
 import { parseDatabaseQuestion } from '@/types/database';
 import { createLogger } from '@/lib/logger';
 import { findRelatedFlashcardCode, findRelatedNormalCode } from '@/lib/supabase/queries';
 import type { QuestionSet, QuestionSetStatus } from '@/types/questions';
 import type { QuestionSet as PublicQuestionSet } from '@/types';
+import { createQuestionSet } from '@/lib/supabase/write-queries';
+import { generateCode } from '@/lib/utils';
 
 type FlagScope = 'play' | 'created' | 'manage';
 
@@ -43,6 +46,32 @@ export async function GET(request: NextRequest) {
   }
 
   return getPlayableQuestionSets(request);
+}
+
+const createQuestionSetRequestSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  subject: z.string().trim().min(1).max(100),
+  subjectType: z.enum(['language', 'math', 'written', 'skills', 'concepts', 'geography']).optional(),
+  grade: z.number().int().min(1).max(13).optional(),
+  difficulty: z.enum(['helppo', 'normaali']).optional(),
+  mode: z.enum(['quiz', 'flashcard']),
+  topic: z.string().trim().max(200).optional(),
+  subtopic: z.string().trim().max(200).optional(),
+  examLength: z.number().int().min(1).max(20).optional(),
+  examDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  status: z.enum(['created', 'published']).optional(),
+  questions: z.array(z.any()).min(1),
+});
+
+async function resolveSchoolIdForCreate(userId: string, request: NextRequest): Promise<string> {
+  const requestedSchoolId = request.headers.get('x-school-id')?.trim() || undefined;
+  const membership = await getSchoolForUser(userId, requestedSchoolId);
+
+  if (!membership) {
+    throw new Error('Tiliäsi ei ole liitetty kouluun.');
+  }
+
+  return membership.school_id;
 }
 
 async function getQuestionSetByCode(
@@ -426,5 +455,131 @@ export async function PATCH(request: NextRequest) {
       },
       { status: 500 }
     );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const requestId = crypto.randomUUID();
+  const logger = createLogger({ requestId, route: '/api/question-sets' });
+
+  logger.info({ method: 'POST' }, 'Create question set request received');
+
+  try {
+    let userId = '';
+    try {
+      const user = await requireAdmin(request);
+      userId = user.id;
+      logger.info({ userId }, 'Admin authentication successful');
+    } catch (authError) {
+      const { status, message } = resolveAuthError(authError, {
+        unauthorized: 'Unauthorized. Please log in.',
+        forbidden: 'Forbidden. Admin access required to create question sets.',
+      });
+      return NextResponse.json({ error: message }, { status });
+    }
+
+    const schoolId = await resolveSchoolIdForCreate(userId, request);
+    const body = await request.json();
+    const validationResult = createQuestionSetRequestSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      const details = validationResult.error.errors.map((error) => `${error.path.join('.')}: ${error.message}`);
+      return NextResponse.json({ error: 'Validation failed', details }, { status: 400 });
+    }
+
+    const payload = validationResult.data;
+    const questions = payload.questions.map((question: any, index: number) => ({
+      question_text: question.question_text,
+      question_type: question.question_type,
+      difficulty: question.difficulty ?? null,
+      explanation: question.explanation,
+      image_url: question.image_url,
+      image_reference: question.image_reference,
+      requires_visual: question.requires_visual,
+      order_index: index,
+      topic: question.topic,
+      skill: question.skill,
+      subtopic: question.subtopic,
+      correct_answer:
+        question.question_type === 'multiple_select'
+          ? question.correct_answers
+          : question.question_type === 'matching'
+            ? question.pairs
+            : question.question_type === 'sequential'
+              ? {
+                  items: question.items,
+                  correct_order: question.correct_order,
+                }
+              : question.correct_answer,
+      options:
+        question.question_type === 'multiple_choice'
+        || question.question_type === 'multiple_select'
+        || question.question_type === 'fill_blank'
+        || question.question_type === 'short_answer'
+          ? question.options ?? question.acceptable_answers ?? null
+          : null,
+    }));
+
+    let code = generateCode();
+    let attempts = 0;
+
+    while (attempts < 50) {
+      const result = await createQuestionSet(
+        {
+          code,
+          user_id: userId,
+          school_id: schoolId,
+          name: payload.name,
+          subject: payload.subject,
+          difficulty: payload.mode === 'flashcard' ? 'normaali' : (payload.difficulty ?? 'normaali'),
+          mode: payload.mode,
+          grade: payload.grade,
+          topic: payload.topic,
+          subtopic: payload.subtopic,
+          subject_type: payload.subjectType,
+          question_count: questions.length,
+          exam_length: payload.examLength,
+          exam_date: payload.examDate ?? null,
+          status: payload.status ?? 'created',
+        },
+        questions
+      );
+
+      if (result.success) {
+        return NextResponse.json({
+          success: true,
+          questionSet: {
+            id: result.questionSet.id,
+            code: result.code,
+            name: result.questionSet.name,
+            difficulty: result.questionSet.difficulty,
+            mode: result.questionSet.mode,
+            questionCount: result.questionSet.question_count,
+          },
+        });
+      }
+
+      if (result.reason !== 'duplicate_code') {
+        return NextResponse.json(
+          {
+            error: result.error?.message ?? 'Failed to create question set',
+          },
+          { status: 500 }
+        );
+      }
+
+      attempts += 1;
+      code = generateCode();
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to generate unique code for question set' },
+      { status: 500 }
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    const status = message === 'Tiliäsi ei ole liitetty kouluun.' ? 403 : 500;
+    logger.error({ error: message }, 'Failed to create question set');
+    return NextResponse.json({ error: message }, { status });
   }
 }

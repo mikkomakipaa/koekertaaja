@@ -25,6 +25,7 @@ export interface IdentifyTopicsParams {
     data: string; // base64
   }>;
   targetProvider?: AIProvider;
+  apiKey?: string;
 }
 
 interface IdentifyTopicsDeps {
@@ -252,7 +253,7 @@ export async function identifyTopics(
   params: IdentifyTopicsParams,
   deps: IdentifyTopicsDeps = {}
 ): Promise<TopicAnalysisResult> {
-  const { subject, grade, materialText, materialFiles, targetProvider } = params;
+  const { subject, grade, materialText, materialFiles, targetProvider, apiKey } = params;
 
   // Build message content
   const messageContent: AIMessageContent[] = [];
@@ -371,6 +372,8 @@ export async function identifyTopics(
     maxTokens: 3000,
     reasoningEffort: selection.provider === 'openai' ? 'minimal' : undefined,
     textVerbosity: selection.provider === 'openai' ? 'low' : undefined,
+    apiKey,
+    allowFallback: false,
   });
   logger.info(
     {

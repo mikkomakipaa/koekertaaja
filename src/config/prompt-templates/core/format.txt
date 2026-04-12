@@ -15,6 +15,7 @@ JSON-SKEEMA (KENTTÄTASON SOPIMUS):
     "question": "kysymysteksti",
     "type": "multiple_choice" | "multiple_select" | "fill_blank" | "true_false" | "short_answer" | "matching" | "sequential" | "flashcard",
     "topic": "aihealue",
+    "difficulty": "helppo" | "normaali" | "vaikea",
     "subtopic": "valinnainen alateema",
     "skill": "snake_case_taito",
     "options": ["vaihtoehto1", "vaihtoehto2", "vaihtoehto3", "vaihtoehto4", "vaihtoehto5"],
@@ -31,6 +32,8 @@ JSON-SKEEMA (KENTTÄTASON SOPIMUS):
 
 PAKOLLISET YHTEISET SÄÄNNÖT:
 - Jokaisessa rivissä on topic ja skill (ei tyhjä).
+- Jokaisessa rivissä on difficulty, joka on "helppo", "normaali" tai "vaikea".
+- Varioi difficulty-arvoa luonnollisesti saman kysymyssetin sisällä.
 - Luo tasan {{question_count}} riviä.
 - Flashcard-tilassa käytä aina type = "flashcard".
 - Käytä vain sallittuja type-arvoja.

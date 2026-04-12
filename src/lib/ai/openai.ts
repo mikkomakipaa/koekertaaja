@@ -1,6 +1,6 @@
 import type { AIMessageContent, AIResponse } from './providerTypes';
 import type { GenerateWithAIOptions } from './providerRouter';
-import { generateWithOpenAIAdapter } from './provider/openaiAdapter';
+import { createOpenAIAdapter, generateWithOpenAIAdapter } from './provider/openaiAdapter';
 
 export type OpenAIResponse = AIResponse;
 
@@ -25,8 +25,11 @@ export async function generateWithOpenAI(
   options: GenerateWithAIOptions = {}
 ): Promise<AIResponse> {
   const parsedOptions = normalizeOptions(options);
+  const adapter = options.apiKey
+    ? createOpenAIAdapter({ apiKey: options.apiKey })
+    : generateWithOpenAIAdapter;
 
-  return generateWithOpenAIAdapter(messages, {
+  return adapter(messages, {
     model: parsedOptions.model,
     maxTokens: parsedOptions.maxTokens,
     reasoningEffort: parsedOptions.reasoningEffort,

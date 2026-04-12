@@ -5,6 +5,7 @@ const logger = createLogger({ module: 'promptMetricsLogger' });
 
 export interface PromptMetricsInsert {
   user_id?: string | null;
+  school_id?: string | null;
   question_set_id?: string | null;
   subject: string;
   difficulty: string;
@@ -16,6 +17,7 @@ export interface PromptMetricsInsert {
   question_count_generated: number;
   question_count_valid: number;
   generation_latency_ms: number;
+  duration_ms?: number | null;
   input_tokens?: number | null;
   output_tokens?: number | null;
   estimated_cost_usd: number;

@@ -98,6 +98,7 @@ export const aiQuestionSchema = z.object({
     .string()
     .min(1, 'Topic must not be empty')
     .max(100, 'Topic must be 100 characters or less'),  // Required - every question must have a topic
+  difficulty: z.enum(['helppo', 'normaali', 'vaikea']),
   subtopic: z
     .string()
     .min(1, 'Subtopic must not be empty')

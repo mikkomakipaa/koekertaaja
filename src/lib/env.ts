@@ -31,6 +31,7 @@ const serverSchema = publicSchema
     SUPABASE_SERVICE_ROLE_KEY: requiredString('SUPABASE_SERVICE_ROLE_KEY is required'),
     ANTHROPIC_API_KEY: requiredString('ANTHROPIC_API_KEY is required'),
     OPENAI_API_KEY: optionalNonEmptyString('OPENAI_API_KEY is required'),
+    ADMIN_SIGNUP_TOKEN: optionalNonEmptyString('ADMIN_SIGNUP_TOKEN is required'),
     AI_PROVIDER_DEFAULT: providerDefaultSchema,
     AI_ENABLE_OPENAI: openAIFlagSchema,
     STRIPE_WEBHOOK_SECRET: z.string().optional(),

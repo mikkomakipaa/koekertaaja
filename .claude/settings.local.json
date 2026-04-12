@@ -60,7 +60,12 @@
       "Bash(npx tsc:*)",
       "Bash(npm test:*)",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(k,v\\) for k,v in {**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}.items\\(\\)]\")",
-      "Bash(bash -x scripts/run-tasks-codex.sh)"
+      "Bash(bash -x scripts/run-tasks-codex.sh)",
+      "Bash(sed -i '' 's/task-318 \\(BYOK routes\\), task-319 \\(\\\\/setup page\\), task-320 \\(create form\\)/task-317 \\(BYOK routes\\), task-318 \\(\\\\/setup page\\), task-319 \\(create form\\)/' task-313-admin-role-helpers.md)",
+      "Bash(sed -i '' 's/task-316 \\(signup\\), task-318 \\(BYOK routes\\)/task-315 \\(signup\\), task-317 \\(BYOK routes\\)/' task-314-multi-user-migrations.md)",
+      "Bash(sed -i '' 's/task-317 \\(migrations/task-314 \\(migrations/' task-315-admin-signup-page.md)",
+      "Bash(sed -i '' 's/task-319\\)/task-318\\)/' task-315-admin-signup-page.md)",
+      "Bash(sed -i '' 's/task-315 \\(roles.ts\\), task-317 \\(school_settings table\\)/task-313 \\(roles.ts\\), task-314 \\(school_settings table\\)/' task-317-byok-key-management.md)"
     ]
   },
   "enableAllProjectMcpServers": true,

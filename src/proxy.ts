@@ -27,7 +27,12 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (request.nextUrl.pathname === '/create' || request.nextUrl.pathname.startsWith('/create/')) {
+  if (
+    request.nextUrl.pathname === '/create' ||
+    request.nextUrl.pathname.startsWith('/create/') ||
+    request.nextUrl.pathname === '/setup' ||
+    request.nextUrl.pathname.startsWith('/setup/')
+  ) {
     if (!user) {
       const redirectResponse = NextResponse.redirect(buildLoginRedirect(request));
       copyResponseCookies(response, redirectResponse);
@@ -40,6 +45,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|login|play(?:/.*)?$|$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|login|signup|play(?:/.*)?$|$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml)$).*)',
   ],
 };

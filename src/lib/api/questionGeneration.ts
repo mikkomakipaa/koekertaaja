@@ -54,6 +54,7 @@ export interface MaterialFile {
 export interface GenerationRequest {
   userId?: string;
   schoolId?: string;
+  apiKey?: string;
   subject: string;
   subjectType?: string;
   grade?: number;
@@ -384,7 +385,10 @@ export async function processUploadedFiles(
  * Returns full enhanced topic analysis for intelligent distribution
  */
 export async function identifyTopicsFromMaterial(
-  request: Pick<GenerationRequest, 'subject' | 'grade' | 'materialText' | 'materialFiles' | 'targetProvider'>
+  request: Pick<
+    GenerationRequest,
+    'subject' | 'grade' | 'materialText' | 'materialFiles' | 'targetProvider' | 'apiKey'
+  >
 ): Promise<import('@/lib/ai/topicIdentifier').TopicAnalysisResult> {
   const logger = createLogger({ module: 'identifyTopicsFromMaterial' });
 
@@ -407,6 +411,7 @@ export async function identifyTopicsFromMaterial(
       materialText: request.materialText,
       materialFiles: request.materialFiles,
       targetProvider: request.targetProvider,
+      apiKey: request.apiKey,
     });
   } catch (error) {
     logger.warn(
@@ -573,8 +578,10 @@ export async function generateQuizSets(
       distribution,
       visuals,
       targetProvider: request.targetProvider,
+      apiKey: request.apiKey,
       metricsContext: {
         userId: request.userId,
+        schoolId: request.schoolId,
       },
       onPromptMetadata: (metadata) => {
         promptMetadata = metadata;
@@ -881,8 +888,10 @@ export async function generateFlashcardSet(
     distribution,
     visuals,
     targetProvider: request.targetProvider,
+    apiKey: request.apiKey,
     metricsContext: {
       userId: request.userId,
+      schoolId: request.schoolId,
     },
     onPromptMetadata: (metadata) => {
       promptMetadata = metadata;

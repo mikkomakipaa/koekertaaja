@@ -1,5 +1,6 @@
 import {
   Question,
+  QuestionDifficulty,
   QuestionSet,
   QuestionFlag,
   SequentialItem,
@@ -84,6 +85,7 @@ export interface DatabaseQuestion {
   question_set_id: string;
   question_text: string;
   question_type: string;
+  difficulty?: QuestionDifficulty | null;
   correct_answer: any; // JSONB
   options?: any; // JSONB
   explanation: string;
@@ -101,8 +103,9 @@ export interface PromptMetricRow {
   id: string;
   created_at: string;
   user_id?: string | null;
+  school_id?: string | null;
   subject: string;
-  difficulty: string;
+  difficulty: QuestionDifficulty;
   mode: 'quiz' | 'flashcard';
   question_count_requested: number;
   provider: string;
@@ -111,6 +114,7 @@ export interface PromptMetricRow {
   question_count_generated: number;
   question_count_valid: number;
   generation_latency_ms: number;
+  duration_ms: number | null;
   input_tokens?: number | null;
   output_tokens?: number | null;
   estimated_cost_usd?: number | null;
@@ -130,6 +134,7 @@ export function parseDatabaseQuestion(dbQuestion: DatabaseQuestion): Question {
     id: dbQuestion.id,
     question_set_id: dbQuestion.question_set_id,
     question_text: dbQuestion.question_text,
+    difficulty: dbQuestion.difficulty ?? null,
     explanation: dbQuestion.explanation,
     image_url: dbQuestion.image_url,
     image_reference: dbQuestion.image_reference,
