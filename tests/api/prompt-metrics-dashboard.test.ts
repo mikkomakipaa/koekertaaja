@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  aggregateByPromptVersion,
+  aggregateBySubject,
   aggregateByProvider,
   calculateSummary,
   calculateTimeSeries,
@@ -88,12 +88,12 @@ test('dashboard aggregations produce summary, provider comparison, and failures'
   assert.equal(failures[0].id, '2');
 });
 
-test('dashboard time series and prompt version breakdown are generated', () => {
+test('dashboard time series and subject breakdown are generated', () => {
   const timeSeries = calculateTimeSeries(metrics, 7);
   assert.equal(timeSeries.length, 7);
   assert.ok(timeSeries.some((point) => point.sessions > 0));
 
-  const byPromptVersion = aggregateByPromptVersion(metrics);
-  assert.equal(byPromptVersion.length, 2);
-  assert.ok(byPromptVersion.some((row) => row.breakingChange));
+  const bySubject = aggregateBySubject(metrics);
+  assert.equal(bySubject.length, 2);
+  assert.ok(bySubject.some((row) => row.subject === 'math' && row.mode === 'quiz'));
 });

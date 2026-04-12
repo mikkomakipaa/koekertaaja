@@ -123,6 +123,65 @@ export function isStringArray(items: unknown): items is string[] {
   return Array.isArray(items) && items.every((item) => typeof item === 'string');
 }
 
+export function normalizeSequentialItemsInput(items: unknown): SequentialItem[] {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items.flatMap((item) => {
+    if (typeof item === 'string') {
+      const text = item.trim();
+      return text ? [{ text }] : [];
+    }
+
+    if (typeof item !== 'object' || item === null) {
+      return [];
+    }
+
+    const rawText = 'text' in item ? item.text : undefined;
+    if (typeof rawText !== 'string' || rawText.trim().length === 0) {
+      return [];
+    }
+
+    const normalizedItem: SequentialItem = {
+      text: rawText.trim(),
+    };
+
+    if ('year' in item) {
+      const rawYear = item.year;
+      const parsedYear =
+        typeof rawYear === 'number'
+          ? rawYear
+          : typeof rawYear === 'string' && rawYear.trim().length > 0
+            ? Number(rawYear)
+            : undefined;
+
+      if (typeof parsedYear === 'number' && Number.isFinite(parsedYear)) {
+        normalizedItem.year = parsedYear;
+      }
+    }
+
+    return [normalizedItem];
+  });
+}
+
+export function normalizeSequentialOrderInput(order: unknown): number[] {
+  if (!Array.isArray(order)) {
+    return [];
+  }
+
+  return order.flatMap((value) => {
+    const parsed =
+      typeof value === 'number'
+        ? value
+        : typeof value === 'string' && value.trim().length > 0
+          ? Number(value)
+          : NaN;
+
+    return Number.isInteger(parsed) ? [parsed] : [];
+  });
+}
+
 // Union type of all question types
 export type Question =
   | MultipleChoiceQuestion

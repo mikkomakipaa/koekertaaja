@@ -10,7 +10,7 @@ export type ClaudeModel =
 export type OpenAIModel =
   | 'gpt-5-nano'
   | 'gpt-5-mini'
-  | 'gpt-5.2'
+  | 'gpt-5.3-chat-latest'
   | 'gpt-5.1';
 
 export type AIModel = ClaudeModel | OpenAIModel;
@@ -21,7 +21,7 @@ export const AI_MODEL_VALUES = [
   'claude-opus-4-6-20250514',
   'gpt-5-nano',
   'gpt-5-mini',
-  'gpt-5.2',
+  'gpt-5.3-chat-latest',
   'gpt-5.1',
 ] as const;
 
@@ -55,7 +55,7 @@ export function selectModelForTask(
         return { provider: 'openai', model: 'gpt-5-mini' };
       case 'question_generation':
         if (subjectType === 'written') {
-          return { provider: 'openai', model: 'gpt-5.2' };
+          return { provider: 'openai', model: 'gpt-5.3-chat-latest' };
         }
         return { provider: 'openai', model: 'gpt-5-mini' };
       case 'flashcard_creation':
@@ -156,11 +156,11 @@ export function getModelMetadataByModel(model: AIModel): ModelMetadata {
         name: 'GPT-5 mini',
         pricing: { input: 0.25, output: 2 },
       };
-    case 'gpt-5.2':
+    case 'gpt-5.3-chat-latest':
       return {
         provider: 'openai',
         model,
-        name: 'GPT-5.2',
+        name: 'GPT-5.3 Chat',
         pricing: { input: 1.75, output: 14 },
       };
     case 'gpt-5.1':

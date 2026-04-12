@@ -150,7 +150,7 @@ function selectOpenAIFallbackModel(primaryModel?: string): string {
 
 function selectAnthropicFallbackModel(primaryModel?: string): string {
   if (!primaryModel) return 'claude-haiku-4-5-20251001';
-  if (primaryModel.includes('gpt-5.1') || primaryModel.includes('gpt-5.2')) {
+  if (primaryModel.includes('gpt-5.1') || primaryModel.includes('gpt-5.3')) {
     return 'claude-sonnet-4-6-20250514';
   }
   return 'claude-haiku-4-5-20251001';

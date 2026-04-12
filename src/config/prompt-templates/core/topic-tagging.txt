@@ -1,26 +1,12 @@
-# Version: 1.0.0
-# Last Updated: 2026-02-12
+# Version: 2.0.0
+# Last Updated: 2026-04-12
 # Author: System
-# Changes: Added prompt version tracking metadata
-# Breaking: false
+# Changes: Removed whole-set topic balancing contract into whole-set-tagging.txt; retained shared topic-tagging preamble and concept dependency section
+# Breaking: true
 
 TOPIC-TAGGING (PAKOLLINEN)
 - Topic = sisältöalue (mistä kysymys kertoo).
 - Skill = toiminto/taito (mitä oppilas tekee).
 - Katso erotus-esimerkit tiedostosta topic-skill-guide.txt.
-
-KÄYTÄ NÄITÄ TUNNISTETTUJA AIHEITA ({{topic_count}} kpl):
-{{topics_list}}
-
-SÄÄNNÖT:
-- Jokaisessa kysymyksessä/kortissa on topic.
-- Topic-arvo on yksi yllä olevista nimistä täsmälleen samalla kirjoitusasulla.
-- Älä keksi uusia topic-arvoja.
-- subtopic on vapaaehtoinen tarkenne.
-
-JAKAUTUMINEN:
-- Tavoite: noin {{questions_per_topic}} kysymystä per topic.
-- Jaa {{question_count}} kysymystä mahdollisimman tasaisesti.
-- Sallittu vaihtelu: enintään noin 2-3 kysymystä per topic laatu edellä.
 
 {{concept_dependency_section}}

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server-auth';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { isAdmin } from '@/lib/auth/admin';
+import { requireAuth, resolveAuthError } from '@/lib/supabase/server-auth';
 import {
-  aggregateByPromptVersion,
+  aggregateBySubject,
   aggregateByProvider,
   calculateSummary,
   calculateTimeSeries,
-  getRecentFailures,
+  getProblematicRuns,
 } from '@/lib/metrics/promptMetrics';
 import type { PromptMetricRow } from '@/types/database';
 
@@ -21,17 +21,19 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const daysAgo = parseDays(searchParams.get('timeRange'));
+    const createdBy = searchParams.get('createdBy')?.trim() || 'all';
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - daysAgo);
 
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let user;
+    try {
+      user = await requireAuth();
+    } catch (authError) {
+      const { status, message } = resolveAuthError(authError, {
+        unauthorized: 'Unauthorized',
+        forbidden: 'Forbidden',
+      });
+      return NextResponse.json({ error: message }, { status });
     }
 
     const userIsAdmin = isAdmin(user.email || '');
@@ -43,6 +45,8 @@ export async function GET(request: NextRequest) {
 
     if (!userIsAdmin) {
       query = query.eq('user_id', user.id);
+    } else if (createdBy !== 'all') {
+      query = query.eq('user_id', createdBy);
     }
 
     const { data, error } = await query;
@@ -51,9 +55,55 @@ export async function GET(request: NextRequest) {
     }
 
     const metrics = (data ?? []) as PromptMetricRow[];
+    const sessionCountByUserId = new Map<string, number>();
 
-    const recentFailures = getRecentFailures(metrics);
-    const questionSetIds = recentFailures
+    for (const metric of metrics) {
+      const userId = typeof metric.user_id === 'string' ? metric.user_id : '';
+      if (!userId) {
+        continue;
+      }
+      sessionCountByUserId.set(userId, (sessionCountByUserId.get(userId) ?? 0) + 1);
+    }
+
+    let creators: Array<{ id: string; label: string; sessionCount: number }> = [];
+
+    if (userIsAdmin && sessionCountByUserId.size > 0) {
+      const { data: authUsers, error: usersError } = await getSupabaseAdmin().auth.admin.listUsers({
+        page: 1,
+        perPage: 200,
+      });
+
+      if (!usersError) {
+        const authUserById = new Map(
+          (authUsers.users ?? []).map((authUser) => [
+            authUser.id,
+            {
+              email: authUser.email ?? '',
+              name:
+                (authUser.user_metadata?.name as string | undefined)?.trim() ||
+                (authUser.user_metadata?.full_name as string | undefined)?.trim() ||
+                '',
+            },
+          ])
+        );
+
+        creators = Array.from(sessionCountByUserId.entries())
+          .map(([id, sessionCount]) => {
+            const authUser = authUserById.get(id);
+            const label = authUser?.name || authUser?.email || id;
+
+            return {
+              id,
+              label,
+              sessionCount,
+            };
+          })
+          .sort((a, b) => b.sessionCount - a.sessionCount || a.label.localeCompare(b.label, 'fi'));
+      }
+    }
+
+    const problematicRuns = getProblematicRuns(metrics);
+    const questionSetIds = problematicRuns
       .map((metric) => metric.question_set_id)
       .filter((value): value is string => typeof value === 'string' && value.length > 0);
     const codeByQuestionSetId = new Map<string, string>();
@@ -72,13 +122,16 @@ export async function GET(request: NextRequest) {
       summary: calculateSummary(metrics),
       timeSeries: calculateTimeSeries(metrics, daysAgo),
       byProvider: aggregateByProvider(metrics),
-      recentFailures: recentFailures.map((failure) => ({
-        ...failure,
-        questionSetCode: failure.question_set_id
-          ? codeByQuestionSetId.get(failure.question_set_id) ?? null
+      recentFailures: problematicRuns.map((run) => ({
+        ...run,
+        questionSetCode: run.question_set_id
+          ? codeByQuestionSetId.get(run.question_set_id) ?? null
           : null,
       })),
-      byPromptVersion: aggregateByPromptVersion(metrics),
+      bySubject: aggregateBySubject(metrics),
+      creators,
+      selectedCreatedBy: userIsAdmin ? createdBy : user.id,
+      canFilterByCreator: userIsAdmin,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';

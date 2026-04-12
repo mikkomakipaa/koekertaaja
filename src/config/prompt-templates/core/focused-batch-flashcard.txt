@@ -1,0 +1,30 @@
+# Version: 1.0.0
+# Last Updated: 2026-04-12
+# Author: System
+# Changes: Initial focused-batch flashcard rules for recall-target uniqueness, subtopic cycling, skill variation, and difficulty spread
+# Breaking: false
+
+FOCUSED-ERÄN MUISTIKORTTISÄÄNNÖT:
+
+Tämä erä kattaa vain yhden aiheen. Siksi korttien vaihtelu ei saa syntyä aiheen vaihdosta, vaan muistamisen kohteen, alateeman, taidon ja vaikeustason vaihtelusta.
+
+MUISTAMISEN KOHDE (recall target):
+- Jokainen kortti testaa eri muistamisen kohdetta.
+- "Muistamisen kohde" = se tieto, sääntö, käsite, ero, menettely tai periaate, jonka question-kenttä vaatii oppilasta muistamaan.
+- Väärin: kaksi korttia kysyy samaa termiä, samaa sääntöä tai samaa kaavaa vain hieman eri sanoin.
+- Oikein: yksi kortti kysyy termin määritelmän, toinen säännön, kolmas poikkeuksen, neljäs käytön, viides vertailun.
+
+ALATEEMOJEN JÄRJESTYS:
+- Kierrätä alateemoja (subtopic) ennen kuin palaat samaan alateemaan uudelleen.
+- Jos aiheessa on useita alateemoja, jaa kortit niiden välillä mahdollisimman tasaisesti.
+- Älä klusteroi montaa peräkkäistä korttia samaan alateemaan, jos muita alateemoja on vielä kattamatta.
+
+TAITOJEN VAIHTELU:
+- Vaihtele skill-arvoja saman aiheen sisällä — käytä skill-tagging-ohjeiston mukaisia arvoja.
+- Varmista, että eri kortit vaativat erilaista kognitiivista työtä: muistamista, ymmärtämistä, soveltamista tai vertailua.
+- Älä rakenna koko erää yhden ainoan taidon varaan.
+
+VAIKEUDEN VAIHTELU:
+- Vaihtele vaikeutta pyydetyn difficulty-tason luontaisen vaihtelun sisällä — älä ylitä tai alita annettua tasoa.
+- Vaihtelun pitää näkyä itse muistamisen kohteessa: yksinkertainen fakta vs. soveltava kysymys vs. poikkeuksen tunnistaminen.
+- Älä anna koko erän kallistua pelkästään helpoimpaan tai vaikeimpaan päähän sallitun tason sisällä.

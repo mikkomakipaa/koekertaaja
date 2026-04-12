@@ -1,32 +1,64 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
+import { useEffect, useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import {
-  CheckCircle,
-  X,
-  Sparkle,
-  ChartBar,
-  LightbulbFilament,
-  Warning
-} from '@phosphor-icons/react';
+import { CheckCircle, ChartBar, LightbulbFilament, Sparkle, X } from '@phosphor-icons/react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { calcQuestionsPerTopic } from '@/config/generationConfig';
 import { cn } from '@/lib/utils';
-import type { TopicAnalysisResult, EnhancedTopic } from '@/lib/ai/topicIdentifier';
+import type { EnhancedTopic, TopicAnalysisResult } from '@/lib/ai/topicIdentifier';
 
-interface TopicWithQuestions extends EnhancedTopic {
-  recommendedQuestions: number;
-  adjustedQuestions: number;
+interface TopicWithState extends EnhancedTopic {
+  selected: boolean;
 }
 
 interface TopicConfirmationDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (totalQuestions: number, topicDistribution: Array<{ topic: string; count: number }>) => void;
+  onConfirm: (confirmedTopics: EnhancedTopic[]) => void;
   topicAnalysis: TopicAnalysisResult;
-  initialQuestionCount?: number;
+  mode: 'quiz' | 'flashcard' | 'both';
+  examLength: number;
+}
+
+interface TopicConfirmationPreview {
+  questionsPerTopic: number;
+  totalPerMode: number;
+  totalCombined: number;
+  estimatedRounds: number;
+}
+
+function buildTopicSelectionState(topicAnalysis: TopicAnalysisResult): TopicWithState[] {
+  return topicAnalysis.topics.map((topic) => ({
+    ...topic,
+    selected: true,
+  }));
+}
+
+export function isTopicConfirmationDisabled(selectedTopicCount: number): boolean {
+  return selectedTopicCount === 0;
+}
+
+export function getTopicConfirmationPreview(
+  totalConcepts: number,
+  selectedTopicCount: number,
+  mode: 'quiz' | 'flashcard' | 'both',
+  examLength: number
+): TopicConfirmationPreview {
+  const questionsPerTopic = selectedTopicCount > 0
+    ? calcQuestionsPerTopic(totalConcepts, selectedTopicCount)
+    : 0;
+  const totalPerMode = selectedTopicCount * questionsPerTopic;
+
+  return {
+    questionsPerTopic,
+    totalPerMode,
+    totalCombined: mode === 'both' ? totalPerMode * 2 : totalPerMode,
+    estimatedRounds: examLength > 0
+      ? Math.round((totalPerMode / examLength) * 10) / 10
+      : 0,
+  };
 }
 
 export function TopicConfirmationDialog({
@@ -34,112 +66,70 @@ export function TopicConfirmationDialog({
   onClose,
   onConfirm,
   topicAnalysis,
-  initialQuestionCount = 50
+  mode,
+  examLength,
 }: TopicConfirmationDialogProps) {
-  const [totalQuestions, setTotalQuestions] = useState(initialQuestionCount);
-  const [topics, setTopics] = useState<TopicWithQuestions[]>([]);
+  const [topics, setTopics] = useState<TopicWithState[]>(
+    () => buildTopicSelectionState(topicAnalysis)
+  );
 
-  // Calculate recommended pool size based on topic analysis
-  const calculateRecommendedPoolSize = (): number => {
-    if (typeof topicAnalysis.metadata.recommendedQuestionPoolSize === 'number') {
-      return Math.max(20, Math.min(200, topicAnalysis.metadata.recommendedQuestionPoolSize));
-    }
-
-    const { totalConcepts, completeness } = topicAnalysis.metadata;
-
-    // Base multiplier: 3-5x concepts depending on completeness
-    const baseMultiplier = 3 + (completeness * 2); // 3-5x
-
-    // Importance factor: weight high-importance topics
-    const highImportanceTopics = topicAnalysis.topics.filter(t => t.importance === 'high').length;
-    const importanceFactor = 1 + (highImportanceTopics * 0.1); // Up to 1.5x
-
-    const recommended = Math.round(totalConcepts * baseMultiplier * importanceFactor);
-
-    // Ensure minimum of 30, maximum of 200
-    return Math.max(30, Math.min(200, recommended));
-  };
-
-  // Initialize topics with recommended question counts
   useEffect(() => {
-    if (topicAnalysis && isOpen) {
-      const recommendedTotal = calculateRecommendedPoolSize();
-      setTotalQuestions(recommendedTotal);
-
-      const topicsWithQuestions = topicAnalysis.topics.map(topic => {
-        const baseCount = Math.round(recommendedTotal * topic.coverage);
-
-        // Adjust by importance
-        let importanceMultiplier = 1.0;
-        if (topic.importance === 'high') importanceMultiplier = 1.2;
-        if (topic.importance === 'low') importanceMultiplier = 0.8;
-
-        const recommendedQuestions = Math.round(baseCount * importanceMultiplier);
-
-        return {
-          ...topic,
-          recommendedQuestions,
-          adjustedQuestions: recommendedQuestions
-        };
-      });
-
-      // Normalize to match total exactly
-      const sum = topicsWithQuestions.reduce((acc, t) => acc + t.adjustedQuestions, 0);
-      const normalizedTopics = topicsWithQuestions.map(t => ({
-        ...t,
-        adjustedQuestions: Math.round((t.adjustedQuestions / sum) * recommendedTotal)
-      }));
-
-      setTopics(normalizedTopics);
+    if (!isOpen) {
+      return;
     }
-  }, [topicAnalysis, isOpen]);
 
-  // Redistribute when total changes
-  const handleTotalChange = (newTotal: number) => {
-    setTotalQuestions(newTotal);
+    setTopics(buildTopicSelectionState(topicAnalysis));
+  }, [isOpen, topicAnalysis]);
 
-    // Redistribute proportionally based on recommended distribution
-    const totalRecommended = topics.reduce((acc, t) => acc + t.recommendedQuestions, 0);
-    const updatedTopics = topics.map(t => ({
-      ...t,
-      adjustedQuestions: Math.round((t.recommendedQuestions / totalRecommended) * newTotal)
-    }));
+  const selectedTopics = useMemo(
+    () => topics.filter((topic) => topic.selected),
+    [topics]
+  );
 
-    setTopics(updatedTopics);
-  };
+  const { questionsPerTopic, totalPerMode, totalCombined, estimatedRounds } =
+    getTopicConfirmationPreview(
+      topicAnalysis.metadata.totalConcepts,
+      selectedTopics.length,
+      mode,
+      examLength
+    );
 
-  // Adjust individual topic
-  const handleTopicAdjust = (index: number, newCount: number) => {
-    const updated = [...topics];
-    updated[index].adjustedQuestions = newCount;
-
-    // Update total to reflect change
-    const newTotal = updated.reduce((acc, t) => acc + t.adjustedQuestions, 0);
-    setTotalQuestions(newTotal);
-    setTopics(updated);
+  const toggleTopic = (topicName: string) => {
+    setTopics((currentTopics) =>
+      currentTopics.map((topic) =>
+        topic.name === topicName
+          ? { ...topic, selected: !topic.selected }
+          : topic
+      )
+    );
   };
 
   const handleConfirm = () => {
-    const distribution = topics.map(t => ({
-      topic: t.name,
-      count: t.adjustedQuestions
-    }));
-
-    onConfirm(totalQuestions, distribution);
+    onConfirm(selectedTopics.map(({ selected, ...topic }) => topic));
   };
-
-  const actualTotal = topics.reduce((acc, t) => acc + t.adjustedQuestions, 0);
-  const totalMismatch = actualTotal !== totalQuestions;
 
   const getImportanceBadge = (importance: 'high' | 'medium' | 'low') => {
     const config = {
-      high: { label: 'Tärkeä', className: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300' },
-      medium: { label: 'Keskitärkeä', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-      low: { label: 'Vähemmän tärkeä', className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' }
+      high: {
+        label: 'Tärkeä',
+        className: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+      },
+      medium: {
+        label: 'Keskitärkeä',
+        className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+      },
+      low: {
+        label: 'Vähemmän tärkeä',
+        className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
+      },
     };
 
     const { label, className } = config[importance];
-    return <Badge variant="outline" size="sm" className={className}>{label}</Badge>;
+    return (
+      <Badge variant="outline" size="sm" className={className}>
+        {label}
+      </Badge>
+    );
   };
 
   if (!isOpen) return null;
@@ -147,28 +137,27 @@ export function TopicConfirmationDialog({
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 animate-in fade-in" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-3xl max-h-[90vh] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-700 animate-in fade-in zoom-in-95 overflow-hidden flex flex-col">
-          {/* Header */}
-          <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-5 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[95vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 dark:border-gray-700 dark:bg-gray-900">
+          <div className="border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-5 dark:border-gray-700 dark:from-indigo-950/30 dark:to-purple-950/30">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/50">
-                  <Sparkle weight="duotone" className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                <div className="rounded-lg bg-indigo-100 p-2 dark:bg-indigo-900/50">
+                  <Sparkle weight="duotone" className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div>
                   <Dialog.Title className="text-xl font-bold text-gray-900 dark:text-gray-100">
                     Aihealueet tunnistettu
                   </Dialog.Title>
-                  <Dialog.Description className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Tarkista ja säädä kysymysmääriä ennen luontia
+                  <Dialog.Description className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Tarkista tunnistetut aihealueet ennen luontia
                   </Dialog.Description>
                 </div>
               </div>
               <Dialog.Close asChild>
                 <button
                   type="button"
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
                   aria-label="Sulje"
                 >
                   <X size={24} />
@@ -177,15 +166,13 @@ export function TopicConfirmationDialog({
             </div>
           </div>
 
-          {/* Content - Scrollable */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-            {/* Analysis Summary */}
-            <div className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle weight="fill" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-950/20">
+              <div className="mb-3 flex items-center gap-2">
+                <CheckCircle weight="fill" className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                 <h3 className="font-semibold text-gray-900 dark:text-gray-100">Materiaalin analyysi</h3>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                 <div>
                   <div className="text-gray-600 dark:text-gray-400">Aihealueita</div>
                   <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
@@ -206,132 +193,120 @@ export function TopicConfirmationDialog({
                 </div>
                 <div>
                   <div className="text-gray-600 dark:text-gray-400">Vaikeustaso</div>
-                  <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400 capitalize">
+                  <div className="text-lg font-bold capitalize text-indigo-600 dark:text-indigo-400">
                     {topicAnalysis.metadata.estimatedDifficulty}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Total Questions Slider */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                  <ChartBar weight="duotone" className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  Kysymysten kokonaismäärä
-                </label>
-                <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                  {totalQuestions}
-                </div>
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-950/20">
+              <div className="mb-2 flex items-center gap-2">
+                <ChartBar weight="duotone" className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Luonnin esikatselu</h3>
               </div>
-              <Slider
-                value={[totalQuestions]}
-                onValueChange={([value]) => handleTotalChange(value)}
-                min={20}
-                max={200}
-                step={5}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-500">
-                <span>20</span>
-                <span>200</span>
-              </div>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                {selectedTopics.length === 0 ? (
+                  'Valitse vähintään yksi aihealue nähdäksesi luonnin arvion.'
+                ) : mode === 'both' ? (
+                  <>
+                    Luodaan <strong>{selectedTopics.length}</strong> × <strong>{questionsPerTopic}</strong>{' '}
+                    tietovisa + <strong>{selectedTopics.length}</strong> × <strong>{questionsPerTopic}</strong>{' '}
+                    muistikortti = <strong>{totalCombined} yhteensä</strong>
+                  </>
+                ) : (
+                  <>
+                    Luodaan <strong>{selectedTopics.length}</strong> aihealuetta ×{' '}
+                    <strong>{questionsPerTopic}</strong> kysymystä = <strong>{totalPerMode} kysymystä</strong>{' '}
+                    (~<strong>{estimatedRounds}</strong> kierrosta)
+                  </>
+                )}
+              </p>
             </div>
 
-            {/* Topic Breakdown */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <LightbulbFilament weight="duotone" className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <LightbulbFilament weight="duotone" className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  Jakautuma aihealueittain
+                  Valitse mukaan tulevat aihealueet
                 </h3>
               </div>
 
               <div className="space-y-3">
-                {topics.map((topic, index) => (
-                  <div
+                {topics.map((topic) => (
+                  <button
                     key={topic.name}
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"
+                    type="button"
+                    onClick={() => toggleTopic(topic.name)}
+                    aria-pressed={topic.selected}
+                    className={cn(
+                      'w-full rounded-lg border p-4 text-left transition-colors',
+                      topic.selected
+                        ? 'border-indigo-300 bg-white hover:border-indigo-400 dark:border-indigo-700 dark:bg-gray-800/50 dark:hover:border-indigo-600'
+                        : 'border-dashed border-gray-200 bg-gray-50/80 opacity-70 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/20 dark:hover:border-gray-600'
+                    )}
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={topic.selected}
+                        readOnly
+                        tabIndex={-1}
+                        aria-hidden="true"
+                        className="mt-1 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
                           <h4 className="font-semibold text-gray-900 dark:text-gray-100">
                             {topic.name}
                           </h4>
                           {getImportanceBadge(topic.importance)}
+                          {!topic.selected && (
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                              Ei mukana luonnissa
+                            </span>
+                          )}
                         </div>
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {topic.keywords.slice(0, 3).map((keyword, i) => (
+                        <div className="mb-2 flex flex-wrap gap-1">
+                          {topic.keywords.slice(0, 3).map((keyword) => (
                             <span
-                              key={i}
-                              className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                              key={`${topic.name}-${keyword}`}
+                              className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400"
                             >
                               {keyword}
                             </span>
                           ))}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-500">
-                          Kattavuus: {Math.round(topic.coverage * 100)}%
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-500">
+                          <span>Kattavuus: {Math.round(topic.coverage * 100)}%</span>
+                          <span>Aliaiheet: {topic.subtopics.length}</span>
                         </div>
                       </div>
-                      <div className="text-right ml-4">
-                        <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                          {topic.adjustedQuestions}
-                        </div>
-                        <div className="text-xs text-gray-500">kysymystä</div>
-                      </div>
                     </div>
-
-                    {/* Individual topic slider */}
-                    <div className="space-y-1">
-                      <Slider
-                        value={[topic.adjustedQuestions]}
-                        onValueChange={([value]) => handleTopicAdjust(index, value)}
-                        min={0}
-                        max={Math.min(100, totalQuestions)}
-                        step={1}
-                        className="w-full"
-                      />
-                      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-500">
-                        <span>Suositus: {topic.recommendedQuestions}</span>
-                        {topic.adjustedQuestions !== topic.recommendedQuestions && (
-                          <span className="text-amber-600 dark:text-amber-400">
-                            (mukautettu)
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
 
-            {/* Mismatch Warning */}
-            {totalMismatch && (
-              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 flex items-start gap-2">
-                <Warning weight="fill" className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-amber-900 dark:text-amber-200">
-                  <strong>Huomio:</strong> Aihealueiden summa ({actualTotal}) ei vastaa kokonaismäärää ({totalQuestions}).
-                  Säädä joko kokonaismäärää tai yksittäisiä aihealueita.
-                </div>
+            {selectedTopics.length === 0 && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-200">
+                Valitse vähintään yksi aihealue ennen vahvistamista.
               </div>
             )}
           </div>
 
-          {/* Footer */}
-          <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800/50">
-            <div className="flex gap-3 justify-end">
+          <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800/50">
+            <div className="flex justify-end gap-3">
               <Button onClick={onClose} variant="secondary">
                 Peruuta
               </Button>
               <Button
                 onClick={handleConfirm}
                 variant="primary"
-                disabled={totalMismatch}
+                disabled={isTopicConfirmationDisabled(selectedTopics.length)}
                 className="min-w-[140px]"
               >
-                <CheckCircle weight="bold" className="w-4 h-4 mr-2" />
+                <CheckCircle weight="bold" className="mr-2 h-4 w-4" />
                 Vahvista ja luo
               </Button>
             </div>

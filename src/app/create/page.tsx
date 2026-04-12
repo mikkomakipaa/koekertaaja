@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import CreatePageClient from '@/components/create/CreatePageClient';
+import { isAdmin } from '@/lib/auth/admin';
 import { getSchoolMembershipsForUser } from '@/lib/auth/roles';
 import { hasAnySchoolApiKey, getSchoolApiKeyStatus } from '@/lib/school/apiKeyStatus';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
@@ -33,6 +34,7 @@ export default async function CreatePage() {
   }
 
   const memberships = await getSchoolMembershipsForUser(user.id);
+  const userIsAdmin = isAdmin(user.email ?? '');
 
   if (memberships.length === 0) {
     return (
@@ -40,6 +42,7 @@ export default async function CreatePage() {
         allowedSchools={[]}
         initialSchoolId=""
         schoolMembershipError="Tiliäsi ei ole liitetty kouluun. Ota yhteyttä ylläpitäjään."
+        initialIsAdmin={userIsAdmin}
       />
     );
   }
@@ -54,6 +57,7 @@ export default async function CreatePage() {
         allowedSchools={[]}
         initialSchoolId=""
         schoolMembershipError="Tiliäsi ei ole liitetty kouluun. Ota yhteyttä ylläpitäjään."
+        initialIsAdmin={userIsAdmin}
       />
     );
   }
@@ -69,6 +73,7 @@ export default async function CreatePage() {
       <CreatePageClient
         allowedSchools={schools}
         initialSchoolId={schools[0].id}
+        initialIsAdmin={userIsAdmin}
       />
     );
   }
@@ -89,6 +94,7 @@ export default async function CreatePage() {
     <CreatePageClient
       allowedSchools={schools}
       initialSchoolId=""
+      initialIsAdmin={userIsAdmin}
     />
   );
 }

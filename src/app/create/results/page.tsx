@@ -27,6 +27,7 @@ interface CreationResults {
   createdSets: CreatedSet[];
   errors: CreationError[];
   totalQuestions: number;
+  topicCount?: number;
 }
 
 const SESSION_KEY = 'creation_results';
@@ -52,7 +53,7 @@ export default function CreateResultsPage() {
 
   if (!results) return null;
 
-  const { createdSets, errors, totalQuestions } = results;
+  const { createdSets, errors, totalQuestions, topicCount = 0 } = results;
   const hasSuccess = createdSets.length > 0;
   const hasErrors = errors.length > 0;
   const isPartial = hasSuccess && hasErrors;
@@ -79,7 +80,7 @@ export default function CreateResultsPage() {
 
   const headerDescription = isTotalFailure
     ? `${errors.length} epäonnistui`
-    : `Luotiin ${createdSets.length} kysymyssarjaa (${totalQuestions} kysymystä yhteensä)`;
+    : `Luotiin ${totalQuestions} kysymystä ${topicCount} aihealueesta`;
 
   return (
     <AuthGuard>

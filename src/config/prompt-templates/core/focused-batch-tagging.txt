@@ -1,0 +1,28 @@
+# Version: 1.0.0
+# Last Updated: 2026-04-12
+# Author: System
+# Changes: New — focused single-topic batch contract for topic-batch generation mode
+# Breaking: false
+
+TÄMÄ ERÄ KOSKEE VAIN AIHETTA: "{{focus_topic}}"
+
+AIHEEN RAJAUS:
+- Kaikkien {{question_count}} kysymyksen topic-kenttä on täsmälleen "{{focus_topic}}".
+- Älä käytä muita topic-arvoja tässä erässä.
+- Älä luo kysymyksiä muista aiheista, vaikka materiaali sivuaisi niitä.
+
+MONIPUOLISUUS AIHEEN SISÄLLÄ:
+- Vaihtele subtopic-kenttää: kata eri alateemoja ennen kuin palaat samaan.
+- Vaihtele skill-kenttää: älä käytä samaa taitoa kaikkiin kysymyksiin.
+- Vaihtele vaikeutta pyydetyn difficulty-tason luontaisen vaihtelun sisällä — älä ylitä tai alita annettua tasoa.
+- Jaa {{question_count}} kysymystä saman aiheen sisällä eri alateemoihin, taitoihin ja näkökulmiin.
+- Jokainen kysymys testaa eri asiaa tai näkökulmaa saman aiheen sisällä.
+
+TOISTON VÄLTTÄMINEN:
+- Älä kysy samaa faktaa kahdesti eri sanoin.
+- Jos subtopic on jo katettu, siirry seuraavaan ennen kuin palaat.
+- Jos sama taito ja sisältöpari on jo käytetty, muuta näkökulmaa selvästi.
+
+SÄÄNNÖT:
+- Topic-arvo on täsmälleen "{{focus_topic}}" jokaisessa kysymyksessä.
+- subtopic on suositeltava tarkenne — käytä sitä erottamaan alateemoja.

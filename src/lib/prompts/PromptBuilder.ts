@@ -6,6 +6,7 @@ import { getSubjectType, type SubjectType } from './subjectTypeMapping';
 import { PromptLoader } from './PromptLoader';
 import { isRuleBasedSubject as isRuleBasedSubjectUtil } from '@/lib/utils/subjectClassification';
 import { dependencyResolver } from '@/lib/utils/dependencyGraph';
+import { formatDistributionForPrompt } from '@/lib/utils/questionDistribution';
 import type { ExtractedVisual } from '@/lib/utils/visualExtraction';
 import type { PromptMetadata } from './promptVersion';
 
@@ -23,6 +24,7 @@ export interface BuildVariablesParams {
   }>;
   mode?: Mode;
   topic?: string;
+  focusTopic?: string; // AIDEV-FOCUS-BATCH-CHAIN
   subtopic?: string;
   identifiedTopics?: string[];
   targetWords?: string[];
@@ -157,6 +159,9 @@ export class PromptBuilder {
       'core/difficulty-rubric.txt',
       `types/${subjectType}.txt`,
     ]);
+    const taggingModeModule = params.focusTopic
+      ? await this.loader.loadModule('core/focused-batch-tagging.txt')
+      : await this.loader.loadModule('core/whole-set-tagging.txt');
 
     const skillTaxonomy = await this.loadSkillTaxonomy(subjectType);
     const curriculum = await this.loadCurriculum(subjectKey, params.grade);
@@ -171,6 +176,10 @@ export class PromptBuilder {
     const flashcardRules = mode === 'flashcard'
       ? await this.loader.loadModule('core/flashcard-rules.txt')
       : '';
+    const focusedBatchFlashcardRules =
+      mode === 'flashcard' && Boolean(params.focusTopic)
+        ? await this.loader.loadModule('core/focused-batch-flashcard.txt')
+        : '';
     const languageFlashcardRules =
       mode === 'flashcard' && subjectType === 'language'
         ? await this.loader.loadModule('core/language-flashcard-rules.txt')
@@ -187,6 +196,8 @@ export class PromptBuilder {
     const assembled = this.concatenateModules([
       format,
       topicRules,
+      taggingModeModule,
+      variables.distribution_section,
       skillTagging,
       difficultyRubric,
       skillTaxonomy,
@@ -194,6 +205,7 @@ export class PromptBuilder {
       curriculum,
       distributions,
       flashcardRules,
+      focusedBatchFlashcardRules,
       languageFlashcardRules,
       ruleBasedEmphasis,
     ]);
@@ -311,7 +323,11 @@ export class PromptBuilder {
     const hasFiles = Boolean(params.materialFiles && params.materialFiles.length > 0);
     const topicCount = params.identifiedTopics?.length ?? 0;
     const effectiveTopicCount = topicCount > 0 ? topicCount : 3;
-    const questionsPerTopic = Math.ceil(params.questionCount / effectiveTopicCount);
+    const isFocusedBatch = Boolean(params.focusTopic); // AIDEV-FOCUS-BATCH-CHAIN
+    const focusTopicName = params.focusTopic ?? '';
+    const questionsPerTopic = isFocusedBatch
+      ? String(params.questionCount)
+      : String(Math.ceil(params.questionCount / effectiveTopicCount));
 
     const materialType = hasFiles ? 'kuvien ja PDF-tiedostojen' : 'materiaalin';
     const gradeNote = this.formatGradeNote(params.subject, params.grade);
@@ -332,9 +348,9 @@ export class PromptBuilder {
     const explanationStyleRules = this.formatExplanationStyleRules(params.subject, subjectType);
 
     // NEW: Use distribution if available (Phase 2)
-    const distributionSection = params.distribution
-      ? this.formatDistributionSection(params.distribution)
-      : '';
+    const distributionSection = isFocusedBatch
+      ? ''
+      : (params.distribution ? this.formatDistributionSection(params.distribution) : '');
     const conceptDependencySection = dependencyResolver.getDependencyPromptSection(
       params.subject,
       params.grade
@@ -349,8 +365,9 @@ export class PromptBuilder {
       target_words_section: this.formatTargetWordsSection(params.targetWords),
       topic_count: String(effectiveTopicCount),
       topics_list: this.formatTopics(params.identifiedTopics),
-      questions_per_topic: String(questionsPerTopic),
+      questions_per_topic: questionsPerTopic,
       distribution_section: distributionSection, // Phase 2
+      focus_topic: focusTopicName,
       concept_dependency_section: conceptDependencySection,
       grade_context_note: gradeContextNote,
       difficulty: params.difficulty,
@@ -461,7 +478,6 @@ export class PromptBuilder {
   private formatDistributionSection(
     distribution: import('@/lib/utils/questionDistribution').TopicDistribution[]
   ): string {
-    const { formatDistributionForPrompt } = require('@/lib/utils/questionDistribution');
     const formattedDistribution = formatDistributionForPrompt(distribution);
 
     return `

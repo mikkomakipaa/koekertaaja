@@ -98,9 +98,9 @@ RLS notes:
 
 ### `public.school_members` (tracked local migration)
 
-- Rows: n/a in linked project (stub table for future multi-user admin)
 - RLS: enabled
 - Primary key: `id`
+- Unique constraint: `(user_id, school_id)` — one row per user-school pair
 - Foreign keys:
   - `user_id -> auth.users.id`
   - `school_id -> public.schools.id`
@@ -110,16 +110,22 @@ Key columns:
 | Column | Type | Notes |
 |---|---|---|
 | `id` | `uuid` | PK, default `gen_random_uuid()` |
-| `user_id` | `uuid` | School admin/teacher user |
+| `user_id` | `uuid` | School admin user |
 | `school_id` | `uuid` | Parent school |
-| `role` | `text` | Checked to `admin` only |
+| `role` | `text` | `admin` only (teacher role not yet active) |
 | `created_at` | `timestamptz` | Default `now()` |
 
 RLS notes:
 
 - Authenticated users can read only their own membership rows.
-- Phase 1 writes are service-role only.
-- Admin signup uses service-role writes to create one `school_members` row for the selected existing school.
+- All writes are service-role only (admin routes, signup).
+
+Multi-school support:
+
+- A single user may have multiple rows (one per school). This is supported and intentional for key users / district coordinators.
+- `getSchoolMembershipsForUser(userId)` returns all rows for a user ordered by `created_at`.
+- `getSchoolForUser(userId, schoolId?)` returns one membership: the one matching `schoolId` if provided, otherwise the earliest created.
+- Admin membership management is done via `POST /api/admin/users/[userId]/memberships` (add) and `DELETE /api/admin/users/[userId]/memberships/[schoolId]` (remove). Removing the last membership is rejected by the API.
 
 ---
 

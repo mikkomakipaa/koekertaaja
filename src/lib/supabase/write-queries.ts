@@ -12,8 +12,8 @@ import {
   QuestionSet,
   SequentialItem,
   WriteActorContext,
-  isSequentialItemArray,
-  isStringArray,
+  normalizeSequentialItemsInput,
+  normalizeSequentialOrderInput,
 } from '@/types';
 import { createLogger } from '@/lib/logger';
 import { normalizeSubtopicLabel, normalizeTopicLabel } from '@/lib/topics/normalization';
@@ -80,15 +80,8 @@ export type CreateQuestionSetResult =
       };
     };
 
-const normalizeSequentialItems = (items: unknown): SequentialItem[] => {
-  if (isSequentialItemArray(items)) {
-    return items;
-  }
-  if (isStringArray(items)) {
-    return items.map((text) => ({ text }));
-  }
-  return [];
-};
+const normalizeSequentialItems = (items: unknown): SequentialItem[] =>
+  normalizeSequentialItemsInput(items);
 
 export function shouldRetryQuestionSetInsertWithoutPromptMetadata(error: {
   code?: string | null;
@@ -224,11 +217,19 @@ export function mapQuestionsToInsertRows(
         };
       case 'sequential': {
         const items = normalizeSequentialItems((q as any).items);
+        const correctOrder = normalizeSequentialOrderInput((q as any).correct_order);
+
+        if (items.length < 3 || correctOrder.length !== items.length) {
+          throw new Error(
+            `Invalid sequential question payload for question: ${String(baseQuestion.question_text ?? '').slice(0, 80)}`
+          );
+        }
+
         return {
           ...baseQuestion,
           correct_answer: {
             items,
-            correct_order: (q as any).correct_order || [],
+            correct_order: correctOrder,
           },
           options: null,
         };

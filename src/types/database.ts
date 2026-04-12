@@ -4,8 +4,8 @@ import {
   QuestionSet,
   QuestionFlag,
   SequentialItem,
-  isSequentialItemArray,
-  isStringArray,
+  normalizeSequentialItemsInput,
+  normalizeSequentialOrderInput,
 } from './questions';
 
 /**
@@ -28,13 +28,7 @@ function convertToBoolean(value: any): boolean {
 }
 
 function normalizeSequentialItems(items: unknown): SequentialItem[] {
-  if (isSequentialItemArray(items)) {
-    return items;
-  }
-  if (isStringArray(items)) {
-    return items.map((text) => ({ text }));
-  }
-  return [];
+  return normalizeSequentialItemsInput(items);
 }
 
 // Supabase Database Types
@@ -194,7 +188,7 @@ export function parseDatabaseQuestion(dbQuestion: DatabaseQuestion): Question {
         ...base,
         question_type: 'sequential',
         items: normalizeSequentialItems(rawItems),
-        correct_order: Array.isArray(storedAnswer?.correct_order) ? storedAnswer.correct_order : [],
+        correct_order: normalizeSequentialOrderInput(storedAnswer?.correct_order),
       };
     }
     case 'flashcard':

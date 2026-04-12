@@ -286,6 +286,7 @@ export async function POST(request: NextRequest) {
           difficulty: payload.difficulty,
         }),
         topic: topicForGeneration,
+        focusTopic: payload.focusTopic?.name, // AIDEV-FOCUS-BATCH-CHAIN
         subtopic: subtopicForGeneration,
         materialText: payload.materialText ?? payload.material,
         materialFiles: files.length > 0 ? files : undefined,

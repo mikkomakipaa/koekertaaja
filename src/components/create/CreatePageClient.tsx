@@ -4,14 +4,15 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ARIATabBar, type Tab } from '@/components/layout/ARIATabBar';
-import { TopicConfirmationDialog } from '@/components/create/TopicConfirmationDialog';
+import { CreationFlowBar } from '@/components/create/CreationFlowBar';
+import { TopicsConfirmationStep } from '@/components/create/TopicsConfirmationStep';
 import type { EnhancedTopic, TopicAnalysisResult } from '@/lib/ai/topicIdentifier';
 import { Textarea } from '@/components/ui/textarea';
 import { GradeSelector } from '@/components/create/GradeSelector';
@@ -56,7 +57,6 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { CreationProgressStepper } from '@/components/create/CreationProgressStepper';
 import { GroupedProgressStepper } from '@/components/create/GroupedProgressStepper';
 import { TestQuestionsTab } from '@/components/create/TestQuestionsTab';
-import { CapacityWarningDialog } from '@/components/create/CapacityWarningDialog';
 import { MetricsTab } from '@/components/metrics/MetricsTab';
 import { UserManagementTab } from '@/components/create/UserManagementTab';
 import { MathText } from '@/components/ui/math-text';
@@ -64,8 +64,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { createLogger } from '@/lib/logger';
 import { withCsrfHeaders } from '@/lib/security/csrf-client';
 import { SUBJECT_GROUPS, getSubjectById, subjectRequiresGrade } from '@/config/subjects';
-import type { MaterialCapacity, QuestionCountValidation } from '@/lib/utils/materialAnalysis';
-import { calculateDistribution } from '@/lib/utils/questionDistribution';
+import { calcQuestionsPerTopic } from '@/config/generationConfig';
 import {
   appendProviderPreference,
   CREATE_PROVIDER_OPTIONS,
@@ -111,6 +110,7 @@ interface QuestionGenerationResponse {
     errorType?: 'generation' | 'validation' | 'timeout' | 'database';
   }>;
   totalQuestions: number;
+  topicCount?: number;
   stats?: {
     requested: number;
     succeeded: number;
@@ -119,16 +119,6 @@ interface QuestionGenerationResponse {
 }
 
 type QuizDifficulty = 'helppo' | 'normaali';
-
-type TopicDistributionConfig = Array<{
-  topic: string;
-  targetCount: number;
-  coverage: number;
-  keywords: string[];
-  subtopics: string[];
-  difficulty: string;
-  importance: string;
-}>;
 
 type RetryableStepId = string;
 
@@ -159,7 +149,7 @@ type GeneratedTopicSet = {
 
 type GenerationSession = {
   requestedQuestionCount: number;
-  topicDistribution?: TopicDistributionConfig;
+  totalConcepts: number;
   topics: string[];
   enhancedTopics: EnhancedTopic[];
   results: {
@@ -168,18 +158,6 @@ type GenerationSession = {
   };
 };
 
-type ExtendProgress = {
-  currentChunk: number;
-  totalChunks: number;
-  completedQuestions: number;
-  requestedQuestions: number;
-};
-
-interface CapacityWarningState {
-  capacity: MaterialCapacity;
-  validation: QuestionCountValidation;
-  requestedCount: number;
-}
 
 interface FlaggedQuestion {
   questionId: string;
@@ -206,6 +184,7 @@ interface CreatePageClientProps {
   allowedSchools?: School[];
   initialSchoolId?: string;
   schoolMembershipError?: string;
+  initialIsAdmin?: boolean;
 }
 
 function formatSchoolLabel(school: School): string {
@@ -216,6 +195,7 @@ export default function CreatePageClient({
   allowedSchools = [],
   initialSchoolId = '',
   schoolMembershipError = '',
+  initialIsAdmin = false,
 }: CreatePageClientProps) {
   const router = useRouter();
   const { signOut, user } = useAuth();
@@ -245,11 +225,6 @@ export default function CreatePageClient({
       label: 'Käsitteet',
     },
   ];
-  const defaultQuestionCounts = {
-    min: 20,
-    max: 200,
-    default: 50,
-  };
   const providerOptions = CREATE_PROVIDER_OPTIONS;
 
   // Form state
@@ -260,7 +235,6 @@ export default function CreatePageClient({
   const [grade, setGrade] = useState<number | undefined>(undefined);
   const [examLength, setExamLength] = useState(15);
   const [examDate, setExamDate] = useState('');
-  const [questionCount, setQuestionCount] = useState(defaultQuestionCounts.default);
   const [questionSetName, setQuestionSetName] = useState('');
   const [materialText, setMaterialText] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -271,7 +245,6 @@ export default function CreatePageClient({
     useState<ProviderPreference>(DEFAULT_CREATE_PROVIDER);
   const [selectedSchoolId, setSelectedSchoolId] = useState(initialSchoolId);
   const [error, setError] = useState('');
-  const [capacityWarning, setCapacityWarning] = useState<CapacityWarningState | null>(null);
   const [topicConfirmation, setTopicConfirmation] = useState<{
     analysis: TopicAnalysisResult;
     requestedCount: number;
@@ -294,7 +267,7 @@ export default function CreatePageClient({
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [expandedTopicSets, setExpandedTopicSets] = useState<Set<string>>(new Set());
   const [deletingTopic, setDeletingTopic] = useState<{ setId: string; topic: string | null } | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin] = useState(initialIsAdmin);
   const [flaggedQuestions, setFlaggedQuestions] = useState<FlaggedQuestion[]>([]);
   const [loadingFlags, setLoadingFlags] = useState(false);
   const [flagLoadError, setFlagLoadError] = useState('');
@@ -314,11 +287,9 @@ export default function CreatePageClient({
   // Extend existing set state
   const [selectedSetToExtend, setSelectedSetToExtend] = useState<string>('');
   const [questionsToAdd, setQuestionsToAdd] = useState(20);
-  const [extendProgress, setExtendProgress] = useState<ExtendProgress | null>(null);
 
-  const minQuestionCount = defaultQuestionCounts.min;
-  const maxQuestionCount = defaultQuestionCounts.max;
-  const defaultQuestionCount = defaultQuestionCounts.default;
+  const defaultQuestionCount = calcQuestionsPerTopic(30, 3);
+  const requestedQuestionCountRef = useRef(defaultQuestionCount);
   const requiresGrade = subject ? subjectRequiresGrade(subject) : false;
   const hasSubject = Boolean(subject.trim());
   const hasSubjectType = Boolean(subjectType);
@@ -355,38 +326,49 @@ export default function CreatePageClient({
     return JSON.parse(value);
   };
 
-  const focusMaterialInput = () => {
-    setTimeout(() => {
-      const materialTextarea = document.querySelector<HTMLTextAreaElement>(
-        'textarea[placeholder^="Esim. kirjoita materiaali"]'
-      );
-      materialTextarea?.focus();
-      materialTextarea?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 0);
-  };
-
   const getGenerationHeaders = () =>
     withCsrfHeaders(
       selectedSchoolId ? { 'x-school-id': selectedSchoolId } : undefined
     );
+
+  const totalConfirmedTopics =
+    generationSession?.enhancedTopics.length ||
+    generationSession?.topics.length ||
+    Array.from(
+      new Set(
+        creationSteps
+          .map((step) => parseTopicStep(step.id)?.topicIndex)
+          .filter((topicIndex): topicIndex is number => topicIndex !== undefined)
+      )
+    ).length;
+
+  const topicTypesRequired =
+    generationMode === 'both'
+      ? 2
+      : generationMode === 'quiz' || generationMode === 'flashcard'
+        ? 1
+        : 0;
+
+  const completedTopics =
+    totalConfirmedTopics > 0
+      ? Array.from({ length: totalConfirmedTopics }, (_, topicIndex) => {
+          const completedTypeCount = creationSteps.filter((step) => {
+            const parsedStep = parseTopicStep(step.id);
+            return parsedStep?.topicIndex === topicIndex && step.status === 'completed';
+          }).length;
+
+          return completedTypeCount >= topicTypesRequired;
+        }).filter(Boolean).length
+      : 0;
 
   const buildGenerationFormData = (options?: {
     questionCountOverride?: number;
     bypassCapacityCheck?: boolean;
     capacityCheckOnly?: boolean;
     identifiedTopics?: string[];
-    topicDistribution?: Array<{
-      topic: string;
-      targetCount: number;
-      coverage: number;
-      keywords: string[];
-      subtopics: string[];
-      difficulty: string;
-      importance: string;
-    }>;
   }) => {
     const formData = new FormData();
-    const requestedQuestionCount = options?.questionCountOverride ?? questionCount;
+    const requestedQuestionCount = options?.questionCountOverride ?? requestedQuestionCountRef.current;
 
     formData.append('subject', subject);
     formData.append('questionCount', requestedQuestionCount.toString());
@@ -417,10 +399,6 @@ export default function CreatePageClient({
 
     if (options?.identifiedTopics && options.identifiedTopics.length > 0) {
       formData.append('identifiedTopics', JSON.stringify(options.identifiedTopics));
-    }
-
-    if (options?.topicDistribution && options.topicDistribution.length > 0) {
-      formData.append('distribution', JSON.stringify(options.topicDistribution));
     }
 
     if (options?.bypassCapacityCheck) {
@@ -454,9 +432,9 @@ export default function CreatePageClient({
   const getFlashcardTopicStepId = (topicIndex: number) =>
     `${FLASHCARD_TOPIC_STEP_PREFIX}${topicIndex}`;
 
-  const parseTopicStep = (
+  function parseTopicStep(
     stepId: string
-  ): { type: TopicStepType; topicIndex: number } | null => {
+  ): { type: TopicStepType; topicIndex: number } | null {
     if (stepId.startsWith(FLASHCARD_TOPIC_STEP_PREFIX)) {
       const topicIndex = Number(stepId.slice(FLASHCARD_TOPIC_STEP_PREFIX.length));
       return Number.isInteger(topicIndex) && topicIndex >= 0
@@ -472,7 +450,7 @@ export default function CreatePageClient({
     }
 
     return null;
-  };
+  }
 
   const buildTopicSteps = (topics: EnhancedTopic[]): CreationStep[] => {
     const steps: CreationStep[] = [];
@@ -491,7 +469,7 @@ export default function CreatePageClient({
       steps.push(
         ...topics.map((topic, topicIndex) => ({
           id: getFlashcardTopicStepId(topicIndex),
-          label: generationMode === 'both' ? `${topic.name} (Muistikortit)` : topic.name,
+          label: generationMode === 'both' ? `${topic.name} (Kortit)` : topic.name,
           status: 'pending' as const,
         }))
       );
@@ -546,13 +524,6 @@ export default function CreatePageClient({
       keywords: [...topic.keywords],
       subtopics: [...topic.subtopics],
     })),
-    topicDistribution: session.topicDistribution
-      ? session.topicDistribution.map((entry) => ({
-          ...entry,
-          keywords: [...entry.keywords],
-          subtopics: [...entry.subtopics],
-        }))
-      : undefined,
     results: {
       topicSets: session.results.topicSets.map((entry) => ({
         ...entry,
@@ -594,33 +565,6 @@ export default function CreatePageClient({
     steps
       .map((step) => step.id)
       .filter((stepId): stepId is RetryableStepId => stepId !== TOPICS_STEP_ID);
-
-  const buildResolvedTopicDistribution = (
-    topics: EnhancedTopic[],
-    requestedQuestionCount: number,
-    distribution?: TopicDistributionConfig
-  ): TopicDistributionConfig =>
-    distribution && distribution.length > 0
-      ? distribution.map((entry) => ({
-          ...entry,
-          keywords: [...entry.keywords],
-          subtopics: [...entry.subtopics],
-        }))
-      : calculateDistribution(topics, requestedQuestionCount).map((entry) => ({
-          ...entry,
-          keywords: [...entry.keywords],
-          subtopics: [...entry.subtopics],
-        }));
-
-  const getTopicTargetCount = (session: GenerationSession, topicIndex: number) => {
-    const topic = session.enhancedTopics[topicIndex];
-    if (!topic) {
-      throw new Error('Aihealueen tietoja ei löytynyt');
-    }
-
-    const distributionEntry = session.topicDistribution?.find((entry) => entry.topic === topic.name);
-    return distributionEntry?.targetCount ?? 0;
-  };
 
   const getMergedQuestionSetName = (type: TopicStepType) =>
     type === 'flashcard' ? `${questionSetName} - Muistikortit` : questionSetName;
@@ -669,30 +613,23 @@ export default function CreatePageClient({
     ).filter((set): set is GeneratedSet => Boolean(set));
     const totalQuestions = allSets.reduce((sum, set) => sum + set.questionCount, 0);
     setGenerationSession(null);
-    setState('form');
-    sessionStorage.setItem(
-      'creation_results',
-      JSON.stringify({
-        createdSets: allSets,
-        errors: session.results.errors.map(({ mode, error }) => ({ mode, error })),
-        totalQuestions,
-      })
-    );
-    router.push('/create/results');
+    setQuestionSetsCreated(allSets);
+    setTotalQuestionsCreated(totalQuestions);
+    setActiveTab('create');
+    setState('success');
+    void loadQuestionSets();
   };
 
   const buildGenerateSingleFormData = (params: {
     type: TopicStepType;
     questionCount: number;
     topics: string[];
-    topicDistribution?: TopicDistributionConfig;
     focusTopic?: EnhancedTopic;
   }) => {
     const formData = buildGenerationFormData({
       questionCountOverride: params.questionCount,
       bypassCapacityCheck: true,
       identifiedTopics: params.topics,
-      topicDistribution: params.topicDistribution,
     });
 
     formData.append('type', params.type);
@@ -707,7 +644,6 @@ export default function CreatePageClient({
     type: TopicStepType;
     questionCount: number;
     topics: string[];
-    topicDistribution?: TopicDistributionConfig;
     focusTopic?: EnhancedTopic;
   }) => {
     const response = await fetch('/api/generate-single', {
@@ -851,76 +787,6 @@ export default function CreatePageClient({
     return data.questionSet as GeneratedSet;
   };
 
-  const chunkQuestionCounts = (totalCount: number): number[] => {
-    if (totalCount <= 20) {
-      return [totalCount];
-    }
-
-    const chunks: number[] = [];
-    let remaining = totalCount;
-
-    while (remaining > 0) {
-      const chunkSize = Math.min(20, remaining);
-      chunks.push(chunkSize);
-      remaining -= chunkSize;
-    }
-
-    return chunks;
-  };
-
-  const runChunkedGenerateStep = async (params: {
-    stepId: RetryableStepId;
-    type: TopicStepType;
-    session: GenerationSession;
-    focusTopic: EnhancedTopic;
-    questionCount: number;
-    progressLabel: string;
-  }) => {
-    const chunkSizes = chunkQuestionCounts(params.questionCount);
-    const createdChunkSets: GeneratedSet[] = [];
-
-    for (let index = 0; index < chunkSizes.length; index += 1) {
-      const chunkSize = chunkSizes[index];
-      const chunkLabel = chunkSizes.length > 1 ? ` (${index + 1}/${chunkSizes.length})` : '';
-
-      updateCreationStep(params.stepId, 'in_progress', {
-        message: `${params.progressLabel}${chunkLabel}...`,
-      });
-
-      const createdSet = await callGenerateSingle({
-        type: params.type,
-        questionCount: chunkSize,
-        topics: params.session.topics,
-        topicDistribution: params.session.topicDistribution,
-        focusTopic: params.focusTopic,
-      });
-
-      createdChunkSets.push(createdSet);
-    }
-
-    if (createdChunkSets.length === 1) {
-      return createdChunkSets[0];
-    }
-
-    const fetchedChunkSets = await Promise.all(
-      createdChunkSets.map(async (createdSet) => fetchQuestionSetWithQuestions(createdSet.code))
-    );
-
-    const mergedQuestions = fetchedChunkSets.flatMap((set) => set.questions);
-    const mergedSet = await createMergedQuestionSet({
-      name: createdChunkSets[0].name,
-      mode: params.type,
-      questions: mergedQuestions,
-    });
-
-    await Promise.all(
-      fetchedChunkSets.map(async (set) => {
-        await deleteTemporaryQuestionSet(set.id);
-      })
-    );
-
-    return mergedSet;
-  };
 
   const runTopicStep = async (
     stepId: RetryableStepId,
@@ -936,15 +802,10 @@ export default function CreatePageClient({
       return false;
     }
 
-    const targetCount = getTopicTargetCount(session, topicIndex);
-    if (targetCount <= 0) {
-      updateCreationStep(stepId, 'completed', {
-        count: 0,
-        message: 'Ohitettu, koska tälle aiheelle ei jaettu kysymyksiä',
-      });
-      clearGenerationError(session, stepId);
-      return true;
-    }
+    const questionsPerTopic = calcQuestionsPerTopic(
+      session.totalConcepts,
+      session.enhancedTopics.length
+    );
 
     const itemLabel = type === 'flashcard' ? 'muistikortteja' : 'kysymyksiä';
 
@@ -953,13 +814,11 @@ export default function CreatePageClient({
     });
 
     try {
-      const createdSet = await runChunkedGenerateStep({
-        stepId,
+      const createdSet = await callGenerateSingle({
         type,
-        session,
+        questionCount: questionsPerTopic,
+        topics: session.topics,
         focusTopic,
-        questionCount: targetCount,
-        progressLabel: `Luodaan aiheen "${focusTopic.name}" ${itemLabel}`,
       });
       storeTopicResult(session, {
         stepId,
@@ -1115,50 +974,31 @@ export default function CreatePageClient({
   };
 
   // Handler for topic confirmation dialog
-  const handleTopicConfirmation = (
-    totalQuestions: number,
-    topicDistribution: Array<{ topic: string; count: number }>
-  ) => {
+  const handleTopicConfirmation = (confirmedTopics: EnhancedTopic[]) => {
+    const totalConcepts =
+      topicConfirmation?.analysis.metadata.totalConcepts ??
+      confirmedTopics.reduce((sum, topic) => sum + topic.subtopics.length, 0);
+    const questionsPerTopic = calcQuestionsPerTopic(totalConcepts, confirmedTopics.length);
+
     // Close dialog
     setTopicConfirmation(null);
 
-    // Store confirmed distribution in state for use by generation
-    setQuestionCount(totalQuestions);
-
-    // Build TopicDistribution format from user's adjusted counts
-    const distribution = topicConfirmation?.analysis.topics.map((topic, index) => {
-      const userCount = topicDistribution.find(d => d.topic === topic.name)?.count || 0;
-      return {
-        topic: topic.name,
-        targetCount: userCount,
-        coverage: topic.coverage,
-        keywords: topic.keywords,
-        subtopics: topic.subtopics,
-        difficulty: topic.difficulty,
-        importance: topic.importance,
-      };
-    }) || [];
-
-    // Proceed with generation, bypassing topic confirmation
+    // Proceed with generation using the confirmed topic distribution.
     void handleSubmit({
-      bypassCapacityCheck: true,
-      questionCountOverride: totalQuestions,
+      questionCountOverride: questionsPerTopic,
       bypassTopicConfirmation: true,
-      confirmedTopics: topicDistribution.map(d => d.topic),
-      confirmedEnhancedTopics: topicConfirmation?.analysis.topics ?? [],
-      topicDistribution: distribution,
+      confirmedTopics: confirmedTopics.map((topic) => topic.name),
+      confirmedEnhancedTopics: confirmedTopics,
     });
   };
 
   const handleSubmit = async (options?: {
-    bypassCapacityCheck?: boolean;
     questionCountOverride?: number;
     bypassTopicConfirmation?: boolean;
     confirmedTopics?: string[];
     confirmedEnhancedTopics?: EnhancedTopic[];
-    topicDistribution?: TopicDistributionConfig;
   }) => {
-    const requestedQuestionCount = options?.questionCountOverride ?? questionCount;
+    const requestedQuestionCount = options?.questionCountOverride ?? requestedQuestionCountRef.current;
 
     // Validation
     if (!questionSetName.trim()) {
@@ -1203,7 +1043,6 @@ export default function CreatePageClient({
 
     // Note: Old word-based capacity check removed - now using intelligent topic-based confirmation
     setError('');
-    setCapacityWarning(null);
     cancelRequestedRef.current = false;
     setState('loading');
     const initialSteps = initializeCreationSteps();
@@ -1212,7 +1051,7 @@ export default function CreatePageClient({
     try {
       const session: GenerationSession = {
         requestedQuestionCount,
-        topicDistribution: options?.topicDistribution,
+        totalConcepts: 0,
         topics: options?.confirmedTopics ? [...options.confirmedTopics] : [],
         enhancedTopics: options?.confirmedEnhancedTopics
           ? options.confirmedEnhancedTopics.map((topic) => ({
@@ -1235,10 +1074,9 @@ export default function CreatePageClient({
         if (session.enhancedTopics.length === 0) {
           session.enhancedTopics = buildFallbackEnhancedTopics(session.topics);
         }
-        session.topicDistribution = buildResolvedTopicDistribution(
-          session.enhancedTopics,
-          requestedQuestionCount,
-          options?.topicDistribution
+        session.totalConcepts = session.enhancedTopics.reduce(
+          (sum, topic) => sum + Math.max(topic.subtopics.length, 1),
+          0
         );
         appendTopicSteps(session.enhancedTopics);
         syncGenerationSession(session);
@@ -1292,11 +1130,12 @@ export default function CreatePageClient({
                     subtopics: [...topic.subtopics],
                   }))
                 : buildFallbackEnhancedTopics(topics);
-              session.topicDistribution = buildResolvedTopicDistribution(
-                session.enhancedTopics,
-                requestedQuestionCount,
-                options?.topicDistribution
-              );
+              session.totalConcepts =
+                enhancedAnalysis?.metadata.totalConcepts ??
+                session.enhancedTopics.reduce(
+                  (sum, topic) => sum + Math.max(topic.subtopics.length, 1),
+                  0
+                );
               appendTopicSteps(session.enhancedTopics);
               syncGenerationSession(session);
               updateCreationStep(TOPICS_STEP_ID, 'completed', {
@@ -1360,13 +1199,9 @@ export default function CreatePageClient({
       logger.error({ error: err }, 'Error generating questions');
       const errorMessage = err instanceof Error ? err.message : 'Kysymysten luonti epäonnistui';
       setGenerationSession(null);
+      setCreationSteps([]);
       setState('form');
-      sessionStorage.setItem('creation_results', JSON.stringify({
-        createdSets: [],
-        errors: [{ mode: 'quiz', error: errorMessage }],
-        totalQuestions: 0,
-      }));
-      router.push('/create/results');
+      setError(errorMessage);
     }
   };
 
@@ -1868,25 +1703,6 @@ export default function CreatePageClient({
   };
 
 
-  const checkAdminStatus = async () => {
-    try {
-      // Make a test call to the publish endpoint to check if user is admin
-      const response = await fetch('/api/question-sets', {
-        method: 'PATCH',
-        headers: withCsrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ questionSetId: '00000000-0000-0000-0000-000000000000', status: 'published' }),
-      });
-
-      // If we get 403, user is authenticated but not admin
-      // If we get 401, user is not authenticated
-      // If we get 400 or 404, user is admin (validation or not found error)
-      setIsAdmin(response.status === 400 || response.status === 404);
-    } catch (error) {
-      logger.error({ error }, 'Error checking admin status');
-      setIsAdmin(false);
-    }
-  };
-
   const handlePublishToggle = async (questionSetId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'published' ? 'created' : 'published';
     const action = newStatus === 'published' ? 'julkaista' : 'piilottaa';
@@ -1992,7 +1808,6 @@ export default function CreatePageClient({
   };
 
   const handleExtendSet = async () => {
-    // Validation
     if (!selectedSetToExtend) {
       setError('Valitse laajennettava kysymyssarja!');
       return;
@@ -2005,61 +1820,36 @@ export default function CreatePageClient({
 
     setError('');
     setState('loading');
-    setExtendProgress({
-      currentChunk: 1,
-      totalChunks: chunkQuestionCounts(questionsToAdd).length,
-      completedQuestions: 0,
-      requestedQuestions: questionsToAdd,
-    });
 
     try {
-      const chunkSizes = chunkQuestionCounts(questionsToAdd);
       const selectedSet = allQuestionSets.find((set) => set.id === selectedSetToExtend);
-      let latestQuestionSet: GeneratedSet | null = null;
-      let totalQuestionsAdded = 0;
+      const data = await callExtendQuestionSet(questionsToAdd);
+      const totalQuestionsAdded = data.questionsAdded ?? questionsToAdd;
+      const result: GeneratedSet = {
+        id: data.questionSet.id,
+        code: data.questionSet.code,
+        name: data.questionSet.name,
+        difficulty: selectedSet?.difficulty,
+        mode: selectedSet?.mode === 'flashcard' ? 'flashcard' : 'quiz',
+        questionCount: data.questionSet.questionCount ?? data.questionSet.question_count ?? totalQuestionsAdded,
+      };
 
-      for (let index = 0; index < chunkSizes.length; index += 1) {
-        const chunkSize = chunkSizes[index];
-        setExtendProgress({
-          currentChunk: index + 1,
-          totalChunks: chunkSizes.length,
-          completedQuestions: totalQuestionsAdded,
-          requestedQuestions: questionsToAdd,
-        });
-
-        const data = await callExtendQuestionSet(chunkSize);
-        totalQuestionsAdded += data.questionsAdded ?? chunkSize;
-        latestQuestionSet = {
-          id: data.questionSet.id,
-          code: data.questionSet.code,
-          name: data.questionSet.name,
-          difficulty: selectedSet?.difficulty,
-          mode: selectedSet?.mode === 'flashcard' ? 'flashcard' : 'quiz',
-          questionCount: data.questionSet.questionCount ?? data.questionSet.question_count ?? totalQuestionsAdded,
-        };
-      }
-
-      if (!latestQuestionSet) {
-        throw new Error('Kysymysten lisääminen ei palauttanut kysymyssarjaa');
-      }
-
-      setQuestionSetsCreated([latestQuestionSet]);
+      setQuestionSetsCreated([result]);
       setTotalQuestionsCreated(totalQuestionsAdded);
+      setActiveTab('create');
       setState('success');
+      void loadQuestionSets();
     } catch (err) {
       logger.error({ error: err }, 'Error extending question set');
       const errorMessage = err instanceof Error ? err.message : 'Kysymysten lisääminen epäonnistui';
       setError(errorMessage);
       setState('form');
-    } finally {
-      setExtendProgress(null);
     }
   };
 
-  // Load question sets and check admin status when component mounts
+  // Load question sets when component mounts
   useEffect(() => {
     loadQuestionSets();
-    checkAdminStatus();
   }, []);
 
   useEffect(() => {
@@ -2067,10 +1857,6 @@ export default function CreatePageClient({
       loadFlaggedQuestions();
     }
   }, [canManageFlags]);
-
-  useEffect(() => {
-    setQuestionCount(defaultQuestionCount);
-  }, [defaultQuestionCount]);
 
   useEffect(() => {
     if (!requiresGrade) {
@@ -2112,85 +1898,6 @@ export default function CreatePageClient({
         )
       : [];
 
-  // Success screen
-  if (state === 'success') {
-    const difficultyLabels: Record<string, string> = {
-      helppo: 'Helppo',
-      normaali: 'Normaali',
-    };
-
-    const modeLabels: Record<string, string> = {
-      quiz: 'Koe',
-      flashcard: 'Kortit',
-  };
-
-  return (
-      <AuthGuard>
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 md:p-12 flex items-center justify-center transition-colors">
-        <Card className="max-w-3xl rounded-xl shadow-2xl border-slate-200 dark:border-slate-800 dark:bg-slate-900">
-          <CardHeader className="bg-gradient-to-r from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 text-white rounded-t-xl">
-            <CardTitle className="text-3xl flex items-center gap-2">
-              <CheckCircle weight="duotone" className="w-8 h-8" />
-              Kysymyssarjat luotu onnistuneesti!
-            </CardTitle>
-            <CardDescription className="text-white text-base md:text-lg font-medium">
-              Luotiin {questionSetsCreated.length} kysymyssarjaa ({totalQuestionsCreated} kysymystä yhteensä)
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="p-6 space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold mb-3 text-slate-900 dark:text-slate-100">Luodut kysymyssarjat:</h3>
-              <div className="space-y-2">
-                {questionSetsCreated.map((set, index) => (
-                  <Card
-                    key={index}
-                    variant="standard"
-                    padding="compact"
-                    className="transition-shadow duration-150 hover:shadow-md"
-                  >
-                    <CardContent>
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-semibold text-slate-900 dark:text-slate-100">
-                            {set.mode === 'flashcard'
-                              ? `${set.name} - ${modeLabels[set.mode]}`
-                              : difficultyLabels[set.difficulty] || set.difficulty}
-                          </p>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">
-                            {set.questionCount} kysymystä
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Koodi:</p>
-                          <code className="px-3 py-1 bg-slate-100 dark:bg-slate-600 rounded font-mono text-lg font-bold text-slate-900 dark:text-slate-100">
-                            {set.code}
-                          </code>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button
-                onClick={handleConfirmAndReturnToCreate}
-                mode="quiz"
-                variant="primary"
-                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-              >
-                OK, takaisin luontiin
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      </AuthGuard>
-    );
-  }
-
   // Configure tabs
   const tabsConfig: Tab<typeof activeTab>[] = [
     { value: 'create', label: 'Luo uusi' },
@@ -2206,7 +1913,20 @@ export default function CreatePageClient({
     ] : [])
   ];
 
-  // Form screen
+  const isTopicRecognitionInProgress =
+    state === 'loading' &&
+    creationSteps.some(
+      (s) => s.id === TOPICS_STEP_ID && (s.status === 'pending' || s.status === 'in_progress'),
+    );
+
+  const creationFlowStep: 1 | 2 | 3 | 4 =
+    state === 'success' ? 4 :
+    state === 'loading' && !isTopicRecognitionInProgress ? 3 :
+    topicConfirmation !== null || isTopicRecognitionInProgress ? 2 : 1;
+
+  const difficultyLabels: Record<string, string> = { helppo: 'Helppo', normaali: 'Normaali' };
+  const modeLabels: Record<string, string> = { quiz: 'Koe', flashcard: 'Kortit' };
+
   return (
     <AuthGuard>
       <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
@@ -2265,10 +1985,132 @@ export default function CreatePageClient({
         {/* Tab Content */}
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-none transition-colors dark:border-slate-800 dark:bg-slate-900 md:p-6">
           {activeTab === 'create' && (
-            <div
-              id="question-form"
-              className="space-y-5 text-slate-900 dark:text-slate-100"
-            >
+            <div className="space-y-5 text-slate-900 dark:text-slate-100">
+            <CreationFlowBar currentStep={creationFlowStep} />
+
+            {topicConfirmation ? (
+              <TopicsConfirmationStep
+                onClose={() => setTopicConfirmation(null)}
+                onConfirm={handleTopicConfirmation}
+                topicAnalysis={topicConfirmation.analysis}
+                mode={generationMode}
+                examLength={examLength}
+              />
+            ) : state === 'loading' ? (
+              <div className="space-y-4">
+                <div className="flex items-start justify-between gap-4 border-b border-slate-200/70 pb-4 dark:border-slate-800">
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      Luodaan kysymyssarjoja
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                      Tämä voi kestää muutaman minuutin. Pidä tämä välilehti auki.
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    {creationSteps.length > 0 && (
+                      <div className="text-right">
+                        <div className="text-lg font-bold tabular-nums text-indigo-600 dark:text-indigo-400">
+                          {totalConfirmedTopics > 0 ? (
+                            <>Aihe {completedTopics} / {totalConfirmedTopics}</>
+                          ) : (
+                            <>
+                              {creationSteps.filter((s) => s.status === 'completed').length}
+                              <span className="text-sm font-normal text-slate-400 dark:text-slate-500">
+                                /{creationSteps.length}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                          {totalConfirmedTopics > 0 ? 'aihealuetta valmiina' : 'vaihetta valmis'}
+                        </div>
+                      </div>
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={isCancelling}
+                      onClick={handleCancelGeneration}
+                      className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    >
+                      {isCancelling ? 'Peruutetaan…' : 'Peruuta'}
+                    </Button>
+                  </div>
+                </div>
+                <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                  AI-palvelu: {selectedProviderLabel}
+                </div>
+                {creationSteps.length > 0 ? (
+                  <GroupedProgressStepper steps={creationSteps} onRetry={handleStepRetry} />
+                ) : (
+                  <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+                    <CircleNotch weight="bold" className="h-5 w-5 animate-spin text-emerald-600" />
+                    <span>Käsitellään…</span>
+                  </div>
+                )}
+              </div>
+            ) : state === 'success' ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 dark:border-emerald-800/60 dark:bg-emerald-900/20">
+                  <CheckCircle weight="duotone" className="h-8 w-8 shrink-0 text-emerald-500 dark:text-emerald-400" />
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      Kysymyssarjat luotu!
+                    </h2>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                      Luotiin {totalQuestionsCreated} kysymystä yhteensä
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {questionSetsCreated.map((set, index) => {
+                    const eyebrow =
+                      set.mode === 'flashcard'
+                        ? modeLabels[set.mode]
+                        : `Koe • ${difficultyLabels[set.difficulty] ?? set.difficulty}`;
+                    return (
+                      <Card
+                        key={`${set.code}-${index}`}
+                        variant="standard"
+                        padding="none"
+                        className="rounded-xl border-slate-200 shadow-none dark:border-slate-800"
+                      >
+                        <CardHeader className="space-y-0.5 p-4 pb-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                            {eyebrow}
+                          </p>
+                          <CardTitle className="text-base">{set.name}</CardTitle>
+                          <CardDescription>
+                            {set.questionCount}{' '}
+                            {set.mode === 'flashcard' ? 'korttia' : 'kysymystä'}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardFooter className="items-center justify-between border-t border-slate-200 p-4 pt-3 dark:border-slate-800">
+                          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                            Koodi
+                          </span>
+                          <code className="rounded-lg bg-slate-100 px-3 py-1 font-mono text-lg font-bold text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+                            {set.code}
+                          </code>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })}
+                </div>
+                <Button
+                  onClick={handleConfirmAndReturnToCreate}
+                  mode="quiz"
+                  variant="primary"
+                  className="w-full justify-center gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Luo uusi
+                </Button>
+              </div>
+            ) : (
+              <>
             {schoolMembershipError && (
               <Alert variant="destructive">
                 <AlertDescription>{schoolMembershipError}</AlertDescription>
@@ -2456,10 +2298,10 @@ export default function CreatePageClient({
                   <div className="flex-1">
                     <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
                       <BookOpenText weight="duotone" className="w-4 h-4" />
-                      Koe (2 vaikeustasoa)
+                      Koe
                     </div>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Luo kaksi kysymyssarjaa: Helppo ja Normaali. Sopii kokeiden harjoitteluun.
+                      Luo yksi kysymyssarja kokeiden harjoitteluun.
                     </p>
                   </div>
                 </label>
@@ -2500,10 +2342,10 @@ export default function CreatePageClient({
                         <Plus className="w-3 h-3" />
                         <Cards weight="duotone" className="w-4 h-4" />
                       </span>
-                      Molemmat (2 koetta + 1 korttisarja)
+                      Koe + Kortit
                     </div>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Luo sekä koesarjat että korttisarja. Kattavin vaihtoehto monipuoliseen harjoitteluun.
+                      Luo yksi koesarja ja yksi korttisarja samalla kertaa.
                     </p>
                   </div>
                 </label>
@@ -2511,7 +2353,7 @@ export default function CreatePageClient({
             </div>
 
             {/* Content Type Selector (language flashcards) */}
-            {generationMode === 'flashcard' && subject && (() => {
+            {(generationMode === 'flashcard' || generationMode === 'both') && subject && (() => {
               const selectedSubject = getSubjectById(subject);
               const isLanguageSubject = selectedSubject?.type === 'language';
               return selectedSubject?.supportsGrammar ? (
@@ -2693,11 +2535,21 @@ export default function CreatePageClient({
               </Button>
             </div>
             </fieldset>
+              </>
+            )}
             </div>
           )}
 
           {activeTab === 'extend' && (
             <div className="space-y-6">
+              <CreationFlowBar currentStep={state === 'success' ? 4 : state === 'loading' ? 3 : 1} />
+              {state === 'loading' ? (
+                  <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+                    <CircleNotch weight="bold" className="h-5 w-5 animate-spin text-emerald-600" />
+                    <span>Käsitellään…</span>
+                  </div>
+              ) : (
+              <>
               <div>
                   <label className="block text-base font-semibold mb-3 text-slate-900 dark:text-slate-100">
                     <span className="inline-flex items-center gap-2">
@@ -2831,6 +2683,8 @@ export default function CreatePageClient({
               <p className="text-xs text-slate-600 dark:text-slate-400">
                 Uudet kysymykset luodaan palvelulla: {selectedProviderLabel}
               </p>
+              </>
+              )}
             </div>
           )}
 
@@ -3610,121 +3464,6 @@ export default function CreatePageClient({
       </div>
       </div>
 
-      {topicConfirmation && (
-        <TopicConfirmationDialog
-          isOpen={true}
-          onClose={() => setTopicConfirmation(null)}
-          onConfirm={handleTopicConfirmation}
-          topicAnalysis={topicConfirmation.analysis}
-          initialQuestionCount={topicConfirmation.requestedCount}
-        />
-      )}
-
-      {capacityWarning && (
-        <CapacityWarningDialog
-          capacity={capacityWarning.capacity}
-          validation={capacityWarning.validation}
-          requestedCount={capacityWarning.requestedCount}
-          minimumCount={minQuestionCount}
-          onProceed={() => {
-            const requested = capacityWarning.requestedCount;
-            setCapacityWarning(null);
-            void handleSubmit({
-              bypassCapacityCheck: true,
-              questionCountOverride: requested,
-            });
-          }}
-          onAdjust={(count) => {
-            const adjustedCount = Math.max(minQuestionCount, count);
-            setQuestionCount(adjustedCount);
-            setCapacityWarning(null);
-            void handleSubmit({
-              bypassCapacityCheck: true,
-              questionCountOverride: adjustedCount,
-            });
-          }}
-          onAddMaterial={() => {
-            setCapacityWarning(null);
-            setState('form');
-            focusMaterialInput();
-          }}
-          onCancel={() => {
-            setCapacityWarning(null);
-            setState('form');
-          }}
-        />
-      )}
-
-      {state === 'loading' && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-white dark:bg-slate-950">
-          <div className="mx-auto max-w-2xl px-4 py-8 md:px-8">
-            <div className="mb-6 border-b border-slate-200/70 pb-6 dark:border-slate-800">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {extendProgress ? 'Lisätään kysymyksiä' : 'Luodaan kysymyssarjoja'}
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                    {extendProgress
-                      ? 'Kysymykset lisätään peräkkäisissä erissä. Pidä tämä välilehti auki.'
-                      : 'Tämä voi kestää muutaman minuutin. Pidä tämä välilehti auki.'}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-2">
-                  {creationSteps.length > 0 && (
-                    <div className="text-right">
-                      <div className="text-lg font-bold tabular-nums text-indigo-600 dark:text-indigo-400">
-                        {creationSteps.filter((s) => s.status === 'completed').length}
-                        <span className="text-sm font-normal text-slate-400 dark:text-slate-500">
-                          /{creationSteps.length}
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">vaihetta valmis</div>
-                    </div>
-                  )}
-                  {!extendProgress && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={isCancelling}
-                      onClick={handleCancelGeneration}
-                      className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                    >
-                      {isCancelling ? 'Peruutetaan…' : 'Peruuta'}
-                    </Button>
-                  )}
-                </div>
-              </div>
-              <div className="mt-3 inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                AI-palvelu: {selectedProviderLabel}
-              </div>
-            </div>
-            {extendProgress ? (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 dark:border-emerald-800 dark:bg-emerald-950">
-                <div className="flex items-center gap-3">
-                  <CircleNotch weight="bold" className="h-5 w-5 animate-spin text-emerald-600" />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
-                      Erä {extendProgress.currentChunk}/{extendProgress.totalChunks}
-                    </div>
-                    <p className="mt-1 text-sm text-emerald-800 dark:text-emerald-200">
-                      Lisätty {extendProgress.completedQuestions}/{extendProgress.requestedQuestions} kysymystä.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : creationSteps.length > 0 ? (
-              <GroupedProgressStepper steps={creationSteps} onRetry={handleStepRetry} />
-            ) : (
-              <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-                <CircleNotch weight="bold" className="h-5 w-5 animate-spin text-emerald-600" />
-                <span>Käsitellään…</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </AuthGuard>
   );
 }

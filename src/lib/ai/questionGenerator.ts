@@ -21,7 +21,15 @@
  * are centralized under /src/config/prompt-templates/core/.
  * For template editing, see /Prompt-separation-plan.md
  */
-import { Question, Subject, Difficulty, QuestionDifficulty, SequentialItem, isSequentialItemArray, isStringArray } from '@/types';
+import {
+  Question,
+  Subject,
+  Difficulty,
+  QuestionDifficulty,
+  SequentialItem,
+  normalizeSequentialItemsInput,
+  normalizeSequentialOrderInput,
+} from '@/types';
 import * as providerRouter from './providerRouter';
 import type { AIMessageContent } from './providerTypes';
 import type { AIProvider } from './providerTypes';
@@ -43,15 +51,8 @@ import { normalizeSubtopicLabel, normalizeTopicLabel } from '@/lib/topics/normal
 const logger = createLogger({ module: 'questionGenerator' });
 const VISUAL_QUESTION_SUPPORT_ENABLED = false;
 
-const normalizeSequentialItems = (items: unknown): SequentialItem[] => {
-  if (isSequentialItemArray(items)) {
-    return items;
-  }
-  if (isStringArray(items)) {
-    return items.map((text) => ({ text }));
-  }
-  return [];
-};
+const normalizeSequentialItems = (items: unknown): SequentialItem[] =>
+  normalizeSequentialItemsInput(items);
 
 const normalizeSkillTag = (value: unknown): string | undefined => {
   if (typeof value !== 'string') {
@@ -261,6 +262,7 @@ export interface GenerateQuestionsParams {
   questionCount: number;
   grade?: number;
   topic?: string; // Topic for subject (e.g., "Grammar", "Geometry")
+  focusTopic?: string; // AIDEV-FOCUS-BATCH-CHAIN
   subtopic?: string; // Subtopic within topic
   materialText?: string;
   materialFiles?: Array<{
@@ -799,6 +801,7 @@ export async function generateQuestions(
     difficulty,
     questionCount,
     grade,
+    focusTopic, // AIDEV-FOCUS-BATCH-CHAIN
     topic,
     subtopic,
     materialText,
@@ -904,6 +907,7 @@ export async function generateQuestions(
       difficulty,
       questionCount,
       grade,
+      focusTopic, // AIDEV-FOCUS-BATCH-CHAIN
       materialText,
       materialFiles,
       mode,
@@ -1005,11 +1009,11 @@ export async function generateQuestions(
     aiRetryCount += 1;
     logger.warn(
       { model: selectedModel.model, contentLength: cleanContent.length },
-      'OpenAI returned empty/near-empty quiz payload - retrying once with gpt-5.2'
+      'OpenAI returned empty/near-empty quiz payload - retrying once with gpt-5.3-chat-latest'
     );
     response = await generateWithAI(messageContent, {
       provider: 'openai',
-      model: 'gpt-5.2',
+      model: 'gpt-5.3-chat-latest',
       maxTokens: 32000,
     });
     cleanContent = response.content.replace(/```json|```/g, '').trim();
@@ -1692,12 +1696,12 @@ export async function generateQuestions(
         };
 
       case 'sequential':
-        // Note: Validation ensures items and correct_order exist
+        // Keep sequential payload resilient across provider formatting drift.
         return {
           ...base,
           question_type: 'sequential' as const,
           items: normalizeSequentialItems(q.items),
-          correct_order: q.correct_order || [],
+          correct_order: normalizeSequentialOrderInput(q.correct_order),
         };
 
       default:

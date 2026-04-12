@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SequentialQuestion as SequentialQuestionType } from '@/types';
 import { MathText } from '@/components/ui/math-text';
 import { TimelineView } from '@/components/questions/TimelineView';
@@ -24,29 +24,57 @@ export function SequentialQuestion({
   const [currentOrder, setCurrentOrder] = useState<number[]>([]);
   const normalizedItems = useMemo(() => normalizeSequentialItems(question.items), [question.items]);
   const displayMode = useMemo(() => getSequentialDisplayMode(normalizedItems), [normalizedItems]);
+  const onAnswerChangeRef = useRef(onAnswerChange);
+  const initializedQuestionIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    onAnswerChangeRef.current = onAnswerChange;
+  }, [onAnswerChange]);
 
   const handleOrderChange = useCallback(
     (newOrder: number[]) => {
       setCurrentOrder(newOrder);
-      onAnswerChange(newOrder);
+      onAnswerChangeRef.current(newOrder);
     },
-    [onAnswerChange]
+    []
   );
 
-  // Initialize: shuffle items on mount or use userAnswer if it exists
+  const itemCount = normalizedItems.length;
+
+  // Initialize only when the question or provided answer actually changes.
   useEffect(() => {
-    if (userAnswer && userAnswer.length > 0) {
+    if (itemCount === 0) {
+      return;
+    }
+
+    const hasUserAnswer = Array.isArray(userAnswer) && userAnswer.length > 0;
+
+    if (hasUserAnswer) {
       setCurrentOrder(userAnswer);
+      initializedQuestionIdRef.current = question.id;
     } else {
+      if (initializedQuestionIdRef.current === question.id) {
+        return;
+      }
+
       // Fisher-Yates shuffle
       const indices = normalizedItems.map((_, i) => i);
       for (let i = indices.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [indices[i], indices[j]] = [indices[j], indices[i]];
       }
-      handleOrderChange(indices); // Set initial answer
+
+      // In explanation mode, keep the local preview state in sync without
+      // pushing a fresh answer back to the parent on every mount/reset.
+      initializedQuestionIdRef.current = question.id;
+      if (showExplanation) {
+        setCurrentOrder(indices);
+      } else {
+        setCurrentOrder(indices);
+        onAnswerChangeRef.current(indices);
+      }
     }
-  }, [handleOrderChange, normalizedItems, userAnswer]);
+  }, [itemCount, question.id, normalizedItems, showExplanation, userAnswer]);
 
   // Move item up
   const moveUp = (index: number) => {

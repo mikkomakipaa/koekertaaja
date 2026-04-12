@@ -1,0 +1,19 @@
+# Version: 1.0.0
+# Last Updated: 2026-04-12
+# Author: System
+# Changes: Extracted from topic-tagging.txt — whole-set multi-topic balancing contract
+# Breaking: false
+
+KÄYTÄ NÄITÄ TUNNISTETTUJA AIHEITA ({{topic_count}} kpl):
+{{topics_list}}
+
+SÄÄNNÖT:
+- Jokaisessa kysymyksessä/kortissa on topic.
+- Topic-arvo on yksi yllä olevista nimistä täsmälleen samalla kirjoitusasulla.
+- Älä keksi uusia topic-arvoja.
+- subtopic on vapaaehtoinen tarkenne.
+
+JAKAUTUMINEN:
+- Tavoite: noin {{questions_per_topic}} kysymystä per topic.
+- Jaa {{question_count}} kysymystä mahdollisimman tasaisesti.
+- Sallittu vaihtelu: enintään noin 2-3 kysymystä per topic laatu edellä.

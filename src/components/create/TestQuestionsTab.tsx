@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { QuestionSet, Question, QuestionType } from '@/types';
-import { QuestionRenderer } from '@/components/questions/QuestionRenderer';
 import { VisualQuestionPreview } from '@/components/questions/VisualQuestionPreview';
 import { Button } from '@/components/ui/button';
 import { MathText } from '@/components/ui/math-text';
@@ -60,8 +59,6 @@ export function TestQuestionsTab({
   const [filterQuestionType, setFilterQuestionType] = useState<QuestionType | 'all'>('all');
   const [testingQuestion, setTestingQuestion] = useState<Question | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-  const [userAnswer, setUserAnswer] = useState<any>(null);
-  const [showExplanation, setShowExplanation] = useState(false);
   const [editQuestionText, setEditQuestionText] = useState('');
   const [editCorrectAnswer, setEditCorrectAnswer] = useState('');
   const [editOptions, setEditOptions] = useState('');
@@ -126,15 +123,43 @@ export function TestQuestionsTab({
   // Open modal with question
   const handleTestQuestion = (question: Question) => {
     setTestingQuestion(question);
-    setUserAnswer(null);
-    setShowExplanation(true);
   };
 
   // Close modal and reset state
   const handleCloseModal = () => {
     setTestingQuestion(null);
-    setUserAnswer(null);
-    setShowExplanation(true);
+  };
+
+  const getCorrectAnswerSummary = (question: Question): string[] => {
+    switch (question.question_type) {
+      case 'multiple_choice':
+      case 'fill_blank':
+      case 'short_answer':
+      case 'flashcard':
+        return [question.correct_answer];
+      case 'multiple_select':
+        return question.correct_answers;
+      case 'true_false':
+        return [question.correct_answer ? 'Tosi' : 'Epätosi'];
+      case 'matching':
+        return question.pairs.map((pair) => `${pair.left} -> ${pair.right}`);
+      case 'sequential': {
+        const items = question.items.map((item) => (typeof item === 'string' ? item : item.text));
+        return question.correct_order.map((itemIndex, index) => `${index + 1}. ${items[itemIndex] ?? ''}`);
+      }
+      default:
+        return [];
+    }
+  };
+
+  const getAlternativeAnswerSummary = (question: Question): string[] => {
+    switch (question.question_type) {
+      case 'fill_blank':
+      case 'short_answer':
+        return question.acceptable_answers ?? [];
+      default:
+        return [];
+    }
   };
 
   const formatListForEdit = (value: unknown): string => {
@@ -586,7 +611,6 @@ export function TestQuestionsTab({
                     </div>
                   </div>
 
-                  {/* Question Renderer */}
                   {(testingQuestion.requires_visual || testingQuestion.image_reference) && (
                     <VisualQuestionPreview
                       imageUrl={testingQuestion.image_url}
@@ -594,27 +618,46 @@ export function TestQuestionsTab({
                       className="mb-4"
                     />
                   )}
-                  <QuestionRenderer
-                    question={testingQuestion}
-                    userAnswer={userAnswer}
-                    showExplanation={showExplanation}
-                    onAnswerChange={setUserAnswer}
-                  />
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-950/30">
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
+                          Oikea vastaus
+                        </h3>
+                        <div className="mt-2 space-y-2 text-sm text-emerald-950 dark:text-emerald-50">
+                          {getCorrectAnswerSummary(testingQuestion).map((answer, index) => (
+                            <div key={`${testingQuestion.id}-correct-${index}`} className="rounded-lg bg-white/70 px-3 py-2 dark:bg-emerald-900/20">
+                              <MathText>{answer}</MathText>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {getAlternativeAnswerSummary(testingQuestion).length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                            Hyväksyttävät vaihtoehdot
+                          </h4>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {getAlternativeAnswerSummary(testingQuestion).map((answer, index) => (
+                              <span
+                                key={`${testingQuestion.id}-alternative-${index}`}
+                                className="rounded-full border border-emerald-300 bg-white/80 px-3 py-1 text-xs font-medium text-emerald-900 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-100"
+                              >
+                                <MathText>{answer}</MathText>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Footer Actions */}
-            <div className="flex items-center justify-between gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-              <Button
-                onClick={() => {
-                  setUserAnswer(null);
-                  setShowExplanation(true);
-                }}
-                variant="outline"
-              >
-                Tyhjennä vastaus
-              </Button>
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
               <div className="flex gap-3">
                 <Button onClick={handleCloseModal}>Sulje</Button>
               </div>

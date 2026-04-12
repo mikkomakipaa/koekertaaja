@@ -63,6 +63,7 @@ export interface GenerationRequest {
   examDate?: string;
   questionSetName: string;
   topic?: string;
+  focusTopic?: string; // AIDEV-FOCUS-BATCH-CHAIN
   subtopic?: string;
   materialText?: string;
   materialFiles?: MaterialFile[];
@@ -568,6 +569,7 @@ export async function generateQuizSets(
       questionCount: effectiveQuizCount,
       grade: request.grade,
       topic: request.topic,
+      focusTopic: request.focusTopic, // AIDEV-FOCUS-BATCH-CHAIN
       subtopic: request.subtopic,
       materialText: request.materialText,
       materialFiles: request.materialFiles,
@@ -877,6 +879,7 @@ export async function generateFlashcardSet(
     questionCount: effectiveFlashcardCount,
     grade: request.grade,
     topic: request.topic,
+    focusTopic: request.focusTopic, // AIDEV-FOCUS-BATCH-CHAIN
     subtopic: request.subtopic,
     materialText: request.materialText,
     materialFiles: request.materialFiles,
