@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { getRecentQuestionSets } from '@/lib/supabase/queries';
 import { getGradeColors } from '@/lib/utils/grade-colors';
 import { getSubjectConfig } from '@/lib/utils/subject-config';
-import { buildModeGradeQuery, parseGradeParam, parseStudyModeParam } from '@/lib/play/mode-grade-query';
+import { buildModeGradeQuery, parseGradeParam } from '@/lib/play/mode-grade-query';
 import {
   difficultyLabels,
   getQuizGradeMeta,
@@ -26,10 +26,9 @@ import {
   buildQuizTopicSelectorHref,
   getAvailableDifficulties,
   getDifficultyTargetSet,
-  type BrowseDifficulty,
 } from '@/lib/play/browse-difficulties';
 import { getLatestDifficultyScore, getPrimaryDifficulty, type DifficultyScoreMap } from '@/lib/play/primary-mode';
-import { QuestionSet, Difficulty, StudyMode } from '@/types';
+import { QuestionSet, Difficulty } from '@/types';
 import { readMistakesFromStorage } from '@/hooks/useReviewMistakes';
 import { useLastScore } from '@/hooks/useLastScore';
 import { useSessionProgress } from '@/hooks/useSessionProgress';
@@ -39,7 +38,9 @@ import { useScrollDetection } from '@/hooks/useScrollDetection';
 import { createLogger } from '@/lib/logger';
 import { buildGroupedQuestionSets, type GroupedQuestionSets } from '@/lib/play/group-question-sets';
 import { SchoolSwitcher } from '@/components/play/SchoolSwitcher';
+import { colors } from '@/lib/design-tokens';
 import {
+  Book,
   Books,
   Circle,
   CircleNotch,
@@ -47,13 +48,11 @@ import {
   Timer,
   Sparkle,
   Rows,
-  Book,
   ArrowCounterClockwise,
   MagnifyingGlass,
 } from '@phosphor-icons/react';
 
 interface PlayBrowsePageClientProps {
-  initialModeParam?: string | null;
   initialGradeParam?: string | null;
 }
 
@@ -114,10 +113,6 @@ const getSubjectHeaderMeta = (subject: string, formattedDate: string | null) => 
   );
 };
 
-const hasFlashcards = (sets: QuestionSet[]) => {
-  return sets.some((set) => set.mode === 'flashcard');
-};
-
 // Grade colors now imported from centralized design tokens
 
 const formatQuestionSetDate = (examDate?: string | null): string | null => {
@@ -140,13 +135,13 @@ const formatQuestionSetDate = (examDate?: string | null): string | null => {
 
 interface QuestionSetCardProps {
   group: GroupedQuestionSets;
-  studyMode: StudyMode;
   router: ReturnType<typeof useRouter>;
 }
 
-function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
+function QuestionSetCard({ group, router }: QuestionSetCardProps) {
   const availableDifficulties = getAvailableDifficulties(group.sets);
-  const groupHasFlashcards = hasFlashcards(group.sets);
+  const flashcardSet = group.sets.find((set) => set.mode === 'flashcard');
+  const groupHasFlashcards = Boolean(flashcardSet);
 
   const helppoSet = group.sets.find((set) => set.mode === 'quiz' && set.difficulty === 'helppo');
   const normaaliSet = group.sets.find((set) => set.mode === 'quiz' && set.difficulty === 'normaali');
@@ -179,6 +174,7 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
   });
   const latestDifficultyScore = getLatestDifficultyScore(availableDifficulties, difficultyScores);
   const topicTargetSet = normaaliSet ?? helppoSet ?? primarySet;
+  const aikahaasteTargetSet = getDifficultyTargetSet(group.sets, 'aikahaaste');
 
   const difficultyOrder: Difficulty[] = ['helppo', 'normaali'];
   const reviewCandidates = difficultyOrder
@@ -200,24 +196,19 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
   const formattedDate = formatQuestionSetDate(newestExamDate);
   const gradeColors = group.grade ? getGradeColors(group.grade) : null;
   const titleLabel = getSubjectConfig(group.subject).label;
-  const primaryActionLabel =
-    studyMode === 'pelaa'
-      ? hasInProgressPrimary
-        ? 'Jatka peliä'
-        : primaryScore
-          ? 'Pelaa uudelleen'
-          : 'Pelaa nyt'
-      : '';
+  const primaryActionLabel = hasInProgressPrimary
+    ? 'Jatka peliä'
+    : primaryScore
+      ? 'Pelaa uudelleen'
+      : 'Pelaa nyt';
   const primaryActionMeta =
-    studyMode === 'pelaa'
-      ? hasInProgressPrimary && primaryProgress
-        ? `${difficultyLabels[primaryDifficulty]} · ${primaryProgress.answered}/${primaryProgress.total}`
-        : primaryScore
-          ? `${difficultyLabels[primaryDifficulty]} · ${getQuizGradeMeta(primaryScore)}`
-          : difficultyLabels[primaryDifficulty]
-      : null;
-  const canChooseTopic = studyMode === 'pelaa' && Boolean(topicTargetSet);
-  const hasAikahaaste = studyMode === 'pelaa' && availableDifficulties.includes('aikahaaste') && Boolean(normaaliSet);
+    hasInProgressPrimary && primaryProgress
+      ? `${difficultyLabels[primaryDifficulty]} · ${primaryProgress.answered}/${primaryProgress.total}`
+      : primaryScore
+        ? `${difficultyLabels[primaryDifficulty]} · ${getQuizGradeMeta(primaryScore)}`
+        : difficultyLabels[primaryDifficulty];
+  const canChooseTopic = Boolean(topicTargetSet);
+  const hasAikahaaste = availableDifficulties.includes('aikahaaste');
 
   return (
     <Card
@@ -254,130 +245,138 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
 
       <CardContent className="space-y-3 border-t border-slate-100 p-4 pt-3 dark:border-white/[0.08]">
         <div className="space-y-3">
-          {studyMode === 'pelaa' ? (
-            availableDifficulties.length > 0 ? (
-              <div className="space-y-2.5">
-                <PrimaryActionButton
-                  onClick={() =>
-                    primarySet && router.push(buildDifficultyHref(primarySet.code, studyMode, primaryDifficulty))
-                  }
-                  mode="quiz"
-                  icon={difficultyIcons[primaryDifficulty]}
-                  label={primaryActionLabel}
-                  ariaLabel={`${primaryActionText} vaikeustaso`}
-                  rightMeta={
-                    primaryActionMeta ? (
-                      <span className="text-xs font-medium tabular-nums text-white/85 max-[480px]:text-xs">
-                        {primaryActionMeta}
+          {availableDifficulties.length > 0 || groupHasFlashcards ? (
+            <div className="space-y-2.5">
+              {availableDifficulties.length > 0 ? (
+                <>
+                  <PrimaryActionButton
+                    onClick={() =>
+                      primarySet && router.push(buildDifficultyHref(primarySet.code, 'pelaa', primaryDifficulty))
+                    }
+                    mode="quiz"
+                    icon={difficultyIcons[primaryDifficulty]}
+                    label={primaryActionLabel}
+                    ariaLabel={`${primaryActionText} vaikeustaso`}
+                    rightMeta={
+                      primaryActionMeta ? (
+                        <span className="text-xs font-medium tabular-nums text-white/85 max-[480px]:text-xs">
+                          {primaryActionMeta}
+                        </span>
+                      ) : null
+                    }
+                  />
+
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {helppoSet ? (
+                      <Button
+                        onClick={() => router.push(buildDifficultyHref(helppoSet.code, 'pelaa', 'helppo'))}
+                        variant="secondary"
+                        size="default"
+                        className={cn(
+                          'min-h-11 justify-center rounded-lg border px-3 text-sm font-semibold shadow-none',
+                          difficultyColors.helppo.bg,
+                          difficultyColors.helppo.hover,
+                          difficultyColors.helppo.text,
+                          difficultyColors.helppo.border
+                        )}
+                        aria-label="Helppo"
+                      >
+                        <span className={cn('mr-2 shrink-0', difficultyColors.helppo.icon)}>
+                          {difficultyIcons.helppo}
+                        </span>
+                        Helppo
+                      </Button>
+                    ) : null}
+
+                    {canChooseTopic ? (
+                      <Button
+                        onClick={() => topicTargetSet && router.push(buildQuizTopicSelectorHref(topicTargetSet.code))}
+                        variant="secondary"
+                        size="default"
+                        className="min-h-11 justify-center rounded-lg border border-sky-200 bg-sky-50 px-3 text-sm font-semibold text-sky-800 shadow-none hover:bg-sky-100 dark:border-sky-700/60 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-sky-950/35"
+                        aria-label="Aihe"
+                      >
+                        <Rows size={18} weight="duotone" className="mr-2 shrink-0 text-sky-600 dark:text-sky-300" />
+                        Aihe
+                      </Button>
+                    ) : null}
+
+                    {hasAikahaaste ? (
+                      <Button
+                        onClick={() =>
+                          aikahaasteTargetSet &&
+                          router.push(buildDifficultyHref(aikahaasteTargetSet.code, 'pelaa', 'aikahaaste'))
+                        }
+                        variant="secondary"
+                        size="default"
+                        className={cn(
+                          'min-h-11 justify-center rounded-lg border px-3 text-sm font-semibold shadow-none',
+                          difficultyColors.aikahaaste.bg,
+                          difficultyColors.aikahaaste.hover,
+                          difficultyColors.aikahaaste.text,
+                          difficultyColors.aikahaaste.border
+                        )}
+                        aria-label="Aikahaaste"
+                      >
+                        <span className={cn('mr-2 shrink-0', difficultyColors.aikahaaste.icon)}>
+                          {difficultyIcons.aikahaaste}
+                        </span>
+                        Aikahaaste
+                      </Button>
+                    ) : null}
+
+                    {groupHasFlashcards ? (
+                      <Button
+                        onClick={() => flashcardSet && router.push(`/play/${flashcardSet.code}?mode=opettele`)}
+                        variant="secondary"
+                        size="default"
+                        className={cn(
+                          'min-h-11 justify-center rounded-lg border px-3 text-sm font-semibold shadow-none',
+                          colors.study.light,
+                          colors.study.text,
+                          'border-teal-200 hover:bg-teal-100 dark:border-teal-700/70 dark:hover:bg-teal-900/35'
+                        )}
+                        aria-label="Opettele"
+                      >
+                        <Book size={18} weight="duotone" className="mr-2 shrink-0 text-teal-600 dark:text-teal-300" />
+                        Opettele
+                      </Button>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-3 flex min-h-8 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-slate-100 pt-3 dark:border-white/[0.08]">
+                    {reviewCandidate ? (
+                      <Button
+                        onClick={() => router.push(`/play/${reviewCandidate.set.code}?mode=review`)}
+                        mode="review"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 min-h-0 gap-1 rounded-full border border-rose-200/80 bg-rose-50/70 px-2.5 py-0 text-xs font-medium leading-none text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-900/30"
+                        aria-label="Virheet"
+                      >
+                        <ArrowCounterClockwise size={14} weight="duotone" className="inline" />
+                        Kertaa virheet ({reviewCandidate.count})
+                      </Button>
+                    ) : (
+                      <span
+                        className="pointer-events-none inline-flex h-7 items-center rounded-full border border-transparent bg-slate-100/70 px-2.5 text-xs font-medium leading-none text-slate-500 opacity-70 dark:bg-slate-800/70 dark:text-slate-400"
+                        aria-disabled="true"
+                      >
+                        Ei virheitä tallessa
                       </span>
-                    ) : null
-                  }
-                />
+                    )}
 
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {helppoSet ? (
-                    <Button
-                      onClick={() => router.push(buildDifficultyHref(helppoSet.code, studyMode, 'helppo'))}
-                      variant="secondary"
-                      size="default"
-                      className={cn(
-                        'min-h-11 justify-center rounded-lg border px-3 text-sm font-semibold shadow-none',
-                        difficultyColors.helppo.bg,
-                        difficultyColors.helppo.hover,
-                        difficultyColors.helppo.text,
-                        difficultyColors.helppo.border
-                      )}
-                      aria-label="Helppo"
-                    >
-                      <span className={cn('mr-2 shrink-0', difficultyColors.helppo.icon)}>{difficultyIcons.helppo}</span>
-                      Helppo
-                    </Button>
-                  ) : null}
-
-                  {canChooseTopic ? (
-                    <Button
-                      onClick={() => topicTargetSet && router.push(buildQuizTopicSelectorHref(topicTargetSet.code))}
-                      variant="secondary"
-                      size="default"
-                      className="min-h-11 justify-center rounded-lg border border-sky-200 bg-sky-50 px-3 text-sm font-semibold text-sky-800 shadow-none hover:bg-sky-100 dark:border-sky-700/60 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-sky-950/35"
-                      aria-label="Aihe"
-                    >
-                      <Rows size={18} weight="duotone" className="mr-2 shrink-0 text-sky-600 dark:text-sky-300" />
-                      Aihe
-                    </Button>
-                  ) : null}
-
-                  {hasAikahaaste ? (
-                    <Button
-                      onClick={() => normaaliSet && router.push(buildDifficultyHref(normaaliSet.code, studyMode, 'aikahaaste'))}
-                      variant="secondary"
-                      size="default"
-                      className={cn(
-                        'min-h-11 justify-center rounded-lg border px-3 text-sm font-semibold shadow-none',
-                        difficultyColors.aikahaaste.bg,
-                        difficultyColors.aikahaaste.hover,
-                        difficultyColors.aikahaaste.text,
-                        difficultyColors.aikahaaste.border
-                      )}
-                      aria-label="Aikahaaste"
-                    >
-                      <span className={cn('mr-2 shrink-0', difficultyColors.aikahaaste.icon)}>
-                        {difficultyIcons.aikahaaste}
-                      </span>
-                      Aikahaaste
-                    </Button>
-                  ) : null}
-                </div>
-
-                <div className="mt-3 flex min-h-8 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-slate-100 pt-3 dark:border-white/[0.08]">
-                  {reviewCandidate ? (
-                    <Button
-                      onClick={() => router.push(`/play/${reviewCandidate.set.code}?mode=review`)}
-                      mode="review"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 min-h-0 gap-1 rounded-full border border-rose-200/80 bg-rose-50/70 px-2.5 py-0 text-xs font-medium leading-none text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-900/30"
-                      aria-label="Virheet"
-                    >
-                      <ArrowCounterClockwise size={14} weight="duotone" className="inline" />
-                      Kertaa virheet ({reviewCandidate.count})
-                    </Button>
-                  ) : (
-                    <span
-                      className="pointer-events-none inline-flex h-7 items-center rounded-full border border-transparent bg-slate-100/70 px-2.5 text-xs font-medium leading-none text-slate-500 opacity-70 dark:bg-slate-800/70 dark:text-slate-400"
-                      aria-disabled="true"
-                    >
-                      Ei virheitä tallessa
+                    <span className="inline-flex items-center truncate text-right text-xs leading-none text-slate-500 dark:text-slate-400">
+                      {latestDifficultyScore
+                        ? getQuizLatestResultSummary(latestDifficultyScore)
+                        : 'Ei tuloksia'}
                     </span>
-                  )}
-
-                  <span className="inline-flex items-center truncate text-right text-xs leading-none text-slate-500 dark:text-slate-400">
-                    {latestDifficultyScore
-                      ? getQuizLatestResultSummary(latestDifficultyScore)
-                      : 'Ei tuloksia'}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400">Ei pelimuotoa saatavilla</p>
-            )
+                  </div>
+                </>
+              ) : null}
+            </div>
           ) : (
-            groupHasFlashcards ? (
-              <PrimaryActionButton
-                onClick={() => {
-                  const flashcardSet = group.sets.find((s) => s.mode === 'flashcard');
-                  if (flashcardSet) {
-                    router.push(`/play/${flashcardSet.code}?mode=opettele`);
-                  }
-                }}
-                mode="study"
-                icon={<Book size={20} weight="duotone" />}
-                label="Opettele"
-                ariaLabel="Opettele korttien avulla"
-              />
-            ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400">Ei kortteja saatavilla</p>
-            )
+            <p className="text-sm text-gray-500 dark:text-gray-400">Ei sisältöä saatavilla</p>
           )}
         </div>
       </CardContent>
@@ -385,16 +384,14 @@ function QuestionSetCard({ group, studyMode, router }: QuestionSetCardProps) {
   );
 }
 
-function PlayBrowsePageSkeleton({ initialModeParam, initialGradeParam }: PlayBrowsePageClientProps) {
+function PlayBrowsePageSkeleton({ initialGradeParam }: PlayBrowsePageClientProps) {
   const router = useRouter();
   const scrolled = useScrollDetection();
-  const initialStudyMode = parseStudyModeParam(initialModeParam ?? null);
   const initialGrade = parseGradeParam(initialGradeParam ?? null);
 
   return (
     <PlayBrowsePageShell
       scrolled={scrolled}
-      studyMode={initialStudyMode}
       selectedGrade={initialGrade}
       availableGrades={[]}
       searchQuery=""
@@ -411,7 +408,6 @@ function PlayBrowsePageSkeleton({ initialModeParam, initialGradeParam }: PlayBro
       onClearRecentSearches={() => {}}
       onBack={() => router.push('/')}
       onSearchClose={() => {}}
-      onStudyModeChange={() => {}}
       onSelectedGradeChange={() => {}}
     >
       <PlayBrowseContentLoading />
@@ -423,8 +419,6 @@ interface PlayBrowsePageShellProps {
   children: ReactNode;
   headerActionBeforeSearch?: ReactNode;
   scrolled: boolean;
-  studyMode: StudyMode;
-  onStudyModeChange: (mode: StudyMode) => void;
   selectedGrade: number | null;
   onSelectedGradeChange: (grade: number | null) => void;
   availableGrades: number[];
@@ -448,8 +442,6 @@ function PlayBrowsePageShell({
   children,
   headerActionBeforeSearch,
   scrolled,
-  studyMode,
-  onStudyModeChange,
   selectedGrade,
   onSelectedGradeChange,
   availableGrades,
@@ -471,8 +463,6 @@ function PlayBrowsePageShell({
   return (
     <div className="min-h-screen bg-white transition-colors dark:bg-gray-900">
       <ModeClassBar
-        studyMode={studyMode}
-        onStudyModeChange={onStudyModeChange}
         selectedGrade={selectedGrade}
         onSelectedGradeChange={onSelectedGradeChange}
         availableGrades={availableGrades}
@@ -538,7 +528,7 @@ function PlayBrowseContentLoading() {
   );
 }
 
-function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrowsePageClientProps) {
+function PlayBrowsePageContent({ initialGradeParam }: PlayBrowsePageClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -547,7 +537,6 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
   const [state, setState] = useState<BrowseState>('loading');
   const [groupedSets, setGroupedSets] = useState<GroupedQuestionSets[]>([]);
   const [error, setError] = useState('');
-  const [studyMode, setStudyMode] = useState<StudyMode>(() => parseStudyModeParam(initialModeParam ?? null));
   const [selectedGrade, setSelectedGrade] = useState<number | null>(() => parseGradeParam(initialGradeParam ?? null));
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -651,22 +640,19 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
   }, [groupedSets]);
 
   useEffect(() => {
-    const nextMode = parseStudyModeParam(searchParams.get('mode'));
     const nextGrade = parseGradeParam(searchParams.get('grade'));
-
-    setStudyMode((previous) => (previous === nextMode ? previous : nextMode));
     setSelectedGrade((previous) => (previous === nextGrade ? previous : nextGrade));
   }, [searchParams]);
 
   useEffect(() => {
-    const nextQuery = buildModeGradeQuery(searchParams, studyMode, selectedGrade);
+    const nextQuery = buildModeGradeQuery(searchParams, selectedGrade);
     const currentQuery = searchParams.toString();
 
     if (nextQuery !== currentQuery) {
       const href = nextQuery ? `${pathname}?${nextQuery}` : pathname;
       router.replace(href, { scroll: false });
     }
-  }, [pathname, router, searchParams, selectedGrade, studyMode]);
+  }, [pathname, router, searchParams, selectedGrade]);
 
   useEffect(() => {
     if (selectedGrade === null) return;
@@ -742,8 +728,6 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
   const filteredSets = useMemo(() => {
     return groupedSets.filter((group) => {
       if (selectedGrade && group.grade !== selectedGrade) return false;
-      if (studyMode === 'opettele' && !hasFlashcards(group.sets)) return false;
-      if (studyMode === 'pelaa' && getAvailableDifficulties(group.sets).length === 0) return false;
 
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -763,7 +747,7 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
 
       return true;
     });
-  }, [groupedSets, searchQuery, selectedGrade, studyMode]);
+  }, [groupedSets, searchQuery, selectedGrade]);
 
   return (
     <PlayBrowsePageShell
@@ -778,8 +762,6 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
         ) : null
       }
       scrolled={scrolled}
-      studyMode={studyMode}
-      onStudyModeChange={setStudyMode}
       selectedGrade={selectedGrade}
       onSelectedGradeChange={setSelectedGrade}
       availableGrades={availableGrades}
@@ -882,7 +864,7 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
               {filteredSets.length > 0 && (
                 <div className="space-y-3.5">
                   {filteredSets.map((group) => (
-                    <QuestionSetCard key={group.key} group={group} studyMode={studyMode} router={router} />
+                    <QuestionSetCard key={group.key} group={group} router={router} />
                   ))}
                 </div>
               )}
@@ -894,18 +876,16 @@ function PlayBrowsePageContent({ initialModeParam, initialGradeParam }: PlayBrow
   );
 }
 
-export default function PlayBrowsePageClient({ initialModeParam, initialGradeParam }: PlayBrowsePageClientProps) {
+export default function PlayBrowsePageClient({ initialGradeParam }: PlayBrowsePageClientProps) {
   return (
     <Suspense
       fallback={
         <PlayBrowsePageSkeleton
-          initialModeParam={initialModeParam}
           initialGradeParam={initialGradeParam}
         />
       }
     >
       <PlayBrowsePageContent
-        initialModeParam={initialModeParam}
         initialGradeParam={initialGradeParam}
       />
     </Suspense>

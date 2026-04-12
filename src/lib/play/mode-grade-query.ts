@@ -1,13 +1,3 @@
-import { type StudyMode } from '@/types';
-
-export function parseStudyModeParam(value: string | null | undefined): StudyMode {
-  if (value === 'opettele') {
-    return value;
-  }
-
-  return 'pelaa';
-}
-
 export function parseGradeParam(value: string | null | undefined): number | null {
   if (!value) return null;
 
@@ -21,12 +11,10 @@ export function parseGradeParam(value: string | null | undefined): number | null
 
 export function buildModeGradeQuery(
   base: URLSearchParams | string,
-  studyMode: StudyMode,
   selectedGrade: number | null
 ): string {
   const params = new URLSearchParams(typeof base === 'string' ? base : base.toString());
-
-  params.set('mode', studyMode);
+  params.delete('mode');
 
   if (selectedGrade === null) {
     params.delete('grade');

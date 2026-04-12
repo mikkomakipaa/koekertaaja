@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Book, GameController, GraduationCap, MagnifyingGlass, Trophy, X } from '@phosphor-icons/react';
+import { ArrowLeft, GraduationCap, MagnifyingGlass, Trophy, X } from '@phosphor-icons/react';
 import { CollapsibleSearch } from '@/components/ui/collapsible-search';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
@@ -11,12 +11,8 @@ import { SegmentedControl, SegmentedControlItem } from '@/components/ui/segmente
 import { SearchSuggestions } from '@/components/ui/search-suggestions';
 import { cn } from '@/lib/utils';
 import { getGradeColors } from '@/lib/utils/grade-colors';
-import { colors } from '@/lib/design-tokens';
-import { type StudyMode } from '@/types';
 
 interface ModeClassBarProps {
-  studyMode: StudyMode;
-  onStudyModeChange: (mode: StudyMode) => void;
   selectedGrade: number | null;
   onSelectedGradeChange: (grade: number | null) => void;
   availableGrades: number[];
@@ -39,24 +35,7 @@ interface ModeClassBarProps {
   className?: string;
 }
 
-const MODE_OPTIONS: Array<{ value: StudyMode; label: string; icon: typeof GameController }> = [
-  { value: 'pelaa', label: 'Pelaa', icon: GameController },
-  { value: 'opettele', label: 'Opettele', icon: Book },
-];
-
-const getActiveModeClass = (mode: StudyMode): string => {
-  if (mode === 'pelaa') return `${colors.quiz.primary} ${colors.quiz.ring} ring-2 font-semibold text-white`;
-  return `${colors.study.primary} ${colors.study.ring} ring-2 font-semibold text-white`;
-};
-
-const getModeFocusRingClass = (mode: StudyMode): string => {
-  if (mode === 'pelaa') return 'focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400';
-  return 'focus-visible:ring-teal-500 dark:focus-visible:ring-teal-400';
-};
-
 export function ModeClassBar({
-  studyMode,
-  onStudyModeChange,
   selectedGrade,
   onSelectedGradeChange,
   availableGrades,
@@ -78,32 +57,6 @@ export function ModeClassBar({
   headerActionBeforeSearch,
   className,
 }: ModeClassBarProps) {
-  const modeRefs = useRef<Array<HTMLButtonElement | null>>([]);
-
-  const handleModeKeyDown = (index: number, event: KeyboardEvent<HTMLButtonElement>) => {
-    const key = event.key;
-    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(key)) return;
-
-    event.preventDefault();
-    let nextIndex = index;
-
-    if (key === 'ArrowRight') {
-      nextIndex = (index + 1) % MODE_OPTIONS.length;
-    } else if (key === 'ArrowLeft') {
-      nextIndex = (index - 1 + MODE_OPTIONS.length) % MODE_OPTIONS.length;
-    } else if (key === 'Home') {
-      nextIndex = 0;
-    } else if (key === 'End') {
-      nextIndex = MODE_OPTIONS.length - 1;
-    }
-
-    const nextMode = MODE_OPTIONS[nextIndex];
-    if (!nextMode) return;
-
-    onStudyModeChange(nextMode.value);
-    modeRefs.current[nextIndex]?.focus();
-  };
-
   return (
     <div
       className={cn(
@@ -185,39 +138,6 @@ export function ModeClassBar({
               aria-label="Suodattimet"
               className="flex h-11 w-full"
             >
-            {MODE_OPTIONS.map((mode, index) => {
-              const isActive = studyMode === mode.value;
-              const Icon = mode.icon;
-
-              return (
-                <SegmentedControlItem
-                  key={`mobile-${mode.value}`}
-                  ref={(element) => {
-                    modeRefs.current[index] = element;
-                  }}
-                  type="button"
-                  role="radio"
-                  aria-checked={isActive}
-                  aria-label={mode.label}
-                  tabIndex={isActive ? 0 : -1}
-                  onClick={() => onStudyModeChange(mode.value)}
-                  onKeyDown={(event) => handleModeKeyDown(index, event)}
-                  active={isActive}
-                  className="h-12 px-2.5 text-[14px]"
-                  activeClassName={cn(
-                    getModeFocusRingClass(mode.value),
-                    getActiveModeClass(mode.value)
-                  )}
-                  inactiveClassName={cn(
-                    getModeFocusRingClass(mode.value),
-                    'bg-transparent text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700'
-                  )}
-                >
-                  <Icon size={18} weight={isActive ? 'fill' : 'regular'} />
-                </SegmentedControlItem>
-              );
-            })}
-
             {availableGrades.map((grade) => {
               const colors = getGradeColors(grade);
               const isActive = selectedGrade === grade;
@@ -303,40 +223,6 @@ export function ModeClassBar({
                 aria-label="Suodattimet"
                 className="min-h-12 min-w-full"
               >
-                {MODE_OPTIONS.map((mode, index) => {
-                  const isActive = studyMode === mode.value;
-                  const Icon = mode.icon;
-
-                  return (
-                    <SegmentedControlItem
-                      key={mode.value}
-                      ref={(element) => {
-                        modeRefs.current[index] = element;
-                      }}
-                      type="button"
-                      role="radio"
-                      aria-checked={isActive}
-                      aria-label={mode.label}
-                      tabIndex={isActive ? 0 : -1}
-                      onClick={() => onStudyModeChange(mode.value)}
-                      onKeyDown={(event) => handleModeKeyDown(index, event)}
-                      active={isActive}
-                      className="h-12 gap-2 px-3 text-sm"
-                      activeClassName={cn(
-                        getModeFocusRingClass(mode.value),
-                        getActiveModeClass(mode.value)
-                      )}
-                      inactiveClassName={cn(
-                        getModeFocusRingClass(mode.value),
-                        'text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700'
-                      )}
-                    >
-                      <Icon size={18} weight={isActive ? 'fill' : 'regular'} />
-                      <span>{mode.label}</span>
-                    </SegmentedControlItem>
-                  );
-                })}
-
                 {availableGrades.map((grade) => {
                   const colors = getGradeColors(grade);
                   const isActive = selectedGrade === grade;
