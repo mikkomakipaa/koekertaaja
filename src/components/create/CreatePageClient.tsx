@@ -184,6 +184,7 @@ interface CreatePageClientProps {
   allowedSchools?: School[];
   initialSchoolId?: string;
   schoolMembershipError?: string;
+  apiKeyWarning?: string;
   initialIsAdmin?: boolean;
 }
 
@@ -195,6 +196,7 @@ export default function CreatePageClient({
   allowedSchools = [],
   initialSchoolId = '',
   schoolMembershipError = '',
+  apiKeyWarning = '',
   initialIsAdmin = false,
 }: CreatePageClientProps) {
   const router = useRouter();
@@ -2111,6 +2113,16 @@ export default function CreatePageClient({
               </div>
             ) : (
               <>
+            {apiKeyWarning && (
+              <Alert className="border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-100">
+                <AlertDescription>
+                  {apiKeyWarning}{' '}
+                  <a href="/setup" className="font-semibold underline underline-offset-2">
+                    Siirry asetuksiin
+                  </a>
+                </AlertDescription>
+              </Alert>
+            )}
             {schoolMembershipError && (
               <Alert variant="destructive">
                 <AlertDescription>{schoolMembershipError}</AlertDescription>

@@ -64,37 +64,30 @@ export default async function CreatePage() {
 
   if (schools.length === 1) {
     const apiKeyStatus = await getSchoolApiKeyStatus(schools[0].id);
-
-    if (!hasAnySchoolApiKey(apiKeyStatus)) {
-      redirect('/setup');
-    }
+    const missingKey = !hasAnySchoolApiKey(apiKeyStatus);
 
     return (
       <CreatePageClient
         allowedSchools={schools}
         initialSchoolId={schools[0].id}
         initialIsAdmin={userIsAdmin}
+        apiKeyWarning={missingKey ? 'API-avainta ei ole asetettu — harjoitussarjojen luominen ei onnistu.' : ''}
       />
     );
   }
 
-  // Multi-school: require at least one school to have an API key configured.
-  // The user selects the school on the create page itself; the per-school key
-  // is validated server-side when the generation request is made.
+  // Multi-school: check if any school has an API key configured.
   const keyStatuses = await Promise.all(
     schools.map((s) => getSchoolApiKeyStatus(s.id))
   );
   const anySchoolHasKey = keyStatuses.some(hasAnySchoolApiKey);
-
-  if (!anySchoolHasKey) {
-    redirect('/setup');
-  }
 
   return (
     <CreatePageClient
       allowedSchools={schools}
       initialSchoolId=""
       initialIsAdmin={userIsAdmin}
+      apiKeyWarning={!anySchoolHasKey ? 'API-avainta ei ole asetettu — harjoitussarjojen luominen ei onnistu.' : ''}
     />
   );
 }

@@ -16,8 +16,6 @@ import { createBrowserClient } from '@/lib/supabase/auth';
 import { useAuth } from '@/hooks/useAuth';
 import { School } from '@/types';
 
-type Provider = 'anthropic' | 'openai';
-
 interface FormState {
   registrationToken: string;
   name: string;
@@ -25,8 +23,6 @@ interface FormState {
   password: string;
   confirmPassword: string;
   schoolId: string;
-  provider: Provider;
-  apiKey: string;
 }
 
 const initialFormState: FormState = {
@@ -36,8 +32,6 @@ const initialFormState: FormState = {
   password: '',
   confirmPassword: '',
   schoolId: '',
-  provider: 'openai',
-  apiKey: '',
 };
 
 export default function SignupPage() {
@@ -119,8 +113,6 @@ export default function SignupPage() {
           email: form.email,
           password: form.password,
           schoolId: form.schoolId,
-          provider: form.provider,
-          apiKey: form.apiKey,
         }),
       });
 
@@ -160,6 +152,7 @@ export default function SignupPage() {
       <AppHeader
         title="Rekisteröidy pääkäyttäjäksi"
         subtitle="Luo pääkäyttäjätili tällä lomakkeella."
+        hideSignupLink
       />
       <div className="mx-auto w-full max-w-2xl px-4 py-8">
         <Card variant="standard" padding="none" className="rounded-2xl border-slate-200 bg-white/95 shadow-[0_10px_30px_rgba(15,23,42,0.08)] dark:border-slate-800 dark:bg-slate-900/95">
@@ -185,7 +178,7 @@ export default function SignupPage() {
                 <Label htmlFor="registrationToken">Rekisteröitymiskoodi</Label>
                 <Input
                   id="registrationToken"
-                  type="password"
+                  type="text"
                   value={form.registrationToken}
                   onChange={(event) => updateField('registrationToken', event.target.value)}
                   required
@@ -272,34 +265,6 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="provider">AI-palvelu</Label>
-                  <select
-                    id="provider"
-                    value={form.provider}
-                    onChange={(event) => updateField('provider', event.target.value as Provider)}
-                    disabled={isSubmitting}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-900 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="anthropic">Anthropic</option>
-                    <option value="openai">OpenAI</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="apiKey">API-avain</Label>
-                  <Input
-                    id="apiKey"
-                    type="password"
-                    value={form.apiKey}
-                    onChange={(event) => updateField('apiKey', event.target.value)}
-                    required
-                    minLength={10}
-                    disabled={isSubmitting}
-                  />
-                </div>
-              </div>
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -317,46 +282,6 @@ export default function SignupPage() {
           </CardContent>
         </Card>
 
-        <Card variant="standard" className="mt-6 border-slate-200 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80">
-          <CardContent className="p-6">
-          <PageTitle as="h2" className="mb-1 text-base text-slate-700 dark:text-slate-100 max-[480px]:text-base">
-            Mistä saan API-avaimen?
-          </PageTitle>
-          <p className="mb-4 text-xs text-slate-500">
-            API-avain on henkilökohtainen tunniste, jolla Koekertaaja saa luvan käyttää tekoälypalvelua sinun puolestasi. Käyttö veloitetaan suoraan omalta tililtäsi palveluntarjoajan hinnaston mukaan — ei Koekertaajalta.
-          </p>
-
-          <div className="space-y-5 text-sm text-slate-600">
-            <div>
-              <p className="font-semibold text-slate-800">OpenAI (suositeltu)</p>
-              <ol className="mt-2 space-y-1.5 pl-4" style={{ listStyleType: 'decimal' }}>
-                <li>Mene osoitteeseen <span className="font-mono text-xs text-slate-800">platform.openai.com</span> ja luo tili tai kirjaudu sisään.</li>
-                <li>Uudet tilit saavat yleensä pienen ilmaisen käyttökiintiön. Jatkuvaan käyttöön tarvitset maksutavan: klikkaa oikeasta yläkulmasta profiilisi nimeä → <span className="italic">Billing</span> → <span className="italic">Add payment method</span>.</li>
-                <li>Siirry kohtaan <span className="italic">API keys</span> (valikosta tai osoitteesta <span className="font-mono text-xs text-slate-800">platform.openai.com/api-keys</span>).</li>
-                <li>Klikkaa <span className="italic">Create new secret key</span>, anna avaimelle nimi (esim. "Koekertaaja") ja klikkaa <span className="italic">Create secret key</span>.</li>
-                <li>Kopioi avain heti — se näytetään vain tässä hetkessä. Avain alkaa merkinnällä <span className="font-mono text-xs text-slate-800">sk-</span>.</li>
-              </ol>
-              <p className="mt-2 text-xs text-slate-500">
-                Voit asettaa kuukausittaisen käyttörajan kohdassa <span className="italic">Billing → Usage limits</span>, jotta kulut pysyvät hallinnassa.
-              </p>
-            </div>
-
-            <div>
-              <p className="font-semibold text-slate-800">Anthropic</p>
-              <ol className="mt-2 space-y-1.5 pl-4" style={{ listStyleType: 'decimal' }}>
-                <li>Mene osoitteeseen <span className="font-mono text-xs text-slate-800">console.anthropic.com</span> ja luo tili tai kirjaudu sisään.</li>
-                <li>Lisää maksutapa: valikosta <span className="italic">Settings → Billing</span> → <span className="italic">Add credit</span>. Anthropic vaatii prepaid-saldon ennen API-käytön aloittamista.</li>
-                <li>Siirry kohtaan <span className="italic">API keys</span> vasemmasta valikosta.</li>
-                <li>Klikkaa <span className="italic">Create Key</span>, anna avaimelle nimi ja kopioi se heti. Avain alkaa merkinnällä <span className="font-mono text-xs text-slate-800">sk-ant-</span>.</li>
-              </ol>
-            </div>
-
-            <div className="rounded-xl border border-amber-100 bg-amber-50/70 px-4 py-3 text-xs text-amber-800">
-              <span className="font-semibold">Tärkeää:</span> Avain tallennetaan salattuna eikä sitä voi enää tarkastella tallennuksen jälkeen. Tallenna avain myös omaan salasananhallintasovellukseesi (esim. 1Password, Bitwarden) — tarvitset sen, jos haluat vaihtaa avaimen myöhemmin.
-            </div>
-          </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

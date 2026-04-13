@@ -173,12 +173,6 @@ function LoginForm() {
 
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">Vain pääkäyttäjät voivat kirjautua sisään</p>
-                <p className="mt-2 text-sm text-gray-600">
-                  Ei vielä tiliä?{' '}
-                  <Link href="/signup" className="font-medium text-blue-700 underline-offset-4 hover:underline">
-                    Rekisteröidy
-                  </Link>
-                </p>
               </div>
             </>
           )}

@@ -10,11 +10,8 @@ const signupSchema = z.object({
   email: z.string().trim().email('Anna kelvollinen sähköpostiosoite'),
   password: z.string().min(8, 'Salasanan on oltava vähintään 8 merkkiä pitkä'),
   schoolId: z.string().uuid('Valitse koulu listasta'),
-  provider: z.enum(['anthropic', 'openai']),
-  apiKey: z.string().min(10, 'API-avaimen on oltava vähintään 10 merkkiä pitkä'),
 });
 
-type SignupPayload = z.infer<typeof signupSchema>;
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
@@ -71,38 +68,6 @@ async function rollbackProvisioning(userId?: string) {
   }
 }
 
-async function deleteVaultSecret(secretId?: string) {
-  if (!secretId) {
-    return;
-  }
-
-  const supabaseAdmin = getSupabaseAdmin();
-  const { error } = await (supabaseAdmin as any).rpc('delete_vault_secret', {
-    secret_id: secretId,
-  });
-
-  if (error) {
-    throw error;
-  }
-}
-
-async function createVaultSecret(
-  payload: SignupPayload
-): Promise<string> {
-  const supabaseAdmin = getSupabaseAdmin();
-  const secretName = `${payload.email}-${payload.provider}`;
-  const { data, error } = await (supabaseAdmin as any).rpc('create_vault_secret', {
-    secret_value: payload.apiKey,
-    secret_name: secretName,
-    secret_description: '',
-  });
-
-  if (error || !data) {
-    throw error ?? new Error('Failed to store API key');
-  }
-
-  return data as string;
-}
 
 export async function POST(request: Request) {
   try {
@@ -135,7 +100,6 @@ export async function POST(request: Request) {
 
     const supabaseAdmin = getSupabaseAdmin();
     let userId: string | undefined;
-    let vaultSecretId: string | undefined;
 
     const { data: existingSchool, error: schoolLookupError } = await supabaseAdmin
       .from('schools')
@@ -180,28 +144,8 @@ export async function POST(request: Request) {
         throw formatStageError('insert_school_member', memberError);
       }
 
-      try {
-        vaultSecretId = await createVaultSecret(payload);
-      } catch (error) {
-        throw formatStageError('create_vault_secret', error);
-      }
-      const providerColumn =
-        payload.provider === 'anthropic' ? 'anthropic_key_secret_id' : 'openai_key_secret_id';
-
-      const { error: settingsError } = await supabaseAdmin
-        .from('school_settings')
-        .upsert({
-          school_id: payload.schoolId,
-          [providerColumn]: vaultSecretId,
-        }, { onConflict: 'school_id' });
-
-      if (settingsError) {
-        throw formatStageError('insert_school_settings', settingsError);
-      }
-
       return NextResponse.json({ success: true });
     } catch (error) {
-      await deleteVaultSecret(vaultSecretId);
       await rollbackProvisioning(userId);
       throw error;
     }

@@ -27,6 +27,10 @@ export default function TermsPage() {
             <p>
               Koekertaaja on Mikko Mäkipään ylläpitämä verkkopalvelu, jonka avulla voidaan luoda tekoälyavusteisia
               harjoitussisältöjä peruskoulun oppilaita varten. Oppilaat voivat käyttää harjoituksia ilman käyttäjätiliä.
+              Palvelu ei kerää oppilaita koskevaa dataa.
+            </p>
+            <p>
+              Palvelu on tarkoitettu itsenäiseen koeharjoitteluun. Pääkäyttäjät ovat lasten huoltajja, jotka luovat koeharjoittelusarjoja palveluun.
             </p>
           </Section>
 
@@ -74,7 +78,7 @@ export default function TermsPage() {
               ja siitä, ettei se loukkaa tekijänoikeuksia tai muita kolmansien oikeuksia.
             </p>
             <p>
-              Koekertaajan koodi, ulkoasu ja tuotenimi ovat Mikko Mäkipään omaisuutta.
+              Koekertaajan toimintamalli, koodi, ulkoasu ja tuotenimi ovat Mikko Mäkipään omaisuutta.
               Palvelun käyttäminen ei siirrä niihin mitään oikeuksia käyttäjälle.
             </p>
           </Section>
@@ -90,14 +94,14 @@ export default function TermsPage() {
           <Section title="7. Vastuunrajoitus">
             <p>
               Mikko Mäkipää ei vastaa välillisistä vahingoista, kuten API-kustannusten
-              odottamattomasta kasvusta, tietojen menetyksestä tai liiketoiminnan
-              keskeytymisestä, siltä osin kuin sovellettava pakottava lainsäädäntö tämän
-              sallii.
+              odottamattomasta kasvusta tai tietojen menetyksestä, siltä osin kuin
+              sovellettava pakottava lainsäädäntö tämän sallii. Kuluttajansuojalain
+              pakottavat säännökset menevät näiden ehtojen edelle.
             </p>
             <p>
               Koekertaaja ei vastaa tekoälypalvelujen tuottamien sisältöjen
               oikeellisuudesta tai sopivuudesta. Pääkäyttäjä on vastuussa
-              tekoälyn tuottamien sisältöjen tarkistamisesta ennen niiden käyttöä opetuksessa.
+              tekoälyn tuottamien sisältöjen tarkistamisesta ennen niiden käyttöä harjoittelussa.
             </p>
           </Section>
 
@@ -111,15 +115,26 @@ export default function TermsPage() {
 
           <Section title="9. Muutokset käyttöehtoihin">
             <p>
-              Voimme päivittää näitä ehtoja. Jatkamalla palvelun käyttöä muutoksen jälkeen
-              hyväksyt päivitetyt ehdot.
+              Voimme päivittää näitä ehtoja. Olennaisista muutoksista ilmoitetaan palvelussa näytettävällä ilmoituksella vähintään 30 päivää ennen
+              muutosten voimaantuloa. Jatkamalla palvelun käyttöä muutosten voimaantulon jälkeen hyväksyt päivitetyt ehdot.
             </p>
           </Section>
 
           <Section title="10. Sovellettava laki ja riitojen ratkaisu">
             <p>
               Näihin ehtoihin sovelletaan Suomen lakia. Erimielisyydet pyritään
-              ensisijaisesti ratkaisemaan neuvottelemalla.
+              ensisijaisesti ratkaisemaan neuvottelemalla. Kuluttajalla on oikeus saattaa
+              erimielisyys maksutta{' '}
+              <a
+                href="https://www.kuluttajariitalautakunta.fi"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-600 hover:underline dark:text-indigo-400"
+              >
+                kuluttajariitalautakunnan
+              </a>{' '}
+              käsiteltäväksi. Mikäli erimielisyyttä ei saada ratkaistua muutoin,
+              riita saatetaan toimivaltaisen käräjäoikeuden ratkaistavaksi.
             </p>
           </Section>
 

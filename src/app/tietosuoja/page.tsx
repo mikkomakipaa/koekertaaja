@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export const metadata = {
   title: 'Tietosuojaseloste – Koekertaaja',
-  description: 'Koekertaaja-palvelun tietosuojaseloste rekisteröidyille pääkäyttäjille.',
+  description: 'Koekertaaja-palvelun tietosuojaseloste rekisteröityneille käyttäjille.',
 };
 
 export default function PrivacyPage() {
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
 
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Tietosuojaseloste</h1>
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          Voimassa 11.4.2025 alkaen · EU:n yleinen tietosuoja-asetus (GDPR) 13 ja 14 artikla
+          Voimassa 11.4.2026 alkaen · EU:n yleinen tietosuoja-asetus (GDPR) 13 ja 14 artikla
         </p>
 
         <div className="prose prose-slate dark:prose-invert mt-10 max-w-none text-sm leading-relaxed">
@@ -35,15 +35,15 @@ export default function PrivacyPage() {
 
           <Section title="2. Käsiteltävät henkilötiedot ja käsittelyn tarkoitus">
             <p>
-              Käsittelemme yksinomaan <strong>rekisteröityneiden pääkäyttäjien</strong> tietoja.
-              Palvelun oppilailla ei ole käyttäjätilejä eikä heistä tallenneta henkilötietoja.
+              Käsittelemme yksinomaan <strong>rekisteröityneiden käyttäjien (huoltajien)</strong> tietoja.
+              Palvelua harjoitteluun käyttävillä lapsilla ei ole käyttäjätilejä eikä heistä tallenneta henkilötietoja.
             </p>
             <Table
               headers={['Tieto', 'Käsittelyn tarkoitus', 'Oikeusperuste']}
               rows={[
                 ['Nimi', 'Käyttäjätunnuksen yksilöinti', 'Sopimuksen täytäntöönpano (art. 6.1 b)'],
                 ['Sähköpostiosoite', 'Kirjautuminen ja yhteydenpito', 'Sopimuksen täytäntöönpano (art. 6.1 b)'],
-                ['Koulu / kunta', 'Sisältöjen kohdistaminen oikealle koululle', 'Sopimuksen täytäntöönpano (art. 6.1 b)'],
+                ['Koulu / kunta', 'Harjoitussisältöjen kohdistaminen oikealle koululle', 'Sopimuksen täytäntöönpano (art. 6.1 b)'],
                 ['Salattu API-avain (OpenAI / Anthropic)', 'Tekoälykysymysten generointi käyttäjän omalla tilillä', 'Sopimuksen täytäntöönpano (art. 6.1 b)'],
                 ['Kirjautumisaika ja istuntotiedot', 'Tietoturva ja väärinkäytösten ehkäisy', 'Oikeutettu etu (art. 6.1 f)'],
               ]}
@@ -57,12 +57,14 @@ export default function PrivacyPage() {
             </p>
             <ul>
               <li>käyttäjätili ja kirjautumistiedot,</li>
-              <li>koulujäsenyys,</li>
+              <li>koulutiedot,</li>
               <li>salattu API-avain.</li>
             </ul>
             <p>
-              Koulu ja siihen liitetyt harjoitussisällöt voidaan säilyttää muiden käyttäjien tai
-              koulun tarpeisiin.
+              Harjoitussisällöt (kysymyssarjat, aiheet) voidaan säilyttää palvelussa myös tilin
+              poistamisen jälkeen, mikäli sama sisältö on muidenkin käyttäjien käytettävissä.
+              Säilyttämisen oikeusperusteena on oikeutettu etu (art. 6.1 f) — harjoitussisällöt
+              eivät sisällä henkilötietoja.
             </p>
           </Section>
 
@@ -72,18 +74,20 @@ export default function PrivacyPage() {
             <Table
               headers={['Alihankkija', 'Rooli', 'Tietojen sijaintialue']}
               rows={[
-                ['Supabase Inc.', 'Tietokanta- ja autentikointipalvelu', 'EU (Frankfurt, AWS eu-central-1)'],
+                ['Supabase Inc.', 'Tietokanta- ja autentikointipalvelu', 'EU (Irlanti, AWS eu-west-1)'],
+                ['Vercel Inc.', 'Sovelluspalvelin ja verkkoinfrastruktuuri', 'Yhdysvallat (reunasolmut globaalisti)'],
                 ['OpenAI / Anthropic', 'Tekoälypalvelu (käyttäjän oma API-avain)', 'Yhdysvallat – käyttäjä solmii itse sopimuksen palveluntarjoajan kanssa'],
               ]}
             />
             <p>
-              OpenAI:n ja Anthropicin kohdalla Koekertaaja välittää käyttäjän omalla avaimella
-              tehtyjä pyyntöjä. Käyttäjä on itse sopimussuhteessa kyseisiin palveluntarjoajiin eikä
-              Koekertaaja ole vastuussa näiden tietojenkäsittelystä.
+              OpenAI:n ja Anthropicin kohdalla Koekertaaja välittää käyttäjän omalla API-avaimella
+              tehtyjä pyyntöjä Yhdysvaltoihin sijaitseville palvelimille. Käyttäjä on itse
+              sopimussuhteessa kyseisiin palveluntarjoajiin ja vastaa siirron lainmukaisuudesta
+              oman sopimuksensa nojalla. Koekertaaja ei ole vastuussa näiden palveluntarjoajien
+              tietojenkäsittelystä.
             </p>
             <p>
-              Tietoja ei siirretä EU/ETA-alueen ulkopuolelle muutoin kuin edellä mainittujen
-              alihankkijoiden kautta tai käyttäjän oman API-avaimen käytön yhteydessä.
+              Muutoin tietoja ei siirretä EU/ETA-alueen ulkopuolelle.
             </p>
           </Section>
 
@@ -99,7 +103,9 @@ export default function PrivacyPage() {
             </ul>
             <p>
               Lähetä oikeuksiasi koskevat pyynnöt sähköpostitse rekisterinpitäjälle. Vastaamme
-              pyyntöihin GDPR:n edellyttämässä 30 päivän kuluessa.
+              pyyntöihin GDPR:n edellyttämässä 30 päivän kuluessa. Tietojen siirrettävyyttä
+              koskeviin pyyntöihin toimitamme tiedot koneluettavassa muodossa (JSON tai CSV).
+              API-avainta ei voida palauttaa selväkielisenä tietoturvasyistä.
             </p>
             <p>
               Sinulla on myös oikeus tehdä valitus{' '}
@@ -121,6 +127,12 @@ export default function PrivacyPage() {
               lukea takaisin selväkielisinä palvelun kautta. Kaikki tietoliikenne tapahtuu
               TLS-suojatusti. Käyttäjien autentikointi hoidetaan Supabase Auth -palvelun
               avulla.
+            </p>
+            <p>
+              Tietoturvaloukkauksesta ilmoitetaan tietosuojavaltuutetulle 72 tunnin kuluessa
+              loukkauksen havaitsemisesta sekä rekisteröidyille GDPR:n 34 artiklan edellyttämällä
+              tavalla, mikäli loukkaus todennäköisesti aiheuttaa korkean riskin heidän
+              oikeuksilleen ja vapauksilleen.
             </p>
           </Section>
 

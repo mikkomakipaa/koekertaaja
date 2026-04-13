@@ -13,6 +13,7 @@ interface AppHeaderProps {
   subtitle: string;
   hideLoginLink?: boolean;
   hideSignupLink?: boolean;
+  hideSetupLink?: boolean;
 }
 
 const ACTION_BUTTON_CLASS =
@@ -23,6 +24,7 @@ export function AppHeader({
   subtitle,
   hideLoginLink = false,
   hideSignupLink = false,
+  hideSetupLink = false,
 }: AppHeaderProps) {
   const router = useRouter();
   const { user, loading, signOut } = useAuth();
@@ -60,12 +62,14 @@ export function AppHeader({
               <Button asChild variant="outline" className={ACTION_BUTTON_CLASS}>
                 <Link href="/create">Luo</Link>
               </Button>
-              <Button asChild variant="outline" className={ACTION_BUTTON_CLASS}>
-                <Link href="/setup">
-                  <Gear className="h-5 w-5" weight="duotone" />
-                  Asetukset
-                </Link>
-              </Button>
+              {!hideSetupLink ? (
+                <Button asChild variant="outline" className={ACTION_BUTTON_CLASS}>
+                  <Link href="/setup">
+                    <Gear className="h-5 w-5" weight="duotone" />
+                    Asetukset
+                  </Link>
+                </Button>
+              ) : null}
               <Button
                 variant="outline"
                 size="icon"
